@@ -1,3 +1,56 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+    html {
+        @apply bg-gray-100 text-gray-900;
+    }
+
+    html.dark {
+        @apply bg-slate-950 text-slate-100;
+    }
+
+    body {
+        @apply bg-transparent text-inherit;
+    }
+
+    [type='text'],
+    [type='email'],
+    [type='url'],
+    [type='password'],
+    [type='number'],
+    [type='search'],
+    textarea,
+    select {
+        @apply border-gray-300 bg-white text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:ring-indigo-500;
+    }
+
+    .dark [type='text'],
+    .dark [type='email'],
+    .dark [type='url'],
+    .dark [type='password'],
+    .dark [type='number'],
+    .dark [type='search'],
+    .dark textarea,
+    .dark select {
+        @apply border-slate-600 bg-slate-900 text-slate-100 placeholder:text-slate-400 focus:border-sky-500 focus:ring-sky-500;
+        color-scheme: dark;
+    }
+
+    .dark [type='checkbox'],
+    .dark [type='radio'] {
+        @apply border-slate-500 bg-slate-900 text-sky-500 focus:ring-sky-500;
+        color-scheme: dark;
+    }
+}
+
+@layer components {
+    .app-surface {
+        @apply rounded-lg border border-gray-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900/80;
+    }
+
+    .app-muted {
+        @apply text-gray-600 dark:text-slate-400;
+    }
+}
