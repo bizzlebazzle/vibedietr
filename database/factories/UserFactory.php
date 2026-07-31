@@ -41,4 +41,14 @@ class UserFactory extends Factory
             'email_verified_at' => null,
         ]);
     }
+
+    /**
+     * Indicate that the user is an administrator.
+     */
+    public function administrator(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_administrator' => true,
+        ]);
+    }
 }

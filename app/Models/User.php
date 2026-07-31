@@ -42,7 +42,16 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'is_administrator' => 'boolean',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Determine whether the user has administrator access.
+     */
+    public function isAdministrator(): bool
+    {
+        return (bool) $this->is_administrator;
     }
 }

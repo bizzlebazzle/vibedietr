@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Exceptions\PublicPropertyNotFoundException;
 use Livewire\Volt\Volt;
 use Tests\TestCase;
 
@@ -62,6 +63,39 @@ class ProfileTest extends TestCase
             ->assertNoRedirect();
 
         $this->assertNotNull($user->refresh()->email_verified_at);
+    }
+
+    public function test_profile_input_cannot_assign_or_remove_administrator_status(): void
+    {
+        $ordinaryUser = User::factory()->create();
+
+        $this->actingAs($ordinaryUser);
+
+        try {
+            Volt::test('profile.update-profile-information-form')
+                ->set('is_administrator', true);
+
+            $this->fail('Livewire accepted a forged administrator property.');
+        } catch (PublicPropertyNotFoundException) {
+            // The component exposes no administrator state to submitted input.
+        }
+
+        $this->assertFalse($ordinaryUser->refresh()->isAdministrator());
+
+        $administrator = User::factory()->administrator()->create();
+
+        $this->actingAs($administrator);
+
+        try {
+            Volt::test('profile.update-profile-information-form')
+                ->set('is_administrator', false);
+
+            $this->fail('Livewire accepted a forged administrator property.');
+        } catch (PublicPropertyNotFoundException) {
+            // The component exposes no administrator state to submitted input.
+        }
+
+        $this->assertTrue($administrator->refresh()->isAdministrator());
     }
 
     public function test_user_can_delete_their_account(): void
