@@ -3,6 +3,7 @@
 namespace App\Audit;
 
 use App\Audit\Enums\AuditAction;
+use App\Domain\Nutrition\NutrientRegistry;
 use InvalidArgumentException;
 
 final class AuditPayloadValidator
@@ -43,19 +44,6 @@ final class AuditPayloadValidator
         'evidence_content',
         'environment_value',
         'command_arguments',
-    ];
-
-    private const NUTRIENTS = [
-        'energy_kcal',
-        'energy_kj',
-        'fat',
-        'saturated_fat',
-        'carbohydrates',
-        'sugars',
-        'fibre',
-        'protein',
-        'salt',
-        'sodium',
     ];
 
     /**
@@ -165,7 +153,7 @@ final class AuditPayloadValidator
     {
         $this->assertShape($payload, ['changed_nutrients', 'outcome'], ['changed_nutrients', 'outcome']);
         $this->assertEnum($payload, 'outcome', ['applied']);
-        $this->assertStringList($payload, 'changed_nutrients', self::NUTRIENTS);
+        $this->assertStringList($payload, 'changed_nutrients', NutrientRegistry::stableIdentifiers());
 
         return $payload;
     }

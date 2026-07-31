@@ -2,9 +2,11 @@
 
 namespace App\Livewire\Ingredients;
 
+use App\Domain\Measurements\MeasurementUnitParser;
+use App\Domain\Measurements\MeasurementUnitRegistry;
 use App\Models\Ingredient;
+use App\Rules\ValidMeasurementUnit;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Validation\Rule;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 
@@ -45,8 +47,6 @@ class Form extends Component
 
     protected function rules(): array
     {
-        $allowedUnits = $this->selectableMeasurementUnits();
-
         return [
             'name' => ['required', 'string', 'max:255'],
             'barcode' => ['nullable', 'string', 'max:64'],
@@ -54,9 +54,9 @@ class Form extends Component
             'categories' => ['nullable', 'array'],
             'nutriments' => ['nullable', 'array'],
             'quantity' => ['required', 'numeric', 'min:0'],
-            'quantity_unit' => ['required', 'string', 'max:32', Rule::in($allowedUnits)],
+            'quantity_unit' => ['required', 'string', 'max:32', new ValidMeasurementUnit],
             'serving_quantity' => ['nullable', 'numeric', 'min:0'],
-            'serving_quantity_unit' => ['nullable', 'string', 'max:32', Rule::in($allowedUnits)],
+            'serving_quantity_unit' => ['nullable', 'string', 'max:32', new ValidMeasurementUnit],
             'recommended_servings' => ['nullable', 'numeric', 'min:0'],
             'image_url' => ['nullable', 'url'],
             ...$this->nutritionInputRules(),
@@ -369,68 +369,13 @@ class Form extends Component
 
     protected function guessUnitFromText(?string $text): ?string
     {
-        if (!is_string($text) || trim($text) === '') {
+        if (! is_string($text) || trim($text) === '') {
             return null;
         }
 
-        $value = strtolower(trim($text));
+        $unit = MeasurementUnitParser::findInText($text);
 
-        // Prefer explicit measurement units when they appear in serving text,
-        // e.g. "1 biscuit (18 g)" should map to "g" rather than "piece".
-        $measurementPatterns = [
-            '/\bmilligrams?\b|\bmgs?\b/' => 'mg',
-            '/\bkilograms?\b|\bkgs?\b/' => 'kg',
-            '/(?<![a-z])g(?![a-z])|\bgrams?\b/' => 'g',
-            '/\bmillilit(?:re|er)s?\b|\bmls?\b/' => 'ml',
-            '/\bcentilit(?:re|er)s?\b|\bcls?\b/' => 'cl',
-            '/(?<![a-z])l(?![a-z])|\blit(?:re|er)s?\b/' => 'l',
-            '/\bteaspoons?\b|\btsps?\b/' => 'tsp',
-            '/\btablespoons?\b|\btbsps?\b/' => 'tbsp',
-            '/\bfluid ounces?\b|\bfl\.?\s*oz\b/' => 'fl oz',
-            '/\bcups?\b/' => 'cup',
-            '/\bpints?\b|\bpts?\b/' => 'pt',
-            '/\bquarts?\b|\bqts?\b/' => 'qt',
-            '/\bgallons?\b|\bgals?\b/' => 'gal',
-            '/\bounces?\b|\bozs?\b/' => 'oz',
-            '/\bpounds?\b|\blbs?\b/' => 'lb',
-        ];
-
-        foreach ($measurementPatterns as $pattern => $unit) {
-            if (preg_match($pattern, $value)) {
-                return $unit;
-            }
-        }
-
-        $portionPatterns = [
-            '/\bservings?\b|\bserve\b/' => 'serving',
-            '/\bportions?\b/' => 'portion',
-            '/\bslices?\b/' => 'slice',
-            '/\bcloves?\b/' => 'clove',
-            '/\bpinches?\b/' => 'pinch',
-            '/\bdashes?\b/' => 'dash',
-            '/\bhandfuls?\b/' => 'handful',
-            '/\bscoops?\b/' => 'scoop',
-            '/\bcans?\b/' => 'can',
-            '/\bjars?\b/' => 'jar',
-            '/\bbottles?\b/' => 'bottle',
-            '/\bcartons?\b/' => 'carton',
-            '/\bpackets?\b|\bpacks?\b/' => 'packet',
-            '/\bpouches?\b/' => 'pouch',
-            '/\bpots?\b/' => 'pot',
-            '/\btubs?\b/' => 'tub',
-            '/\bsticks?\b/' => 'stick',
-            '/\bbars?\b/' => 'bar',
-            '/\bpieces?\b|\bpcs?\b|\bcookies?\b|\bbiscuits?\b|\bcrackers?\b/' => 'piece',
-            '/\beach\b|\bunit\b/' => 'each',
-        ];
-
-        foreach ($portionPatterns as $pattern => $unit) {
-            if (preg_match($pattern, $value)) {
-                return $unit;
-            }
-        }
-
-        return null;
+        return $unit === null ? null : MeasurementUnitParser::parsedValue($unit);
     }
 
     protected function normalizeParsedNumber(string $value): int|float|null
@@ -448,51 +393,11 @@ class Form extends Component
 
     public function measurementUnitGroups(): array
     {
-        return [
-            'Weight' => [
-                'mg' => 'Milligrams (mg)',
-                'g' => 'Grams (g)',
-                'kg' => 'Kilograms (kg)',
-                'oz' => 'Ounces (oz)',
-                'lb' => 'Pounds (lb)',
-            ],
-            'Volume' => [
-                'ml' => 'Millilitres (ml)',
-                'cl' => 'Centilitres (cl)',
-                'l' => 'Litres (l)',
-                'tsp' => 'Teaspoons (tsp)',
-                'tbsp' => 'Tablespoons (tbsp)',
-                'fl oz' => 'Fluid ounces (fl oz)',
-                'cup' => 'Cups',
-                'pt' => 'Pints (pt)',
-                'qt' => 'Quarts (qt)',
-                'gal' => 'Gallons (gal)',
-            ],
-            'Pieces & portions' => [
-                'each' => 'Each',
-                'piece' => 'Piece',
-                'slice' => 'Slice',
-                'clove' => 'Clove',
-                'pinch' => 'Pinch',
-                'dash' => 'Dash',
-                'handful' => 'Handful',
-                'scoop' => 'Scoop',
-                'serving' => 'Serving',
-                'portion' => 'Portion',
-            ],
-            'Packs & containers' => [
-                'can' => 'Can',
-                'jar' => 'Jar',
-                'bottle' => 'Bottle',
-                'carton' => 'Carton',
-                'packet' => 'Packet',
-                'pouch' => 'Pouch',
-                'pot' => 'Pot',
-                'tub' => 'Tub',
-                'stick' => 'Stick',
-                'bar' => 'Bar',
-            ],
-        ];
+        $groups = MeasurementUnitRegistry::formGroups();
+        $customUnits = MeasurementUnitRegistry::suggestedCustomUnits();
+        $groups['Custom measures'] = array_combine($customUnits, array_map('ucfirst', $customUnits));
+
+        return $groups;
     }
 
     public function customMeasurementUnits(): array
@@ -531,6 +436,10 @@ class Form extends Component
         }
 
         $this->validate($this->rules());
+        $this->quantity_unit = MeasurementUnitParser::storageValue($this->quantity_unit);
+        $this->serving_quantity_unit = blank($this->serving_quantity_unit)
+            ? null
+            : MeasurementUnitParser::storageValue($this->serving_quantity_unit);
         $this->nutriments = $this->mergeNutritionInputsIntoNutriments();
 
         $payload = [

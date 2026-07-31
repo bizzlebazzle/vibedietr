@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Rules\ValidMeasurementUnit;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreIngredientRequest extends FormRequest
@@ -20,9 +21,9 @@ class StoreIngredientRequest extends FormRequest
             'categories'               => ['nullable', 'array'],
             'nutriments'               => ['nullable', 'array'],
             'quantity'                 => ['required', 'numeric', 'min:0'],
-            'quantity_unit'            => ['required', 'string', 'max:32'],
+            'quantity_unit'            => ['required', 'string', 'max:32', new ValidMeasurementUnit],
             'serving_quantity'         => ['nullable', 'numeric', 'min:0'],
-            'serving_quantity_unit'    => ['nullable', 'string', 'max:32'],
+            'serving_quantity_unit'    => ['nullable', 'string', 'max:32', new ValidMeasurementUnit],
             'recommended_servings'     => ['nullable', 'numeric', 'min:0'],
             'image_url'                => ['nullable', 'url'],
         ];

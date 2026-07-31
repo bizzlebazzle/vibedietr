@@ -105,23 +105,17 @@
         </div>
         <div>
           <label class="block font-medium sm:flex sm:min-h-[3rem] sm:items-end">Quantity unit</label>
-          <select wire:model.defer="quantity_unit" class="w-full rounded border px-3 py-2">
-            <option value="">Select a unit</option>
-            @if($customMeasurementUnits)
-              <optgroup label="Current custom units">
-                @foreach($customMeasurementUnits as $unit)
-                  <option value="{{ $unit }}">{{ $unit }}</option>
-                @endforeach
-              </optgroup>
-            @endif
+          <input type="text" list="measurement-unit-options" wire:model.defer="quantity_unit" class="w-full rounded border px-3 py-2" placeholder="e.g. g, tbsp or bunch">
+          <datalist id="measurement-unit-options">
             @foreach($measurementUnitGroups as $group => $units)
-              <optgroup label="{{ $group }}">
-                @foreach($units as $value => $label)
-                  <option value="{{ $value }}">{{ $label }}</option>
-                @endforeach
-              </optgroup>
+              @foreach($units as $value => $label)
+                <option value="{{ $value }}" label="{{ $group }} — {{ $label }}"></option>
+              @endforeach
             @endforeach
-          </select>
+            @foreach($customMeasurementUnits as $unit)
+              <option value="{{ $unit }}" label="Current custom unit"></option>
+            @endforeach
+          </datalist>
           @error('quantity_unit') <div class="text-sm text-red-600">{{ $message }}</div> @enderror
         </div>
         <div>
@@ -139,23 +133,7 @@
         </div>
         <div>
           <label class="block font-medium">Serving quantity unit (optional)</label>
-          <select wire:model.defer="serving_quantity_unit" class="w-full rounded border px-3 py-2">
-            <option value="">Select a unit</option>
-            @if($customMeasurementUnits)
-              <optgroup label="Current custom units">
-                @foreach($customMeasurementUnits as $unit)
-                  <option value="{{ $unit }}">{{ $unit }}</option>
-                @endforeach
-              </optgroup>
-            @endif
-            @foreach($measurementUnitGroups as $group => $units)
-              <optgroup label="{{ $group }}">
-                @foreach($units as $value => $label)
-                  <option value="{{ $value }}">{{ $label }}</option>
-                @endforeach
-              </optgroup>
-            @endforeach
-          </select>
+          <input type="text" list="measurement-unit-options" wire:model.defer="serving_quantity_unit" class="w-full rounded border px-3 py-2" placeholder="e.g. ml, piece or splash">
           @error('serving_quantity_unit') <div class="text-sm text-red-600">{{ $message }}</div> @enderror
         </div>
       </div>
