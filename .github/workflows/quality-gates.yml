@@ -1,0 +1,183 @@
+name: Quality gates
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  backend-tests:
+    name: Backend tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: testing
+          MYSQL_USER: ci
+          MYSQL_PASSWORD: ci-password
+          MYSQL_ROOT_PASSWORD: root-ci-password
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot-ci-password"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=12
+
+    env:
+      APP_ENV: testing
+      APP_DEBUG: false
+      DB_CONNECTION: mysql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_DATABASE: testing
+      DB_USERNAME: ci
+      DB_PASSWORD: ci-password
+      MAIL_MAILER: array
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v6
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: dom, fileinfo, pdo_mysql, xml, xmlwriter
+          coverage: none
+          tools: composer:v2
+
+      - name: Locate the Composer download cache
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Composer downloads
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-php-8.4-composer-${{ hashFiles('composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-php-8.4-composer-
+
+      - name: Install Composer dependencies from the lock file
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Configure the application
+        run: |
+          cp .env.example .env
+          php artisan key:generate --ansi
+
+      - name: Confirm MySQL is ready
+        run: >-
+          php -r 'new PDO(
+          "mysql:host=".getenv("DB_HOST").";port=".getenv("DB_PORT").";dbname=".getenv("DB_DATABASE"),
+          getenv("DB_USERNAME"), getenv("DB_PASSWORD")
+          );'
+
+      - name: Run database migrations
+        run: php artisan migrate --force --ansi
+
+      - name: Run backend tests
+        run: composer test
+
+  php-formatting:
+    name: PHP formatting
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v6
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: dom, fileinfo, xml, xmlwriter
+          coverage: none
+          tools: composer:v2
+
+      - name: Locate the Composer download cache
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Composer downloads
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-php-8.4-composer-${{ hashFiles('composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-php-8.4-composer-
+
+      - name: Install Composer dependencies from the lock file
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Check PHP formatting
+        run: vendor/bin/pint --test
+
+  static-analysis:
+    name: Static analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v6
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: dom, fileinfo, xml, xmlwriter
+          coverage: none
+          tools: composer:v2
+
+      - name: Locate the Composer download cache
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Composer downloads
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-php-8.4-composer-${{ hashFiles('composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-php-8.4-composer-
+
+      - name: Install Composer dependencies from the lock file
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Run static analysis
+        run: composer analyse
+
+      - name: Prove static-analysis failures are blocking
+        run: composer analyse:failure-regression
+
+  frontend-build:
+    name: Frontend build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22.18'
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install frontend dependencies from the lock file
+        run: npm ci
+
+      - name: Build frontend assets
+        run: npm run build

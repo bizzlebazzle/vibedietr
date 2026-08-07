@@ -23,10 +23,10 @@ class Ingredient extends Model
     ];
 
     protected $casts = [
-        'keywords'    => 'array',
-        'categories'  => 'array',
-        'nutriments'  => 'array',
-        'quantity'    => 'decimal:3',
+        'keywords' => 'array',
+        'categories' => 'array',
+        'nutriments' => 'array',
+        'quantity' => 'decimal:3',
         'serving_quantity' => 'decimal:3',
         'recommended_servings' => 'decimal:2',
     ];

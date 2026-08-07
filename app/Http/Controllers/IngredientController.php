@@ -33,12 +33,14 @@ class IngredientController extends Controller
     public function show(Ingredient $ingredient)
     {
         $this->authorize('view', $ingredient);
+
         return view('ingredients.show', compact('ingredient'));
     }
 
     public function edit(Ingredient $ingredient)
     {
         $this->authorize('update', $ingredient);
+
         return view('ingredients.edit', compact('ingredient'));
     }
 

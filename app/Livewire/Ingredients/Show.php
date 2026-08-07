@@ -10,6 +10,7 @@ use Livewire\Component;
 class Show extends Component
 {
     public Ingredient $ingredient;
+
     public bool $withinModal = false;
 
     public function mount(Ingredient $ingredient, bool $withinModal = false): void
@@ -47,7 +48,7 @@ class Show extends Component
 
     public function formatNutritionValue($value, bool $integer = false): ?string
     {
-        if (!is_numeric($value)) {
+        if (! is_numeric($value)) {
             return null;
         }
 
@@ -60,7 +61,7 @@ class Show extends Component
 
     public function formatMeasurementValue($value): ?string
     {
-        if (!is_numeric($value)) {
+        if (! is_numeric($value)) {
             return null;
         }
 
@@ -88,7 +89,7 @@ class Show extends Component
         ];
 
         if (
-            !in_array($unit, $nonPluralShorthandUnits, true)
+            ! in_array($unit, $nonPluralShorthandUnits, true)
             && preg_match('/^[a-z]+$/i', $unit)
             && is_numeric($value)
             && (float) $value !== 1.0

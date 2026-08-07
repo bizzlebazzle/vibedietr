@@ -16,7 +16,9 @@ class Index extends Component
     public string $search = '';
 
     public bool $showFormModal = false;
+
     public bool $showDetailsModal = false;
+
     public ?int $viewingIngredientId = null;
 
     protected $listeners = [
@@ -78,7 +80,7 @@ class Index extends Component
 
     public function formatMeasurementValue($value): ?string
     {
-        if (!is_numeric($value)) {
+        if (! is_numeric($value)) {
             return null;
         }
 
@@ -106,7 +108,7 @@ class Index extends Component
         ];
 
         if (
-            !in_array($unit, $nonPluralShorthandUnits, true)
+            ! in_array($unit, $nonPluralShorthandUnits, true)
             && preg_match('/^[a-z]+$/i', $unit)
             && is_numeric($value)
             && (float) $value !== 1.0
@@ -140,11 +142,9 @@ class Index extends Component
     {
         $ingredients = Ingredient::query()
             ->where('user_id', auth()->id())
-            ->when($this->search, fn ($q) =>
-                $q->where(fn ($qq) =>
-                    $qq->where('name', 'like', '%'.$this->search.'%')
-                       ->orWhere('barcode', 'like', '%'.$this->search.'%')
-                )
+            ->when($this->search, fn ($q) => $q->where(fn ($qq) => $qq->where('name', 'like', '%'.$this->search.'%')
+                ->orWhere('barcode', 'like', '%'.$this->search.'%')
+            )
             )
             ->latest()
             ->paginate(12);
