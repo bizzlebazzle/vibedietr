@@ -23,5 +23,4 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 .editorconfig
-AGENTS.md
-docs/*
+docs/*.orig
