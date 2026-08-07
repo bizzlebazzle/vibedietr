@@ -1,0 +1,19 @@
+{
+    "DEC-001": "Food-matching confidence thresholds",
+    "DEC-002": "Food-match review-warning treatment",
+    "DEC-003": "Nutrient storage precision",
+    "DEC-004": "Nutrient display precision",
+    "DEC-005": "Recipe-import providers and formats",
+    "DEC-006": "OCR providers and formats",
+    "DEC-007": "Import and OCR extraction-quality thresholds",
+    "DEC-008": "Account data-export format",
+    "DEC-009": "Initial administrator assignment",
+    "DEC-010": "Moderation escalation and service levels",
+    "DEC-011": "Manual-food de-duplication and merge rules",
+    "DEC-012": "Backup erasure timing",
+    "DEC-013": "Security and legal audit retention",
+    "DEC-014": "Public meal plans after owner deletion",
+    "DEC-015": "Administrator second-factor mechanism and recovery",
+    "DEC-016": "Administrator security-notification delivery",
+    "DEC-017": "Culinary measurement jurisdictions"
+}

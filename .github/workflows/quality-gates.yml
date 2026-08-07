@@ -179,5 +179,11 @@ jobs:
       - name: Install frontend dependencies from the lock file
         run: npm ci
 
+      - name: Validate documentation
+        run: npm run docs:check
+
+      - name: Prove documentation-validation failures are blocking
+        run: npm run docs:test
+
       - name: Build frontend assets
         run: npm run build
