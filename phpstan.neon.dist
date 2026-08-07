@@ -1,0 +1,19 @@
+includes:
+    - phpstan-baseline.neon
+    - vendor/larastan/larastan/extension.neon
+    - vendor/nesbot/carbon/extension.neon
+
+parameters:
+    level: 5
+    reportUnmatchedIgnoredErrors: true
+
+    paths:
+        - app
+        - database/factories
+        - database/seeders
+        - routes
+        - tests
+
+    excludePaths:
+        analyse:
+            - tests/StaticAnalysis/Fixtures/InvalidReturnType.php
