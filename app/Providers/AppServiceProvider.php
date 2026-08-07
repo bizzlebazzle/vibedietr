@@ -7,6 +7,8 @@ use App\Models\Ingredient;
 use App\Models\User;
 use App\Policies\AuditEventPolicy;
 use App\Policies\IngredientPolicy;
+use App\Queue\Reference\CacheReferenceTaskResultRecorder;
+use App\Queue\Reference\ReferenceTaskResultRecorder;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -17,7 +19,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(
+            ReferenceTaskResultRecorder::class,
+            CacheReferenceTaskResultRecorder::class,
+        );
     }
 
     /**
