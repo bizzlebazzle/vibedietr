@@ -16,21 +16,37 @@ class Form extends Component
 
     #[Validate('required|string|max:255')]
     public string $name = '';
+
     public ?string $barcode = null;
+
     public array $keywords = [];
+
     public array $categories = [];
+
     public array $nutriments = []; // structure: ['raw'=>[], 'per_100g'=>[], 'per_serving'=>[]]
+
     public $per_100g_energy_kj = null;
+
     public $per_100g_energy_kcal = null;
+
     public $per_100g_fat = null;
+
     public $per_100g_saturates = null;
+
     public $per_100g_sugars = null;
+
     public $per_100g_salt = null;
+
     public $per_serving_energy_kj = null;
+
     public $per_serving_energy_kcal = null;
+
     public $per_serving_fat = null;
+
     public $per_serving_saturates = null;
+
     public $per_serving_sugars = null;
+
     public $per_serving_salt = null;
 
     #[Validate('required|numeric|min:0')]
@@ -40,7 +56,9 @@ class Form extends Component
     public ?string $quantity_unit = null;
 
     public $serving_quantity = null;
+
     public ?string $serving_quantity_unit = null;
+
     public $recommended_servings = null;
 
     public ?string $image_url = null;
@@ -90,7 +108,7 @@ class Form extends Component
     {
         $barcode = trim((string) $barcode);
 
-        if ($barcode === '' || !auth()->check()) {
+        if ($barcode === '' || ! auth()->check()) {
             return null;
         }
 
@@ -105,7 +123,7 @@ class Form extends Component
     {
         $ingredient = $this->existingIngredientForBarcode($barcode);
 
-        if (!$ingredient) {
+        if (! $ingredient) {
             return false;
         }
 
@@ -121,6 +139,7 @@ class Form extends Component
 
         if ($barcode === '') {
             $this->addError('barcode', 'Enter a barcode before fetching from OpenFoodFacts.');
+
             return;
         }
 
@@ -146,17 +165,19 @@ class Form extends Component
                     'serving_size',
                     'image_front_small_url',
                     'image_front_url',
-                ])
+                ]),
             ]);
 
-        if (!$resp->ok()) {
+        if (! $resp->ok()) {
             $this->dispatch('notify', type: 'error', message: 'OFF lookup failed.');
+
             return;
         }
 
         $product = $resp->json('product');
-        if (!$product) {
+        if (! $product) {
             $this->dispatch('notify', type: 'error', message: 'No product found for that barcode.');
+
             return;
         }
 
@@ -178,41 +199,41 @@ class Form extends Component
         $this->nutriments = array_replace_recursive($this->nutriments, [
             'raw' => $nutr,
             'per_100g' => [
-                'carbohydrates'   => $nutr['carbohydrates_100g'] ?? null,
-                'fat'             => $nutr['fat_100g'] ?? null,
-                'energy_kcal'     => $this->roundNutritionInteger($nutr['energy-kcal_100g'] ?? ($nutr['energy-kcal_100g'] ?? null)),
-                'energy_kj'       => $this->roundNutritionInteger($nutr['energy-kj_100g'] ?? ($nutr['energy-kj_100g'] ?? null)),
-                'fiber'           => $nutr['fiber_100g'] ?? null,
-                'proteins'        => $nutr['proteins_100g'] ?? null,
-                'salt'            => $nutr['salt_100g'] ?? null,
-                'saturated_fat'   => $nutr['saturated-fat_100g'] ?? ($nutr['saturated_fat_100g'] ?? null),
-                'sodium'          => $nutr['sodium_100g'] ?? null,
-                'sugars'          => $nutr['sugars_100g'] ?? null,
+                'carbohydrates' => $nutr['carbohydrates_100g'] ?? null,
+                'fat' => $nutr['fat_100g'] ?? null,
+                'energy_kcal' => $this->roundNutritionInteger($nutr['energy-kcal_100g'] ?? ($nutr['energy-kcal_100g'] ?? null)),
+                'energy_kj' => $this->roundNutritionInteger($nutr['energy-kj_100g'] ?? ($nutr['energy-kj_100g'] ?? null)),
+                'fiber' => $nutr['fiber_100g'] ?? null,
+                'proteins' => $nutr['proteins_100g'] ?? null,
+                'salt' => $nutr['salt_100g'] ?? null,
+                'saturated_fat' => $nutr['saturated-fat_100g'] ?? ($nutr['saturated_fat_100g'] ?? null),
+                'sodium' => $nutr['sodium_100g'] ?? null,
+                'sugars' => $nutr['sugars_100g'] ?? null,
             ],
             'per_serving' => [
-                'carbohydrates'   => $nutr['carbohydrates_serving'] ?? null,
-                'fat'             => $nutr['fat_serving'] ?? null,
-                'energy_kcal'     => $this->roundNutritionInteger($nutr['energy-kcal_serving'] ?? ($nutr['energy_kcal_serving'] ?? null)),
-                'energy_kj'       => $this->roundNutritionInteger($nutr['energy-kj_serving'] ?? ($nutr['energy_kj_serving'] ?? null)),
-                'fiber'           => $nutr['fiber_serving'] ?? null,
-                'proteins'        => $nutr['proteins_serving'] ?? null,
-                'salt'            => $nutr['salt_serving'] ?? null,
-                'saturated_fat'   => $nutr['saturated-fat_serving'] ?? ($nutr['saturated_fat_serving'] ?? null),
-                'sodium'          => $nutr['sodium_serving'] ?? null,
-                'sugars'          => $nutr['sugars_serving'] ?? null,
+                'carbohydrates' => $nutr['carbohydrates_serving'] ?? null,
+                'fat' => $nutr['fat_serving'] ?? null,
+                'energy_kcal' => $this->roundNutritionInteger($nutr['energy-kcal_serving'] ?? ($nutr['energy_kcal_serving'] ?? null)),
+                'energy_kj' => $this->roundNutritionInteger($nutr['energy-kj_serving'] ?? ($nutr['energy_kj_serving'] ?? null)),
+                'fiber' => $nutr['fiber_serving'] ?? null,
+                'proteins' => $nutr['proteins_serving'] ?? null,
+                'salt' => $nutr['salt_serving'] ?? null,
+                'saturated_fat' => $nutr['saturated-fat_serving'] ?? ($nutr['saturated_fat_serving'] ?? null),
+                'sodium' => $nutr['sodium_serving'] ?? null,
+                'sugars' => $nutr['sugars_serving'] ?? null,
             ],
         ]);
 
         $this->hydrateNutritionInputs();
 
         // Guess quantity + unit from serving info if helpful
-        if (!$this->serving_quantity && isset($product['serving_quantity'])) {
+        if (! $this->serving_quantity && isset($product['serving_quantity'])) {
             $this->serving_quantity = is_numeric($product['serving_quantity'])
                 ? (float) $product['serving_quantity']
                 : null;
         }
 
-        if (!$this->serving_quantity_unit) {
+        if (! $this->serving_quantity_unit) {
             $this->serving_quantity_unit = $this->guessServingQuantityUnitFromOff($product['serving_size'] ?? null);
         }
 
@@ -265,7 +286,7 @@ class Form extends Component
 
     protected function roundNutritionInteger($value): ?int
     {
-        if (!is_numeric($value)) {
+        if (! is_numeric($value)) {
             return null;
         }
 
@@ -274,7 +295,7 @@ class Form extends Component
 
     protected function roundNutritionDecimal($value): ?float
     {
-        if (!is_numeric($value)) {
+        if (! is_numeric($value)) {
             return null;
         }
 
@@ -304,6 +325,7 @@ class Form extends Component
 
             if (blank($value)) {
                 unset($nutriments[$bucket][$key]);
+
                 continue;
             }
 
@@ -321,7 +343,7 @@ class Form extends Component
 
     protected function guessServingQuantityUnitFromOff(?string $servingSize): ?string
     {
-        if (!is_string($servingSize) || trim($servingSize) === '') {
+        if (! is_string($servingSize) || trim($servingSize) === '') {
             return null;
         }
 
@@ -330,7 +352,7 @@ class Form extends Component
 
     protected function parseProductQuantityFromOff(?string $quantityText): array
     {
-        if (!is_string($quantityText) || trim($quantityText) === '') {
+        if (! is_string($quantityText) || trim($quantityText) === '') {
             return ['quantity' => null, 'unit' => null, 'multiple' => false];
         }
 
@@ -382,7 +404,7 @@ class Form extends Component
     {
         $normalized = str_replace(',', '.', trim($value));
 
-        if (!is_numeric($normalized)) {
+        if (! is_numeric($normalized)) {
             return null;
         }
 
@@ -443,18 +465,18 @@ class Form extends Component
         $this->nutriments = $this->mergeNutritionInputsIntoNutriments();
 
         $payload = [
-            'user_id'                 => auth()->id(),
-            'name'                    => $this->name,
-            'barcode'                 => $this->barcode ?: null,
-            'keywords'                => $this->keywords ?: null,
-            'categories'              => $this->categories ?: null,
-            'nutriments'              => $this->nutriments ?: null,
-            'quantity'                => $this->quantity,
-            'quantity_unit'           => $this->quantity_unit,
-            'serving_quantity'        => $this->serving_quantity ?: null,
-            'serving_quantity_unit'   => $this->serving_quantity_unit ?: null,
-            'recommended_servings'    => $this->recommended_servings ?: null,
-            'image_url'               => $this->image_url ?: null,
+            'user_id' => auth()->id(),
+            'name' => $this->name,
+            'barcode' => $this->barcode ?: null,
+            'keywords' => $this->keywords ?: null,
+            'categories' => $this->categories ?: null,
+            'nutriments' => $this->nutriments ?: null,
+            'quantity' => $this->quantity,
+            'quantity_unit' => $this->quantity_unit,
+            'serving_quantity' => $this->serving_quantity ?: null,
+            'serving_quantity_unit' => $this->serving_quantity_unit ?: null,
+            'recommended_servings' => $this->recommended_servings ?: null,
+            'image_url' => $this->image_url ?: null,
         ];
 
         if ($this->ingredient?->exists) {
@@ -466,7 +488,7 @@ class Form extends Component
             $this->dispatch('notify', type: 'success', message: 'Ingredient created.');
             $this->dispatch('ingredientSaved')->to(Index::class);
 
-            if (!request()->routeIs('ingredients.index')) {
+            if (! request()->routeIs('ingredients.index')) {
                 $this->redirectRoute('ingredients.index', navigate: true);
             }
         }
