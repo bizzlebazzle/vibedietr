@@ -189,6 +189,7 @@ changes, it is deliberately split across multiple items.
 
 - **Outcome:** Research and approve the code-based second-factor mechanism,
   provider, enrollment, and recovery behavior required by DEC-009.
+- **Status:** Complete (2026-08-09).
 - **Dependencies:** DEC-009.
 - **Acceptance criteria:** Representative mechanisms and providers are compared
   for security, replay/rate-limit controls, recovery, secrets handling,

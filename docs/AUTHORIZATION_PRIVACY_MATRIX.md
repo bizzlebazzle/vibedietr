@@ -54,13 +54,14 @@ Matrix wording has these meanings:
 - **Confirmed outcome:** Initial production assignment is a one-time,
   deployment-configured CLI operation by one authenticated and traceable trusted
   operator. It targets an existing active account with verified email and
-  enrolled second factor, succeeds only with zero administrators and an unset
-  persistent completion marker, and fails closed on verification, concurrency,
-  audit, or configuration failure. Bootstrap never reopens.
+  a confirmed TOTP factor and acknowledged recovery codes, succeeds only with zero
+  administrators and an unset persistent completion marker, and fails closed on
+  verification, concurrency, audit, or configuration failure. Bootstrap never
+  reopens.
 - **Lifecycle outcome:** Multiple administrators are supported. Routine
-  promotion requires an existing administrator's recent re-authentication and
-  second-factor code, a verified/enrolled target, and the target's
-  second-factor-confirmed acceptance within 24 hours. Another administrator may
+  promotion requires an existing administrator's recent re-authentication and a
+  fresh TOTP, a verified, TOTP-enrolled target, and the target's
+  TOTP-confirmed acceptance within 24 hours. Another administrator may
   revoke with the same acting-admin controls only when at least one other active
   administrator will remain. Self-revocation and sole-administrator deletion or
   revocation are denied. Separate configured CLI break-glass recovery may
@@ -72,11 +73,43 @@ Matrix wording has these meanings:
   development keeps the core CLI, repeat-prevention, last-admin, and application
   audit safeguards but may use explicit test states and omit external evidence.
 - **Remaining boundaries:** Audit access and retention follow the approved
-  DEC-013 schedule. DEC-015 selects the second-factor mechanism and recovery
-  implementation; DEC-016
-  selects reliable security-notification delivery. DEC-009 does not grant
-  administrators access to private user content beyond separately confirmed
-  resource permissions.
+  DEC-013 schedule. DEC-015 now defines locally verified TOTP enrollment,
+  verification, and recovery; DEC-016 still selects reliable
+  security-notification delivery. DEC-009 does not grant administrators access
+  to private user content beyond separately confirmed resource permissions.
+
+### DEC-015 — Administrator second-factor mechanism and recovery
+
+- **Current status:** Decided.
+- **Confirmed outcome:** Administrator accounts use locally verified RFC 6238
+  TOTP with no required external provider, recurring verification charge,
+  specific authenticator application, or smartphone. Any active,
+  email-verified user may enroll their own factor without gaining privilege.
+  Initial scope is one confirmed TOTP factor and ten mandatory, acknowledged,
+  single-use recovery codes; multiple factors and WebAuthn/passkeys are future
+  enhancements.
+- **Verification and recovery:** TOTP uses a unique encrypted seed, six digits,
+  a 30-second timestep, bounded clock skew, atomic replay prevention, and
+  account/factor/operation plus IP throttling. Recovery-code hashes are one-way
+  and plaintext is shown only at creation or regeneration. Lost-factor recovery
+  uses one recovery code, a different active administrator's password and fresh
+  TOTP, or a short-lived single-use CLI authorization backed by traceable host
+  access for total sole-administrator loss. Every path requires the affected
+  user to confirm a replacement factor and invalidates old factors, codes, and
+  sessions.
+- **Access, evidence, and environment:** Administrators cannot remove their
+  final factor while retaining administrator status. Passwords, reset emails,
+  profile edits, ordinary sessions, endpoints, direct database changes, support
+  contact, and environment flags never bypass TOTP. Enrollment and recovery
+  provide accessible manual and QR paths, screen-reader support, paste/autofill,
+  and accessible recovery-code handling. Events are correlated, audited,
+  security-notified, and secret-free. Production fails closed without secure
+  key, clock, replay, throttle, audit, session, and notification capabilities;
+  explicit deterministic test adapters cannot run in production.
+- **Remaining boundaries:** FND-13 implements the approved mechanism and
+  recovery behavior. DEC-016 selects notification delivery. Any future
+  multiple-factor, passkey, hardware-key, or provider-managed design requires a
+  separately reviewed change.
 
 ## 3. Current repository behavior and conflicts
 
@@ -223,7 +256,7 @@ anonymization, and narrow legal/security exceptions follow the approved
 | Import processing records and job metadata | Planned | Importing user for access; application for operation | Application job acting for importing user | Owner only for user-facing status; operational details restricted | Denied | Denied | Allowed: view own status/result and invoke allowed retry/cancel actions | Denied | Proposed: administrator/operations access only to minimized failure metadata, not raw private content | Created only for an authorized user's import | Owner sees minimized own status; authorized operations access not yet specified | User cannot rewrite provenance/job history; allowed retry creates/advances controlled state | Terminal operational metadata is deleted 30 days after completion | Denied | Denied | User-facing record removed with import/account; minimal terminal operational metadata is deleted after 30 days under DEC-013 | Correlation, attempts, failures, and cleanup must be auditable without leaking inputs | DEC-005, DEC-006, DEC-007, DEC-013 | FND-09, REC-15 through REC-17, DEP-04, DEP-05 | Operational access and retention follow DEC-013 purpose separation and minimisation. |
 | Account data exports and generated export files | Planned | Requesting account user | Authorized export job acting for user | Owner only | Denied | Denied, including users who can view shares | Allowed: request, inspect status, and download own unexpired export | Denied | Proposed: no export-content access; minimized operations access only if separately authorized | Authenticated owner only | Authenticated owner only through expiring download | Export content is immutable; owner may request a new export | Generated files are deleted seven days after becoming ready | Denied | Denied | Requests/files removed on purge or earlier cleanup; export must not preserve data that should be erased | Request, generation, download, expiry, and deletion are auditable | DEC-008, DEC-012, DEC-013 | DEP-07, FND-09, DEP-08 | Export includes owned data and excludes another user's private data merely viewable through shares/bookmarks/remixes. |
 | Audit records | Current FND-05 store and policy foundation; purpose-specific views remain planned | Application; no user ownership | Trusted application code records an allowlisted actor category | Internal by purpose; no production browser | Denied | Denied; a filtered activity projection and controlled rights response remain planned | No direct audit-store access; filtered activity remains planned | Denied | Current: administrators may read an individual moderation/catalogue-purpose event; administrator status grants no security or privileged-lifecycle access. Later duty-scoped roles remain planned | Current append-only allowlisted recorder only; protected legal evidence uses a separate future store | Current individual-event policy only; monitored purpose-specific views/exports remain planned | Denied; corrections are linked events | Ordinary APIs denied; approved retention/anonymization jobs and scoped holds remain planned | Denied | Denied | Final purge must destroy ordinary actor/subject mappings; minimized anonymous events may complete their approved clock, while protected evidence follows its separate statutory/hold schedule | Required and data-minimized for security, catalogue/moderation, admin decisions, versions/lineage, snapshots, anonymization, deletion verification, and user-visible activity | DEC-013 | FND-05, DEP-08, DEP-09 | The store now enforces allowlisted classifications/payloads, erasable identity mappings, UTC ULIDs, application append-only behavior, and HMAC integrity checking. Retention execution, filtered activity, monitored exports and protected evidence remain deferred. |
-| Administrator status, pending promotions, bootstrap and recovery state | Planned | Application security state; the account remains owned by its user | Initial/recovery operator or active administrator initiating a pending promotion | Administrator/security restricted; a target may view their own pending promotion | Denied | Denied except the target's own pending promotion | Target may accept or decline an authorized pending promotion with their own authentication and second factor; cannot originate promotion, self-revoke, or bypass safeguards | Denied | Active administrator may initiate/cancel promotion or revoke another administrator only with recent re-authentication and second factor; cannot revoke self or final administrator | Initial bootstrap and break-glass recovery are configured CLI-only operator actions; routine promotion is created only by an active administrator and remains pending for target acceptance | Active administrators may view lifecycle state; target may view only their own pending request | Only controlled bootstrap, acceptance, decline, cancellation, expiry, revocation, and recovery transitions | Direct deletion denied; revocation follows the last-admin, acting-admin, audit, notification, and session-invalidation rules | Denied | Denied; administrator status is not transferable by ordinary account action | Sole administrator cannot request deletion. After a replacement is active, account deletion follows the account row; the bootstrap-completed marker remains set and audit retention follows DEC-013 | Every attempt and transition is secret-free, correlated, audited, and security-notified as required by DEC-009 | DEC-009, DEC-013, DEC-015, DEC-016 | FND-04, FND-05, FND-11 through FND-14, DEP-02, DEP-08 | Multiple administrators are supported. Production activation requires verified email and enrolled second factor. Pending routine promotion expires after 24 hours; initial and break-glass assignment do not require target acceptance. |
+| Administrator status, pending promotions, bootstrap and recovery state | Planned | Application security state; the account remains owned by its user | Initial/recovery operator or active administrator initiating a pending promotion | Administrator/security restricted; a target may view their own pending promotion | Denied | Denied except the target's own pending promotion | Target may accept or decline an authorized pending promotion with their own authentication and second factor; cannot originate promotion, self-revoke, or bypass safeguards | Denied | Active administrator may initiate/cancel promotion or revoke another administrator only with recent re-authentication and second factor; cannot revoke self or final administrator | Initial bootstrap and break-glass recovery are configured CLI-only operator actions; routine promotion is created only by an active administrator and remains pending for target acceptance | Active administrators may view lifecycle state; target may view only their own pending request | Only controlled bootstrap, acceptance, decline, cancellation, expiry, revocation, and recovery transitions | Direct deletion denied; revocation follows the last-admin, acting-admin, audit, notification, and session-invalidation rules | Denied | Denied; administrator status is not transferable by ordinary account action | Sole administrator cannot request deletion. After a replacement is active, account deletion follows the account row; the bootstrap-completed marker remains set and audit retention follows DEC-013 | Every attempt and transition is secret-free, correlated, audited, and security-notified as required by DEC-009 | DEC-009, DEC-013, DEC-015, DEC-016 | FND-04, FND-05, FND-11 through FND-14, DEP-02, DEP-08 | Multiple administrators are supported. Production activation requires verified email, a confirmed RFC 6238 TOTP factor, and acknowledged recovery codes. Pending routine promotion expires after 24 hours; initial and break-glass assignment do not require target acceptance. |
 | Administrator-only moderation and management records | Planned | Application | Authorized administrator or system | Administrator only | Denied | Denied | Not applicable as ordinary user ownership | Denied | Allowed only for expressly authorized moderation/managed-vocabulary actions; decisions are append-only/audited | Administrator/system only after FND-04 authorization and FND-14 activation; administrator assignment follows DEC-009 | Administrator only | Allowed only for mutable queue/management fields; recorded decisions and audit history not edited | Retention/deprecation follows record type; final audit retention follows AUDIT_RETENTION_SCHEDULE.md | Denied, except approved result becomes visible through its catalogue/tag resource | Denied | Administrator deletion removes actor attribution as permitted; record retention follows DEC-013 | Every decision, actor, subject, purpose, and timestamp is auditable | DEC-009, DEC-010, DEC-013 | FND-04, FND-05, FND-14, NUT-09 through NUT-11, REC-13 | DEC-009 decides administrator assignment and lifecycle; DEC-010 governs service levels/escalation, not basic authorization. |
 | Deleted or anonymized-owner public content | Planned lifecycle state, not a new creatable resource | No active public owner after anonymization | Former creator retained only through non-identifying attribution where confirmed | Public recipe remains public; retained public plan becomes unlisted | Public recipe allowed. Retained plan allowed only through its existing URL while another-user bookmarks remain | Same read access; authenticated viewers may independently copy a retained plan but cannot add a new bookmark | Not applicable after deletion request unless secure recovery succeeds during an unwaived period of up to 30 days | Public read-only only; existing plan bookmark owners may remove bookmarks | Proposed moderation where defined. Confirmed power to suppress or permanently remove a retained plan; no restore, reattribution, transfer, impersonation, or recovery extension | Not applicable | Public recipe: allowed. Approved catalogue contribution: follows catalogue. Retained plan: existing URL only while bookmarked and public-safe | Ordinary edit denied; correction/moderation uses the source workflow | Public plan is deleted after its final bookmark or a failed safety check; other retention follows the source resource | Cannot restore former ownership by sharing; ordinary viewers cannot reshare private data | Denied; no transfer to another account | Public recipes remain anonymized; approved catalogue records retain no identifying submitter. A bookmarked public plan is immediately anonymized as non-linked `Former VibeDietr user`, unlisted, closed to new bookmarks, and retained only while an existing bookmark remains. Zero-bookmark and unsafe plans become unavailable immediately. Recovery can reattribute and restore them only during that unwaived period; after purge, retained plans cannot be reclaimed | Anonymization, bookmark lifecycle, safety validation, retained attribution, recovery, and removal are auditable subject to DEC-013 | DEC-012, DEC-013, DEC-014 | DEP-08, FND-05, REC-14, NUT-01, PLAN-08, PLAN-09 | Retained content must never route to former private account data. Broader inactive-data retention is future policy. |
 
@@ -324,25 +357,29 @@ anonymization, and narrow legal/security exceptions follow the approved
 16. **Initial administrator bootstrap:** Production bootstrap is CLI-only and
     requires one authenticated/traceable trusted operator, explicit environment
     enablement and exact target configuration, an active verified and
-    second-factor-enrolled target, zero administrators, an unset persistent
+    TOTP-enrolled target, zero administrators, an unset persistent
     completion marker, operator confirmation, and successful audit evidence.
     It is atomic, never automatic or self-service, and never reopens.
 17. **Administrator promotion and revocation:** An active administrator may
     create a pending promotion only after recent re-authentication and a valid
-    second-factor code. A verified, enrolled target gains no privilege until
-    accepting with their own factor within 24 hours. Authorized
+    fresh TOTP. A verified, TOTP-enrolled target gains no privilege until
+    accepting with their own TOTP within 24 hours. Authorized
     cancellation/decline and expiry leave the target ordinary. Another
     administrator may revoke with the acting-admin controls only if at least one
     other active administrator will remain; self-revocation and sole-
     administrator deletion/revocation are denied, and
     revocation invalidates active sessions and privileged credentials.
-18. **Administrator recovery:** Ordinary account/factor recovery is attempted
-    first. If no administrator is usable, a separately configured, fully
-    audited CLI break-glass action may activate a verified and enrolled
-    replacement and revoke a compromised administrator without clearing the
-    bootstrap marker or leaving zero active administrators. Privilege events
-    require reliable production security notifications; provider choices remain
-    DEC-015 and DEC-016.
+18. **Administrator recovery:** Ordinary recovery first uses one mandatory
+    single-use recovery code and requires replacement-factor confirmation. A
+    different active administrator may initiate recovery only with immediate
+    password re-confirmation and their own fresh TOTP; the affected user must
+    complete enrollment. Total sole-administrator factor loss may use the
+    short-lived, single-use, target-bound CLI-assisted host-access ceremony
+    defined by DEC-015. It never disables TOTP or grants access directly and
+    does not clear bootstrap state. Recovery invalidates old factors, codes,
+    sessions, and remembered logins. Privilege events require reliable
+    production security notifications; only their delivery selection remains
+    unresolved under DEC-016.
 
 ## 7. Unresolved decisions and product-owner questions
 
@@ -355,9 +392,6 @@ The matrix does not select an answer for any of these items:
 - **DEC-010:** Define moderation escalation, appeal, stale-item handling, and
   service levels. Basic administrator accept/reject authority is already
   confirmed.
-- **DEC-015:** Select the administrator second-factor mechanism, provider,
-  enrollment, and recovery behavior. DEC-009 requires the control and prohibits
-  password-only fallback but does not select its implementation.
 - **DEC-016:** Select reliable production delivery for administrator security
   notifications. DEC-009 defines the events and recipients but does not select
   a channel or provider.
