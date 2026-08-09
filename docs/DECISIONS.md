@@ -45,7 +45,7 @@ Backlog relationships mean:
 | DEC-012 | Backup erasure timing | Research required | Technical investigation |
 | DEC-013 | Security and legal audit retention | Decided | Product owner |
 | DEC-014 | Public meal plans after owner deletion | Decided | Product owner |
-| DEC-015 | Administrator second-factor mechanism and recovery | Research required | Technical investigation |
+| DEC-015 | Administrator second-factor mechanism and recovery | Decided | Product owner |
 | DEC-016 | Administrator security-notification delivery | Research required | Technical investigation |
 | DEC-017 | Culinary measurement jurisdictions | Decided | Product owner |
 
@@ -785,11 +785,11 @@ Backlog relationships mean:
   lifecycle actions cannot proceed in production until the required second
   factor can be enrolled, verified, recovered safely, and tested without a
   password-only fallback.
-- **Status:** Research required.
-- **Owner:** Technical investigation.
-- **Alternatives:** An application-supported time-based code mechanism; codes
-  supplied through an external identity or authentication provider; another
-  reviewed code-based factor with separately protected recovery material.
+- **Status:** Decided.
+- **Owner:** Product owner.
+- **Alternatives:** Application-managed RFC 6238 TOTP; WebAuthn passkeys or
+  hardware security keys; SMS- or email-delivered codes; or TOTP and other
+  factors managed by an external authentication provider.
 - **Existing constraints from DEC-009:** Every administrator must enroll an
   approved second factor before activation. Routine promotion and revocation
   require the acting administrator's valid code; routine acceptance and decline
@@ -798,14 +798,197 @@ Backlog relationships mean:
   Password-only fallback is prohibited, codes and recovery material are never
   logged, and production fails closed until the mechanism exists. Local/test
   states must be explicit and unavailable in production.
-- **Backlog relationships:** `Blocked`: FND-13, FND-14. `Constrained`: DEP-02,
-  DEP-08. `Related`: FND-11.
+- **Backlog relationships:** This resolution removes DEC-015 as a blocker for
+  FND-13 and FND-14 and constrains DEP-02 and DEP-08. FND-13 and FND-14 remain
+  blocked by DEC-016. `Related`: FND-11.
 - **Resolution condition:** Evaluate viable mechanisms and providers for code
   security, enrollment, account and factor recovery, replay protection, rate
   limits, secrets handling, deployment configuration, self-hosted operation,
   testability, accessibility, cost, and provider failure; then record the
   approved mechanism, recovery rules, and production/local behavior.
-- **Final decision and rationale:** Unresolved.
+- **Final decision and rationale:** Administrator accounts use
+  application-managed, locally verified Time-Based One-Time Passwords that
+  conform to RFC 6238. No external authentication or delivery provider,
+  provider account, network verification call, recurring verification charge,
+  specific authenticator application, or smartphone is required. Any
+  standards-compatible authenticator may be used. WebAuthn passkeys, hardware
+  security keys, and multiple independently enrolled authenticators are
+  deferred optional enhancements because their present implementation,
+  recovery, browser-testing, and device-management complexity is
+  disproportionate to the project's size.
+
+  Any active, email-verified user may enroll TOTP on their own account before
+  becoming an administrator. Enrollment grants no privilege; it only makes the
+  account eligible for a later authorized bootstrap or promotion. Enrollment
+  requires an authenticated session and immediate password re-confirmation,
+  not merely an existing password-confirmation timestamp. The application
+  generates a pending cryptographically random seed, presents both a standard
+  `otpauth://` QR code and a selectable manual Base32 key, and requires a valid
+  code generated from that seed. The seed remains pending until the user also
+  receives and explicitly acknowledges the mandatory recovery-code set.
+  Cancellation or expiry destroys the pending seed and leaves any existing
+  factor unchanged. The seed, QR payload, and manual key are never displayed
+  again after activation.
+
+  The interoperable profile is a unique seed containing at least 160 bits of
+  cryptographically random entropy, HMAC-SHA-1, six decimal digits, a 30-second
+  timestep, and `T0 = 0`. Verification may accept the current server timestep
+  and one adjacent timestep in either direction. A trusted synchronized server
+  clock is required. Successful verification atomically consumes the matched
+  timestep for that factor in shared durable state. The same factor/timestep
+  cannot be reused for login, enrollment, recovery, or a privileged action. A
+  fresh TOTP is required for every DEC-009 privileged lifecycle action; a code
+  used for login cannot be replayed for promotion, acceptance, cancellation,
+  decline, revocation, recovery approval, or factor management.
+
+  TOTP seeds must be recoverable by the verifier and are therefore stored with
+  authenticated encryption. Plaintext seeds, QR payloads, or manual keys are
+  never persisted. Encryption keys are held separately from database exports
+  and backups, are backed up under operational control, and support controlled
+  rotation followed by re-encryption and removal of obsolete decryption keys.
+  Database exports and backups remain sensitive. Losing every applicable
+  encryption key makes enrolled factors unusable; compromise of both the
+  ciphertext and a decryption key permits factor cloning and requires factor
+  replacement. Seed rotation requires confirmed re-enrollment. Account purge
+  removes its factor secrets and recovery-code hashes.
+
+  Enrollment creates ten recovery codes, each containing at least 128 bits of
+  cryptographically random entropy and formatted in readable groups. Plaintext
+  is displayed only at creation or regeneration and must be accessible for
+  copying, downloading, and printing. Each code is stored only as an
+  appropriate one-way hash, is individually single-use, and is atomically
+  consumed on successful use; it is never silently replaced. Regeneration
+  requires immediate password re-confirmation and a fresh TOTP or completion of
+  an approved factor-recovery ceremony, invalidates the whole previous set,
+  and displays the replacement set once. Administrators are instructed to keep
+  the codes separately from their authenticator device. Code values are never
+  recorded in audit evidence, notifications, logs, errors, or telemetry.
+
+  A password plus one unused recovery code may authenticate a lost-device
+  recovery and permit replacement-factor enrollment, but a recovery code does
+  not authorize DEC-009 privileged lifecycle actions that require the acting
+  administrator's fresh TOTP. Replacement requires confirmation of a new TOTP
+  and acknowledgement of new recovery codes. Completion atomically invalidates
+  the old seed, every previous recovery code, other sessions, and remembered
+  logins before activating the replacement factor and code set.
+
+  In a multiple-administrator deployment, another active administrator may
+  initiate recovery for a different locked-out administrator only after
+  immediate password re-confirmation and a fresh TOTP. The short-lived pending
+  authorization is target-bound, grants no session or privilege, and cannot be
+  completed by the assisting administrator. The affected user must authenticate
+  to their own account and personally confirm the replacement factor and new
+  recovery codes. Administrator access remains restricted while recovery is
+  pending. Initiation, expiry, cancellation, refusal, and completion are
+  correlated, audited, and security-notified.
+
+  If a sole administrator has lost every TOTP device and recovery code, an
+  individually authenticated and traceable deployment-host operator may use a
+  documented CLI-assisted recovery ceremony. The command requires exact
+  identification of an active, email-verified administrator and generates a
+  target- and operation-bound authorization with at least 128 bits of entropy.
+  Only its one-way hash is stored; plaintext is displayed once in the terminal,
+  expires after ten minutes, and permits one successful use. It must be
+  combined with the affected user's authenticated web recovery session and can
+  authorize only immediate enrollment and confirmation of a replacement TOTP
+  and new recovery codes. Completion atomically invalidates the authorization,
+  old factor, old recovery codes, sessions, and remembered logins. The CLI and
+  web events have correlated audit evidence and security notifications.
+  Failure, expiry, cancellation, or interruption leaves the factor requirement
+  in force. The ceremony cannot clear or reuse DEC-009 bootstrap state, grant
+  administrator access directly, write a replacement factor from the CLI, or
+  act as an environment bypass.
+
+  An administrator cannot disable or remove their final TOTP factor while
+  retaining administrator status. They may replace it after immediate password
+  re-confirmation and a fresh TOTP, replace it through an approved recovery
+  ceremony, or remove it only after administrator status has first been
+  validly revoked under DEC-009. Password re-entry, a password-reset email,
+  profile editing, an authenticated session, an unauthenticated endpoint,
+  direct database modification, support contact, or a documented or
+  undocumented environment flag can never remove, reset, or bypass the factor.
+
+  TOTP, enrollment-confirmation, and recovery-code challenges are limited per
+  account/factor/operation and separately per source IP. No more than five
+  failed attempts are allowed in a rolling ten-minute window; repeated failures
+  receive increasing delay, and ten consecutive failures cause a 30-minute
+  account-level verification lock. A new TOTP timestep does not reset failure
+  state. Successful strong authentication or expiry of the defined lock may
+  reset consecutive-failure state, but never replay state. Responses do not
+  disclose account or factor state. Production fails closed if seed decryption,
+  shared replay state, rate-limit state, or required audit persistence is
+  unavailable.
+
+  Audit evidence covers enrollment, confirmation, cancellation, expiry,
+  verification outcomes, replay, throttling, locks, recovery-code generation,
+  regeneration and use, factor replacement, prohibited removal, assisted and
+  CLI recovery, and resulting session invalidation. It records only necessary
+  event type, outcome, time, actor and subject references, opaque factor
+  identifier, operation, environment, and correlation data. TOTP seeds, QR
+  payloads, submitted codes, recovery codes, CLI authorizations, passwords,
+  and password-reset tokens are excluded. Enrollment completion, factor
+  replacement or removal, recovery-code regeneration or use, lockout, and all
+  assisted recovery events require the security notifications selected by
+  DEC-016.
+
+  Enrollment and recovery must work with screen readers and compatible phone,
+  desktop, hardware, or password-manager authenticators. Manual entry is
+  available alongside QR scanning; code fields are labelled, accept paste,
+  password-manager entry and platform autofill, and do not require split-box
+  interaction. Clear messages distinguish incorrect, expired, replayed, and
+  temporarily limited codes without exposing secrets. Recovery codes remain
+  selectable and available through accessible print and download paths. No
+  path depends on phone reception, SMS, colour, animation, scanning, or fine
+  motor interaction alone.
+
+  The eventual implementation is tested deterministically with generated
+  test-only seeds and a controllable clock. Coverage includes eligible and
+  ineligible enrollment, password re-confirmation, confirmation, cancellation,
+  expiry, correct/incorrect/expired/skewed codes, atomic concurrent replay,
+  every throttle and lock boundary, recovery-code use/reuse/regeneration,
+  lost-device replacement, assisted and sole-administrator recovery, disabled
+  or removed administrators, session invalidation, DEC-009 bootstrap and
+  promotion interaction, encryption-key rotation and loss, infrastructure
+  failure, secret redaction, and production rejection of local/test adapters.
+  No test makes a real provider call or uses a production-derived secret.
+
+  Production requires HTTPS, secure session cookies, a valid encryption key, a
+  synchronized clock, shared durable replay and throttle state, required audit
+  persistence, and the notification capability selected by DEC-016.
+  Administrator activation and privileged workflows fail closed without them.
+  Local/test environments may use explicit deterministic clocks, generated
+  fixture secrets, and fake audit/notification adapters, but those adapters
+  cannot be selected in production. No environment has a password-only or
+  factor-disabled administrator mode.
+
+  SMS is rejected because of SIM-swap, interception, delivery, phone-number
+  privacy, international, provider, and recurring-cost risks. Email is rejected
+  because the same mailbox participates in password recovery and is not an
+  adequately independent factor. Provider-managed TOTP is rejected as the
+  required mechanism because it adds cost, availability, privacy, and vendor
+  dependency without a current operational need. TOTP is not phishing
+  resistant and a live attacker can relay a code; compromise of the application
+  host or encryption key also remains material. Short expiry, TLS, replay
+  prevention, throttling, fresh privileged-action verification, constrained
+  recovery, audit evidence, and notification reduce but do not eliminate those
+  residual risks. WebAuthn remains the preferred future phishing-resistant
+  enhancement.
+
+  Research used current primary sources, all accessed 9 August 2026: [Laravel
+  Fortify](https://laravel.com/docs/12.x/fortify), [Laravel
+  authentication](https://laravel.com/docs/12.x/authentication), [Laravel
+  encryption](https://laravel.com/docs/12.x/encryption), [Laravel rate
+  limiting](https://laravel.com/docs/12.x/rate-limiting), [RFC
+  6238](https://www.rfc-editor.org/rfc/rfc6238.html), [NIST SP
+  800-63B-4](https://pages.nist.gov/800-63-4/sp800-63b.html), [NCSC recommended
+  MFA types](https://www.ncsc.gov.uk/collection/mfa-for-your-corporate-online-services/recommended-types-of-mfa),
+  [W3C WebAuthn](https://www.w3.org/TR/webauthn/), [WCAG accessible
+  authentication](https://www.w3.org/WAI/WCAG22/Understanding/accessible-authentication-minimum),
+  [Twilio Verify pricing](https://www.twilio.com/en-us/verify/pricing), [Twilio
+  test credentials](https://www.twilio.com/docs/iam/test-credentials), [WorkOS
+  pricing](https://workos.com/pricing), [WorkOS
+  MFA](https://workos.com/docs/user-management/mfa), and [Selenium virtual
+  authenticators](https://www.selenium.dev/documentation/webdriver/interactions/virtual_authenticator/).
 
 ## DEC-016 — Administrator security-notification delivery
 

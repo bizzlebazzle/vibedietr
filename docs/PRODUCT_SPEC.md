@@ -60,6 +60,19 @@ manual foods, user corrections, and refreshed OpenFoodFacts data, then accept
 or reject the proposed change. Ordinary users cannot directly edit or delete
 barcode-imported shared catalogue records.
 
+Administrator status requires verified email, a confirmed, locally
+verified RFC 6238 TOTP factor, and acknowledged mandatory recovery codes
+before activation. Any active, email-verified user may enroll their own
+factor without gaining privilege. Initial scope is one TOTP factor per
+account with no required provider, recurring verification charge, specific
+authenticator application, or smartphone. DEC-009 privileged lifecycle
+actions require a fresh TOTP, and an administrator cannot remove their final
+factor while retaining administrator status. Recovery may use a single-use
+recovery code, another active administrator using their own password and
+fresh TOTP, or a traceable CLI-assisted host-access ceremony for total sole-
+administrator factor loss; none permits password-only fallback. Multiple
+factors and WebAuthn/passkeys are future enhancements.
+
 ## Recipes
 
 ### Ownership and visibility
