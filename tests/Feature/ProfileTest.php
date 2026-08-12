@@ -65,6 +65,25 @@ class ProfileTest extends TestCase
         $this->assertNotNull($user->refresh()->email_verified_at);
     }
 
+    public function test_administrator_email_cannot_bypass_the_verified_security_destination_flow(): void
+    {
+        $administrator = User::factory()->administrator()->create([
+            'email' => 'old@example.test',
+            'email_verified_at' => now(),
+        ]);
+        $this->actingAs($administrator);
+
+        Volt::test('profile.update-profile-information-form')
+            ->set('name', $administrator->name)
+            ->set('email', 'new@example.test')
+            ->call('updateProfileInformation')
+            ->assertHasErrors('email');
+
+        $administrator->refresh();
+        $this->assertSame('old@example.test', $administrator->email);
+        $this->assertNotNull($administrator->email_verified_at);
+    }
+
     public function test_profile_input_cannot_assign_or_remove_administrator_status(): void
     {
         $ordinaryUser = User::factory()->create();

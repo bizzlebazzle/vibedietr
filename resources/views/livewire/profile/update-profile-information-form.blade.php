@@ -4,6 +4,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Livewire\Volt\Component;
 
 new class extends Component
@@ -31,6 +32,12 @@ new class extends Component
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class)->ignore($user->id)],
         ]);
+
+        if ($user->isAdministrator() && $validated['email'] !== $user->email) {
+            throw ValidationException::withMessages([
+                'email' => 'Administrator notification destinations require the dedicated verified security flow.',
+            ]);
+        }
 
         $user->fill($validated);
 

@@ -78,6 +78,40 @@ denies guests and ordinary users, permits only individual moderation/catalogue
 records to administrators, and does not treat administrator status as security
 or privileged-lifecycle audit authorization.
 
+### Administrator second-factor state
+
+A user may own one pending enrollment and one confirmed second factor. Pending
+and confirmed records have separate ULID identities. Both keep only Laravel-
+encrypted TOTP seeds and hide them from serialization. A pending enrollment
+records its purpose, expiry, proved timestep and recovery-generation time. A
+confirmed factor records confirmation, recovery acknowledgement, lock state and
+the last atomically consumed timestep.
+
+Recovery codes are child rows attached to either the pending enrollment or
+confirmed factor. Each stores only a one-way hash and optional use timestamp.
+Verification failures store account, optional factor, bounded operation, keyed
+source fingerprint and occurrence time; no raw source IP is retained. Account
+state separately records consecutive failures, next permitted attempt and lock
+expiry.
+
+### Administrator security-notification state
+
+A security notification intent is one recipient-specific, correlated logical
+email. It stores event and recipient categories, opaque destination version,
+stable idempotency key, safe environment/instance references, delivery state,
+and optional opaque provider acceptance or failure evidence. It stores neither
+the destination nor message body. Provider acceptance is not delivery or read
+
+A recovery authorization is target-bound and records its assisted-administrator
+or deployment-CLI method, initiator or opaque operator reference, correlation,
+expiry, and terminal consumed/cancelled timestamps. A CLI authorization stores
+only a one-way hash. A pending recovery enrollment may reference one
+authorization so its single successful use is consumed atomically with factor
+replacement; secrets are hidden from model serialization.
+
+evidence. Singleton health state records only readiness booleans, safe failure
+code, and provider, capacity, worker and monitor timestamps.
+
 ### Ingredient
 
 `App\Models\Ingredient` is a user-owned food record. Its current fields make it

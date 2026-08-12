@@ -68,6 +68,8 @@ final class AuditPayloadValidator
             AuditAction::RecipeNutritionOverrideApplied => $this->validateNutritionOverride($payload),
             AuditAction::PlanSnapshotRecorded => $this->validatePlanSnapshot($payload),
             AuditAction::AccountAnonymizationCompleted => $this->validateAnonymization($payload),
+            AuditAction::SecuritySecondFactorEvent,
+            AuditAction::SecurityNotificationEvent => $this->validateSecurityEvent($payload),
         };
 
         ksort($validated);
@@ -178,6 +180,23 @@ final class AuditPayloadValidator
             'catalogue_contributor',
             'public_content_owner',
         ]);
+
+        return $payload;
+    }
+
+    /** @param array<string, mixed> $payload */
+    private function validateSecurityEvent(array $payload): array
+    {
+        $this->assertShape(
+            $payload,
+            ['event', 'operation', 'outcome', 'reason_code', 'recipient_category', 'delivery_status'],
+            ['event', 'outcome'],
+        );
+        foreach ($payload as $field => $value) {
+            if (! is_string($value) || $value === '' || strlen($value) > self::MAX_STRING_LENGTH) {
+                throw new InvalidArgumentException("Invalid audit payload value for $field.");
+            }
+        }
 
         return $payload;
     }

@@ -28,6 +28,12 @@ from the OFF API can be treated as accurate.
 - Ask for clarification when product behaviour is genuinely ambiguous.
 - Never remove user data or create destructive migrations without approval.
 - Never commit credentials, tokens or secrets.
+- Route administrator-factor verification through the centralized FND-13
+  services. Never log, audit, serialize into queued jobs, or include in
+  exceptions any submitted TOTP, seed, provisioning payload, recovery code,
+  provider credential, session value, or notification body. Production
+  administrator workflows must pass the FND-13 readiness boundary and must not
+  use log, array, null, local-catcher, or unmonitored local delivery.
 - Preserve the original ingredient text entered by the user.
 - Keep the application recognisably conventional Laravel and Livewire.
 - Prefer clear, maintainable code over clever abstractions.

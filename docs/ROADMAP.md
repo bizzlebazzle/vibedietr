@@ -224,6 +224,7 @@ changes, it is deliberately split across multiple items.
 - **Outcome:** Provide the approved second-factor enrollment/verification and
   reliable security-notification capabilities needed before administrator
   lifecycle actions can be enabled.
+- **Status:** Complete (2026-08-12).
 - **Dependencies:** FND-04, FND-08, DEC-015, DEC-016.
 - **Acceptance criteria:** Administrator activation can require confirmed
   enrollment; privileged workflows can require recent re-authentication and a
