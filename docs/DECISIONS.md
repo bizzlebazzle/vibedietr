@@ -974,6 +974,17 @@ Backlog relationships mean:
   residual risks. WebAuthn remains the preferred future phishing-resistant
   enhancement.
 
+  **Owner-approved implementation clarification (12 August 2026):** Recent
+  primary authentication lasts five minutes. A separately verified fresh TOTP
+  proof lasts two minutes, is bound to one named operation, and is single-use.
+  Pending enrollment expires after 30 minutes. A password-plus-recovery-code
+  lost-device session and an assisted-administrator recovery authorization each
+  expire after 15 minutes. After consecutive verification failures the next
+  attempt is delayed by 1, 2, 4, 8, then 16 seconds; the separately approved
+  five-failure rolling throttle and ten-failure account lock remain unchanged.
+  These values supply the bounded implementation timings required by FND-13 and
+  do not create a password-only recovery or reusable privileged proof.
+
   Research used current primary sources, all accessed 9 August 2026: [Laravel
   Fortify](https://laravel.com/docs/12.x/fortify), [Laravel
   authentication](https://laravel.com/docs/12.x/authentication), [Laravel
@@ -1217,6 +1228,16 @@ Backlog relationships mean:
   asynchronous failure escalation, Slack, Teams, SMS or signed-webhook fallback,
   two-provider failover and in-application security history remain optional
   future work.
+
+  **Owner-approved implementation clarification (12 August 2026):** A signed
+  destination-verification challenge expires after 60 minutes. Production
+  provider acceptance and capacity-headroom evidence must be no older than 24
+  hours. Queue-worker and failed-job-monitor health evidence must be no older
+  than five minutes. Capacity headroom means enough capacity for every message
+  in the complete current logical event recipient set and must be confirmed
+  within the same 24-hour period. These are production-readiness boundaries,
+  not claims of provider delivery, inbox placement, human reading or a
+  contractual service level.
 
   Research used current primary sources, all accessed 12 August 2026: [Laravel
   mail](https://laravel.com/docs/12.x/mail), [Laravel

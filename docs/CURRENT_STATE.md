@@ -107,6 +107,29 @@ protected evidence storage, and production action instrumentation are not
 implemented. DEC-013 remains owner-led rather than professional legal review,
 and DEC-012 still leaves the backup lifecycle unresolved.
 
+## Implemented administrator security foundations
+
+FND-13 adds confirmed RFC 6238 TOTP enrollment for active email-verified
+accounts, without granting administrator privilege. Enrollment requires an
+immediate password proof, persists only an encrypted pending seed, presents QR
+and manual setup paths, verifies possession, generates ten one-time recovery
+codes, and activates only after their explicit acknowledgement.
+
+Active verification centrally enforces six digits, a 30-second period, current
+plus adjacent timesteps, durable atomic replay consumption, account/factor/
+operation and privacy-safe source throttles, increasing delay, and a 30-minute
+lock after ten consecutive failures. Recent primary authentication and a
+single-use, operation-bound fresh TOTP proof are separate session concepts.
+
+Mandatory administrator security events have typed queued-mail definitions,
+recipient-specific durable intents, correlation and idempotency identifiers,
+provider-acceptance evidence, bounded retry, safe permanent failure handling,
+and channel health state. Production readiness rejects local/fake delivery and
+requires the DEC-016 transport, destination, credential, queue, monitoring,
+capacity, clock and audit conditions. See
+[Administrator security foundations](ADMINISTRATOR_SECURITY_FOUNDATIONS.md).
+FND-14 lifecycle mutations remain unimplemented.
+
 ## Implemented ingredient catalogue
 
 Ingredients are the only food-related records currently represented.

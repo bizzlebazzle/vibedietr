@@ -10,6 +10,8 @@ enum AuditAction: string
     case RecipeNutritionOverrideApplied = 'recipe.nutrition_override_applied';
     case PlanSnapshotRecorded = 'plan.snapshot_recorded';
     case AccountAnonymizationCompleted = 'account.anonymization_completed';
+    case SecuritySecondFactorEvent = 'security.second_factor_event';
+    case SecurityNotificationEvent = 'security.notification_event';
 
     public function purpose(): AuditPurpose
     {
@@ -20,6 +22,8 @@ enum AuditAction: string
             self::RecipeNutritionOverrideApplied,
             self::PlanSnapshotRecorded => AuditPurpose::ProductHistory,
             self::AccountAnonymizationCompleted => AuditPurpose::AccountErasureEvidence,
+            self::SecuritySecondFactorEvent,
+            self::SecurityNotificationEvent => AuditPurpose::AccountSecurity,
         };
     }
 
@@ -32,6 +36,8 @@ enum AuditAction: string
             self::RecipeNutritionOverrideApplied,
             self::PlanSnapshotRecorded => AuditRetentionClass::PrivateContentUntilFinalPurge,
             self::AccountAnonymizationCompleted => AuditRetentionClass::PurgeReceiptTwelveMonths,
+            self::SecuritySecondFactorEvent,
+            self::SecurityNotificationEvent => AuditRetentionClass::SecurityEventSixMonths,
         };
     }
 
@@ -53,6 +59,12 @@ enum AuditAction: string
             ],
             self::PlanSnapshotRecorded,
             self::AccountAnonymizationCompleted => [AuditActorType::System],
+            self::SecuritySecondFactorEvent,
+            self::SecurityNotificationEvent => [
+                AuditActorType::AuthenticatedUser,
+                AuditActorType::Administrator,
+                AuditActorType::System,
+            ],
         };
     }
 
@@ -71,6 +83,8 @@ enum AuditAction: string
                 AuditSubjectType::NutritionOverride,
             ],
             self::PlanSnapshotRecorded => [AuditSubjectType::PlanSnapshot],
+            self::SecuritySecondFactorEvent,
+            self::SecurityNotificationEvent => [AuditSubjectType::UserAccount],
         };
     }
 }

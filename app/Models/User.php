@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -53,5 +54,20 @@ class User extends Authenticatable
     public function isAdministrator(): bool
     {
         return (bool) $this->is_administrator;
+    }
+
+    public function secondFactor(): HasOne
+    {
+        return $this->hasOne(SecondFactor::class);
+    }
+
+    public function secondFactorEnrollment(): HasOne
+    {
+        return $this->hasOne(SecondFactorEnrollment::class);
+    }
+
+    public function hasConfirmedSecondFactor(): bool
+    {
+        return $this->secondFactor()->whereNotNull('confirmed_at')->exists();
     }
 }
