@@ -206,6 +206,7 @@ changes, it is deliberately split across multiple items.
 
 - **Outcome:** Research and approve a reliable production notification channel
   for the privilege-lifecycle events required by DEC-009.
+- **Status:** Complete (2026-08-12).
 - **Dependencies:** DEC-009.
 - **Acceptance criteria:** Candidate channels/providers are compared for
   delivery evidence, retry/failure handling, privacy, destination verification,

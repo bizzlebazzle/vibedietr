@@ -73,6 +73,22 @@ fresh TOTP, or a traceable CLI-assisted host-access ceremony for total sole-
 administrator factor loss; none permits password-only fallback. Multiple
 factors and WebAuthn/passkeys are future enhancements.
 
+Administrator security notifications use queued email. Resend is the preferred
+zero-recurring-cost low-volume production provider, while self-hosted
+deployments may select another qualifying authenticated SMTP relay. Successful
+bootstrap, promotion and revocation transitions, break-glass and factor-recovery
+events, factor changes and lockout notify the affected account and active
+administrators according to DEC-016. A non-administrator's ordinary factor
+enrollment is disclosed only to that account. Administrator destination changes
+require a newly verified address and notification to both the old and new
+addresses. Privilege-increasing and recovery transitions fail closed unless
+their audit evidence and notification intents can be durably committed;
+risk-reducing revocation, lockout and session invalidation remain available
+during delivery failure. Provider acceptance is recorded but is not described
+as recipient-server delivery or human reading. Local/test mail transports are
+never production notification channels, and no administrator may disable these
+mandatory security notifications.
+
 ## Recipes
 
 ### Ownership and visibility

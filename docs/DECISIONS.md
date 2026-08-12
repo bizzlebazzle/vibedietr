@@ -46,7 +46,7 @@ Backlog relationships mean:
 | DEC-013 | Security and legal audit retention | Decided | Product owner |
 | DEC-014 | Public meal plans after owner deletion | Decided | Product owner |
 | DEC-015 | Administrator second-factor mechanism and recovery | Decided | Product owner |
-| DEC-016 | Administrator security-notification delivery | Research required | Technical investigation |
+| DEC-016 | Administrator security-notification delivery | Decided | Product owner |
 | DEC-017 | Culinary measurement jurisdictions | Decided | Product owner |
 
 ## DEC-001 — Food-matching confidence thresholds
@@ -998,26 +998,243 @@ Backlog relationships mean:
 - **Why it matters:** Privilege changes and break-glass recovery require prompt,
   independently observable notification, while the current mail configuration
   only logs messages and is not a production delivery service.
-- **Status:** Research required.
-- **Owner:** Technical investigation.
-- **Alternatives:** A production transactional-email provider; an external
-  security-notification service; a layered design combining in-application and
-  independently delivered operational notifications.
-- **Existing constraints from DEC-009:** Promotion initiation, acceptance,
-  decline, cancellation, expiry, revocation, and break-glass recovery notify the
-  target and active administrators. Production must have at least one reliable
-  configured channel before these workflows are enabled. Notification events
-  are correlated with audit evidence and must not contain credentials,
-  second-factor codes, recovery material, or other secrets. Local development
-  may use an explicit non-delivery test channel.
-- **Backlog relationships:** `Blocked`: FND-13, FND-14. `Constrained`: DEP-02,
-  DEP-08. `Related`: FND-12.
+- **Status:** Decided.
+- **Owner:** Product owner.
+- **Alternatives:** Transactional email through Resend, another qualifying SMTP
+  relay, Postmark, or Amazon SES; SMS; a secure chat or signed webhook;
+  in-application notification; or mandatory multi-channel delivery.
+- **Existing constraints from DEC-009:** DEC-009 and DEC-015 require promotion initiation,
+  acceptance, decline, cancellation, expiry, revocation, bootstrap and
+  break-glass recovery, and specified factor and recovery events require
+  secret-free, correlated, audited security notification. Production must have
+  a reliable configured channel before administrator lifecycle workflows are
+  enabled. Local and test adapters must be unavailable in production.
+- **Backlog relationships:** Resolution removes DEC-016 as the decision blocker
+  for FND-13 and FND-14 and constrains DEP-02, DEP-04, and DEP-08. `Related`:
+  FND-12.
 - **Resolution condition:** Evaluate viable channels and providers for delivery
   assurance, identity and destination verification, failure and retry behavior,
   self-hosted operation, privacy, secrets handling, observability,
   accessibility, cost, local testing, and incident recovery; then record the
   approved channel, fallback behavior, and production enablement checks.
-- **Final decision and rationale:** Unresolved.
+- **Final decision and rationale:** Administrator security notifications use
+  queued Laravel mail notifications as the mandatory application-level channel.
+  Every message has complete plain-text content and accessible semantic HTML.
+  In-application notification may later supplement email but cannot replace it,
+  because an affected administrator may be locked out or revoked.
+
+  Resend is the preferred production provider. Its free transactional allowance
+  was 3,000 messages per month and 100 per day when researched on 12 August
+  2026, and zero recurring cost is preferred where that capacity is sufficient.
+  Those limits and continued free availability are assumptions to monitor, not
+  permanent product guarantees or a contractual service-level claim. A low
+  recurring cost is acceptable when capacity, support, reliability, or operator
+  preference justifies a paid Resend plan or another provider.
+
+  Administrator lifecycle code remains provider-neutral. A self-hosted
+  deployment may select another SMTP relay when it provides authenticated
+  encrypted submission, verified sender identity, immediate acceptance or
+  refusal, a message identifier and correlation support, configuration and
+  credential health checking, capacity monitoring where applicable, queue and
+  terminal-failure monitoring, and safe credential rotation. Postmark, Amazon
+  SES, and other qualifying transactional transports are permitted alternatives,
+  not required runtime fallbacks. A fully self-hosted public mail server is
+  permitted through the same contract but is not recommended because DNS,
+  reputation, bounce handling, abuse prevention, patching, monitoring and
+  deliverability create substantial operational cost. The initial design uses
+  one configured provider and no mandatory secondary channel or automatic
+  provider failover.
+
+  A log, array, null or disabled mailer, Mailpit, Mailhog, another local catcher,
+  or an unmonitored local sendmail process is never a production security
+  channel. A Laravel failover transport must not report success by falling back
+  to a log or other non-delivery transport.
+
+  Successful initial bootstrap notifies the newly created administrator.
+  Promotion initiation, acceptance, decline, cancellation and expiry notify the
+  target and all active administrators. Revocation notifies the affected
+  administrator and all remaining active administrators. Break-glass replacement
+  or privilege recovery notifies the target and all active administrators.
+
+  A non-administrator completing ordinary TOTP enrollment is notified without
+  disclosing that non-privileged security state to administrators. Once the
+  account is an active administrator, factor replacement, recovery-code
+  regeneration or use, and lockout notify the affected administrator and all
+  other active administrators. Administrator-assisted and CLI-assisted recovery
+  initiation, expiry, cancellation, refusal and completion notify the affected
+  administrator and all active administrators. A former administrator's final
+  factor removal after valid revocation notifies that account; administrators
+  have already received the revocation notification. Failed factor attempts
+  below DEC-015's lockout threshold remain audit-only to prevent notification
+  flooding. A recipient included through multiple rules receives one message for
+  the logical event. Account disabling is not an approved administrator
+  lifecycle operation, so this decision does not invent its notification rule.
+
+  The security destination is the account's verified email address. Merely
+  storing or configuring an address does not verify it. A new address completes
+  an expiring signed email challenge before becoming trusted. Administrator
+  activation, promotion acceptance, bootstrap and recovery completion cannot
+  rely on an unverified destination. An active administrator's destination
+  change requires DEC-015's recent re-authentication and fresh-TOTP controls,
+  remains pending until the new address is verified, warns the old verified
+  address and confirms the new verified address. The old address is captured
+  before mutation. A normal change fails if its old-address warning cannot be
+  durably queued. Loss of the old mailbox requires the separately controlled,
+  strongly authenticated and audited recovery path rather than a silent bypass.
+  Sender verification is separate: Resend requires a verified domain with SPF
+  and DKIM; DMARC is recommended.
+
+  Required delivery evidence distinguishes a durable application notification
+  intent, queue processing, and provider acceptance or immediate refusal. Resend
+  acceptance stores its email ID; another transport stores its equivalent
+  message identifier. Provider acceptance means accepted for delivery, not
+  recipient-server delivery, inbox placement or human reading. Signed Resend
+  webhooks for delivered, delayed, bounced, suppressed, complained or later
+  failed events, automated asynchronous-bounce escalation, and open/read
+  tracking are optional future enhancements. Provider dashboards may support
+  manual investigation but are not guaranteed application evidence.
+
+  Every lifecycle operation supplies one bounded, opaque, non-secret correlation
+  ID to its audit event, recipient-specific notification intents, queued work and
+  provider-acceptance records. A stable idempotency key derives from the logical
+  event, recipient, channel and destination version; a queue UUID is not an
+  idempotency key. Duplicate dispatch, retry or redelivery must not send a second
+  message after provider acceptance is recorded. An authorized manual replay is
+  a distinct action linked to the original correlation. Email addresses,
+  content, IP addresses, credentials and tokens never form correlation or
+  idempotency identifiers.
+
+  Delivery follows FND-09: identifier-only after-commit jobs, an explicit queue,
+  bounded attempts and timeouts, safe permanent/transient classification, and
+  privacy-minimized terminal failure reporting. The starting retry schedule is
+  three attempts with backoff of 10 seconds and then 60 seconds, adjusted only
+  where a provider's rate-limit response requires it. Timeouts, temporary
+  network or DNS errors, provider 5xx responses and temporary rate limits are
+  retryable. Invalid or unverified configuration or destination, unauthorized
+  credentials, exhausted no-overage quota until capacity resets or changes,
+  policy refusal, known suppression, immediate hard rejection, malformed input,
+  and production selection of a local/test transport are permanent. Permanent
+  failures stop automatic retry and mark the affected channel or destination
+  unhealthy.
+
+  Privilege-increasing and recovery transitions fail closed at the local durable
+  boundary, not on a synchronous provider call. Initial bootstrap, promotion
+  initiation and acceptance, assisted-recovery authorization, administrator
+  recovery completion, break-glass activation or replacement, and an active
+  administrator destination change require the lifecycle change, audit event and
+  all required notification intents to commit together. Failure to persist audit
+  or notification intent leaves privileged state unchanged. Remote delivery is
+  never awaited inside that database transaction.
+
+  Risk-reducing or closing transitions remain available when notification
+  infrastructure fails: promotion decline, cancellation and expiry; privilege
+  revocation; factor or account lockout; session and remembered-login
+  invalidation; and recovery refusal, cancellation or expiry. Their notification
+  failures are recorded and operationally escalated where infrastructure permits.
+  Dangerous access is never preserved solely because email is unavailable.
+  Ordinary non-administrator TOTP enrollment grants no privilege; a notification
+  failure does not undo enrollment, while later administrator activation remains
+  blocked until notification health is restored.
+
+  A provider rejection after a committed transition never rolls back or
+  retroactively blocks that operation. It records a terminal failure and marks
+  notification health unavailable. Further privilege-increasing and
+  recovery-completion operations then fail closed until health is restored,
+  while risk-reducing actions remain available. This avoids both synchronous
+  provider coupling and unsafe automated privilege rollback.
+
+  Production administrator lifecycle functionality remains disabled unless a
+  permitted non-test transport and its credentials are configured, sender
+  identity and every required active-administrator destination are verified,
+  provider capacity has operational headroom, a recent controlled
+  provider/configuration acceptance check has succeeded, workers and failed-job
+  monitoring operate, immediate provider refusals are monitored, audit and
+  notification-intent persistence operate, and correlation and acceptance
+  evidence can be recorded. A health check demonstrates configuration and
+  provider acceptance only. A later permanent rejection marks the channel
+  unhealthy under the preceding event-specific rule.
+
+  Each required security event retains its lifecycle audit event whether
+  notification succeeds or fails. It records only the event and outcome, actor
+  and subject references, UTC time, environment, correlation ID, required
+  recipient category, notification-intent outcome, terminal acceptance/refusal
+  category and an opaque provider reference where appropriate. Individual
+  transient attempts remain operational records. A terminal failure that makes
+  the channel unhealthy is a correlated security-relevant outcome. Audit and
+  operational data exclude message bodies, raw destinations where an opaque
+  reference suffices, credentials, personal provider responses and exception
+  dumps.
+
+  Content is limited to the security-event category and safe outcome, UTC time,
+  environment and application instance, safe account reference, clear required
+  action, and non-secret correlation reference. Passwords, TOTP seeds or codes,
+  QR payloads, recovery codes, CLI authorizations, password-reset tokens, access
+  tokens, API keys, sessions, raw IP addresses, full user agents, audit payloads,
+  environment dumps, and recipe, plan, diary, nutrition or health content are
+  prohibited. Open and click tracking are disabled where provider configuration
+  permits. Security messages do not depend on tracked links except the signed,
+  expiring challenge needed to verify a new destination.
+
+  API keys and SMTP credentials are supplied through protected environment or
+  secret management, separated per environment, least-privileged where
+  supported, independently rotatable, and redacted from source control,
+  documentation values, queue payloads, logs, audit events, exceptions, CI
+  output and database backups where possible. Resend webhook credentials are not
+  required until the optional webhook enhancement is approved.
+
+  Local manual inspection uses Mailpit explicitly as a local-only service.
+  Automated tests and CI use Laravel notification/mail fakes or the array
+  transport, never real destinations or production-derived credentials. Tests
+  cover exact recipients and channel, every required event, old/new destination
+  changes, plain text and accessible content, secret redaction, correlation,
+  duplicate suppression, transient retry, permanent refusal, quota exhaustion,
+  invalid credentials or sender verification, queue failure, event-specific
+  blocking, provider acceptance IDs, and production rejection of local/test
+  adapters. Delivery-event webhook tests remain deferred with that enhancement.
+
+  Messages remain understandable without HTML, images, CSS, JavaScript, colour,
+  smartphone ownership, mobile signal, QR scanning or membership of a chat
+  workspace. Subjects and semantic headings state what happened, whether action
+  is required and where to obtain help, with descriptive links and no alarmist
+  or ambiguous wording.
+
+  Email supplies an independent path when application access is unavailable,
+  integrates conventionally with Laravel, supports accessible plain text and a
+  zero-recurring-cost low-volume deployment, and avoids mandatory phone or
+  workspace dependence. Resend adds verified-domain transactional sending,
+  immediate acceptance evidence and stable message IDs while leaving signed
+  delivery events available later. Provider-neutral application behavior and a
+  qualifying SMTP contract preserve self-hosted choice. The selected local
+  durable boundary supplies fail-closed protection without allowing a provider
+  outage to preserve dangerous access.
+
+  Known limitations are that provider acceptance proves neither delivery nor
+  reading; later bounces and suppressions are not ingested automatically; email
+  may be delayed, filtered or compromised with the mailbox; Resend's free tier
+  has no assumed contractual SLA; one configured provider remains a delivery
+  dependency; sole-administrator deployments lack an independent human fallback;
+  and generic SMTP may expose less provider evidence. Signed delivery events,
+  asynchronous failure escalation, Slack, Teams, SMS or signed-webhook fallback,
+  two-provider failover and in-application security history remain optional
+  future work.
+
+  Research used current primary sources, all accessed 12 August 2026: [Laravel
+  mail](https://laravel.com/docs/12.x/mail), [Laravel
+  queues](https://laravel.com/docs/12.x/queues), [Resend
+  pricing](https://resend.com/docs/knowledge-base/what-is-resend-pricing),
+  [Resend Laravel integration](https://resend.com/docs/send-with-laravel/),
+  [Resend domains](https://resend.com/docs/dashboard/domains/introduction),
+  [Resend event types](https://resend.com/docs/webhooks/event-types), [Resend
+  webhook verification](https://resend.com/docs/webhooks/verify-webhooks-requests),
+  [Postmark pricing](https://postmarkapp.com/pricing), [Postmark
+  webhooks](https://postmarkapp.com/developer/webhooks/webhooks-overview),
+  [Amazon SES pricing](https://aws.amazon.com/ses/pricing/), [Amazon SES event
+  notifications](https://docs.aws.amazon.com/ses/latest/dg/monitor-sending-activity-using-notifications.html),
+  [SendGrid pricing](https://www.twilio.com/en-us/products/email-api/pricing),
+  [SendGrid event webhook](https://www.twilio.com/docs/sendgrid/for-developers/tracking-events/event),
+  [Twilio UK SMS pricing](https://www.twilio.com/en-us/sms/pricing/gb), [Slack
+  Free](https://slack.com/pricing/free), and [Microsoft Teams
+  webhooks](https://learn.microsoft.com/en-us/microsoftteams/platform/webhooks-and-connectors/what-are-webhooks-and-connectors).
 
 ## DEC-017 — Culinary measurement jurisdictions
 
