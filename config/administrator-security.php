@@ -1,6 +1,23 @@
 <?php
 
 return [
+    'lifecycle' => [
+        'promotion_ttl_seconds' => 86400,
+        'bootstrap' => [
+            'enabled' => env('ADMIN_BOOTSTRAP_ENABLED', false),
+            'expected_environment' => env('ADMIN_BOOTSTRAP_ENVIRONMENT'),
+            'target_email' => env('ADMIN_BOOTSTRAP_TARGET_EMAIL'),
+            'operator_reference' => env('ADMIN_BOOTSTRAP_OPERATOR_REFERENCE'),
+            'operation_version' => env('APP_VERSION', 'development'),
+        ],
+        'break_glass' => [
+            'enabled' => env('ADMIN_BREAK_GLASS_ENABLED', false),
+            'expected_environment' => env('ADMIN_BREAK_GLASS_ENVIRONMENT'),
+            'replacement_email' => env('ADMIN_BREAK_GLASS_REPLACEMENT_EMAIL'),
+            'compromised_email' => env('ADMIN_BREAK_GLASS_COMPROMISED_EMAIL'),
+            'operator_reference' => env('ADMIN_BREAK_GLASS_OPERATOR_REFERENCE'),
+        ],
+    ],
     'totp' => [
         'digits' => 6,
         'period' => 30,

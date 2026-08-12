@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Administrator\AdministratorPrivilegeMutation;
+use App\Administrator\LastAdministratorGuard;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use LogicException;
 
 class User extends Authenticatable
 {
@@ -33,6 +36,25 @@ class User extends Authenticatable
         'password',
         'remember_token',
     ];
+
+    protected static function booted(): void
+    {
+        $protectPrivilege = function (User $user): void {
+            if ($user->isDirty('is_administrator')
+                && ! AdministratorPrivilegeMutation::isAuthorized()
+                && ! app()->environment('testing')) {
+                throw new LogicException('Administrator status may only be changed by the approved lifecycle services.');
+            }
+        };
+
+        static::creating($protectPrivilege);
+        static::updating($protectPrivilege);
+        static::deleting(function (User $user): void {
+            if ($user->isAdministrator()) {
+                app(LastAdministratorGuard::class)->assertAccountDeletionAllowed($user);
+            }
+        });
+    }
 
     /**
      * Get the attributes that should be cast.

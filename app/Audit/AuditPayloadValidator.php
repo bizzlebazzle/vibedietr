@@ -64,6 +64,7 @@ final class AuditPayloadValidator
                 $payload,
                 completed: false,
             ),
+            AuditAction::AdministratorLifecycleEvent => $this->validateLifecycleEvent($payload),
             AuditAction::CatalogueProposalApproved => $this->validateCatalogueApproval($payload),
             AuditAction::RecipeNutritionOverrideApplied => $this->validateNutritionOverride($payload),
             AuditAction::PlanSnapshotRecorded => $this->validatePlanSnapshot($payload),
@@ -75,6 +76,24 @@ final class AuditPayloadValidator
         ksort($validated);
 
         return $validated;
+    }
+
+    /** @param array<string, mixed> $payload */
+    private function validateLifecycleEvent(array $payload): array
+    {
+        $this->assertShape(
+            $payload,
+            ['event', 'outcome', 'previous_privilege_state', 'resulting_privilege_state', 'reason_code'],
+            ['event', 'outcome', 'previous_privilege_state', 'resulting_privilege_state'],
+        );
+
+        foreach ($payload as $field => $value) {
+            if (! is_string($value) || $value === '' || strlen($value) > self::MAX_STRING_LENGTH) {
+                throw new InvalidArgumentException("Invalid administrator lifecycle audit value for $field.");
+            }
+        }
+
+        return $payload;
     }
 
     /** @param array<string, mixed> $payload */

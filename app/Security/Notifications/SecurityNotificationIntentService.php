@@ -8,7 +8,7 @@ use App\Models\User;
 use App\Security\SecurityAuditService;
 use Illuminate\Support\Facades\DB;
 
-final class SecurityNotificationIntentService
+class SecurityNotificationIntentService
 {
     public function __construct(private readonly SecurityAuditService $audit) {}
 

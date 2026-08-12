@@ -243,6 +243,7 @@ changes, it is deliberately split across multiple items.
 - **Outcome:** Implement the initial bootstrap, routine promotion and revocation,
   last-administrator protection, security notifications, and break-glass
   recovery approved in DEC-009.
+- **Status:** Complete (2026-08-12).
 - **Dependencies:** FND-04, FND-05, FND-13.
 - **Acceptance criteria:** Production bootstrap is CLI-only, explicitly
   configured, target-bound, operator-confirmed, auditable, atomic, and allowed

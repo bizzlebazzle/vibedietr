@@ -1,6 +1,9 @@
 <?php
 
+use App\Administrator\LastAdministratorGuard;
 use App\Livewire\Actions\Logout;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Volt\Component;
 
@@ -11,13 +14,22 @@ new class extends Component
     /**
      * Delete the currently authenticated user.
      */
-    public function deleteUser(Logout $logout): void
+    public function deleteUser(Logout $logout, LastAdministratorGuard $guard): void
     {
         $this->validate([
             'password' => ['required', 'string', 'current_password'],
         ]);
 
-        tap(Auth::user(), $logout(...))->delete();
+        $user = Auth::user();
+        try {
+            DB::transaction(function () use ($guard, $user): void {
+                $guard->assertAccountDeletionAllowed($user);
+                $user->newQuery()->whereKey($user->getKey())->delete();
+            }, 3);
+        } catch (RuntimeException $exception) {
+            throw ValidationException::withMessages(['password' => $exception->getMessage()]);
+        }
+        $logout();
 
         $this->redirect('/', navigate: true);
     }

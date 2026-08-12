@@ -6,6 +6,7 @@ enum AuditAction: string
 {
     case AdministratorBootstrapCompleted = 'administrator.bootstrap_completed';
     case AdministratorBootstrapRefused = 'administrator.bootstrap_refused';
+    case AdministratorLifecycleEvent = 'administrator.lifecycle_event';
     case CatalogueProposalApproved = 'catalogue.proposal_approved';
     case RecipeNutritionOverrideApplied = 'recipe.nutrition_override_applied';
     case PlanSnapshotRecorded = 'plan.snapshot_recorded';
@@ -17,7 +18,8 @@ enum AuditAction: string
     {
         return match ($this) {
             self::AdministratorBootstrapCompleted,
-            self::AdministratorBootstrapRefused => AuditPurpose::PrivilegedAccessAccountability,
+            self::AdministratorBootstrapRefused,
+            self::AdministratorLifecycleEvent => AuditPurpose::PrivilegedAccessAccountability,
             self::CatalogueProposalApproved => AuditPurpose::CatalogueProvenance,
             self::RecipeNutritionOverrideApplied,
             self::PlanSnapshotRecorded => AuditPurpose::ProductHistory,
@@ -31,7 +33,8 @@ enum AuditAction: string
     {
         return match ($this) {
             self::AdministratorBootstrapCompleted,
-            self::AdministratorBootstrapRefused => AuditRetentionClass::PrivilegedIdentityTwelveMonths,
+            self::AdministratorBootstrapRefused,
+            self::AdministratorLifecycleEvent => AuditRetentionClass::PrivilegedIdentityTwelveMonths,
             self::CatalogueProposalApproved => AuditRetentionClass::ProvenanceActiveVersionPlusTwelveMonths,
             self::RecipeNutritionOverrideApplied,
             self::PlanSnapshotRecorded => AuditRetentionClass::PrivateContentUntilFinalPurge,
@@ -51,6 +54,13 @@ enum AuditAction: string
             self::AdministratorBootstrapRefused => [
                 AuditActorType::ExternalOperator,
                 AuditActorType::Deployment,
+            ],
+            self::AdministratorLifecycleEvent => [
+                AuditActorType::Administrator,
+                AuditActorType::AuthenticatedUser,
+                AuditActorType::ExternalOperator,
+                AuditActorType::Deployment,
+                AuditActorType::System,
             ],
             self::CatalogueProposalApproved => [AuditActorType::Administrator],
             self::RecipeNutritionOverrideApplied => [
@@ -75,8 +85,9 @@ enum AuditAction: string
     {
         return match ($this) {
             self::AdministratorBootstrapCompleted,
-            self::AdministratorBootstrapRefused,
             self::AccountAnonymizationCompleted => [AuditSubjectType::UserAccount],
+            self::AdministratorBootstrapRefused,
+            self::AdministratorLifecycleEvent => [AuditSubjectType::UserAccount, AuditSubjectType::SystemOperation],
             self::CatalogueProposalApproved => [AuditSubjectType::CatalogueProposal],
             self::RecipeNutritionOverrideApplied => [
                 AuditSubjectType::Recipe,

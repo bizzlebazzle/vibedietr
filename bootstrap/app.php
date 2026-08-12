@@ -1,5 +1,8 @@
 <?php
 
+use App\Console\Commands\BootstrapAdministrator;
+use App\Console\Commands\BreakGlassReplaceAdministrator;
+use App\Console\Commands\ExpireAdministratorPromotionRequests;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -10,6 +13,11 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
+    ->withCommands([
+        BootstrapAdministrator::class,
+        BreakGlassReplaceAdministrator::class,
+        ExpireAdministratorPromotionRequests::class,
+    ])
     ->withMiddleware(function (Middleware $middleware): void {
         //
     })

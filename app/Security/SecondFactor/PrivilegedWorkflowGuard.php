@@ -12,7 +12,9 @@ final class PrivilegedWorkflowGuard
 
     public function allows(?User $user, string $operation, Session $session, bool $consume = true): bool
     {
-        if ($user === null || ! $user->isAdministrator() || ! $user->hasConfirmedSecondFactor()) {
+        if ($user === null
+            || ! User::query()->whereKey($user->getKey())->where('is_administrator', true)->exists()
+            || ! $user->hasConfirmedSecondFactor()) {
             return false;
 
         }
