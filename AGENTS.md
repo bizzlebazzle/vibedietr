@@ -38,6 +38,9 @@ from the OFF API can be treated as accurate.
 - Keep the application recognisably conventional Laravel and Livewire.
 - Prefer clear, maintainable code over clever abstractions.
 - Follow `docs/QUEUED_JOB_CONVENTIONS.md` for asynchronous work.
+- Administrator status must never be changed directly by ordinary application
+  code. Production assignment and revocation must use the approved FND-14
+  administrator lifecycle services.
 
 When beginning any backlog item, first check whether it depends on unresolved
 entries in docs/DECISIONS.md.

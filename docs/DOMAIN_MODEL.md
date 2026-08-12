@@ -26,13 +26,14 @@ profile, and delete their account. A user's theme preference is browser-local
 state and is not part of the persisted user concept.
 
 Administrator status supplies the centrally defined `access-admin` ability.
-The status is excluded from normal mass assignment and from registration and
-profile component state. The current application has no production bootstrap,
-promotion, revocation, or recovery path; those lifecycle controls remain
-assigned to FND-14. The explicit administrator factory state is test-only.
-Administrator status does not override resource policies or grant access to
-private user content unless a later resource rule expressly uses the central
-ability.
+The status is excluded from normal mass assignment, registration, and profile
+component state. Production assignment and revocation are accepted only inside
+the FND-14 lifecycle mutation scope; authorization re-reads the persisted role
+so a revoked account cannot rely on stale session model state. The explicit
+administrator factory state is test-only and is rejected when the application
+environment is production. Administrator status does not override resource
+policies or grant access to private user content unless a later resource rule
+expressly uses the central ability.
 
 The database relationship from `ingredients.user_id` means one user can own
 many ingredients. The code exposes only the inverse
@@ -77,6 +78,28 @@ boundary. No production audit browser or creation endpoint exists. Policy
 denies guests and ordinary users, permits only individual moderation/catalogue
 records to administrators, and does not treat administrator status as security
 or privileged-lifecycle audit authorization.
+
+### Administrator lifecycle state
+
+`AdministratorLifecycleState` is a migration-owned singleton and the global
+transaction lock for administrator-count invariants. Its nullable bootstrap
+completion timestamp, bootstrap audit-event ULID, and correlation ID form the
+persistent one-time marker. Production model mutation outside the bootstrap
+marker service is rejected. Revocation, deletion, bootstrap, acceptance, and
+break-glass take this lock before mutable eligibility/count checks.
+
+`AdministratorPromotionRequest` is a target-bound ULID state machine. It stores
+the target and nullable initiating administrator, pending or terminal status,
+non-secret correlation ID, exact expiry, and the applicable terminal timestamp.
+Pending requests grant no privilege; accepted, declined, cancelled, and expired
+states are terminal. The target reference is the authenticated workflow
+reference rather than a bearer elevation token.
+
+Initial bootstrap and break-glass have no HTTP representation. Routine
+promotion and revocation use a minimal authenticated lifecycle interface backed
+by server-side services. The bootstrap and break-glass commands use distinct
+configuration and audit event categories, and break-glass cannot write or clear
+the bootstrap marker.
 
 ### Administrator second-factor state
 

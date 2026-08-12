@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
-final class AuditEventRecorder
+class AuditEventRecorder
 {
     public function __construct(
         private readonly AuditPayloadValidator $payloadValidator,

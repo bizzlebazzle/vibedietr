@@ -59,6 +59,10 @@ but not complete; the reason, risk, and remaining check must be explicit.
   fix.
 - Authorization and privacy behavior is tested for the relevant owner,
   non-owner, administrator, authenticated-user, and guest cases.
+- Administrator privilege changes use the FND-14 lifecycle services and test
+  recent primary authentication, fresh operation-bound TOTP, durable audit and
+  notification intent boundaries, last-administrator locking, session and
+  remembered-login invalidation, and production rejection of test shortcuts.
 - Livewire changes are exercised through their public component behavior, and
   validation failures confirm that user input and stored data remain safe.
 - External services such as OpenFoodFacts are mocked in automated tests; the

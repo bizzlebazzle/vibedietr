@@ -32,6 +32,6 @@ class AppServiceProvider extends ServiceProvider
     {
         Gate::policy(AuditEvent::class, AuditEventPolicy::class);
         Gate::policy(Ingredient::class, IngredientPolicy::class);
-        Gate::define('access-admin', fn (User $user): bool => $user->isAdministrator());
+        Gate::define('access-admin', fn (User $user): bool => User::query()->whereKey($user->getKey())->where('is_administrator', true)->exists());
     }
 }

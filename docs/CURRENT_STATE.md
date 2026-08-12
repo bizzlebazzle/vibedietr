@@ -63,11 +63,10 @@ on route or interface protection. Confirmed administrators pass the gate,
 authenticated ordinary users receive a 403 response, and guests using the
 documented route middleware combination are redirected to login.
 
-FND-04 provides no production administrator-assignment path. The normal
-seeder creates an ordinary user, and registration/profile input cannot set or
-change administrator status. An explicit administrator factory state exists
-only for automated tests. Production bootstrap and lifecycle remain assigned
-to FND-14 and its second-factor, audit, and notification dependencies.
+FND-04 provides the persisted authorization flag while FND-14 now owns every
+production assignment and revocation path. The normal seeder creates an
+ordinary user, registration/profile input cannot change administrator status,
+and the explicit administrator factory state is rejected in production.
 
 Deleting a user permanently deletes that user. The ingredient foreign key uses
 `cascadeOnDelete`, so their ingredients are deleted by the database at the same
@@ -128,7 +127,36 @@ and channel health state. Production readiness rejects local/fake delivery and
 requires the DEC-016 transport, destination, credential, queue, monitoring,
 capacity, clock and audit conditions. See
 [Administrator security foundations](ADMINISTRATOR_SECURITY_FOUNDATIONS.md).
-FND-14 lifecycle mutations remain unimplemented.
+
+## Implemented administrator bootstrap and lifecycle
+
+See [Administrator lifecycle](ADMINISTRATOR_LIFECYCLE.md).
+FND-14 centralizes production privilege changes behind application-owned
+lifecycle services. `administrator:bootstrap` is a configured, target-bound,
+operator-confirmed CLI command. A locked singleton lifecycle row records the
+one-time completion marker separately from user rows, and the same global lock
+serializes role mutations and sole-administrator deletion checks. Bootstrap
+atomically grants the role, records the FND-05 event, persists every required
+FND-13 notification intent, and sets the marker; it never reopens.
+
+Routine promotion persists a target-bound ULID request with pending, accepted,
+declined, cancelled, or expired state and an exact 24-hour window. Initiation,
+acceptance, decline, cancellation, and revocation enforce server-side ownership
+and the DEC-015 recent-password/fresh-TOTP proofs. Revocation is other-admin
+only, rotates remembered login state, deletes database sessions, cancels the
+revoked administrator's pending initiations, and uses current database role
+state for subsequent authorization checks. Self-revocation, concurrent removal
+of all administrators, and sole-administrator account deletion are denied.
+
+`administrator:break-glass-replace` is a separately configured and confirmed
+CLI operation available only after initial bootstrap when no administrator
+other than the configured compromised account is technically usable. It
+atomically activates an eligible replacement, optionally revokes the exact
+compromised account, invalidates that account's privileged access, audits both
+outcomes, and creates required notification intents without changing the
+bootstrap marker. The normal seeder remains ordinary-user only; model-level
+production role changes and bootstrap-marker mutation outside the lifecycle
+services fail closed.
 
 ## Implemented ingredient catalogue
 
