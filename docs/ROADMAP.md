@@ -315,6 +315,7 @@ changes, it is deliberately split across multiple items.
 
 - **Outcome:** Give controller and Livewire writes one validation and
   normalization contract while routes are still retained.
+- **Status:** Complete (2026-08-13).
 - **Dependencies:** STB-01, FND-06.
 - **Acceptance criteria:** Unit vocabulary, paired serving fields, barcode
   handling, nutrition shape, and nullable values behave consistently on both

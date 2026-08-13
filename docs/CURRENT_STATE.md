@@ -204,6 +204,15 @@ the authenticated user through the relationship, ownership is not mass
 assignable, and update payloads cannot reassign it. The dormant edit-modal
 opener and its nested form use the same secured mutation path.
 
+STB-04 gives both retained write paths one `IngredientWriteContract` and one
+`IngredientWriteNormalizer`. The contract validates the complete persisted
+field allowlist, FND-06 units, an all-or-none serving quantity/unit pair,
+barcodes as optional strings up to 64 characters, and a bounded nutrition
+shape. Normalization trims nullable strings, stores empty optionals as null,
+preserves numeric zero, canonicalizes standard unit aliases, retains safe
+custom/ambiguous unit text, and quantizes nutrient decimals once to DEC-003's
+scale without display rounding. Ownership is not part of the contract.
+
 ## OpenFoodFacts and barcode support
 
 The Livewire ingredient form can make a synchronous server-side request to the
@@ -256,9 +265,10 @@ The owner has identified calories, fat, sugars, salt, and protein as the key
 nutrition values. Protein can be imported and stored, but the current form does
 not expose it for manual editing or display.
 
-Energy values exposed by the form are rounded to whole kJ or kcal. Other
-exposed nutrition values are rounded to two decimal places before saving.
-Values are validated as non-negative.
+Normalized nutrition values are validated as non-negative DEC-003 decimals,
+stored as scale-18 decimal strings, and are not rounded to DEC-004 display
+precision during writes. Null or blank nutrient values remain missing, while
+numeric zero and string `"0"` remain explicit zero.
 
 The code does not:
 
@@ -291,11 +301,10 @@ FND-06 adds application-owned definitions under `app/Domain/Nutrition` and
 - Safe aliases normalize through one registry. Unknown or ambiguous inputs,
   including `T` and `t`, remain custom and preserve their original text.
 
-The ingredient Livewire form now uses the shared unit catalogue for choices,
-validation, alias normalization, custom input, and OpenFoodFacts unit
-inference. Conventional ingredient request validation and the audit nutrient
-allowlist also use the shared definitions. Existing ingredient nutrition JSON
-rounding and component display-row mappings remain for STB-05/STB-06.
+The ingredient Livewire form uses the shared unit catalogue for choices and
+OpenFoodFacts unit inference. STB-04 now makes controller and Livewire writes
+consume the same unit/nutrient validation and normalization contract.
+Component display-row mappings remain legacy presentation code for STB-06.
 
 The intended source rules are:
 
@@ -415,10 +424,11 @@ and additive migration rollback while preserving existing user/ingredient data.
   production administrator can be assigned until the separately controlled
   FND-14 bootstrap and lifecycle work is delivered with its second-factor,
   audit, and notification dependencies.
-- Ingredient writes have two paths: the Livewire component and conventional
-  resource-controller `store`/`update` methods. Their validation and behavior
-  differ. Both use shared safe custom-unit validation, but the controller paths
-  do not apply alias normalization, barcode de-duplication, or nutrition normalization.
+- Ingredient writes retain Livewire and conventional controller paths. Their
+  field validation and normalization now share one contract. Livewire alone
+  retains the pre-existing duplicate-barcode redirect and provider-assisted
+  UI behavior; this temporary workflow difference is documented in
+  `STABILIZATION_FINDINGS.md`.
 - Livewire is the preferred mutation path. The existing controller routes are
   to be retained until they are proven unused.
 - Barcode uniqueness is not a database invariant. Concurrent requests or the
@@ -437,12 +447,10 @@ and additive migration rollback while preserving existing user/ingredient data.
   caching, or rate-limit behavior is defined.
 - The scanner depends on a third-party CDN at runtime. Scanner behavior has no
   automated browser coverage.
-- Nutrition's JSON schema is enforced only by component mapping conventions.
-  The database and controller request validation accept arbitrary nested
-  arrays.
-- The Livewire nutrition merge treats zero as blank and removes that normalized
-  key. A test compares a missing salt value loosely to `0.0`, so it does not
-  detect the loss of an explicitly entered zero.
+- Nutrition remains JSON rather than a relational/versioned model. The shared
+  write contract now restricts normalized buckets to registered nutrients and
+  exact non-negative decimals, but the retained raw OpenFoodFacts bucket is
+  intentionally provider-shaped and unversioned.
 - Imported and manually edited nutrition values are blended in the same JSON
   record with no provenance. The UI cannot apply the accuracy distinction
   described in `AGENTS.md`.
@@ -457,7 +465,7 @@ and additive migration rollback while preserving existing user/ingredient data.
 - `Ingredient` has a `user()` relation, but `User` has no reciprocal
   `ingredients()` relation.
 - The static-analysis baseline retains one optional-email-verification mismatch,
-  five redundant ingredient-form expressions, and four assertions whose
+  four redundant ingredient-form expressions, and four assertions whose
   outcomes PHPStan knows in advance. These
   findings should be removed as the affected existing code is revised.
 - The active local baseline is the MySQL-based Sail stack, but `.env.example`

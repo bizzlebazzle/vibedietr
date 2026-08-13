@@ -1,0 +1,131 @@
+<?php
+
+namespace App\Domain\Ingredients;
+
+use App\Domain\Nutrition\Nutrient;
+use App\Rules\ValidMeasurementUnit;
+use App\Rules\ValidNutrientValue;
+
+final class IngredientWriteContract
+{
+    /** @return list<string> */
+    public static function fields(): array
+    {
+        return [
+            'name',
+            'barcode',
+            'keywords',
+            'categories',
+            'nutriments',
+            'quantity',
+            'quantity_unit',
+            'serving_quantity',
+            'serving_quantity_unit',
+            'recommended_servings',
+            'image_url',
+        ];
+    }
+
+    /**
+     * Apply transport-neutral whitespace handling before validation.
+     *
+     * @param  array<string, mixed>  $input
+     * @return array<string, mixed>
+     */
+    public static function prepare(array $input): array
+    {
+        foreach (['name', 'barcode', 'quantity_unit', 'serving_quantity_unit', 'image_url'] as $field) {
+            if (array_key_exists($field, $input) && is_string($input[$field])) {
+                $input[$field] = trim($input[$field]);
+            }
+        }
+
+        foreach (['barcode', 'serving_quantity_unit', 'image_url'] as $field) {
+            if (($input[$field] ?? null) === '') {
+                $input[$field] = null;
+            }
+        }
+
+        return $input;
+    }
+
+    /** @return array<string, array<int, mixed>> */
+    public static function rules(): array
+    {
+        $nutrientKeys = implode(',', array_keys(self::nutrientKeyMap()));
+        $rules = [
+            'name' => ['required', 'string', 'max:255'],
+            'barcode' => ['nullable', 'string', 'max:64'],
+            'keywords' => ['nullable', 'array'],
+            'categories' => ['nullable', 'array'],
+            'nutriments' => ['nullable', 'array:raw,per_100g,per_serving'],
+            'nutriments.raw' => ['nullable', 'array'],
+            'nutriments.per_100g' => ['nullable', "array:{$nutrientKeys}"],
+            'nutriments.per_serving' => ['nullable', "array:{$nutrientKeys}"],
+            'quantity' => ['required', 'numeric', 'min:0'],
+            'quantity_unit' => ['required', 'string', 'max:32', new ValidMeasurementUnit],
+            'serving_quantity' => ['nullable', 'required_with:serving_quantity_unit', 'numeric', 'min:0'],
+            'serving_quantity_unit' => ['nullable', 'required_with:serving_quantity', 'string', 'max:32', new ValidMeasurementUnit],
+            'recommended_servings' => ['nullable', 'numeric', 'min:0'],
+            'image_url' => ['nullable', 'url'],
+        ];
+
+        foreach (['per_100g', 'per_serving'] as $bucket) {
+            foreach (array_keys(self::nutrientKeyMap()) as $key) {
+                $rules["nutriments.{$bucket}.{$key}"] = ['nullable', new ValidNutrientValue];
+            }
+        }
+
+        return $rules;
+    }
+
+    /** @return array<string, array<int, mixed>> */
+    public static function livewireRules(): array
+    {
+        $rules = self::rules();
+
+        foreach (array_keys(self::nutritionInputMap()) as $property) {
+            $rules[$property] = ['nullable', new ValidNutrientValue];
+        }
+
+        return $rules;
+    }
+
+    /** @return array<string, array{bucket: string, key: string}> */
+    public static function nutritionInputMap(): array
+    {
+        return [
+            'per_100g_energy_kj' => ['bucket' => 'per_100g', 'key' => Nutrient::EnergyKj->value],
+            'per_100g_energy_kcal' => ['bucket' => 'per_100g', 'key' => Nutrient::EnergyKcal->value],
+            'per_100g_fat' => ['bucket' => 'per_100g', 'key' => Nutrient::Fat->value],
+            'per_100g_saturates' => ['bucket' => 'per_100g', 'key' => Nutrient::SaturatedFat->value],
+            'per_100g_sugars' => ['bucket' => 'per_100g', 'key' => Nutrient::Sugars->value],
+            'per_100g_salt' => ['bucket' => 'per_100g', 'key' => Nutrient::Salt->value],
+            'per_serving_energy_kj' => ['bucket' => 'per_serving', 'key' => Nutrient::EnergyKj->value],
+            'per_serving_energy_kcal' => ['bucket' => 'per_serving', 'key' => Nutrient::EnergyKcal->value],
+            'per_serving_fat' => ['bucket' => 'per_serving', 'key' => Nutrient::Fat->value],
+            'per_serving_saturates' => ['bucket' => 'per_serving', 'key' => Nutrient::SaturatedFat->value],
+            'per_serving_sugars' => ['bucket' => 'per_serving', 'key' => Nutrient::Sugars->value],
+            'per_serving_salt' => ['bucket' => 'per_serving', 'key' => Nutrient::Salt->value],
+        ];
+    }
+
+    /** @return array<string, Nutrient> */
+    public static function nutrientKeyMap(): array
+    {
+        return [
+            Nutrient::EnergyKcal->value => Nutrient::EnergyKcal,
+            Nutrient::EnergyKj->value => Nutrient::EnergyKj,
+            Nutrient::Fat->value => Nutrient::Fat,
+            Nutrient::SaturatedFat->value => Nutrient::SaturatedFat,
+            Nutrient::Carbohydrates->value => Nutrient::Carbohydrates,
+            Nutrient::Sugars->value => Nutrient::Sugars,
+            Nutrient::Fibre->value => Nutrient::Fibre,
+            'fiber' => Nutrient::Fibre,
+            Nutrient::Protein->value => Nutrient::Protein,
+            'proteins' => Nutrient::Protein,
+            Nutrient::Salt->value => Nutrient::Salt,
+            Nutrient::Sodium->value => Nutrient::Sodium,
+        ];
+    }
+}

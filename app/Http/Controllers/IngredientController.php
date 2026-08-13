@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Domain\Ingredients\IngredientWriteNormalizer;
 use App\Http\Requests\StoreIngredientRequest;
 use App\Http\Requests\UpdateIngredientRequest;
 use App\Models\Ingredient;
@@ -20,11 +21,11 @@ class IngredientController extends Controller
         return view('ingredients.create');
     }
 
-    public function store(StoreIngredientRequest $request)
+    public function store(StoreIngredientRequest $request, IngredientWriteNormalizer $normalizer)
     {
         $this->authorize('create', Ingredient::class);
 
-        $ingredient = new Ingredient($request->validated());
+        $ingredient = new Ingredient($normalizer->normalize($request->validated()));
         $ingredient->user()->associate($request->user());
         $ingredient->save();
 
@@ -45,10 +46,13 @@ class IngredientController extends Controller
         return view('ingredients.edit', compact('ingredient'));
     }
 
-    public function update(UpdateIngredientRequest $request, Ingredient $ingredient)
-    {
+    public function update(
+        UpdateIngredientRequest $request,
+        Ingredient $ingredient,
+        IngredientWriteNormalizer $normalizer,
+    ) {
         $this->authorize('update', $ingredient);
-        $ingredient->update($request->validated());
+        $ingredient->update($normalizer->normalize($request->validated()));
 
         return redirect()->route('ingredients.index')->with('status', 'Ingredient updated.');
     }

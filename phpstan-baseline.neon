@@ -7,12 +7,6 @@ parameters:
 			path: app/Http/Controllers/Auth/VerifyEmailController.php
 
 		-
-			message: '#^Property App\\Livewire\\Ingredients\\Form\:\:\$name \(string\) on left side of \?\? is not nullable\.$#'
-			identifier: nullCoalesce.property
-			count: 1
-			path: app/Livewire/Ingredients/Form.php
-
-		-
 			message: '#^Using nullsafe property access "\?\-\>categories" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
 			identifier: nullsafe.neverNull
 			count: 1
