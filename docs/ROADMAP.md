@@ -301,6 +301,7 @@ changes, it is deliberately split across multiple items.
 
 - **Outcome:** Prevent a mounted or crafted Livewire request from updating a
   record when page-level authorization is bypassed.
+- **Status:** Complete (2026-08-13).
 - **Dependencies:** STB-01.
 - **Acceptance criteria:** Create/update/delete checks occur at the mutation
   boundary; controller and Livewire paths have equivalent denials; ownership

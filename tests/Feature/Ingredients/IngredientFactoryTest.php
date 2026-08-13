@@ -89,6 +89,21 @@ class IngredientFactoryTest extends TestCase
         $this->assertDatabaseCount('users', 1);
     }
 
+    public function test_ownership_is_not_mass_assignable(): void
+    {
+        $owner = User::factory()->create();
+        $otherUser = User::factory()->create();
+        $ingredient = Ingredient::factory()->for($owner)->create();
+
+        $ingredient->fill([
+            'user_id' => $otherUser->id,
+            'name' => 'Allowed name change',
+        ])->save();
+
+        $this->assertSame($owner->id, $ingredient->refresh()->user_id);
+        $this->assertSame('Allowed name change', $ingredient->name);
+    }
+
     public function test_several_factory_records_do_not_violate_current_constraints(): void
     {
         $ingredients = Ingredient::factory()->count(5)->create();

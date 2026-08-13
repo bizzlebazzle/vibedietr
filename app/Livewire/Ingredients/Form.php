@@ -12,7 +12,7 @@ use Livewire\Component;
 
 class Form extends Component
 {
-    public ?Ingredient $ingredient = null;
+    public ?int $ingredientId = null;
 
     #[Validate('required|string|max:255')]
     public string $name = '';
@@ -83,7 +83,7 @@ class Form extends Component
 
     public function mount(?Ingredient $ingredient = null)
     {
-        $this->ingredient = $ingredient;
+        $this->ingredientId = $ingredient?->getKey();
         $this->resetForm($ingredient);
     }
 
@@ -115,7 +115,7 @@ class Form extends Component
         return Ingredient::query()
             ->where('user_id', auth()->id())
             ->where('barcode', $barcode)
-            ->when($this->ingredient?->exists, fn ($query) => $query->whereKeyNot($this->ingredient->getKey()))
+            ->when($this->ingredientId !== null, fn ($query) => $query->whereKeyNot($this->ingredientId))
             ->first();
     }
 
@@ -451,6 +451,8 @@ class Form extends Component
 
     public function save(): void
     {
+        $ingredient = $this->authorizeMutation();
+
         $this->normalizeNutritionInputs();
 
         if ($this->redirectToExistingBarcodeIngredient($this->barcode)) {
@@ -465,7 +467,6 @@ class Form extends Component
         $this->nutriments = $this->mergeNutritionInputsIntoNutriments();
 
         $payload = [
-            'user_id' => auth()->id(),
             'name' => $this->name,
             'barcode' => $this->barcode ?: null,
             'keywords' => $this->keywords ?: null,
@@ -479,12 +480,20 @@ class Form extends Component
             'image_url' => $this->image_url ?: null,
         ];
 
-        if ($this->ingredient?->exists) {
-            $this->ingredient->update($payload);
+        if ($ingredient) {
+            $ingredient = Ingredient::query()->findOrFail($ingredient->getKey());
+            $this->authorize('update', $ingredient);
+            $ingredient->update($payload);
+            $this->ingredientId = $ingredient->getKey();
             $this->dispatch('notify', type: 'success', message: 'Ingredient updated.');
             $this->dispatch('ingredientSaved')->to(Index::class);
         } else {
-            $this->ingredient = Ingredient::create($payload);
+            $this->authorize('create', Ingredient::class);
+
+            $ingredient = new Ingredient($payload);
+            $ingredient->user()->associate(auth()->user());
+            $ingredient->save();
+            $this->ingredientId = $ingredient->getKey();
             $this->dispatch('notify', type: 'success', message: 'Ingredient created.');
             $this->dispatch('ingredientSaved')->to(Index::class);
 
@@ -492,6 +501,20 @@ class Form extends Component
                 $this->redirectRoute('ingredients.index', navigate: true);
             }
         }
+    }
+
+    protected function authorizeMutation(): ?Ingredient
+    {
+        if ($this->ingredientId === null) {
+            $this->authorize('create', Ingredient::class);
+
+            return null;
+        }
+
+        $ingredient = Ingredient::query()->findOrFail($this->ingredientId);
+        $this->authorize('update', $ingredient);
+
+        return $ingredient;
     }
 
     public function render()

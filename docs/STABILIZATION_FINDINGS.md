@@ -11,11 +11,11 @@ controller create/update/delete methods, the Livewire form create/update
 method, owner-scoped search, 12-item pagination, hard deletion, and the dormant
 edit-modal entry point. There is no Livewire delete method.
 
-| Finding | Area | Impact | Follow-up |
+| Finding | Area | Impact | Status/follow-up |
 | --- | --- | --- | --- |
-| STB-FIND-001 | Direct Livewire update | Cross-user mutation and ownership transfer | STB-03 |
-| STB-FIND-002 | Direct guest Livewire save | Database error instead of authorization denial | STB-03 |
-| STB-FIND-003 | Controller/Livewire unit aliases | Persisted-data inconsistency | STB-04 |
+| STB-FIND-001 | Direct Livewire update | Cross-user mutation and ownership transfer | Resolved by STB-03 |
+| STB-FIND-002 | Direct guest Livewire save | Database error instead of authorization denial | Resolved by STB-03 |
+| STB-FIND-003 | Controller/Livewire unit aliases | Persisted-data inconsistency | Open; STB-04 |
 
 ## STB-FIND-001 — Direct Livewire update bypasses owner authorization
 
@@ -31,9 +31,14 @@ edit-modal entry point. There is no Livewire delete method.
 - **Security/data-integrity impact:** High. A crafted Livewire request can alter
   another user's private record and transfer its ownership.
 - **Whether STB-01 changed it:** No. STB-01 only records and tests the behavior.
-- **Recommended follow-up backlog item:** STB-03.
-- **Capturing test:**
-  `test_non_owner_direct_livewire_update_currently_changes_and_reassigns_the_record`.
+- **Resolution:** Resolved by STB-03. The component keeps only an untrusted
+  scalar identifier, re-resolves the authoritative record at save time, and
+  invokes `IngredientPolicy::update` before persistence. Ownership is omitted
+  from the update allowlist and from model mass assignment.
+- **Regression tests:**
+  `test_non_owner_direct_livewire_update_is_forbidden_and_leaves_both_users_records_unchanged`,
+  `test_forged_livewire_ingredient_identifier_is_forbidden_and_changes_no_records`,
+  and `test_stale_mounted_livewire_component_rechecks_current_ownership_before_update`.
 
 ## STB-FIND-002 — Direct guest Livewire save reaches the database
 
@@ -50,11 +55,13 @@ edit-modal entry point. There is no Livewire delete method.
   but unauthenticated crafted requests reach an internal constraint failure
   instead of a controlled denial.
 - **Whether STB-01 changed it:** No. STB-01 only records and tests the behavior.
-- **Recommended follow-up backlog item:** STB-03.
-- **Capturing tests:**
-  `test_guest_direct_livewire_create_raises_database_error_and_creates_nothing`
+- **Resolution:** Resolved by STB-03. Direct guest create and update actions
+  invoke the policy at the mutation boundary and return exact 403 denials
+  without reaching persistence.
+- **Regression tests:**
+  `test_guest_direct_livewire_create_is_forbidden_and_creates_nothing`
   and
-  `test_guest_direct_livewire_update_raises_database_error_and_leaves_record_unchanged`.
+  `test_guest_direct_livewire_update_is_forbidden_and_leaves_record_unchanged`.
 
 ## STB-FIND-003 — Controller and Livewire normalize unit aliases differently
 
@@ -83,7 +90,7 @@ each list item opens only the details modal.
 The method remains directly executable. Its owner call opens the modal; direct
 non-owner and guest calls return exact 403 responses. The modal mounts the same
 `Ingredients\Form` component as the dedicated edit page, so validation is the
-same and the mutation inherits STB-FIND-001 and STB-FIND-002. Tests
+same and the mutation uses STB-03's secured save boundary. Tests
 `test_owner_can_open_the_currently_unused_edit_modal_path`,
 `test_non_owner_direct_edit_modal_invocation_is_forbidden`, and
 `test_guest_direct_edit_modal_invocation_is_forbidden` capture the executable
@@ -96,7 +103,7 @@ entry point without reactivating it in the interface.
 | Controller show/edit | 200 | 403 | 302 to login |
 | Controller update | 302 after update | 403, unchanged | 302 to login, unchanged |
 | Controller delete | 302 after hard delete | 403, intact | 302 to login, intact |
-| Direct Livewire update | Updated | Updated and reassigned | SQLSTATE 23000, unchanged |
+| Direct Livewire update | Updated | 403, unchanged | 403, unchanged |
 | Direct edit-modal opener | Modal opens | 403 | 403 |
 
 Search is partial across name and barcode, case-insensitive on the supported

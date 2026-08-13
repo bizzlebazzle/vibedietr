@@ -22,10 +22,11 @@ class IngredientController extends Controller
 
     public function store(StoreIngredientRequest $request)
     {
-        $data = $request->validated();
-        $data['user_id'] = auth()->id();
+        $this->authorize('create', Ingredient::class);
 
-        Ingredient::create($data);
+        $ingredient = new Ingredient($request->validated());
+        $ingredient->user()->associate($request->user());
+        $ingredient->save();
 
         return redirect()->route('ingredients.index')->with('status', 'Ingredient created.');
     }
