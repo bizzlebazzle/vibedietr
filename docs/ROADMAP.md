@@ -288,6 +288,7 @@ changes, it is deliberately split across multiple items.
 - **Outcome:** Make current and migration-era ingredient states easy to create
   consistently in tests.
 - **Dependencies:** None.
+- **Status:** Complete (2026-08-13).
 - **Acceptance criteria:** The factory has valid manual, barcode-imported,
   nutrition, and unusual-unit states; existing tests use it without changing
   behavior.
