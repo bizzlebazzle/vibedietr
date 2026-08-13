@@ -411,7 +411,12 @@ There is no status indicating that divergence.
 STB-04 gives normalized JSON buckets a shared write schema backed by the
 FND-06 nutrient registry. Unknown normalized keys are rejected, legacy
 `fiber`/`proteins` aliases normalize to `fibre`/`protein`, and values
-use DEC-003 scale. The provider-shaped `raw` bucket remains unbounded.
+use DEC-003 scale. STB-05 stores known zero as JSON numeric `0`; null, empty,
+and whitespace-only normalized inputs are missing values and therefore omit
+the nutrient key. Empty normalized buckets are omitted, and an otherwise empty
+nutrition object is stored as SQL `NULL`. JSON `null` remains structurally
+distinguishable but is not the shared writer's missing-value convention. The
+provider-shaped `raw` bucket remains unbounded.
 Normalized values still do not carry provenance, locale, or explicit unit
 metadata; their basis remains encoded by the bucket name.
 

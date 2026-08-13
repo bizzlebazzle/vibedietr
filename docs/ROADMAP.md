@@ -329,6 +329,7 @@ changes, it is deliberately split across multiple items.
 
 - **Outcome:** Store a user-entered zero as zero rather than treating it as a
   missing value.
+- **Status:** Complete (2026-08-13).
 - **Dependencies:** STB-04.
 - **Acceptance criteria:** Zero and blank remain distinct for every normalized
   nutrient bucket; existing non-zero rounding remains unchanged.

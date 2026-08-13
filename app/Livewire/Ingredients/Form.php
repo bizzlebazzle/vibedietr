@@ -384,6 +384,10 @@ class Form extends Component
             $input[$field] = $this->{$field};
         }
 
+        foreach (array_keys($this->nutritionInputMap()) as $property) {
+            $input[$property] = $this->{$property};
+        }
+
         return $input;
     }
 

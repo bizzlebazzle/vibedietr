@@ -213,6 +213,11 @@ preserves numeric zero, canonicalizes standard unit aliases, retains safe
 custom/ambiguous unit text, and quantizes nutrient decimals once to DEC-003's
 scale without display rounding. Ownership is not part of the contract.
 
+STB-05 makes the nutrition distinction strict: explicit numeric or numeric-
+string zero is stored as JSON numeric `0`, while null, empty, and whitespace-
+only normalized values are represented by an omitted key. Both normalized
+buckets and both write paths use that convention.
+
 ## OpenFoodFacts and barcode support
 
 The Livewire ingredient form can make a synchronous server-side request to the

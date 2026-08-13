@@ -16,6 +16,7 @@ edit-modal entry point. There is no Livewire delete method.
 | STB-FIND-001 | Direct Livewire update | Cross-user mutation and ownership transfer | Resolved by STB-03 |
 | STB-FIND-002 | Direct guest Livewire save | Database error instead of authorization denial | Resolved by STB-03 |
 | STB-FIND-003 | Controller/Livewire unit aliases | Persisted-data inconsistency | Resolved by STB-04 |
+| STB-FIND-004 | Explicit nutrition zero | Non-canonical JSON type and zero display loss | Resolved by STB-05 |
 
 ## STB-FIND-001 — Direct Livewire update bypasses owner authorization
 
@@ -90,6 +91,35 @@ edit-modal entry point. There is no Livewire delete method.
   and the dataset-driven `IngredientWriteEquivalenceTest`.
 - **Remaining follow-up:** Duplicate-barcode workflow behavior remains
   intentionally route-specific as recorded below.
+
+## STB-FIND-004 — Explicit nutrition zero has inconsistent absence behavior
+
+- **Area/path:** `IngredientWriteNormalizer::normalizeNutriments()`,
+  Livewire flattened nutrient preparation, and the ingredient nutrition
+  display.
+- **Observed behavior:** STB-04's explicit absence check retained zero, but
+  serialized it as the scale-18 JSON string `"0.000000000000000000"` rather
+  than JSON numeric `0`. Whitespace-only HTTP nutrition input became missing
+  through global request middleware while the equivalent flattened Livewire
+  value failed validation. Integer-formatted energy zero became string `"0"`
+  and a truthy display ternary then treated it as absent.
+- **Expected/documented behavior:** STB-05 requires explicit zero, including
+  accepted numeric-string zero, to remain distinct from null and blank in
+  every normalized nutrient bucket and on both retained write paths.
+- **Security/data-integrity impact:** Low. Stored zero was numerically
+  recoverable, but its JSON type did not meet the strict normalized contract;
+  equivalent whitespace input differed by transport, and known zero energy
+  could be presented as not set.
+- **Resolution:** Resolved by STB-05. Shared preparation trims normalized
+  nutrient strings and maps blanks to missing, shared normalization emits JSON
+  numeric `0` for exact zero without changing non-zero DEC-003 quantization,
+  and the display uses explicit null checks. Missing normalized values omit
+  their key; empty buckets and wholly empty nutrition remain absent.
+- **Regression tests:** Dataset-driven controller/Livewire comparisons cover
+  numeric, float, and string zero, null, empty, whitespace, and small non-zero
+  values. `IngredientNutritionZeroTest` covers every FND-06 nutrient in both
+  buckets, strict JSON zero/null/missing types, round trips, filtering, and
+  zero-energy display.
 
 ## Intentional controller/Livewire write differences
 
