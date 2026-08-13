@@ -176,6 +176,9 @@ An ingredient stores:
 
 - Its owning user.
 - Name and optional barcode.
+- Barcode provenance classified as manual, verified machine import, or legacy
+  unknown.
+- A nullable stable barcode source identifier and server import timestamp.
 - Package or item quantity and a required quantity unit.
 - Optional serving quantity, serving unit, and recommended serving count.
 - Optional image URL.
@@ -205,13 +208,21 @@ assignable, and update payloads cannot reassign it. The dormant edit-modal
 opener and its nested form use the same secured mutation path.
 
 STB-04 gives both retained write paths one `IngredientWriteContract` and one
-`IngredientWriteNormalizer`. The contract validates the complete persisted
-field allowlist, FND-06 units, an all-or-none serving quantity/unit pair,
-barcodes as optional strings up to 64 characters, and a bounded nutrition
-shape. Normalization trims nullable strings, stores empty optionals as null,
-preserves numeric zero, canonicalizes standard unit aliases, retains safe
-custom/ambiguous unit text, and quantizes nutrient decimals once to DEC-003's
-scale without display rounding. Ownership is not part of the contract.
+`IngredientWriteNormalizer`. The contract validates the persisted ordinary
+field allowlist, FND-06 units, an all-or-none serving quantity/unit pair, a
+bounded nutrition shape, and nullable values. Normalization trims nullable
+strings, stores empty optionals as null, preserves numeric zero, canonicalizes
+standard unit aliases, retains safe custom/ambiguous unit text, and quantizes
+nutrient decimals once to DEC-003's scale without display rounding. Ownership
+and barcode machine metadata are not part of the ordinary write contract.
+
+STB-08 makes barcode, stable source, server import time, and provenance
+machine-owned fields. Controller and ordinary Livewire saves ignore crafted
+values and model mass assignment excludes them. A successful typed STB-07
+result is retained briefly in server-side session state bound to the user and
+ingredient; a locked random Livewire token only references it. The dedicated
+import action revalidates requested/returned barcode consistency and assigns
+`openfoodfacts`, a UTC server timestamp, and verified machine provenance.
 
 STB-05 makes the nutrition distinction strict: explicit numeric or numeric-
 string zero is stored as JSON numeric `0`, while null, empty, and whitespace-
@@ -234,8 +245,10 @@ connection/timeouts, HTTP 408, ordinary 5xx responses, and 429/503 throttles
 whose `Retry-After` fits the short interactive ceiling. It returns typed
 success, not-found, unavailable, rate-limited, invalid-response, or permanent-
 failure results and writes only privacy-minimized correlated failure logs.
-A successful lookup
-can populate:
+A successful lookup is usable only when the mapped provider code exactly
+matches the trimmed lookup input. It may populate the form, but barcode
+provenance is not persisted until the subsequent trusted save consumes the
+server-side success result. A successful lookup can populate:
 
 - Product name.
 - Barcode.
@@ -254,11 +267,11 @@ The browser form also contains a camera barcode scanner. It:
 - Sends a successful scan to the Livewire form, which immediately starts an
   OpenFoodFacts lookup.
 
-Before fetching or saving through the Livewire form, the application checks for
-another ingredient with the same non-empty barcode owned by the current user.
-If one is found, it redirects to the existing record. This is an application
-check only: the database has a non-unique barcode index, and the conventional
-controller store/update paths do not perform the same duplicate check.
+Before fetching through the Livewire form, the application checks for another
+ingredient with the same non-empty barcode owned by the current user. If one is
+found, it redirects to the existing record. This is an application check only:
+the database has a non-unique barcode index, and the conventional controller
+paths have no provider lookup action.
 
 For the current user-owned implementation, the owner has confirmed that barcode
 uniqueness should be scoped per user. There is no agreed de-duplication rule for
@@ -297,8 +310,8 @@ The code does not:
 - Calculate nutrition from a quantity or serving size.
 - Calculate recipe or meal totals.
 - Invoke the shared converter to recalculate an ingredient quantity in the UI.
-- Record whether a value was imported, entered manually, calculated, or later
-  edited.
+- Record per-nutrient origin, calculation, provider revision, or later manual
+  divergence; STB-08 provenance applies to the barcode import as a whole.
 - Attach an accuracy or estimate label to nutrition values.
 
 ## Shared nutrient and measurement definitions
@@ -332,20 +345,23 @@ small-positive limits, explicit zero, and `Not available` for missing values.
 
 The intended source rules are:
 
-- An ingredient with a null barcode is considered manually entered.
-- An ingredient with a barcode is intended to represent machine-imported
-  OpenFoodFacts data.
+- A manual ingredient has no barcode, source, or import timestamp and carries
+  `manual` barcode provenance.
+- A new barcode is persisted only after a successful trusted OpenFoodFacts
+  lookup and carries `machine_imported` provenance, source `openfoodfacts`, and
+  a server-generated UTC import timestamp.
+- Every pre-STB-08 non-empty barcode is preserved with `legacy_unknown`
+  provenance and null source/time; barcode presence alone never verifies it.
 - Calculated nutrition belongs to future recipe and diet models, not the
   current ingredient model. Those future tables may require an explicit
   nutrition-source column.
 - Manual OpenFoodFacts search is planned as a future import route in addition
   to barcode lookup.
 
-The current code does not fully enforce the barcode-based source distinction:
-users can type and save a barcode without completing a successful
-OpenFoodFacts lookup, and no import-success or provenance field is persisted.
-The owner has confirmed that manual barcode entry is only a legacy testing
-facility: in normal operation the barcode must not be manually fillable.
+The visible barcode input is lookup input, not an ordinary editable persisted
+field. Failed, expired, malformed, rate-limited, unavailable, not-found, and
+permanent-failure lookups cannot create verified provenance. A failed
+re-import leaves existing verified metadata intact.
 
 ## Capabilities not represented
 
@@ -407,18 +423,23 @@ profile flows. Ingredient feature tests cover:
 - Creating an ingredient through Livewire.
 - Rounding and persistence of exposed nutrition values.
 - A successful mocked OpenFoodFacts lookup.
-- Redirecting instead of fetching or saving when the current user already has
-  the barcode.
+- Redirecting instead of fetching when the current user already has the
+  barcode.
 - Rendering an owner's list, show page, and edit page.
 - Quantity formatting on the list and show pages.
 - OpenFoodFacts request path and identification, response mapping, timeouts,
   bounded retry, transient and permanent failures, throttling, not-found,
   malformed/schema-invalid payloads, safe logging context, and Livewire error
   messages without live provider dependencies.
+- Manual controller/Livewire provenance forgery, guarded mass assignment,
+  trusted scan/import persistence, server timestamp/source derivation,
+  requested/returned barcode mismatch, failure outcomes, stale pending import
+  invalidation, failed re-import preservation, and legacy compatibility.
 
 Ingredient tests use a conventional model factory with automatic or explicit
-ownership and named manual, barcode-imported, legacy-nutrition, and unusual-unit
-states. Supported states can be composed for migration-era fixtures.
+ownership and named manual, verified barcode-imported, legacy-barcode,
+legacy-nutrition, and unusual-unit states. Supported states can be composed for
+migration-era fixtures.
 
 Ingredient characterization and authorization tests cover update persistence,
 hard deletion, search, pagination, owner/non-owner/guest behavior, retained
@@ -453,10 +474,10 @@ and additive migration rollback while preserving existing user/ingredient data.
   FND-14 bootstrap and lifecycle work is delivered with its second-factor,
   audit, and notification dependencies.
 - Ingredient writes retain Livewire and conventional controller paths. Their
-  field validation and normalization now share one contract. Livewire alone
-  retains the pre-existing duplicate-barcode redirect and provider-assisted
-  UI behavior; this temporary workflow difference is documented in
-  `STABILIZATION_FINDINGS.md`.
+  ordinary field validation and normalization now share one contract. Livewire
+  alone provides the provider lookup/scanner UI and its pre-fetch
+  duplicate-barcode redirect; ordinary saves agree that barcode provenance is
+  machine-controlled.
 - Livewire is the preferred mutation path. The existing controller routes are
   to be retained until they are proven unused.
 - Barcode uniqueness is not a database invariant. Concurrent requests or the
@@ -481,9 +502,10 @@ and additive migration rollback while preserving existing user/ingredient data.
   write contract now restricts normalized buckets to registered nutrients and
   exact non-negative decimals, but the retained raw OpenFoodFacts bucket is
   intentionally provider-shaped and unversioned.
-- Imported and manually edited nutrition values are blended in the same JSON
-  record with no provenance. The UI cannot apply the accuracy distinction
-  described in `AGENTS.md`.
+- Imported and manually edited nutrition values remain blended in the same JSON
+  record without per-value provenance. STB-08 identifies a verified barcode
+  import but does not provide the versioned field-level provenance needed to
+  apply the full accuracy distinction described in `AGENTS.md`.
 - The current JSON nutrition model retains provider-shaped observations in
   `raw`, but normalized values still lack per-value origin, derivation,
   normalization-policy version, and conflict metadata. NUT-05 owns that broader

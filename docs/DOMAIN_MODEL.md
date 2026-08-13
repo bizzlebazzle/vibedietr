@@ -154,6 +154,10 @@ Description and external identification:
 
 - Required `name`.
 - Optional `barcode`, indexed but not unique.
+- Required `barcode_provenance` allowlist: `manual`, `machine_imported`, or
+  `legacy_unknown`.
+- Nullable stable `barcode_source` identifier.
+- Nullable `barcode_imported_at` server timestamp.
 - Optional `image_url`.
 - Optional arrays of `keywords` and `categories`.
 
@@ -262,8 +266,9 @@ provenance metadata.
 
 ### Barcode and OpenFoodFacts product data
 
-A barcode is an optional string of up to 64 characters. The code does not
-validate its symbology, length for a particular standard, or check digit.
+A barcode is an optional string of up to 64 characters. Lookup trims
+surrounding whitespace and preserves leading zeros, but the code does not
+validate a specific symbology or check digit.
 
 Within the Livewire workflow, barcode lookup serves two roles:
 
@@ -271,9 +276,13 @@ Within the Livewire workflow, barcode lookup serves two roles:
 2. If no such record exists, it identifies a product requested from
    OpenFoodFacts.
 
-OpenFoodFacts is not represented as a persisted source or product entity. Its
-data is copied into the ingredient record. There is no source identifier,
-import timestamp, source revision, or per-field provenance.
+OpenFoodFacts is not represented as a separate persisted product entity. A
+successful trusted import copies mapped data into the ingredient and records
+`openfoodfacts` as its stable barcode source, a server-generated UTC import
+timestamp, and `machine_imported` provenance. Manual records have null barcode
+metadata and `manual` provenance. Pre-STB-08 non-empty barcodes are preserved
+as `legacy_unknown` with null source/time. The record-level classification does
+not provide source revision or per-field nutrition provenance.
 
 ## Current relationships
 
@@ -305,6 +314,8 @@ Database-enforced rules:
 - Deleting a user deletes their ingredients.
 - Ingredient name, quantity, and quantity unit cannot be null.
 - Barcode has a non-unique index.
+- Barcode provenance is restricted to the three stable enum values and defaults
+  to `manual`; it has an index for migration classification.
 - JSON fields and optional serving/image fields may be null.
 - Audit event and identity identifiers are ULID primary keys.
 - Audit classification columns and event time are non-null; the event payload
@@ -333,8 +344,8 @@ Application-enforced audit rules:
 Rules shared by the Livewire and controller write paths:
 
 - Name is required and at most 255 characters.
-- Barcode is an optional string of at most 64 characters. Whitespace is
-  trimmed, an empty value stores as null, and leading zeros are preserved.
+- Barcode, source, import time, and provenance are excluded from ordinary
+  controller/Livewire validation and model mass assignment.
 - Quantity is required, numeric, and non-negative.
 - Quantity unit is required and at most 32 characters. Unambiguous FND-06
   aliases normalize to storage symbols; safe custom and ambiguous text is
@@ -348,13 +359,20 @@ Rules shared by the Livewire and controller write paths:
   as scale-18 strings without DEC-004 display rounding. Missing remains
   distinct from numeric or string zero.
 - Ownership identifiers are excluded from the write allowlist.
+- A narrow trusted import action accepts only a typed successful STB-07 result,
+  requires requested/returned barcode equality, reapplies the shared
+  validation/normalization rules to mapped data, and assigns machine metadata
+  explicitly.
 
 Additional Livewire behavior:
 
-- A duplicate non-empty barcode for the same user redirects to the existing
-  record rather than saving.
-- OpenFoodFacts data and its provider-shaped `raw` bucket are merged into the
-  form's current nutrition document before shared normalization.
+- A duplicate non-empty lookup barcode for the same user redirects to the
+  existing record before a provider request.
+- A successful result is held in short-lived server session state bound to the
+  authenticated user and ingredient. A locked random component token references
+  it; ordinary public state cannot supply source, time, or provenance.
+- Failed lookup or replacement lookup attempts clear any earlier pending
+  success. Failed re-import leaves persisted verified provenance unchanged.
 
 Authorization is based on ingredient ownership. Listing queries explicitly
 filter by the current user's identifier. Individual view, edit, and delete
@@ -403,14 +421,15 @@ copies or whether a barcode should identify one shared product.
 
 ### Nutrition provenance and accuracy
 
-The same normalized fields can originate from OpenFoodFacts or manual editing,
-and imported values can later be changed. The data model does not retain their
-source. Consequently, it cannot implement the distinction in `AGENTS.md`
-between accurate imported values and estimated calculated values.
+The ingredient now records whether its barcode was verified through the
+OpenFoodFacts import workflow, but the same normalized nutrition fields can
+still originate from OpenFoodFacts or later manual editing. The record-level
+barcode classification is not per-value provenance and therefore cannot fully
+implement the accuracy distinction in `AGENTS.md`.
 
 The `raw` OpenFoodFacts object can coexist with manually changed normalized
-values, so it is not necessarily the source of the current normalized fields.
-There is no status indicating that divergence.
+values, so it is not necessarily the source of each current normalized field.
+There is no status indicating field-level divergence.
 
 ### Nutrition schema and units
 

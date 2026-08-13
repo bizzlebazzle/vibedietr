@@ -2,15 +2,20 @@
 
 namespace App\Livewire\Ingredients;
 
+use App\Domain\Ingredients\ApplyOpenFoodFactsImport;
 use App\Domain\Ingredients\IngredientWriteContract;
 use App\Domain\Ingredients\IngredientWriteNormalizer;
+use App\Domain\Ingredients\PendingIngredientImport;
+use App\Domain\Ingredients\PendingIngredientImportStore;
 use App\Domain\Measurements\MeasurementUnitRegistry;
 use App\Domain\Nutrition\Nutrient;
 use App\Domain\Nutrition\NutrientRegistry;
 use App\Integrations\OpenFoodFacts\OpenFoodFactsClient;
 use App\Integrations\OpenFoodFacts\OpenFoodFactsLookupStatus;
 use App\Models\Ingredient;
+use App\Models\User;
 use Illuminate\Support\Arr;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 class Form extends Component
@@ -20,6 +25,9 @@ class Form extends Component
     public $name = '';
 
     public $barcode = null;
+
+    #[Locked]
+    public ?string $pendingImportToken = null;
 
     public $keywords = [];
 
@@ -84,6 +92,14 @@ class Form extends Component
         return IngredientWriteContract::livewireRules();
     }
 
+    /** @return array<string, array<int, string>> */
+    protected function barcodeLookupRules(): array
+    {
+        return [
+            'barcode' => ['required', 'string', 'max:64'],
+        ];
+    }
+
     public function mount(?Ingredient $ingredient = null)
     {
         $this->ingredientId = $ingredient?->getKey();
@@ -138,6 +154,12 @@ class Form extends Component
 
     public function fetchFromOff(?string $barcode = null): void
     {
+        $this->authorizeMutation();
+
+        $pendingImports = app(PendingIngredientImportStore::class);
+        $pendingImports->forget($this->pendingImportToken);
+        $this->pendingImportToken = null;
+
         $barcode = trim((string) ($barcode ?? $this->barcode ?? ''));
 
         if ($barcode === '') {
@@ -153,7 +175,7 @@ class Form extends Component
             return;
         }
 
-        $this->validateOnly('barcode');
+        $this->validateOnly('barcode', $this->barcodeLookupRules());
         $result = app(OpenFoodFactsClient::class)->lookup($barcode);
 
         if ($result->status !== OpenFoodFactsLookupStatus::Success || $result->product === null) {
@@ -170,6 +192,16 @@ class Form extends Component
 
             return;
         }
+
+        $user = auth()->user();
+
+        if (! $user instanceof User) {
+            abort(403);
+        }
+
+        $this->pendingImportToken = $pendingImports->remember(
+            $user, $this->ingredientId, $barcode, $result
+        );
 
         $product = $result->product;
         $this->name = $product->name ?? $this->name;
@@ -301,16 +333,11 @@ class Form extends Component
 
         $this->prepareWriteInput();
 
-        if ($this->redirectToExistingBarcodeIngredient($this->barcode)) {
-            return;
-        }
-
         $validated = $this->validate($this->rules());
         $validated['nutriments'] = $this->mergeNutritionInputsIntoNutriments();
         $payload = app(IngredientWriteNormalizer::class)->normalize(Arr::only($validated, IngredientWriteContract::fields()));
 
         $this->name = $payload['name'];
-        $this->barcode = $payload['barcode'] ?? null;
         $this->keywords = $payload['keywords'] ?? [];
         $this->categories = $payload['categories'] ?? [];
         $this->nutriments = $payload['nutriments'] ?? [];
@@ -320,10 +347,18 @@ class Form extends Component
         $this->recommended_servings = $payload['recommended_servings'] ?? null;
         $this->image_url = $payload['image_url'] ?? null;
 
+        $pendingImport = $this->pendingImportForSave();
+
+        if ($this->pendingImportToken !== null && $pendingImport === null) {
+            $this->addError('barcode', 'The verified barcode lookup expired. Fetch it again before saving.');
+
+            return;
+        }
+
         if ($ingredient) {
             $ingredient = Ingredient::query()->findOrFail($ingredient->getKey());
             $this->authorize('update', $ingredient);
-            $ingredient->update($payload);
+            $this->persist($ingredient, $payload, $pendingImport);
             $this->ingredientId = $ingredient->getKey();
             $this->dispatch('notify', type: 'success', message: 'Ingredient updated.');
             $this->dispatch('ingredientSaved')->to(Index::class);
@@ -332,7 +367,7 @@ class Form extends Component
 
             $ingredient = new Ingredient($payload);
             $ingredient->user()->associate(auth()->user());
-            $ingredient->save();
+            $this->persist($ingredient, $payload, $pendingImport);
             $this->ingredientId = $ingredient->getKey();
             $this->dispatch('notify', type: 'success', message: 'Ingredient created.');
             $this->dispatch('ingredientSaved')->to(Index::class);
@@ -341,6 +376,51 @@ class Form extends Component
                 $this->redirectRoute('ingredients.index', navigate: true);
             }
         }
+
+        $this->barcode = $ingredient->barcode;
+        app(PendingIngredientImportStore::class)->forget($this->pendingImportToken);
+        $this->pendingImportToken = null;
+    }
+
+    protected function pendingImportForSave(): ?PendingIngredientImport
+    {
+        if ($this->pendingImportToken === null) {
+            return null;
+        }
+
+        $user = auth()->user();
+
+        if (! $user instanceof User) {
+            abort(403);
+        }
+
+        return app(PendingIngredientImportStore::class)->get(
+            $this->pendingImportToken,
+            $user,
+            $this->ingredientId,
+        );
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    protected function persist(
+        Ingredient $ingredient,
+        array $payload,
+        ?PendingIngredientImport $pendingImport,
+    ): void {
+        if ($pendingImport === null) {
+            $ingredient->fill($payload)->save();
+
+            return;
+        }
+
+        app(ApplyOpenFoodFactsImport::class)->apply(
+            $ingredient,
+            $payload,
+            $pendingImport->requestedBarcode,
+            $pendingImport->result,
+        );
     }
 
     protected function authorizeMutation(): ?Ingredient

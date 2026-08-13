@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Domain\Ingredients\IngredientBarcodeProvenance;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,7 +14,6 @@ class Ingredient extends Model
 
     protected $fillable = [
         'name',
-        'barcode',
         'keywords',
         'categories',
         'nutriments',
@@ -29,6 +29,8 @@ class Ingredient extends Model
         'keywords' => 'array',
         'categories' => 'array',
         'nutriments' => 'array',
+        'barcode_provenance' => IngredientBarcodeProvenance::class,
+        'barcode_imported_at' => 'immutable_datetime',
         'quantity' => 'decimal:3',
         'serving_quantity' => 'decimal:3',
         'recommended_servings' => 'decimal:2',

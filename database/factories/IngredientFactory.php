@@ -2,6 +2,8 @@
 
 namespace Database\Factories;
 
+use App\Domain\Ingredients\IngredientBarcodeProvenance;
+use App\Integrations\OpenFoodFacts\OpenFoodFactsClient;
 use App\Models\Ingredient;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -22,6 +24,9 @@ class IngredientFactory extends Factory
             'user_id' => User::factory(),
             'name' => fake()->words(2, true),
             'barcode' => null,
+            'barcode_provenance' => IngredientBarcodeProvenance::Manual,
+            'barcode_source' => null,
+            'barcode_imported_at' => null,
             'keywords' => null,
             'categories' => null,
             'nutriments' => null,
@@ -44,6 +49,9 @@ class IngredientFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'barcode' => null,
+            'barcode_provenance' => IngredientBarcodeProvenance::Manual,
+            'barcode_source' => null,
+            'barcode_imported_at' => null,
             'keywords' => null,
             'categories' => null,
             'image_url' => null,
@@ -51,16 +59,19 @@ class IngredientFactory extends Factory
     }
 
     /**
-     * Represent data copied from the current OpenFoodFacts barcode path.
+     * Represent data from a verified OpenFoodFacts barcode import.
      *
-     * Do not combine this state with manual(); the schema has no separate
-     * provenance field with which to reconcile those source conventions.
+     * Do not combine this state with manual(); they represent mutually
+     * exclusive provenance classifications.
      */
     public function barcodeImported(): static
     {
         return $this->state(fn (array $attributes) => [
             'name' => 'Imported test product '.fake()->unique()->numerify('####'),
-            'barcode' => fake()->unique()->numerify('TEST-BARCODE-############'),
+            'barcode' => fake()->unique()->numerify('0############'),
+            'barcode_provenance' => IngredientBarcodeProvenance::MachineImported,
+            'barcode_source' => OpenFoodFactsClient::PROVIDER,
+            'barcode_imported_at' => now()->utc(),
             'keywords' => ['synthetic', 'imported'],
             'categories' => ['en:test-foods'],
             'quantity' => 400,
@@ -68,6 +79,20 @@ class IngredientFactory extends Factory
             'serving_quantity' => 100,
             'serving_quantity_unit' => 'g',
             'image_url' => 'https://example.test/products/synthetic-product.jpg',
+        ]);
+    }
+
+    /**
+     * Represent a pre-STB-08 barcode whose import origin cannot be proven.
+     */
+    public function legacyBarcode(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'name' => 'Legacy barcode product '.fake()->unique()->numerify('####'),
+            'barcode' => fake()->unique()->numerify('9############'),
+            'barcode_provenance' => IngredientBarcodeProvenance::LegacyUnknown,
+            'barcode_source' => null,
+            'barcode_imported_at' => null,
         ]);
     }
 

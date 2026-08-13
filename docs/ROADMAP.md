@@ -374,6 +374,7 @@ changes, it is deliberately split across multiple items.
 
 - **Outcome:** Ensure a stored barcode represents a successful import rather
   than arbitrary manual input.
+- **Status:** Complete (2026-08-13).
 - **Dependencies:** STB-07, FND-05.
 - **Acceptance criteria:** Normal creation cannot freely type a barcode;
   scanner/import results carry source identifier and import timestamp; failed

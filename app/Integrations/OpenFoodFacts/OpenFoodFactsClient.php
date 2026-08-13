@@ -12,7 +12,7 @@ use JsonException;
 
 final readonly class OpenFoodFactsClient
 {
-    private const PROVIDER = 'openfoodfacts';
+    public const PROVIDER = 'openfoodfacts';
 
     private const FIELDS = [
         'code', 'product_name', 'quantity', 'categories_tags', 'states_tags',
@@ -24,6 +24,7 @@ final readonly class OpenFoodFactsClient
 
     public function lookup(string $barcode): OpenFoodFactsLookupResult
     {
+        $barcode = trim($barcode);
         $correlationId = (string) Str::ulid();
         if (! $this->hasUsableConfiguration()) {
             return $this->failure(OpenFoodFactsLookupStatus::PermanentFailure, $correlationId, $barcode, 0);
@@ -84,6 +85,10 @@ final readonly class OpenFoodFactsClient
             try {
                 $decoded = ExactJsonDecoder::decodeObject($response->body());
                 $product = $this->mapper->map($decoded);
+
+                if (trim($product->code) !== $barcode) {
+                    throw new InvalidOpenFoodFactsResponse;
+                }
             } catch (JsonException|InvalidOpenFoodFactsResponse) {
                 return $this->failure(OpenFoodFactsLookupStatus::InvalidResponse, $correlationId, $barcode, $attempt, $response->status());
             }

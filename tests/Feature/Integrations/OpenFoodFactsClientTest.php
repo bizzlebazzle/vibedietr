@@ -127,7 +127,7 @@ class OpenFoodFactsClientTest extends TestCase
     {
         Http::fake(['*' => Http::sequence()
             ->push(['safe' => 'ignored'], 500)
-            ->push($this->validResponse())]);
+            ->push($this->validResponse(['code' => '1234567890123']))]);
 
         $result = app(OpenFoodFactsClient::class)->lookup('1234567890123');
 
@@ -166,7 +166,7 @@ class OpenFoodFactsClientTest extends TestCase
     {
         Http::fake(['*' => Http::sequence()
             ->push(['technical' => 'ignored'], 429, ['Retry-After' => '0'])
-            ->push($this->validResponse())]);
+            ->push($this->validResponse(['code' => '1234567890123']))]);
 
         $result = app(OpenFoodFactsClient::class)->lookup('1234567890123');
 
@@ -205,6 +205,16 @@ class OpenFoodFactsClientTest extends TestCase
 
         $this->assertSame(OpenFoodFactsLookupStatus::InvalidResponse, $result->status);
         Http::assertSentCount(1);
+    }
+
+    public function test_provider_barcode_must_match_the_normalized_lookup_input(): void
+    {
+        Http::fake(['*' => Http::response($this->validResponse())]);
+
+        $result = app(OpenFoodFactsClient::class)->lookup(' 1234567890123 ');
+
+        $this->assertSame(OpenFoodFactsLookupStatus::InvalidResponse, $result->status);
+        $this->assertNull($result->product);
     }
 
     #[DataProvider('invalidPayloadProvider')]

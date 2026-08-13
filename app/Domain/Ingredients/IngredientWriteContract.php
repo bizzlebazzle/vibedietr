@@ -14,7 +14,6 @@ final class IngredientWriteContract
     {
         return [
             'name',
-            'barcode',
             'keywords',
             'categories',
             'nutriments',
@@ -35,13 +34,13 @@ final class IngredientWriteContract
      */
     public static function prepare(array $input): array
     {
-        foreach (['name', 'barcode', 'quantity_unit', 'serving_quantity_unit', 'image_url'] as $field) {
+        foreach (['name', 'quantity_unit', 'serving_quantity_unit', 'image_url'] as $field) {
             if (array_key_exists($field, $input) && is_string($input[$field])) {
                 $input[$field] = trim($input[$field]);
             }
         }
 
-        foreach (['barcode', 'serving_quantity_unit', 'image_url'] as $field) {
+        foreach (['serving_quantity_unit', 'image_url'] as $field) {
             if (($input[$field] ?? null) === '') {
                 $input[$field] = null;
             }
@@ -85,7 +84,6 @@ final class IngredientWriteContract
         $nutrientKeys = implode(',', array_keys(self::nutrientKeyMap()));
         $rules = [
             'name' => ['required', 'string', 'max:255'],
-            'barcode' => ['nullable', 'string', 'max:64'],
             'keywords' => ['nullable', 'array'],
             'categories' => ['nullable', 'array'],
             'nutriments' => ['nullable', 'array:raw,per_100g,per_serving'],

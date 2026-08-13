@@ -67,10 +67,13 @@
       </div>
 
       <div class="space-y-1">
-        <label class="block font-medium">Barcode</label>
+        <label class="block font-medium">Barcode lookup</label>
+        <p class="text-sm text-gray-600 dark:text-slate-300">
+          A barcode is saved only after OpenFoodFacts confirms the product.
+        </p>
         <div class="flex flex-col gap-2">
           <div class="flex gap-2">
-            <input type="text" wire:model.defer="barcode" class="flex-1 rounded border px-3 py-2" placeholder="e.g., 5449000000996">
+            <input type="text" wire:model.defer="barcode" class="flex-1 rounded border px-3 py-2" placeholder="Scan or enter a barcode to look up">
             <button
               type="button"
               class="rounded bg-blue-600 text-white px-3 py-2 disabled:opacity-50"

@@ -16,13 +16,13 @@ final readonly class IngredientWriteNormalizer
      */
     public function normalize(array $validated): array
     {
-        foreach (['name', 'barcode', 'image_url'] as $field) {
+        foreach (['name', 'image_url'] as $field) {
             if (array_key_exists($field, $validated) && is_string($validated[$field])) {
                 $validated[$field] = trim($validated[$field]);
             }
         }
 
-        foreach (['barcode', 'image_url'] as $field) {
+        foreach (['image_url'] as $field) {
             if (array_key_exists($field, $validated) && $this->isBlank($validated[$field])) {
                 $validated[$field] = null;
             }

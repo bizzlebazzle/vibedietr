@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Ingredients;
 
+use App\Domain\Ingredients\IngredientBarcodeProvenance;
+use App\Integrations\OpenFoodFacts\OpenFoodFactsClient;
 use App\Models\Ingredient;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -22,6 +24,9 @@ class IngredientFactoryTest extends TestCase
         $this->assertSame('g', $ingredient->quantity_unit);
         $this->assertNull($ingredient->barcode);
         $this->assertNull($ingredient->nutriments);
+        $this->assertSame(IngredientBarcodeProvenance::Manual, $ingredient->barcode_provenance);
+        $this->assertNull($ingredient->barcode_source);
+        $this->assertNull($ingredient->barcode_imported_at);
     }
 
     public function test_manual_state_persists_without_external_product_attributes(): void
@@ -32,19 +37,35 @@ class IngredientFactoryTest extends TestCase
         $this->assertNull($ingredient->keywords);
         $this->assertNull($ingredient->categories);
         $this->assertNull($ingredient->image_url);
+        $this->assertSame(IngredientBarcodeProvenance::Manual, $ingredient->barcode_provenance);
+        $this->assertNull($ingredient->barcode_source);
+        $this->assertNull($ingredient->barcode_imported_at);
     }
 
     public function test_barcode_imported_state_persists_with_current_import_attributes(): void
     {
         $ingredient = Ingredient::factory()->barcodeImported()->create();
 
-        $this->assertStringStartsWith('TEST-BARCODE-', $ingredient->barcode);
+        $this->assertMatchesRegularExpression('/^0[0-9]{12}$/', $ingredient->barcode);
+        $this->assertSame(IngredientBarcodeProvenance::MachineImported, $ingredient->barcode_provenance);
+        $this->assertSame(OpenFoodFactsClient::PROVIDER, $ingredient->barcode_source);
+        $this->assertNotNull($ingredient->barcode_imported_at);
         $this->assertSame(['synthetic', 'imported'], $ingredient->keywords);
         $this->assertSame(['en:test-foods'], $ingredient->categories);
         $this->assertSame('400.000', $ingredient->quantity);
         $this->assertSame('100.000', $ingredient->serving_quantity);
         $this->assertNull($ingredient->recommended_servings);
         $this->assertSame('https://example.test/products/synthetic-product.jpg', $ingredient->image_url);
+    }
+
+    public function test_legacy_barcode_state_is_explicitly_unknown(): void
+    {
+        $ingredient = Ingredient::factory()->legacyBarcode()->create();
+
+        $this->assertMatchesRegularExpression('/^9[0-9]{12}$/', $ingredient->barcode);
+        $this->assertSame(IngredientBarcodeProvenance::LegacyUnknown, $ingredient->barcode_provenance);
+        $this->assertNull($ingredient->barcode_source);
+        $this->assertNull($ingredient->barcode_imported_at);
     }
 
     public function test_nutrition_state_persists_current_legacy_nutrition_data(): void
@@ -72,7 +93,8 @@ class IngredientFactoryTest extends TestCase
 
         $this->assertNull($manualWithNutrition->barcode);
         $this->assertSame(245, data_get($manualWithNutrition->nutriments, 'per_100g.energy_kcal'));
-        $this->assertStringStartsWith('TEST-BARCODE-', $barcodeWithNutrition->barcode);
+        $this->assertMatchesRegularExpression('/^0[0-9]{12}$/', $barcodeWithNutrition->barcode);
+        $this->assertSame(IngredientBarcodeProvenance::MachineImported, $barcodeWithNutrition->barcode_provenance);
         $this->assertSame(245, data_get($barcodeWithNutrition->nutriments, 'per_100g.energy_kcal'));
         $this->assertNull($manualWithUnusualUnit->barcode);
         $this->assertSame('sprig', $manualWithUnusualUnit->quantity_unit);
