@@ -189,6 +189,20 @@ user to list and create records, but only the owning user can view, update, or
 delete a particular ingredient. Restore and force-delete policy operations are
 disabled; the model does not use soft deletes.
 
+STB-01 characterization confirms that controller show, edit, update, and delete
+return 403 for a non-owner, while guests are redirected to login. Search and
+pagination remain owner-scoped. The controller is the only ingredient deletion
+path and redirects to the unfiltered first index page after a hard delete.
+
+Direct Livewire behavior is not equivalent. `Ingredients\Form::save()` does not
+authorize create or update. A directly mounted authenticated form can update
+another user's row and reassign `user_id` to the caller; a guest create or
+update reaches the database and fails its non-null ownership constraint instead
+of returning an authorization denial. The dormant edit-modal opener does
+perform policy authorization, but its nested form uses the same unsafe save
+method. These discrepancies and their capturing tests are recorded in
+[Stabilization findings](STABILIZATION_FINDINGS.md).
+
 ## OpenFoodFacts and barcode support
 
 The Livewire ingredient form can make a synchronous server-side request to the
