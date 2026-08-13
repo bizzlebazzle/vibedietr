@@ -36,7 +36,7 @@ class FormTest extends TestCase
         $this->assertSame('g', $ingredient->quantity_unit);
     }
 
-    public function test_nutrition_values_are_rounded_before_saving(): void
+    public function test_nutrition_values_preserve_storage_precision_when_saving(): void
     {
         $user = User::factory()->create();
 
@@ -53,22 +53,22 @@ class FormTest extends TestCase
             ->set('per_serving_salt', 0.004)
             ->call('save')
             ->assertHasNoErrors()
-            ->assertSet('per_100g_energy_kcal', 124)
-            ->assertSet('per_100g_fat', 1.24)
-            ->assertSet('per_100g_saturates', 0.99)
-            ->assertSet('per_serving_sugars', 10.56)
-            ->assertSet('per_serving_salt', 0.0);
+            ->assertSet('per_100g_energy_kcal', 123.6)
+            ->assertSet('per_100g_fat', 1.236)
+            ->assertSet('per_100g_saturates', 0.994)
+            ->assertSet('per_serving_sugars', 10.555)
+            ->assertSet('per_serving_salt', 0.004);
 
         $ingredient = Ingredient::query()
             ->where('name', 'Rounded Nutrition Ingredient')
             ->first();
 
         $this->assertNotNull($ingredient);
-        $this->assertSame(124, data_get($ingredient->nutriments, 'per_100g.energy_kcal'));
-        $this->assertSame(1.24, data_get($ingredient->nutriments, 'per_100g.fat'));
-        $this->assertSame(0.99, data_get($ingredient->nutriments, 'per_100g.saturated_fat'));
-        $this->assertSame(10.56, data_get($ingredient->nutriments, 'per_serving.sugars'));
-        $this->assertEquals(0.0, data_get($ingredient->nutriments, 'per_serving.salt'));
+        $this->assertSame('123.600000000000000000', data_get($ingredient->nutriments, 'per_100g.energy_kcal'));
+        $this->assertSame('1.236000000000000000', data_get($ingredient->nutriments, 'per_100g.fat'));
+        $this->assertSame('0.994000000000000000', data_get($ingredient->nutriments, 'per_100g.saturated_fat'));
+        $this->assertSame('10.555000000000000000', data_get($ingredient->nutriments, 'per_serving.sugars'));
+        $this->assertSame('0.004000000000000000', data_get($ingredient->nutriments, 'per_serving.salt'));
     }
 
     public function test_fetch_from_off_uses_the_component_barcode(): void
@@ -97,8 +97,8 @@ class FormTest extends TestCase
             ->assertHasNoErrors('barcode')
             ->assertSet('barcode', '1234567890123')
             ->assertSet('name', 'OFF Test Product')
-            ->assertSet('per_100g_energy_kcal', 124)
-            ->assertSet('per_100g_fat', 1.24);
+            ->assertSet('per_100g_energy_kcal', 123.6)
+            ->assertSet('per_100g_fat', 1.236);
 
         Http::assertSent(function ($request) {
             return str_contains($request->url(), '/1234567890123.json');

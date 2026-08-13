@@ -253,7 +253,7 @@ class IngredientLivewireCharacterizationTest extends TestCase
         ]);
     }
 
-    public function test_controller_and_livewire_currently_normalize_valid_unit_aliases_differently(): void
+    public function test_controller_and_livewire_normalize_valid_unit_aliases_consistently(): void
     {
         $owner = User::factory()->create();
         $controllerIngredient = $this->ingredientFor($owner, 'Controller unit original');
@@ -274,7 +274,7 @@ class IngredientLivewireCharacterizationTest extends TestCase
             ->call('save')
             ->assertHasNoErrors();
 
-        $this->assertSame('grams', $controllerIngredient->refresh()->quantity_unit);
+        $this->assertSame('g', $controllerIngredient->refresh()->quantity_unit);
         $this->assertSame('g', $livewireIngredient->refresh()->quantity_unit);
     }
 

@@ -327,27 +327,28 @@ Application-enforced audit rules:
 Rules shared by the Livewire and controller write paths:
 
 - Name is required and at most 255 characters.
-- Barcode is optional and at most 64 characters.
+- Barcode is an optional string of at most 64 characters. Whitespace is
+  trimmed, an empty value stores as null, and leading zeros are preserved.
 - Quantity is required, numeric, and non-negative.
-- Quantity unit is required and at most 32 characters.
-- Serving quantity and recommended servings are optional, numeric, and
-  non-negative.
-- Serving unit is optional and at most 32 characters.
+- Quantity unit is required and at most 32 characters. Unambiguous FND-06
+  aliases normalize to storage symbols; safe custom and ambiguous text is
+  preserved without conversion.
+- Serving quantity and unit are an all-or-none pair. The quantity is
+  non-negative; its unit follows the same unit rules.
+- Recommended servings is optional, numeric, and non-negative.
 - Image URL is optional and must be a URL.
+- Normalized nutrition has only `per_100g` and `per_serving` registered
+  nutrient keys. Values are nullable non-negative DEC-003 decimals and persist
+  as scale-18 strings without DEC-004 display rounding. Missing remains
+  distinct from numeric or string zero.
+- Ownership identifiers are excluded from the write allowlist.
 
-Additional Livewire rules and behavior:
+Additional Livewire behavior:
 
-- Quantity and serving units use shared validation. Unambiguous aliases
-  normalize to standard storage symbols; safe custom text is accepted and
-  preserved.
-- Exposed nutrition values must be non-negative.
-- An exposed nutrition value of zero is treated as blank during the JSON merge
-  and its normalized key is removed.
-- Energy is normalized to whole numbers and other exposed values to two
-  decimal places.
 - A duplicate non-empty barcode for the same user redirects to the existing
   record rather than saving.
-- OpenFoodFacts data is merged into the form's current nutrition document.
+- OpenFoodFacts data and its provider-shaped `raw` bucket are merged into the
+  form's current nutrition document before shared normalization.
 
 Authorization is based on ingredient ownership. Listing queries explicitly
 filter by the current user's identifier. Individual view, edit, and delete
@@ -383,8 +384,9 @@ first two together as "Recommended serving" and the last as "Recommended
 servings." The code does not define whether `recommended_servings` means
 servings per package, a dietary recommendation, or another value.
 
-Serving amount and serving unit are independently nullable and validated. The
-model can therefore hold an amount without a unit or a unit without an amount.
+The columns remain independently nullable for legacy compatibility, but all
+new controller and Livewire writes require serving amount and unit together.
+Both absent and both present are valid; either one alone is rejected.
 
 ### Food identity and barcode uniqueness
 
@@ -406,10 +408,12 @@ There is no status indicating that divergence.
 
 ### Nutrition schema and units
 
-The recognized JSON keys form an implicit schema inside one Livewire
-component. Arbitrary nutrition keys can be persisted through the resource
-controller. Normalized values do not carry units, locale, basis metadata, or
-precision information.
+STB-04 gives normalized JSON buckets a shared write schema backed by the
+FND-06 nutrient registry. Unknown normalized keys are rejected, legacy
+`fiber`/`proteins` aliases normalize to `fibre`/`protein`, and values
+use DEC-003 scale. The provider-shaped `raw` bucket remains unbounded.
+Normalized values still do not carry provenance, locale, or explicit unit
+metadata; their basis remains encoded by the bucket name.
 
 The `per_100g` basis assumes mass. The model also supports products measured in
 volume, pieces, and containers, but it contains no density or conversion data
@@ -454,7 +458,6 @@ representation:
   measured by piece or container?
 - Should an unknown quantity be valid, and is zero a real quantity or a stand-in
   for unknown?
-- Must a serving amount and serving unit always be supplied together?
 - Should barcodes identify shared products globally, be unique only within a
   user's catalogue, or merely be optional lookup hints?
 - Which fields need source, import time, confidence, accuracy, or

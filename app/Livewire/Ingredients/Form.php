@@ -2,28 +2,28 @@
 
 namespace App\Livewire\Ingredients;
 
+use App\Domain\Ingredients\IngredientWriteContract;
+use App\Domain\Ingredients\IngredientWriteNormalizer;
 use App\Domain\Measurements\MeasurementUnitParser;
 use App\Domain\Measurements\MeasurementUnitRegistry;
 use App\Models\Ingredient;
-use App\Rules\ValidMeasurementUnit;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http;
-use Livewire\Attributes\Validate;
 use Livewire\Component;
 
 class Form extends Component
 {
     public ?int $ingredientId = null;
 
-    #[Validate('required|string|max:255')]
-    public string $name = '';
+    public $name = '';
 
-    public ?string $barcode = null;
+    public $barcode = null;
 
-    public array $keywords = [];
+    public $keywords = [];
 
-    public array $categories = [];
+    public $categories = [];
 
-    public array $nutriments = []; // structure: ['raw'=>[], 'per_100g'=>[], 'per_serving'=>[]]
+    public $nutriments = []; // structure: ['raw'=>[], 'per_100g'=>[], 'per_serving'=>[]]
 
     public $per_100g_energy_kj = null;
 
@@ -49,36 +49,21 @@ class Form extends Component
 
     public $per_serving_salt = null;
 
-    #[Validate('required|numeric|min:0')]
     public $quantity = null;
 
-    #[Validate('required|string|max:32')]
-    public ?string $quantity_unit = null;
+    public $quantity_unit = null;
 
     public $serving_quantity = null;
 
-    public ?string $serving_quantity_unit = null;
+    public $serving_quantity_unit = null;
 
     public $recommended_servings = null;
 
-    public ?string $image_url = null;
+    public $image_url = null;
 
     protected function rules(): array
     {
-        return [
-            'name' => ['required', 'string', 'max:255'],
-            'barcode' => ['nullable', 'string', 'max:64'],
-            'keywords' => ['nullable', 'array'],
-            'categories' => ['nullable', 'array'],
-            'nutriments' => ['nullable', 'array'],
-            'quantity' => ['required', 'numeric', 'min:0'],
-            'quantity_unit' => ['required', 'string', 'max:32', new ValidMeasurementUnit],
-            'serving_quantity' => ['nullable', 'numeric', 'min:0'],
-            'serving_quantity_unit' => ['nullable', 'string', 'max:32', new ValidMeasurementUnit],
-            'recommended_servings' => ['nullable', 'numeric', 'min:0'],
-            'image_url' => ['nullable', 'url'],
-            ...$this->nutritionInputRules(),
-        ];
+        return IngredientWriteContract::livewireRules();
     }
 
     public function mount(?Ingredient $ingredient = null)
@@ -201,10 +186,10 @@ class Form extends Component
             'per_100g' => [
                 'carbohydrates' => $nutr['carbohydrates_100g'] ?? null,
                 'fat' => $nutr['fat_100g'] ?? null,
-                'energy_kcal' => $this->roundNutritionInteger($nutr['energy-kcal_100g'] ?? ($nutr['energy-kcal_100g'] ?? null)),
-                'energy_kj' => $this->roundNutritionInteger($nutr['energy-kj_100g'] ?? ($nutr['energy-kj_100g'] ?? null)),
-                'fiber' => $nutr['fiber_100g'] ?? null,
-                'proteins' => $nutr['proteins_100g'] ?? null,
+                'energy_kcal' => $nutr['energy-kcal_100g'] ?? null,
+                'energy_kj' => $nutr['energy-kj_100g'] ?? null,
+                'fibre' => $nutr['fiber_100g'] ?? null,
+                'protein' => $nutr['proteins_100g'] ?? null,
                 'salt' => $nutr['salt_100g'] ?? null,
                 'saturated_fat' => $nutr['saturated-fat_100g'] ?? ($nutr['saturated_fat_100g'] ?? null),
                 'sodium' => $nutr['sodium_100g'] ?? null,
@@ -213,10 +198,10 @@ class Form extends Component
             'per_serving' => [
                 'carbohydrates' => $nutr['carbohydrates_serving'] ?? null,
                 'fat' => $nutr['fat_serving'] ?? null,
-                'energy_kcal' => $this->roundNutritionInteger($nutr['energy-kcal_serving'] ?? ($nutr['energy_kcal_serving'] ?? null)),
-                'energy_kj' => $this->roundNutritionInteger($nutr['energy-kj_serving'] ?? ($nutr['energy_kj_serving'] ?? null)),
-                'fiber' => $nutr['fiber_serving'] ?? null,
-                'proteins' => $nutr['proteins_serving'] ?? null,
+                'energy_kcal' => $nutr['energy-kcal_serving'] ?? ($nutr['energy_kcal_serving'] ?? null),
+                'energy_kj' => $nutr['energy-kj_serving'] ?? ($nutr['energy_kj_serving'] ?? null),
+                'fibre' => $nutr['fiber_serving'] ?? null,
+                'protein' => $nutr['proteins_serving'] ?? null,
                 'salt' => $nutr['salt_serving'] ?? null,
                 'saturated_fat' => $nutr['saturated-fat_serving'] ?? ($nutr['saturated_fat_serving'] ?? null),
                 'sodium' => $nutr['sodium_serving'] ?? null,
@@ -245,91 +230,32 @@ class Form extends Component
         $this->dispatch('notify', type: 'success', message: 'Successfully loaded item information from OpenFoodFacts.');
     }
 
-    protected function nutritionInputRules(): array
-    {
-        $rules = [];
-
-        foreach ($this->nutritionInputMap() as $field => $config) {
-            $rules[$field] = $config['integer']
-                ? ['nullable', 'integer', 'min:0']
-                : ['nullable', 'numeric', 'min:0'];
-        }
-
-        return $rules;
-    }
-
     protected function nutritionInputMap(): array
     {
-        return [
-            'per_100g_energy_kj' => ['bucket' => 'per_100g', 'key' => 'energy_kj', 'integer' => true],
-            'per_100g_energy_kcal' => ['bucket' => 'per_100g', 'key' => 'energy_kcal', 'integer' => true],
-            'per_100g_fat' => ['bucket' => 'per_100g', 'key' => 'fat', 'integer' => false],
-            'per_100g_saturates' => ['bucket' => 'per_100g', 'key' => 'saturated_fat', 'integer' => false],
-            'per_100g_sugars' => ['bucket' => 'per_100g', 'key' => 'sugars', 'integer' => false],
-            'per_100g_salt' => ['bucket' => 'per_100g', 'key' => 'salt', 'integer' => false],
-            'per_serving_energy_kj' => ['bucket' => 'per_serving', 'key' => 'energy_kj', 'integer' => true],
-            'per_serving_energy_kcal' => ['bucket' => 'per_serving', 'key' => 'energy_kcal', 'integer' => true],
-            'per_serving_fat' => ['bucket' => 'per_serving', 'key' => 'fat', 'integer' => false],
-            'per_serving_saturates' => ['bucket' => 'per_serving', 'key' => 'saturated_fat', 'integer' => false],
-            'per_serving_sugars' => ['bucket' => 'per_serving', 'key' => 'sugars', 'integer' => false],
-            'per_serving_salt' => ['bucket' => 'per_serving', 'key' => 'salt', 'integer' => false],
-        ];
+        return IngredientWriteContract::nutritionInputMap();
     }
 
     protected function hydrateNutritionInputs(): void
     {
-        foreach ($this->nutritionInputMap() as $property => ['bucket' => $bucket, 'key' => $key, 'integer' => $integer]) {
-            $value = data_get($this->nutriments, "{$bucket}.{$key}");
-            $this->{$property} = $this->normalizeNutritionValue($value, $integer);
-        }
-    }
-
-    protected function roundNutritionInteger($value): ?int
-    {
-        if (! is_numeric($value)) {
-            return null;
-        }
-
-        return (int) round((float) $value);
-    }
-
-    protected function roundNutritionDecimal($value): ?float
-    {
-        if (! is_numeric($value)) {
-            return null;
-        }
-
-        return round((float) $value, 2);
-    }
-
-    protected function normalizeNutritionValue($value, bool $integer): int|float|null
-    {
-        return $integer
-            ? $this->roundNutritionInteger($value)
-            : $this->roundNutritionDecimal($value);
-    }
-
-    protected function normalizeNutritionInputs(): void
-    {
-        foreach ($this->nutritionInputMap() as $property => ['integer' => $integer]) {
-            $this->{$property} = $this->normalizeNutritionValue($this->{$property}, $integer);
+        foreach ($this->nutritionInputMap() as $property => ['bucket' => $bucket, 'key' => $key]) {
+            $this->{$property} = data_get($this->nutriments, "{$bucket}.{$key}");
         }
     }
 
     protected function mergeNutritionInputsIntoNutriments(): array
     {
-        $nutriments = $this->nutriments;
+        $nutriments = is_array($this->nutriments) ? $this->nutriments : [];
 
-        foreach ($this->nutritionInputMap() as $property => ['bucket' => $bucket, 'key' => $key, 'integer' => $integer]) {
+        foreach ($this->nutritionInputMap() as $property => ['bucket' => $bucket, 'key' => $key]) {
             $value = $this->{$property};
 
-            if (blank($value)) {
+            if ($value === null || (is_string($value) && trim($value) === '')) {
                 unset($nutriments[$bucket][$key]);
 
                 continue;
             }
 
-            $nutriments[$bucket][$key] = $this->normalizeNutritionValue($value, $integer);
+            $nutriments[$bucket][$key] = $value;
         }
 
         foreach (['per_100g', 'per_serving'] as $bucket) {
@@ -449,36 +375,49 @@ class Form extends Component
         ]));
     }
 
+    /** @return array<string, mixed> */
+    protected function writeInput(): array
+    {
+        $input = [];
+
+        foreach (IngredientWriteContract::fields() as $field) {
+            $input[$field] = $this->{$field};
+        }
+
+        return $input;
+    }
+
+    protected function prepareWriteInput(): void
+    {
+        foreach (IngredientWriteContract::prepare($this->writeInput()) as $field => $value) {
+            $this->{$field} = $value;
+        }
+    }
+
     public function save(): void
     {
         $ingredient = $this->authorizeMutation();
 
-        $this->normalizeNutritionInputs();
+        $this->prepareWriteInput();
 
         if ($this->redirectToExistingBarcodeIngredient($this->barcode)) {
             return;
         }
 
-        $this->validate($this->rules());
-        $this->quantity_unit = MeasurementUnitParser::storageValue($this->quantity_unit);
-        $this->serving_quantity_unit = blank($this->serving_quantity_unit)
-            ? null
-            : MeasurementUnitParser::storageValue($this->serving_quantity_unit);
-        $this->nutriments = $this->mergeNutritionInputsIntoNutriments();
+        $validated = $this->validate($this->rules());
+        $validated['nutriments'] = $this->mergeNutritionInputsIntoNutriments();
+        $payload = app(IngredientWriteNormalizer::class)->normalize(Arr::only($validated, IngredientWriteContract::fields()));
 
-        $payload = [
-            'name' => $this->name,
-            'barcode' => $this->barcode ?: null,
-            'keywords' => $this->keywords ?: null,
-            'categories' => $this->categories ?: null,
-            'nutriments' => $this->nutriments ?: null,
-            'quantity' => $this->quantity,
-            'quantity_unit' => $this->quantity_unit,
-            'serving_quantity' => $this->serving_quantity ?: null,
-            'serving_quantity_unit' => $this->serving_quantity_unit ?: null,
-            'recommended_servings' => $this->recommended_servings ?: null,
-            'image_url' => $this->image_url ?: null,
-        ];
+        $this->name = $payload['name'];
+        $this->barcode = $payload['barcode'] ?? null;
+        $this->keywords = $payload['keywords'] ?? [];
+        $this->categories = $payload['categories'] ?? [];
+        $this->nutriments = $payload['nutriments'] ?? [];
+        $this->quantity_unit = $payload['quantity_unit'];
+        $this->serving_quantity = $payload['serving_quantity'] ?? null;
+        $this->serving_quantity_unit = $payload['serving_quantity_unit'] ?? null;
+        $this->recommended_servings = $payload['recommended_servings'] ?? null;
+        $this->image_url = $payload['image_url'] ?? null;
 
         if ($ingredient) {
             $ingredient = Ingredient::query()->findOrFail($ingredient->getKey());

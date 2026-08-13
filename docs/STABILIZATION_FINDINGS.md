@@ -15,7 +15,7 @@ edit-modal entry point. There is no Livewire delete method.
 | --- | --- | --- | --- |
 | STB-FIND-001 | Direct Livewire update | Cross-user mutation and ownership transfer | Resolved by STB-03 |
 | STB-FIND-002 | Direct guest Livewire save | Database error instead of authorization denial | Resolved by STB-03 |
-| STB-FIND-003 | Controller/Livewire unit aliases | Persisted-data inconsistency | Open; STB-04 |
+| STB-FIND-003 | Controller/Livewire unit aliases | Persisted-data inconsistency | Resolved by STB-04 |
 
 ## STB-FIND-001 — Direct Livewire update bypasses owner authorization
 
@@ -79,6 +79,29 @@ edit-modal entry point. There is no Livewire delete method.
 - **Recommended follow-up backlog item:** STB-04.
 - **Capturing test:**
   `test_controller_and_livewire_currently_normalize_valid_unit_aliases_differently`.
+- **Resolution:** Resolved by STB-04. Both Form Requests and Livewire consume
+  `IngredientWriteContract`, then persist only values returned by
+  `IngredientWriteNormalizer`. Standard aliases now use the FND-06 storage
+  symbol, safe custom units retain their text, and ambiguous values such as
+  `T` remain custom. The shared contract also converges serving pairs,
+  barcode strings, nullable values, and the allowed nutrition shape.
+- **Regression tests:**
+  `test_controller_and_livewire_normalize_valid_unit_aliases_consistently`
+  and the dataset-driven `IngredientWriteEquivalenceTest`.
+- **Remaining follow-up:** Duplicate-barcode workflow behavior remains
+  intentionally route-specific as recorded below.
+
+## Intentional controller/Livewire write differences
+
+| Field/behavior | Controller | Livewire | Why intentional | Relevant test | Temporary |
+| --- | --- | --- | --- | --- | --- |
+| Duplicate non-empty barcode | Continues through the ordinary write after validation | Redirects to the existing record before saving | Existing provider-assisted Livewire workflow outside payload validation; the schema has no uniqueness constraint | `test_save_redirects_to_existing_barcode_ingredient_instead_of_creating_duplicate` | Yes; later catalogue/uniqueness work must converge it safely |
+| Successful response | Redirects with a session status | Dispatches component events and may navigate | Transport-specific UX is preserved | Controller and Livewire characterization suites | No |
+| Direct guest invocation | Auth middleware redirects before the action | Mutation-boundary policy returns 403 | STB-03 protects independently callable Livewire actions | STB-03 guest mutation tests | No |
+
+There are no intentional differences in field validation or normalization.
+The flattened Livewire nutrition properties are UI state only; they are
+validated from the same contract and merged before the shared normalizer.
 
 ## Dormant edit-modal evidence
 
