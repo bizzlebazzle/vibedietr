@@ -359,6 +359,7 @@ changes, it is deliberately split across multiple items.
 - **Outcome:** Move HTTP and response mapping out of the Livewire component
   into a testable client with explicit identification, timeout, retry, and
   error semantics.
+- **Status:** Complete (2026-08-13).
 - **Dependencies:** FND-09.
 - **Acceptance criteria:** UI behavior is preserved; timeouts, non-success
   responses, missing products, invalid payloads, and rate limits produce safe

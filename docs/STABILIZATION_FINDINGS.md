@@ -18,6 +18,7 @@ edit-modal entry point. There is no Livewire delete method.
 | STB-FIND-003 | Controller/Livewire unit aliases | Persisted-data inconsistency | Resolved by STB-04 |
 | STB-FIND-004 | Explicit nutrition zero | Non-canonical JSON type and zero display loss | Resolved by STB-05 |
 | STB-FIND-005 | Energy and supported-nutrient presentation | Independent conflicting energy and silently omitted nutrients | Resolved by STB-06 |
+| STB-FIND-006 | Direct OpenFoodFacts access | Unbounded, unidentified provider coupling in Livewire | Resolved by STB-07 |
 
 ## STB-FIND-001 — Direct Livewire update bypasses owner authorization
 
@@ -149,6 +150,35 @@ edit-modal entry point. There is no Livewire delete method.
 - **Remaining follow-up:** The JSON model has no per-normalized-value origin,
   status, policy-version, or conflict metadata. NUT-05 remains responsible for
   the versioned catalogue provenance model.
+
+## STB-FIND-006 — OpenFoodFacts transport and mapping live in the UI
+
+- **Area/path:** `App\Livewire\Ingredients\Form::fetchFromOff()`.
+- **Observed behavior:** Livewire constructed a hard-coded deprecated v2 URL,
+  supplied no application User-Agent, defined no timeout or retry, treated
+  non-success responses generically, allowed connection and JSON exceptions to
+  escape, and directly parsed every provider path. Product absence, provider
+  failure, throttling, and schema drift were not stable application states.
+- **Expected/documented behavior:** STB-07 requires one reusable client with
+  explicit application identification, timeout, bounded retry, status and
+  rate-limit handling, validated mapping, safe diagnostics, and stable results
+  for UI callers.
+- **Resolution:** Resolved by STB-07. `App\Integrations\OpenFoodFacts` now owns
+  the configurable v3.4 compatibility endpoint, custom User-Agent, two/five-
+  second connect/request limits, two total attempts, safe `Retry-After`
+  handling, exact JSON validation, registry-driven nutrient mapping, typed
+  result semantics, and correlated privacy-minimized final-failure logs.
+  Livewire handles interaction and maps only those stable results to safe
+  messages. Routine not-found creates no infrastructure-error log or audit
+  event.
+- **Regression tests:** `OpenFoodFactsClientTest` covers transport,
+  classification, mapping, schema failures, precision, zero and bounded retry;
+  `OpenFoodFactsLivewireTest` covers success and every user-visible failure
+  state without provider-detail leakage.
+- **Remaining follow-up:** The current ingredient JSON shape requires the
+  provider's v3.4 flat nutrient compatibility profile. A v3.6 mapper migration
+  must account for its breaking nutrition/tag schema before changing the
+  configured profile. STB-09 separately owns the scanner CDN dependency.
 
 ## Intentional controller/Livewire write differences
 

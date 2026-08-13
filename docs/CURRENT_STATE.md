@@ -220,8 +220,21 @@ buckets and both write paths use that convention.
 
 ## OpenFoodFacts and barcode support
 
-The Livewire ingredient form can make a synchronous server-side request to the
-OpenFoodFacts v2 product endpoint for a supplied barcode. A successful lookup
+The Livewire ingredient form can make a synchronous server-side request through
+the application-owned OpenFoodFacts client for a supplied barcode. The client
+uses the configurable production product-read endpoint and defaults to the
+OpenFoodFacts v3.4 compatibility profile. This moves the integration off
+deprecated v2 while retaining the documented flat nutrient fields required by
+the current ingredient JSON model; v3.5 and later need an explicit mapper
+review because the provider changed its nutrition schema.
+
+The client supplies a configurable custom User-Agent, a two-second connection
+timeout, a five-second total timeout, and at most two attempts. It retries only
+connection/timeouts, HTTP 408, ordinary 5xx responses, and 429/503 throttles
+whose `Retry-After` fits the short interactive ceiling. It returns typed
+success, not-found, unavailable, rate-limited, invalid-response, or permanent-
+failure results and writes only privacy-minimized correlated failure logs.
+A successful lookup
 can populate:
 
 - Product name.
@@ -398,6 +411,10 @@ profile flows. Ingredient feature tests cover:
   the barcode.
 - Rendering an owner's list, show page, and edit page.
 - Quantity formatting on the list and show pages.
+- OpenFoodFacts request path and identification, response mapping, timeouts,
+  bounded retry, transient and permanent failures, throttling, not-found,
+  malformed/schema-invalid payloads, safe logging context, and Livewire error
+  messages without live provider dependencies.
 
 Ingredient tests use a conventional model factory with automatic or explicit
 ownership and named manual, barcode-imported, legacy-nutrition, and unusual-unit
@@ -407,8 +424,8 @@ Ingredient characterization and authorization tests cover update persistence,
 hard deletion, search, pagination, owner/non-owner/guest behavior, retained
 controller mutations, dormant edit-modal invocation, forged Livewire
 identifiers, stale ownership at save time, and ownership mass assignment.
-OpenFoodFacts failure responses, quantity parsing variants, and browser camera
-behavior remain uncovered.
+OpenFoodFacts failure responses and representative quantity mapping are now
+covered. Browser camera behavior remains uncovered.
 
 Administrator authorization tests cover migration defaults for existing and
 new users, persistence, mass-assignment and self-service input protection, the
@@ -453,9 +470,11 @@ and additive migration rollback while preserving existing user/ingredient data.
   deletable by users. Their submitting-user foreign key must become nullable,
   and deleting that user must set the reference to null rather than delete the
   catalogue record.
-- OpenFoodFacts access is embedded in the Livewire component rather than a
-  dedicated client or domain service. No application-specific timeout, retry,
-  caching, or rate-limit behavior is defined.
+- OpenFoodFacts transport and mapping are isolated behind a typed application
+  client with bounded interactive failure behavior. It intentionally pins the
+  v3.4 flat-nutrient compatibility profile; adopting the provider's latest
+  v3.6 nutrition structure remains a mapper migration risk rather than an
+  environment-only version change. No response cache is implemented.
 - The scanner depends on a third-party CDN at runtime. Scanner behavior has no
   automated browser coverage.
 - Nutrition remains JSON rather than a relational/versioned model. The shared

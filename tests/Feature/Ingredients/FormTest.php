@@ -78,8 +78,11 @@ class FormTest extends TestCase
         $this->actingAs($user);
 
         Http::fake([
-            'https://world.openfoodfacts.org/api/v2/product/*' => Http::response([
+            'https://world.openfoodfacts.org/api/v3.4/product/*' => Http::response([
+                'status' => 'success',
+                'result' => ['id' => 'product_found'],
                 'product' => [
+                    'code' => '1234567890123',
                     'product_name' => 'OFF Test Product',
                     'keywords' => ['test'],
                     'categories_tags' => ['en:test-category'],
