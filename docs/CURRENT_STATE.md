@@ -186,22 +186,23 @@ An ingredient stores:
 Ingredient lists and individual records are scoped through the authenticated
 user or checked with `IngredientPolicy`. The policy allows any authenticated
 user to list and create records, but only the owning user can view, update, or
-delete a particular ingredient. Restore and force-delete policy operations are
-disabled; the model does not use soft deletes.
+delete a particular ingredient. Controller and Livewire writes invoke the
+policy at the mutation boundary. Restore and force-delete policy operations
+are disabled; the model does not use soft deletes.
 
-STB-01 characterization confirms that controller show, edit, update, and delete
-return 403 for a non-owner, while guests are redirected to login. Search and
-pagination remain owner-scoped. The controller is the only ingredient deletion
-path and redirects to the unfiltered first index page after a hard delete.
+Controller show, edit, update, and delete return 403 for a non-owner, while
+guests are redirected to login. Search and pagination remain owner-scoped. The
+controller is the only ingredient deletion path and redirects to the
+unfiltered first index page after a hard delete.
 
-Direct Livewire behavior is not equivalent. `Ingredients\Form::save()` does not
-authorize create or update. A directly mounted authenticated form can update
-another user's row and reassign `user_id` to the caller; a guest create or
-update reaches the database and fails its non-null ownership constraint instead
-of returning an authorization denial. The dormant edit-modal opener does
-perform policy authorization, but its nested form uses the same unsafe save
-method. These discrepancies and their capturing tests are recorded in
-[Stabilization findings](STABILIZATION_FINDINGS.md).
+STB-03 makes direct Livewire behavior equivalent at the access-decision
+boundary. `Ingredients\Form::save()` keeps only an untrusted scalar ingredient
+identifier, re-resolves the record, and authorizes the authoritative model
+immediately before update. Crafted identifiers, stale ownership, non-owner
+updates, and direct guest saves receive 403 without mutation. Creation assigns
+the authenticated user through the relationship, ownership is not mass
+assignable, and update payloads cannot reassign it. The dormant edit-modal
+opener and its nested form use the same secured mutation path.
 
 ## OpenFoodFacts and barcode support
 
@@ -382,10 +383,12 @@ Ingredient tests use a conventional model factory with automatic or explicit
 ownership and named manual, barcode-imported, legacy-nutrition, and unusual-unit
 states. Supported states can be composed for migration-era fixtures.
 
-There are no ingredient tests for update persistence, deletion, search,
-pagination, non-owner authorization, request-based controller mutations,
-OpenFoodFacts failure responses, quantity parsing variants, or browser camera
-behavior.
+Ingredient characterization and authorization tests cover update persistence,
+hard deletion, search, pagination, owner/non-owner/guest behavior, retained
+controller mutations, dormant edit-modal invocation, forged Livewire
+identifiers, stale ownership at save time, and ownership mass assignment.
+OpenFoodFacts failure responses, quantity parsing variants, and browser camera
+behavior remain uncovered.
 
 Administrator authorization tests cover migration defaults for existing and
 new users, persistence, mass-assignment and self-service input protection, the
@@ -418,9 +421,6 @@ and additive migration rollback while preserving existing user/ingredient data.
   do not apply alias normalization, barcode de-duplication, or nutrition normalization.
 - Livewire is the preferred mutation path. The existing controller routes are
   to be retained until they are proven unused.
-- `Form::save()` updates an existing model without making its own policy call.
-  Current page and modal entry points authorize before rendering the form, but
-  authorization is distributed rather than enforced at the mutation itself.
 - Barcode uniqueness is not a database invariant. Concurrent requests or the
   controller path can create duplicates for one user, despite the intended
   per-user uniqueness rule.

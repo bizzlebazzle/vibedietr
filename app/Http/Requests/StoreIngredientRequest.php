@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Ingredient;
 use App\Rules\ValidMeasurementUnit;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -9,7 +10,7 @@ class StoreIngredientRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return auth()->check();
+        return $this->user()?->can('create', Ingredient::class) ?? false;
     }
 
     public function rules(): array

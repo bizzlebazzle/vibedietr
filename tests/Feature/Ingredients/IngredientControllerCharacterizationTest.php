@@ -91,6 +91,7 @@ class IngredientControllerCharacterizationTest extends TestCase
     public function test_owner_controller_update_changes_only_submitted_attributes(): void
     {
         $owner = User::factory()->create();
+        $otherUser = User::factory()->create();
         $ingredient = $this->ingredientFor($owner, 'Original owner name', [
             'barcode' => 'Owner-only barcode',
             'categories' => ['unchanged-category'],
@@ -101,6 +102,7 @@ class IngredientControllerCharacterizationTest extends TestCase
                 'name' => 'Controller-updated name',
                 'barcode' => 'Owner-only barcode',
                 'categories' => ['unchanged-category'],
+                'user_id' => $otherUser->id,
             ]))
             ->assertRedirect(route('ingredients.index'));
 

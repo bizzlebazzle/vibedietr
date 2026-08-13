@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Ingredient;
 use App\Rules\ValidMeasurementUnit;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -9,7 +10,10 @@ class UpdateIngredientRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return auth()->check();
+        $ingredient = $this->route('ingredient');
+
+        return $ingredient instanceof Ingredient
+            && ($this->user()?->can('update', $ingredient) ?? false);
     }
 
     public function rules(): array

@@ -6,8 +6,8 @@ use App\Livewire\Ingredients\Form;
 use App\Livewire\Ingredients\Index;
 use App\Models\Ingredient;
 use App\Models\User;
-use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Exceptions\PublicPropertyNotFoundException;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -77,7 +77,7 @@ class IngredientLivewireCharacterizationTest extends TestCase
         $this->assertSame('0.000', $ingredient->refresh()->quantity);
     }
 
-    public function test_non_owner_direct_livewire_update_currently_changes_and_reassigns_the_record(): void
+    public function test_non_owner_direct_livewire_update_is_forbidden_and_leaves_both_users_records_unchanged(): void
     {
         $owner = User::factory()->create();
         $otherUser = User::factory()->create();
@@ -89,12 +89,12 @@ class IngredientLivewireCharacterizationTest extends TestCase
             ->set('quantity', 4)
             ->set('quantity_unit', 'kg')
             ->call('save')
-            ->assertHasNoErrors();
+            ->assertForbidden();
 
         $this->assertDatabaseHas('ingredients', [
             'id' => $ownersIngredient->id,
-            'user_id' => $otherUser->id,
-            'name' => 'Cross-user Livewire mutation',
+            'user_id' => $owner->id,
+            'name' => 'Owner vulnerable record',
         ]);
         $this->assertDatabaseHas('ingredients', [
             'id' => $otherUsersIngredient->id,
@@ -103,46 +103,107 @@ class IngredientLivewireCharacterizationTest extends TestCase
         ]);
     }
 
-    public function test_guest_direct_livewire_update_raises_database_error_and_leaves_record_unchanged(): void
+    public function test_guest_direct_livewire_update_is_forbidden_and_leaves_record_unchanged(): void
     {
         $owner = User::factory()->create();
-        $ingredient = $this->ingredientFor($owner, 'Guest Livewire protected by database');
+        $ingredient = $this->ingredientFor($owner, 'Guest Livewire authorization protected');
 
-        try {
-            Livewire::test(Form::class, ['ingredient' => $ingredient])
-                ->set('name', 'Guest Livewire attempted mutation')
-                ->set('quantity', 5)
-                ->set('quantity_unit', 'kg')
-                ->call('save');
-
-            $this->fail('The current direct guest update is expected to fail at the database boundary.');
-        } catch (QueryException $exception) {
-            $this->assertSame('23000', $exception->getCode());
-        }
+        Livewire::test(Form::class, ['ingredient' => $ingredient])
+            ->set('name', 'Guest Livewire attempted mutation')
+            ->set('quantity', 5)
+            ->set('quantity_unit', 'kg')
+            ->call('save')
+            ->assertForbidden();
 
         $this->assertDatabaseHas('ingredients', [
             'id' => $ingredient->id,
             'user_id' => $owner->id,
-            'name' => 'Guest Livewire protected by database',
+            'name' => 'Guest Livewire authorization protected',
             'quantity_unit' => 'g',
         ]);
     }
 
-    public function test_guest_direct_livewire_create_raises_database_error_and_creates_nothing(): void
+    public function test_guest_direct_livewire_create_is_forbidden_and_creates_nothing(): void
     {
-        try {
-            Livewire::test(Form::class)
-                ->set('name', 'Guest Livewire attempted creation')
-                ->set('quantity', 1)
-                ->set('quantity_unit', 'g')
-                ->call('save');
-
-            $this->fail('The current direct guest create is expected to fail at the database boundary.');
-        } catch (QueryException $exception) {
-            $this->assertSame('23000', $exception->getCode());
-        }
+        Livewire::test(Form::class)
+            ->set('name', 'Guest Livewire attempted creation')
+            ->set('quantity', 1)
+            ->set('quantity_unit', 'g')
+            ->call('save')
+            ->assertForbidden();
 
         $this->assertDatabaseCount('ingredients', 0);
+    }
+
+    public function test_forged_livewire_ingredient_identifier_is_forbidden_and_changes_no_records(): void
+    {
+        $owner = User::factory()->create();
+        $otherUser = User::factory()->create();
+        $ownersIngredient = $this->ingredientFor($owner, 'Mounted owner record');
+        $otherUsersIngredient = $this->ingredientFor($otherUser, 'Forged target record');
+
+        Livewire::actingAs($owner)->test(Form::class, ['ingredient' => $ownersIngredient])
+            ->set('ingredientId', $otherUsersIngredient->id)
+            ->set('name', 'Forged target mutation')
+            ->call('save')
+            ->assertForbidden();
+
+        $this->assertDatabaseHas('ingredients', [
+            'id' => $ownersIngredient->id,
+            'user_id' => $owner->id,
+            'name' => 'Mounted owner record',
+        ]);
+        $this->assertDatabaseHas('ingredients', [
+            'id' => $otherUsersIngredient->id,
+            'user_id' => $otherUser->id,
+            'name' => 'Forged target record',
+        ]);
+        $this->assertDatabaseCount('ingredients', 2);
+    }
+
+    public function test_stale_mounted_livewire_component_rechecks_current_ownership_before_update(): void
+    {
+        $originalOwner = User::factory()->create();
+        $newOwner = User::factory()->create();
+        $ingredient = $this->ingredientFor($originalOwner, 'Stale component target');
+
+        $component = Livewire::actingAs($originalOwner)->test(Form::class, ['ingredient' => $ingredient]);
+
+        Ingredient::query()->whereKey($ingredient)->update(['user_id' => $newOwner->id]);
+
+        $component
+            ->set('name', 'Stale component mutation')
+            ->call('save')
+            ->assertForbidden();
+
+        $this->assertDatabaseHas('ingredients', [
+            'id' => $ingredient->id,
+            'user_id' => $newOwner->id,
+            'name' => 'Stale component target',
+        ]);
+        $this->assertDatabaseCount('ingredients', 1);
+    }
+
+    public function test_forged_livewire_ownership_field_is_rejected_and_cannot_reassign_the_record(): void
+    {
+        $owner = User::factory()->create();
+        $otherUser = User::factory()->create();
+        $ingredient = $this->ingredientFor($owner, 'Ownership-bound record');
+
+        try {
+            Livewire::actingAs($owner)->test(Form::class, ['ingredient' => $ingredient])
+                ->set('user_id', $otherUser->id)
+                ->set('name', 'Forged ownership update')
+                ->call('save');
+
+            $this->fail('The ownership field must not be public Livewire state.');
+        } catch (PublicPropertyNotFoundException) {
+            // Expected: ownership is not a bindable component property.
+        }
+
+        $ingredient->refresh();
+        $this->assertSame($owner->id, $ingredient->user_id);
+        $this->assertSame('Ownership-bound record', $ingredient->name);
     }
 
     public function test_owner_can_open_the_currently_unused_edit_modal_path(): void
