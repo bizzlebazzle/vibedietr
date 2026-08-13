@@ -46,7 +46,36 @@ final class IngredientWriteContract
             }
         }
 
+        if (isset($input['nutriments']) && is_array($input['nutriments'])) {
+            foreach (['per_100g', 'per_serving'] as $bucket) {
+                if (! isset($input['nutriments'][$bucket]) || ! is_array($input['nutriments'][$bucket])) {
+                    continue;
+                }
+
+                foreach ($input['nutriments'][$bucket] as $key => $value) {
+                    $input['nutriments'][$bucket][$key] = self::prepareNutrientValue($value);
+                }
+            }
+        }
+
+        foreach (array_keys(self::nutritionInputMap()) as $property) {
+            if (array_key_exists($property, $input)) {
+                $input[$property] = self::prepareNutrientValue($input[$property]);
+            }
+        }
+
         return $input;
+    }
+
+    private static function prepareNutrientValue(mixed $value): mixed
+    {
+        if (! is_string($value)) {
+            return $value;
+        }
+
+        $value = trim($value);
+
+        return $value === '' ? null : $value;
     }
 
     /** @return array<string, array<int, mixed>> */

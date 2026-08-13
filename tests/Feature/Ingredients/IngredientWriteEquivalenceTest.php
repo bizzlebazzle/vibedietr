@@ -149,11 +149,35 @@ class IngredientWriteEquivalenceTest extends TestCase
         ];
         yield 'numeric nutrient zero is preserved' => [
             self::validPayload(['nutriments' => ['per_100g' => ['fat' => 0]]]),
-            true, null, null, ['nutriments.per_100g.fat' => '0.000000000000000000'],
+            true, null, null, ['nutriments.per_100g.fat' => 0],
+        ];
+        yield 'numeric float nutrient zero is preserved' => [
+            self::validPayload(['nutriments' => ['per_100g' => ['fat' => 0.0]]]),
+            true, null, null, ['nutriments.per_100g.fat' => 0],
+        ];
+        yield 'decimal string nutrient zero is preserved' => [
+            self::validPayload(['nutriments' => ['per_100g' => ['fat' => '0.0']]]),
+            true, null, null, ['nutriments.per_100g.fat' => 0],
         ];
         yield 'string nutrient zero is preserved' => [
             self::validPayload(['nutriments' => ['per_serving' => ['salt' => '0']]]),
-            true, null, null, ['nutriments.per_serving.salt' => '0.000000000000000000'],
+            true, null, null, ['nutriments.per_serving.salt' => 0],
+        ];
+        yield 'whitespace-only nutrient remains missing' => [
+            self::validPayload(['nutriments' => ['per_serving' => ['salt' => '   ']]]),
+            true, null, null, ['nutriments' => null],
+        ];
+        yield 'empty per-100g nutrient remains missing' => [
+            self::validPayload(['nutriments' => ['per_100g' => ['fat' => '']]]),
+            true, null, null, ['nutriments' => null],
+        ];
+        yield 'null per-serving nutrient remains missing' => [
+            self::validPayload(['nutriments' => ['per_serving' => ['salt' => null]]]),
+            true, null, null, ['nutriments' => null],
+        ];
+        yield 'small per-serving nutrient remains non-zero' => [
+            self::validPayload(['nutriments' => ['per_serving' => ['salt' => '0.0049']]]),
+            true, null, null, ['nutriments.per_serving.salt' => '0.004900000000000000'],
         ];
         yield 'nutrition is not rounded to display precision' => [
             self::validPayload(['nutriments' => ['per_100g' => ['salt' => '0.0049']]]),

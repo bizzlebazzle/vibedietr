@@ -74,7 +74,10 @@ final class IngredientWriteNormalizer
                 }
 
                 $canonicalKey = $keyMap[$key]->value;
-                $normalized[$canonicalKey] = Decimal::forStorage(Decimal::parse($this->decimalString($value)));
+                $decimal = Decimal::parse($this->decimalString($value));
+                $normalized[$canonicalKey] = $decimal->isZero()
+                    ? 0
+                    : Decimal::forStorage($decimal);
             }
 
             if ($normalized === []) {
