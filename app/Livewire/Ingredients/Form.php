@@ -4,14 +4,13 @@ namespace App\Livewire\Ingredients;
 
 use App\Domain\Ingredients\IngredientWriteContract;
 use App\Domain\Ingredients\IngredientWriteNormalizer;
-use App\Domain\Measurements\MeasurementUnitParser;
 use App\Domain\Measurements\MeasurementUnitRegistry;
 use App\Domain\Nutrition\Nutrient;
 use App\Domain\Nutrition\NutrientRegistry;
-use App\Domain\Shared\ExactJsonDecoder;
+use App\Integrations\OpenFoodFacts\OpenFoodFactsClient;
+use App\Integrations\OpenFoodFacts\OpenFoodFactsLookupStatus;
 use App\Models\Ingredient;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Http;
 use Livewire\Component;
 
 class Form extends Component
@@ -154,97 +153,48 @@ class Form extends Component
             return;
         }
 
-        // OFF v2 product endpoint (adjust fields as needed)
-        $resp = Http::acceptJson()
-            ->get("https://world.openfoodfacts.org/api/v2/product/{$barcode}.json", [
-                'fields' => implode(',', [
-                    'code',
-                    'product_name',
-                    'quantity',
-                    'categories_tags',
-                    'states_tags',
-                    'keywords',
-                    'nutriments',
-                    'serving_quantity',
-                    'serving_size',
-                    'image_front_small_url',
-                    'image_front_url',
-                ]),
-            ]);
+        $this->validateOnly('barcode');
+        $result = app(OpenFoodFactsClient::class)->lookup($barcode);
 
-        if (! $resp->ok()) {
-            $this->dispatch('notify', type: 'error', message: 'OFF lookup failed.');
+        if ($result->status !== OpenFoodFactsLookupStatus::Success || $result->product === null) {
+            $message = match ($result->status) {
+                OpenFoodFactsLookupStatus::NotFound => 'No product found for that barcode.',
+                OpenFoodFactsLookupStatus::RateLimited => 'Too many lookups. Please try again shortly.',
+                OpenFoodFactsLookupStatus::InvalidResponse => 'Product data could not be read.',
+                OpenFoodFactsLookupStatus::Unavailable => 'Food database temporarily unavailable. Please try again.',
+                OpenFoodFactsLookupStatus::PermanentFailure => 'Food database could not complete the lookup.',
+                OpenFoodFactsLookupStatus::Success => 'Product data could not be read.',
+            };
+
+            $this->dispatch('notify', type: 'error', message: $message);
 
             return;
         }
 
-        $product = data_get(ExactJsonDecoder::decodeObject($resp->body()), 'product');
-        if (! is_array($product)) {
-            $this->dispatch('notify', type: 'error', message: 'No product found for that barcode.');
+        $product = $result->product;
+        $this->name = $product->name ?? $this->name;
+        $this->keywords = $product->keywords;
+        $this->categories = $product->categories;
 
-            return;
+        if ($product->quantity !== null) {
+            $this->quantity = $product->quantity;
+        }
+        if ($product->quantityUnit !== null || $product->multipleQuantity) {
+            $this->quantity_unit = $product->quantityUnit;
         }
 
-        // Map fields
-        $this->name = $product['product_name'] ?? $this->name ?? '';
-        $this->keywords = $product['keywords'] ?? ($product['_keywords'] ?? []);
-        $this->categories = $product['categories_tags'] ?? [];
-
-        $parsedQuantity = $this->parseProductQuantityFromOff($product['quantity'] ?? null);
-        if ($parsedQuantity['quantity'] !== null) {
-            $this->quantity = $parsedQuantity['quantity'];
-        }
-        if ($parsedQuantity['unit'] !== null || $parsedQuantity['multiple']) {
-            $this->quantity_unit = $parsedQuantity['unit'];
-        }
-
-        $nutr = $product['nutriments'] ?? [];
-        // Normalize nutriments into three buckets
-        $this->nutriments = array_replace_recursive($this->nutriments, [
-            'raw' => $nutr,
-            'per_100g' => [
-                'carbohydrates' => $nutr['carbohydrates_100g'] ?? null,
-                'fat' => $nutr['fat_100g'] ?? null,
-                'energy_kcal' => $nutr['energy-kcal_100g'] ?? null,
-                'energy_kj' => $nutr['energy-kj_100g'] ?? null,
-                'fibre' => $nutr['fiber_100g'] ?? null,
-                'protein' => $nutr['proteins_100g'] ?? null,
-                'salt' => $nutr['salt_100g'] ?? null,
-                'saturated_fat' => $nutr['saturated-fat_100g'] ?? ($nutr['saturated_fat_100g'] ?? null),
-                'sodium' => $nutr['sodium_100g'] ?? null,
-                'sugars' => $nutr['sugars_100g'] ?? null,
-            ],
-            'per_serving' => [
-                'carbohydrates' => $nutr['carbohydrates_serving'] ?? null,
-                'fat' => $nutr['fat_serving'] ?? null,
-                'energy_kcal' => $nutr['energy-kcal_serving'] ?? ($nutr['energy_kcal_serving'] ?? null),
-                'energy_kj' => $nutr['energy-kj_serving'] ?? ($nutr['energy_kj_serving'] ?? null),
-                'fibre' => $nutr['fiber_serving'] ?? null,
-                'protein' => $nutr['proteins_serving'] ?? null,
-                'salt' => $nutr['salt_serving'] ?? null,
-                'saturated_fat' => $nutr['saturated-fat_serving'] ?? ($nutr['saturated_fat_serving'] ?? null),
-                'sodium' => $nutr['sodium_serving'] ?? null,
-                'sugars' => $nutr['sugars_serving'] ?? null,
-            ],
-        ]);
-
+        $this->nutriments = array_replace_recursive($this->nutriments, $product->nutriments);
         $this->hydrateNutritionInputs();
 
-        // Guess quantity + unit from serving info if helpful
-        if (! $this->serving_quantity && isset($product['serving_quantity'])) {
-            $this->serving_quantity = is_numeric($product['serving_quantity'])
-                ? (float) $product['serving_quantity']
-                : null;
+        if (! $this->serving_quantity && $product->servingQuantity !== null) {
+            $this->serving_quantity = $product->servingQuantity;
         }
 
         if (! $this->serving_quantity_unit) {
-            $this->serving_quantity_unit = $this->guessServingQuantityUnitFromOff($product['serving_size'] ?? null);
+            $this->serving_quantity_unit = $product->servingQuantityUnit;
         }
 
-        // Image
-        $this->image_url = $product['image_front_url']
-            ?? $product['image_front_small_url']
-            ?? null;
+        $this->image_url = $product->imageUrl;
 
         $this->dispatch('notify', type: 'success', message: 'Successfully loaded item information from OpenFoodFacts.');
     }
@@ -284,78 +234,6 @@ class Form extends Component
         }
 
         return $nutriments;
-    }
-
-    protected function guessServingQuantityUnitFromOff(?string $servingSize): ?string
-    {
-        if (! is_string($servingSize) || trim($servingSize) === '') {
-            return null;
-        }
-
-        return $this->guessUnitFromText($servingSize);
-    }
-
-    protected function parseProductQuantityFromOff(?string $quantityText): array
-    {
-        if (! is_string($quantityText) || trim($quantityText) === '') {
-            return ['quantity' => null, 'unit' => null, 'multiple' => false];
-        }
-
-        $value = strtolower(trim($quantityText));
-
-        if (preg_match('/(\d+(?:[.,]\d+)?)\s*[x×]\s*(\d+(?:[.,]\d+)?)\s*[a-z]/i', $value, $matches)) {
-            return [
-                'quantity' => $this->normalizeParsedNumber($matches[1]),
-                'unit' => null,
-                'multiple' => true,
-            ];
-        }
-
-        if (preg_match('/\((\d+(?:[.,]\d+)?)\s*[x×]\s*(\d+(?:[.,]\d+)?)\s*[a-z][^)]*\)/i', $value, $matches)) {
-            return [
-                'quantity' => $this->normalizeParsedNumber($matches[1]),
-                'unit' => null,
-                'multiple' => true,
-            ];
-        }
-
-        if (preg_match('/\b(\d+(?:[.,]\d+)?)\b/', $value, $matches)) {
-            return [
-                'quantity' => $this->normalizeParsedNumber($matches[1]),
-                'unit' => $this->guessUnitFromText($quantityText),
-                'multiple' => false,
-            ];
-        }
-
-        return [
-            'quantity' => null,
-            'unit' => $this->guessUnitFromText($quantityText),
-            'multiple' => false,
-        ];
-    }
-
-    protected function guessUnitFromText(?string $text): ?string
-    {
-        if (! is_string($text) || trim($text) === '') {
-            return null;
-        }
-
-        $unit = MeasurementUnitParser::findInText($text);
-
-        return $unit === null ? null : MeasurementUnitParser::parsedValue($unit);
-    }
-
-    protected function normalizeParsedNumber(string $value): int|float|null
-    {
-        $normalized = str_replace(',', '.', trim($value));
-
-        if (! is_numeric($normalized)) {
-            return null;
-        }
-
-        $number = (float) $normalized;
-
-        return floor($number) === $number ? (int) $number : $number;
     }
 
     public function measurementUnitGroups(): array

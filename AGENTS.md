@@ -28,6 +28,9 @@ from the OFF API can be treated as accurate.
 - Ask for clarification when product behaviour is genuinely ambiguous.
 - Never remove user data or create destructive migrations without approval.
 - Never commit credentials, tokens or secrets.
+- Route all OpenFoodFacts HTTP access and provider response mapping through the
+  application-owned client under `app/Integrations/OpenFoodFacts`; UI code must
+  consume its stable result types rather than provider requests or raw JSON.
 - Route administrator-factor verification through the centralized FND-13
   services. Never log, audit, serialize into queued jobs, or include in
   exceptions any submitted TOTP, seed, provisioning payload, recovery code,

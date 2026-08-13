@@ -56,8 +56,11 @@ class IngredientNutrientHandlingTest extends TestCase
         $sourceKilojoules = '999.123456789012345678';
 
         Http::fake([
-            'https://world.openfoodfacts.org/api/v2/product/*' => Http::response([
+            'https://world.openfoodfacts.org/api/v3.4/product/*' => Http::response([
+                'status' => 'success',
+                'result' => ['id' => 'product_found'],
                 'product' => [
+                    'code' => '1234567890123',
                     'product_name' => 'Complete nutrient product',
                     'quantity' => '100 g',
                     'nutriments' => [
@@ -103,8 +106,8 @@ class IngredientNutrientHandlingTest extends TestCase
         $user = User::factory()->create();
 
         Http::fake([
-            'https://world.openfoodfacts.org/api/v2/product/*' => Http::response(
-                '{"product":{"product_name":"Precise source","quantity":"100 g","nutriments":{"energy-kcal_100g":100.1234567890123456789,"energy-kj_100g":999.1234567890123456789,"proteins_100g":1.2345678901234567894}}}',
+            'https://world.openfoodfacts.org/api/v3.4/product/*' => Http::response(
+                '{"status":"success","result":{"id":"product_found"},"product":{"code":"1234567890123","product_name":"Precise source","quantity":"100 g","nutriments":{"energy-kcal_100g":100.1234567890123456789,"energy-kj_100g":999.1234567890123456789,"proteins_100g":1.2345678901234567894}}}',
                 200,
                 ['Content-Type' => 'application/json'],
             ),
