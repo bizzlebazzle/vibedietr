@@ -62,7 +62,7 @@ class IngredientControllerCharacterizationTest extends TestCase
 
         $this->assertSame($owner->id, $ingredient->user_id);
         $this->assertSame('Controller-created oats', $ingredient->name);
-        $this->assertSame('Original barcode', $ingredient->barcode);
+        $this->assertNull($ingredient->barcode);
     }
 
     public function test_controller_store_validation_failure_leaves_database_unchanged(): void
@@ -92,7 +92,8 @@ class IngredientControllerCharacterizationTest extends TestCase
     {
         $owner = User::factory()->create();
         $otherUser = User::factory()->create();
-        $ingredient = $this->ingredientFor($owner, 'Original owner name', [
+        $ingredient = Ingredient::factory()->for($owner)->legacyBarcode()->create([
+            'name' => 'Original owner name',
             'barcode' => 'Owner-only barcode',
             'categories' => ['unchanged-category'],
         ]);

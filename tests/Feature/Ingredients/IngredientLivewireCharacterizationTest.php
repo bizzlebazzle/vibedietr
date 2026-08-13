@@ -18,7 +18,8 @@ class IngredientLivewireCharacterizationTest extends TestCase
     public function test_owner_direct_livewire_update_changes_the_correct_record_without_changing_ownership(): void
     {
         $owner = User::factory()->create();
-        $ingredient = $this->ingredientFor($owner, 'Livewire original', [
+        $ingredient = Ingredient::factory()->for($owner)->legacyBarcode()->create([
+            'name' => 'Livewire original',
             'barcode' => 'LIVEWIRE-OWNER',
             'categories' => ['unchanged-category'],
         ]);

@@ -137,7 +137,7 @@ class IngredientIndexCharacterizationTest extends TestCase
         string $barcode,
         ?Carbon $createdAt = null,
     ): Ingredient {
-        $ingredient = Ingredient::factory()->for($owner)->create([
+        $ingredient = Ingredient::factory()->for($owner)->legacyBarcode()->create([
             'name' => $name,
             'barcode' => $barcode,
         ]);

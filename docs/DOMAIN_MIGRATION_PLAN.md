@@ -48,7 +48,10 @@ matches the migration.
 | `id` | Unsigned `BIGINT`, non-null, auto-increment. Primary key. | Eloquent identity and implicit route-model key; passed to Livewire show/edit modal lookups. A future source mapping must retain this identifier without changing it. |
 | `user_id` | Unsigned `BIGINT`, non-null. Indexed by `ingredients_user_id_foreign`. Foreign key to `users.id`; `ON UPDATE NO ACTION`, `ON DELETE CASCADE`. | Fillable and assigned from the authenticated user on create; currently means ownership. Lists and duplicate-barcode lookups filter by it, and the policy compares it with the authenticated user for view/update/delete. `Ingredient::user()` is the only declared relationship. |
 | `name` | `VARCHAR(255)`, non-null, no database default. No separate index. | Fillable and required on both mutation paths. Shown and edited throughout the UI, searched with a partial `LIKE`, and replaced with an OFF product name when returned by lookup. It is not guaranteed to preserve original user wording. |
-| `barcode` | `VARCHAR(64)`, nullable, default `NULL`. Non-unique B-tree index `ingredients_barcode_index`. | Fillable and editable; searchable by partial `LIKE`; used by the scanner and OFF lookup. Livewire redirects on a duplicate non-empty barcode for the same user, excluding the record being edited. The controller and database do not apply this rule, and cross-user duplicates are allowed. A barcode does not prove a successful import. |
+| `barcode` | `VARCHAR(64)`, nullable, default `NULL`. Non-unique B-tree index `ingredients_barcode_index`. | Searchable and used as untrusted scanner/lookup input. It is excluded from ordinary validation and mass assignment; the trusted import action assigns it only after a successful consistent provider result. Cross-user and database duplicates remain possible. |
+| `barcode_provenance` | `ENUM('manual', 'machine_imported', 'legacy_unknown')`, non-null, default `manual`. Indexed. | Cast to `IngredientBarcodeProvenance`. Existing non-empty barcodes are backfilled `legacy_unknown`; only the trusted import action assigns `machine_imported`. |
+| `barcode_source` | `VARCHAR(32)`, nullable, default `NULL`. | Stable machine-owned provider key; successful current imports store `openfoodfacts`. Legacy/manual rows retain null. |
+| `barcode_imported_at` | `TIMESTAMP`, nullable, default `NULL`. | Immutable-datetime cast and machine-owned. Successful imports use server UTC time, never a browser/provider timestamp. |
 | `keywords` | `JSON`, nullable, default `NULL`. No index. | Fillable and cast to an array. OFF keywords and manually added tags share the same array. Users can add/remove them in the form and see them on the detail view. |
 | `categories` | `JSON`, nullable, default `NULL`. No index. | Fillable and cast to an array. OFF `categories_tags` and manual values share the same array. Users can add/remove them in the form and see them on the detail view. |
 | `nutriments` | `JSON`, nullable, default `NULL`. No index. | Fillable and cast to an array. Livewire conventionally uses `raw`, `per_100g`, and `per_serving`; the controller accepts any array shape. OFF mapping can retain energy, carbohydrate, fat, fibre, protein, salt, saturated fat, sodium, and sugars. The form and detail view expose only energy, fat, saturated fat, sugars, and salt. There is no persisted basis/unit schema, provenance, source revision, or override state. |
@@ -61,10 +64,10 @@ matches the migration.
 | `created_at` | `TIMESTAMP`, nullable, default `NULL`. No index. | Maintained by Eloquent. `Ingredient::latest()` uses it for the default newest-first list. It is not displayed. |
 | `updated_at` | `TIMESTAMP`, nullable, default `NULL`. No index. | Maintained by Eloquent on updates. It is not displayed and is not a catalogue version or source-revision marker. |
 
-The table has exactly three indexes: `PRIMARY (id)`, the foreign-key index on
-`user_id`, and the non-unique index on `barcode`. It has no unique constraint,
-soft-delete column, provenance field, moderation status, version reference, or
-legacy-to-target mapping.
+The table has four indexes: `PRIMARY (id)`, the foreign-key index on `user_id`,
+the non-unique index on `barcode`, and the classification index on
+`barcode_provenance`. It has no barcode uniqueness constraint, soft-delete
+column, moderation status, version reference, or legacy-to-target mapping.
 
 ### Related tables and relationships
 
@@ -90,9 +93,10 @@ legacy-to-target mapping.
 
 ### Current compatibility boundary
 
-Existing routes and both current write paths expect an `Ingredient` row. The
-Livewire path has stricter unit and same-user barcode behavior than the
-resource controller. Owner-only reads and mutations depend directly on
+Existing routes and both current write paths expect an `Ingredient` row.
+Ordinary controller and Livewire writes share the same allowlist and cannot
+change barcode provenance. Livewire alone owns the scanner/provider lookup and
+same-user duplicate redirect. Owner-only reads and mutations depend directly on
 `ingredients.user_id`, and deleting a user currently deletes their ingredient
 rows. Those behaviors must remain available until an explicitly approved
 cut-over changes them.
@@ -173,7 +177,7 @@ snapshot, plan-bookmark, recovery, or anonymized-plan structure.
 | Identity | One `Ingredient` row combines a private record, food identity, package data, and nutrition. | Add separate stable catalogue identity/version structures. Preserve `ingredients` unchanged during transition. |
 | User relationship | Required owner; user deletion cascades the row. | Nullable submitter/provenance; user deletion nulls attribution. Do not alter the current foreign key in place. |
 | Access | Owner-only listing, viewing, editing, and deletion. | Approved catalogue data is shared; pending manual records remain restricted; ordinary users cannot edit/delete imported shared records. Cut-over requires the authorization matrix in FND-03. |
-| Barcode | Optional, non-unique, freely editable, and only checked per user by Livewire. | A target barcode record represents a successful machine import and barcode identity is globally consistent. Legacy barcode rows need provenance classification before promotion. |
+| Barcode | Optional and non-unique, but excluded from ordinary writes. Trusted imports record source/time and `machine_imported`; pre-STB-08 values are `legacy_unknown`. | A target barcode record represents a successful machine import and barcode identity is globally consistent. Legacy barcode rows need provenance classification before promotion. |
 | De-duplication | Duplicate barcodes can exist within or across users; manual duplicate rules do not exist. | Candidate detection is allowed, but no reassignment or merge is allowed without an approved rule. DEC-011 remains unresolved. |
 | Package data | One required quantity/unit pair; zero is the database default. | Separate nullable package and internal-item concepts; unknown is null. Legacy zero and multipack values are ambiguous and require review rather than reinterpretation. |
 | Serving data | Independently nullable serving amount/unit plus ambiguously named recommended servings. | Explicit structure and derivation basis. Incomplete pairs and ambiguous recommended-servings values cannot be silently normalized. |
@@ -323,14 +327,14 @@ target mapping only where the evidence and approved rules make that safe.
 - Record pre-backfill counts and a stable source range/high-water mark.
 - Upsert one mapping/candidate per `ingredients.id`; use the source identifier
   as the idempotency key. Never update or delete the source row.
-- Copy all 15 source-column values or a lossless snapshot sufficient to prove
-  their preservation, including JSON documents and timestamps. Retain the
-  original owner identifier in migration provenance.
+- Copy all 18 source-column values or a lossless snapshot sufficient to prove
+  their preservation, including barcode provenance, JSON documents, and
+  timestamps. Retain the original owner identifier in migration provenance.
 - Classify null/blank-barcode rows as legacy manual candidates, not approved
   shared records. Do not merge them.
-- Classify barcode rows created under future STB-08 evidence separately from
-  older barcode rows. Treat a legacy barcode without persisted successful
-  import provenance as ambiguous, even if its JSON resembles OFF data.
+- Classify `machine_imported` rows separately from `legacy_unknown` rows.
+  Treat legacy unknown as ambiguous even if its JSON resembles OFF data; do not
+  infer verification from barcode or payload shape.
 - Detect duplicate barcode and manual-food candidates and report them. Do not
   silently select a winner, merge rows, or redirect ownership.
 - Preserve zero quantities, incomplete serving pairs, custom units, arbitrary
@@ -802,10 +806,11 @@ WHERE nutriments IS NOT NULL
   );
 ```
 
-Every pre-STB-08 barcode row is a provenance-review candidate unless stronger
-persisted evidence exists. Quantity zero, recommended servings, incomplete
-serving pairs, and unusual JSON are reports for review, not permission to
-rewrite the source.
+Every `legacy_unknown` barcode row is a provenance-review candidate.
+`machine_imported` is reserved for post-STB-08 trusted imports with source and
+server import time. Quantity zero, recommended servings, incomplete serving
+pairs, and unusual JSON are reports for review, not permission to rewrite the
+source.
 
 ### Laravel query-builder count reconciliation
 

@@ -112,7 +112,7 @@ class FormTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $ingredient = Ingredient::factory()->for($user)->create([
+        $ingredient = Ingredient::factory()->for($user)->legacyBarcode()->create([
             'name' => 'Existing Barcode Ingredient',
             'barcode' => '1234567890123',
             'quantity' => 1,
@@ -135,7 +135,7 @@ class FormTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $ingredient = Ingredient::factory()->for($user)->create([
+        $ingredient = Ingredient::factory()->for($user)->legacyBarcode()->create([
             'name' => 'Visible Ingredient',
             'barcode' => '9876543210000',
             'quantity' => 4,
@@ -162,11 +162,11 @@ class FormTest extends TestCase
             ->assertSee('2', false);
     }
 
-    public function test_save_redirects_to_existing_barcode_ingredient_instead_of_creating_duplicate(): void
+    public function test_manual_save_ignores_a_barcode_matching_an_existing_record(): void
     {
         $user = User::factory()->create();
 
-        $ingredient = Ingredient::factory()->for($user)->create([
+        Ingredient::factory()->for($user)->legacyBarcode()->create([
             'name' => 'Existing Barcode Ingredient',
             'barcode' => '1234567890123',
             'quantity' => 1,
@@ -181,16 +181,19 @@ class FormTest extends TestCase
             ->set('quantity', 2)
             ->set('quantity_unit', 'kg')
             ->call('save')
-            ->assertRedirect(route('ingredients.show', $ingredient, false));
+            ->assertRedirect(route('ingredients.index'));
 
-        $this->assertSame(1, Ingredient::count());
+        $created = Ingredient::query()->where('name', 'Duplicate Barcode Ingredient')->sole();
+        $this->assertNull($created->barcode);
+        $this->assertSame('manual', $created->barcode_provenance->value);
+        $this->assertSame(2, Ingredient::count());
     }
 
     public function test_owner_sees_formatted_quantity_on_ingredients_index(): void
     {
         $user = User::factory()->create();
 
-        Ingredient::factory()->for($user)->create([
+        Ingredient::factory()->for($user)->legacyBarcode()->create([
             'name' => 'Indexed Ingredient',
             'barcode' => '1111111111111',
             'quantity' => 4,
@@ -212,7 +215,7 @@ class FormTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $ingredient = Ingredient::factory()->for($user)->create([
+        $ingredient = Ingredient::factory()->for($user)->legacyBarcode()->create([
             'name' => 'Editable Ingredient',
             'barcode' => '2222222222222',
             'quantity' => 1,

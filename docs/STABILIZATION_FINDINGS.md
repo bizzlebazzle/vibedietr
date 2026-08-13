@@ -19,6 +19,7 @@ edit-modal entry point. There is no Livewire delete method.
 | STB-FIND-004 | Explicit nutrition zero | Non-canonical JSON type and zero display loss | Resolved by STB-05 |
 | STB-FIND-005 | Energy and supported-nutrient presentation | Independent conflicting energy and silently omitted nutrients | Resolved by STB-06 |
 | STB-FIND-006 | Direct OpenFoodFacts access | Unbounded, unidentified provider coupling in Livewire | Resolved by STB-07 |
+| STB-FIND-007 | Manual barcode persistence | User-controlled data could forge machine-import provenance | Resolved by STB-08 |
 
 ## STB-FIND-001 — Direct Livewire update bypasses owner authorization
 
@@ -180,11 +181,44 @@ edit-modal entry point. There is no Livewire delete method.
   must account for its breaking nutrition/tag schema before changing the
   configured profile. STB-09 separately owns the scanner CDN dependency.
 
+## STB-FIND-007 — Manual writes can forge barcode import provenance
+
+- **Area/path:** Shared ingredient write contract, model mass assignment,
+  controller mutations, and `Ingredients\Form` public state/save.
+- **Observed behavior:** Barcode was a normal validated/fillable field. The
+  Livewire component assigned attempted lookup input before provider success,
+  so manual, failed, or crafted requests could persist a barcode
+  indistinguishably from an OpenFoodFacts import.
+- **Expected/documented behavior:** STB-08 requires barcode and its source,
+  import time, and classification to be machine-controlled and persisted only
+  after a usable successful STB-07 result. Legacy barcodes must remain readable
+  without being promoted.
+- **Security/data-integrity impact:** High. Barcode presence could falsely imply
+  trusted provider provenance and imported-data accuracy.
+- **Resolution:** Resolved by STB-08. An additive allowlisted classification
+  marks manual, verified machine import, and legacy unknown states. The
+  migration preserves every legacy barcode/nutrition value and classifies each
+  pre-existing non-empty barcode as unknown. Ordinary validation and
+  `$fillable` exclude all machine fields. Successful provider DTOs are retained
+  in short-lived server-side state bound to user and ingredient, and a narrow
+  action verifies barcode consistency before assigning `openfoodfacts`,
+  server UTC import time, and verified provenance. Failure clears pending
+  success and never writes trusted metadata.
+- **Regression tests:** `IngredientBarcodeProvenanceTest` covers controller,
+  Livewire, mass-assignment and locked-state forgery; successful mapped import;
+  every required failure; failed re-import preservation; authorization; and
+  legacy reads. `IngredientBarcodeProvenanceMigrationTest` proves additive
+  classification and rollback without barcode/nutrition loss. Factory tests
+  distinguish manual, verified import, and legacy unknown states.
+- **Remaining follow-up:** NUT-01/NUT-02 own shared-catalogue identity,
+  de-duplication review, and migration mappings. NUT-05 owns versioned,
+  per-nutrient provenance.
+
 ## Intentional controller/Livewire write differences
 
 | Field/behavior | Controller | Livewire | Why intentional | Relevant test | Temporary |
 | --- | --- | --- | --- | --- | --- |
-| Duplicate non-empty barcode | Continues through the ordinary write after validation | Redirects to the existing record before saving | Existing provider-assisted Livewire workflow outside payload validation; the schema has no uniqueness constraint | `test_save_redirects_to_existing_barcode_ingredient_instead_of_creating_duplicate` | Yes; later catalogue/uniqueness work must converge it safely |
+| Duplicate non-empty lookup barcode | No provider lookup route; ordinary forged barcode is ignored | Redirects before the provider request | Scanner/lookup UX remains Livewire-only; ordinary mutation semantics agree | `test_fetch_from_off_redirects_to_existing_barcode_ingredient` | Yes; later catalogue/uniqueness work must converge it safely |
 | Successful response | Redirects with a session status | Dispatches component events and may navigate | Transport-specific UX is preserved | Controller and Livewire characterization suites | No |
 | Direct guest invocation | Auth middleware redirects before the action | Mutation-boundary policy returns 403 | STB-03 protects independently callable Livewire actions | STB-03 guest mutation tests | No |
 

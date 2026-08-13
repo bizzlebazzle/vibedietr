@@ -106,15 +106,15 @@ class IngredientWriteEquivalenceTest extends TestCase
             self::validPayload(['barcode' => '   ', 'image_url' => '']),
             true, null, null, ['barcode' => null, 'image_url' => null],
         ];
-        yield 'leading-zero barcode is preserved and surrounding whitespace removed' => [
+        yield 'forged leading-zero barcode is ignored' => [
             self::validPayload(['barcode' => '  0012345678905  ']),
-            true, null, null, ['barcode' => '0012345678905'],
+            true, null, null, ['barcode' => null],
         ];
-        yield 'barcode must be a string' => [
-            self::validPayload(['barcode' => 123456789]), false, 'barcode',
+        yield 'forged non-string barcode is outside the ordinary contract' => [
+            self::validPayload(['barcode' => 123456789]), true, null, null, ['barcode' => null],
         ];
-        yield 'oversized barcode' => [
-            self::validPayload(['barcode' => str_repeat('1', 65)]), false, 'barcode',
+        yield 'forged oversized barcode is outside the ordinary contract' => [
+            self::validPayload(['barcode' => str_repeat('1', 65)]), true, null, null, ['barcode' => null],
         ];
         yield 'supported nutrition with legacy aliases' => [
             self::validPayload(['nutriments' => [
