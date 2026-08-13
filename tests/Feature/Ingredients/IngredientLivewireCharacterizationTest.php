@@ -219,12 +219,8 @@ class IngredientLivewireCharacterizationTest extends TestCase
 
     private function ingredientFor(User $owner, string $name, array $attributes = []): Ingredient
     {
-        return Ingredient::query()->create(array_merge([
-            'user_id' => $owner->id,
+        return Ingredient::factory()->for($owner)->create(array_merge([
             'name' => $name,
-            'barcode' => null,
-            'quantity' => 1,
-            'quantity_unit' => 'g',
         ], $attributes));
     }
 }

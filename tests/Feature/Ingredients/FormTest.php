@@ -109,8 +109,7 @@ class FormTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $ingredient = Ingredient::query()->create([
-            'user_id' => $user->id,
+        $ingredient = Ingredient::factory()->for($user)->create([
             'name' => 'Existing Barcode Ingredient',
             'barcode' => '1234567890123',
             'quantity' => 1,
@@ -133,8 +132,7 @@ class FormTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $ingredient = Ingredient::query()->create([
-            'user_id' => $user->id,
+        $ingredient = Ingredient::factory()->for($user)->create([
             'name' => 'Visible Ingredient',
             'barcode' => '9876543210000',
             'quantity' => 4,
@@ -165,8 +163,7 @@ class FormTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $ingredient = Ingredient::query()->create([
-            'user_id' => $user->id,
+        $ingredient = Ingredient::factory()->for($user)->create([
             'name' => 'Existing Barcode Ingredient',
             'barcode' => '1234567890123',
             'quantity' => 1,
@@ -190,8 +187,7 @@ class FormTest extends TestCase
     {
         $user = User::factory()->create();
 
-        Ingredient::query()->create([
-            'user_id' => $user->id,
+        Ingredient::factory()->for($user)->create([
             'name' => 'Indexed Ingredient',
             'barcode' => '1111111111111',
             'quantity' => 4,
@@ -213,8 +209,7 @@ class FormTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $ingredient = Ingredient::query()->create([
-            'user_id' => $user->id,
+        $ingredient = Ingredient::factory()->for($user)->create([
             'name' => 'Editable Ingredient',
             'barcode' => '2222222222222',
             'quantity' => 1,

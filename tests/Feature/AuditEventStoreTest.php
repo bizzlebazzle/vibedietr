@@ -344,11 +344,8 @@ class AuditEventStoreTest extends TestCase
     public function test_migration_is_additive_and_has_a_safe_development_rollback(): void
     {
         $user = User::factory()->create();
-        Ingredient::create([
-            'user_id' => $user->id,
+        Ingredient::factory()->for($user)->create([
             'name' => 'Existing ingredient',
-            'quantity' => 1,
-            'quantity_unit' => 'g',
         ]);
         $migration = require database_path(
             'migrations/2026_07_31_000001_create_audit_event_store.php'

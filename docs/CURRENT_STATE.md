@@ -378,6 +378,10 @@ profile flows. Ingredient feature tests cover:
 - Rendering an owner's list, show page, and edit page.
 - Quantity formatting on the list and show pages.
 
+Ingredient tests use a conventional model factory with automatic or explicit
+ownership and named manual, barcode-imported, legacy-nutrition, and unusual-unit
+states. Supported states can be composed for migration-era fixtures.
+
 There are no ingredient tests for update persistence, deletion, search,
 pagination, non-owner authorization, request-based controller mutations,
 OpenFoodFacts failure responses, quantity parsing variants, or browser camera
@@ -452,7 +456,6 @@ and additive migration rollback while preserving existing user/ingredient data.
   now use FND-06.
 - `Ingredient` has a `user()` relation, but `User` has no reciprocal
   `ingredients()` relation.
-- There is no `IngredientFactory`; ingredient tests construct records directly.
 - The static-analysis baseline retains one optional-email-verification mismatch,
   five redundant ingredient-form expressions, and four assertions whose
   outcomes PHPStan knows in advance. These
