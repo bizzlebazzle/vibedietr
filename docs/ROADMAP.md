@@ -273,6 +273,7 @@ changes, it is deliberately split across multiple items.
 
 - **Outcome:** Lock down the behavior that must remain safe while the catalogue
   is redesigned.
+- **Status:** Complete (2026-08-13).
 - **Dependencies:** FND-08.
 - **Acceptance criteria:** Tests cover search, pagination, update, deletion,
   owner/non-owner access, guest access, controller mutations, and the unused

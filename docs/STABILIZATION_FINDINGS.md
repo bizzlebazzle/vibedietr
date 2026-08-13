@@ -1,0 +1,105 @@
+# Stabilization findings
+
+This register records current behavior found while stabilizing existing
+features. A finding documents observed behavior; it does not redefine the
+product requirements in `PRODUCT_SPEC.md`.
+
+## Ingredient characterization summary
+
+STB-01 characterizes all seven authenticated ingredient resource routes, the
+controller create/update/delete methods, the Livewire form create/update
+method, owner-scoped search, 12-item pagination, hard deletion, and the dormant
+edit-modal entry point. There is no Livewire delete method.
+
+| Finding | Area | Impact | Follow-up |
+| --- | --- | --- | --- |
+| STB-FIND-001 | Direct Livewire update | Cross-user mutation and ownership transfer | STB-03 |
+| STB-FIND-002 | Direct guest Livewire save | Database error instead of authorization denial | STB-03 |
+| STB-FIND-003 | Controller/Livewire unit aliases | Persisted-data inconsistency | STB-04 |
+
+## STB-FIND-001 — Direct Livewire update bypasses owner authorization
+
+- **Area/path:** `App\Livewire\Ingredients\Form::save()` update branch.
+- **Observed behavior:** A second authenticated user can mount the form with
+  another user's ingredient, update it, and reassign `user_id` to themselves.
+  The conventional controller update denies the equivalent request with an
+  exact 403 response.
+- **Expected/documented behavior:** The current-ingredient row in
+  `AUTHORIZATION_PRIVACY_MATRIX.md` requires owner-only update and denial of
+  ownership transfer. STB-03 explicitly requires authorization at the Livewire
+  mutation boundary.
+- **Security/data-integrity impact:** High. A crafted Livewire request can alter
+  another user's private record and transfer its ownership.
+- **Whether STB-01 changed it:** No. STB-01 only records and tests the behavior.
+- **Recommended follow-up backlog item:** STB-03.
+- **Capturing test:**
+  `test_non_owner_direct_livewire_update_currently_changes_and_reassigns_the_record`.
+
+## STB-FIND-002 — Direct guest Livewire save reaches the database
+
+- **Area/path:** `App\Livewire\Ingredients\Form::save()` create and update
+  branches when invoked without an authenticated user.
+- **Observed behavior:** The action builds a payload with a null `user_id`.
+  MySQL rejects both create and update with SQLSTATE 23000; create persists no
+  row and update leaves the existing row unchanged. There is no Livewire-level
+  redirect, 401, 403, or 404 response.
+- **Expected/documented behavior:** Ingredient mutation is authenticated and
+  directly invocable mutation actions enforce authorization at their action
+  boundary.
+- **Security/data-integrity impact:** Medium. The database prevents persistence,
+  but unauthenticated crafted requests reach an internal constraint failure
+  instead of a controlled denial.
+- **Whether STB-01 changed it:** No. STB-01 only records and tests the behavior.
+- **Recommended follow-up backlog item:** STB-03.
+- **Capturing tests:**
+  `test_guest_direct_livewire_create_raises_database_error_and_creates_nothing`
+  and
+  `test_guest_direct_livewire_update_raises_database_error_and_leaves_record_unchanged`.
+
+## STB-FIND-003 — Controller and Livewire normalize unit aliases differently
+
+- **Area/path:** `IngredientController::update()` with
+  `UpdateIngredientRequest` compared with `Ingredients\Form::save()`.
+- **Observed behavior:** Both paths accept the valid alias `grams`. The
+  controller persists `grams`; Livewire normalizes it to the shared storage
+  symbol `g` before persistence. Required, negative, and unsafe-unit validation
+  otherwise produce validation failures on both characterized paths.
+- **Expected/documented behavior:** STB-04 requires one validation and
+  normalization contract across retained ingredient write paths.
+- **Security/data-integrity impact:** Low. Equivalent valid input produces
+  inconsistent stored values and can complicate later catalogue migration.
+- **Whether STB-01 changed it:** No. STB-01 only records and tests the behavior.
+- **Recommended follow-up backlog item:** STB-04.
+- **Capturing test:**
+  `test_controller_and_livewire_currently_normalize_valid_unit_aliases_differently`.
+
+## Dormant edit-modal evidence
+
+`Ingredients\Index::openEditModal()` and its conditional Blade branch still
+exist. Repository route, view, JavaScript, and test searches found no rendered
+control or event that calls the method. The add button opens a create form and
+each list item opens only the details modal.
+
+The method remains directly executable. Its owner call opens the modal; direct
+non-owner and guest calls return exact 403 responses. The modal mounts the same
+`Ingredients\Form` component as the dedicated edit page, so validation is the
+same and the mutation inherits STB-FIND-001 and STB-FIND-002. Tests
+`test_owner_can_open_the_currently_unused_edit_modal_path`,
+`test_non_owner_direct_edit_modal_invocation_is_forbidden`, and
+`test_guest_direct_edit_modal_invocation_is_forbidden` capture the executable
+entry point without reactivating it in the interface.
+
+## Characterized response map
+
+| Path | Owner | Non-owner | Guest |
+| --- | --- | --- | --- |
+| Controller show/edit | 200 | 403 | 302 to login |
+| Controller update | 302 after update | 403, unchanged | 302 to login, unchanged |
+| Controller delete | 302 after hard delete | 403, intact | 302 to login, intact |
+| Direct Livewire update | Updated | Updated and reassigned | SQLSTATE 23000, unchanged |
+| Direct edit-modal opener | Modal opens | 403 | 403 |
+
+Search is partial across name and barcode, case-insensitive on the supported
+MySQL baseline, owner-scoped, newest-first, and paginated at 12 records. Search
+changes reset pagination to page one. Deletion exists only through the
+controller and does not preserve search or later-page state in its redirect.
