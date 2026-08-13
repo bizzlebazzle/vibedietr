@@ -3,6 +3,7 @@
 namespace App\Domain\Ingredients;
 
 use App\Domain\Nutrition\Nutrient;
+use App\Domain\Nutrition\NutrientRegistry;
 use App\Rules\ValidMeasurementUnit;
 use App\Rules\ValidNutrientValue;
 
@@ -123,20 +124,16 @@ final class IngredientWriteContract
     /** @return array<string, array{bucket: string, key: string}> */
     public static function nutritionInputMap(): array
     {
-        return [
-            'per_100g_energy_kj' => ['bucket' => 'per_100g', 'key' => Nutrient::EnergyKj->value],
-            'per_100g_energy_kcal' => ['bucket' => 'per_100g', 'key' => Nutrient::EnergyKcal->value],
-            'per_100g_fat' => ['bucket' => 'per_100g', 'key' => Nutrient::Fat->value],
-            'per_100g_saturates' => ['bucket' => 'per_100g', 'key' => Nutrient::SaturatedFat->value],
-            'per_100g_sugars' => ['bucket' => 'per_100g', 'key' => Nutrient::Sugars->value],
-            'per_100g_salt' => ['bucket' => 'per_100g', 'key' => Nutrient::Salt->value],
-            'per_serving_energy_kj' => ['bucket' => 'per_serving', 'key' => Nutrient::EnergyKj->value],
-            'per_serving_energy_kcal' => ['bucket' => 'per_serving', 'key' => Nutrient::EnergyKcal->value],
-            'per_serving_fat' => ['bucket' => 'per_serving', 'key' => Nutrient::Fat->value],
-            'per_serving_saturates' => ['bucket' => 'per_serving', 'key' => Nutrient::SaturatedFat->value],
-            'per_serving_sugars' => ['bucket' => 'per_serving', 'key' => Nutrient::Sugars->value],
-            'per_serving_salt' => ['bucket' => 'per_serving', 'key' => Nutrient::Salt->value],
-        ];
+        $inputs = [];
+
+        foreach (['per_100g', 'per_serving'] as $bucket) {
+            foreach (NutrientRegistry::all() as $definition) {
+                $key = $definition->id->value;
+                $inputs["{$bucket}_{$key}"] = ['bucket' => $bucket, 'key' => $key];
+            }
+        }
+
+        return $inputs;
     }
 
     /** @return array<string, Nutrient> */

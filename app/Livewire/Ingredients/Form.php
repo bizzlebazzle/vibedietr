@@ -6,6 +6,9 @@ use App\Domain\Ingredients\IngredientWriteContract;
 use App\Domain\Ingredients\IngredientWriteNormalizer;
 use App\Domain\Measurements\MeasurementUnitParser;
 use App\Domain\Measurements\MeasurementUnitRegistry;
+use App\Domain\Nutrition\Nutrient;
+use App\Domain\Nutrition\NutrientRegistry;
+use App\Domain\Shared\ExactJsonDecoder;
 use App\Models\Ingredient;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http;
@@ -25,29 +28,45 @@ class Form extends Component
 
     public $nutriments = []; // structure: ['raw'=>[], 'per_100g'=>[], 'per_serving'=>[]]
 
-    public $per_100g_energy_kj = null;
-
     public $per_100g_energy_kcal = null;
+
+    public $per_100g_energy_kj = null;
 
     public $per_100g_fat = null;
 
-    public $per_100g_saturates = null;
+    public $per_100g_saturated_fat = null;
+
+    public $per_100g_carbohydrates = null;
 
     public $per_100g_sugars = null;
 
+    public $per_100g_fibre = null;
+
+    public $per_100g_protein = null;
+
     public $per_100g_salt = null;
 
-    public $per_serving_energy_kj = null;
+    public $per_100g_sodium = null;
 
     public $per_serving_energy_kcal = null;
 
+    public $per_serving_energy_kj = null;
+
     public $per_serving_fat = null;
 
-    public $per_serving_saturates = null;
+    public $per_serving_saturated_fat = null;
+
+    public $per_serving_carbohydrates = null;
 
     public $per_serving_sugars = null;
 
+    public $per_serving_fibre = null;
+
+    public $per_serving_protein = null;
+
     public $per_serving_salt = null;
+
+    public $per_serving_sodium = null;
 
     public $quantity = null;
 
@@ -159,8 +178,8 @@ class Form extends Component
             return;
         }
 
-        $product = $resp->json('product');
-        if (! $product) {
+        $product = data_get(ExactJsonDecoder::decodeObject($resp->body()), 'product');
+        if (! is_array($product)) {
             $this->dispatch('notify', type: 'error', message: 'No product found for that barcode.');
 
             return;
@@ -465,40 +484,45 @@ class Form extends Component
         return view('livewire.ingredients.form', [
             'measurementUnitGroups' => $this->measurementUnitGroups(),
             'customMeasurementUnits' => $this->customMeasurementUnits(),
-            'nutritionPanels' => [
-                [
-                    'title' => 'Per 100g',
-                    'rows' => [
-                        [
-                            'label' => 'Energy',
-                            'inputs' => [
-                                ['model' => 'per_100g_energy_kj', 'label' => 'kJ', 'step' => '1'],
-                                ['model' => 'per_100g_energy_kcal', 'label' => 'kcal', 'step' => '1'],
-                            ],
-                        ],
-                        ['label' => 'Fat', 'model' => 'per_100g_fat', 'unit' => 'g', 'step' => '0.01'],
-                        ['label' => 'Saturates', 'model' => 'per_100g_saturates', 'unit' => 'g', 'step' => '0.01'],
-                        ['label' => 'Sugars', 'model' => 'per_100g_sugars', 'unit' => 'g', 'step' => '0.01'],
-                        ['label' => 'Salt', 'model' => 'per_100g_salt', 'unit' => 'g', 'step' => '0.01'],
-                    ],
-                ],
-                [
-                    'title' => 'Per serving',
-                    'rows' => [
-                        [
-                            'label' => 'Energy',
-                            'inputs' => [
-                                ['model' => 'per_serving_energy_kj', 'label' => 'kJ', 'step' => '1'],
-                                ['model' => 'per_serving_energy_kcal', 'label' => 'kcal', 'step' => '1'],
-                            ],
-                        ],
-                        ['label' => 'Fat', 'model' => 'per_serving_fat', 'unit' => 'g', 'step' => '0.01'],
-                        ['label' => 'Saturates', 'model' => 'per_serving_saturates', 'unit' => 'g', 'step' => '0.01'],
-                        ['label' => 'Sugars', 'model' => 'per_serving_sugars', 'unit' => 'g', 'step' => '0.01'],
-                        ['label' => 'Salt', 'model' => 'per_serving_salt', 'unit' => 'g', 'step' => '0.01'],
-                    ],
-                ],
-            ],
+            'nutritionPanels' => $this->nutritionPanels(),
         ]);
+    }
+
+    /** @return list<array{title: string, rows: array<int, array<string, mixed>>}> */
+    protected function nutritionPanels(): array
+    {
+        return [
+            ['title' => 'Per 100g', 'rows' => $this->nutritionRows('per_100g')],
+            ['title' => 'Per serving', 'rows' => $this->nutritionRows('per_serving')],
+        ];
+    }
+
+    /** @return array<int, array<string, mixed>> */
+    protected function nutritionRows(string $bucket): array
+    {
+        $energy = [Nutrient::EnergyKcal, Nutrient::EnergyKj];
+        $rows = [[
+            'label' => NutrientRegistry::definition(Nutrient::EnergyKcal)->label,
+            'inputs' => array_map(fn (Nutrient $nutrient): array => [
+                'model' => "{$bucket}_{$nutrient->value}",
+                'label' => NutrientRegistry::definition($nutrient)->preferredDisplayUnit->symbol(),
+                'step' => 'any',
+            ], $energy),
+        ]];
+
+        foreach (NutrientRegistry::all() as $definition) {
+            if (in_array($definition->id, $energy, true)) {
+                continue;
+            }
+
+            $rows[] = [
+                'label' => $definition->label,
+                'model' => "{$bucket}_{$definition->id->value}",
+                'unit' => $definition->canonicalStorageUnit->symbol(),
+                'step' => 'any',
+            ];
+        }
+
+        return $rows;
     }
 }

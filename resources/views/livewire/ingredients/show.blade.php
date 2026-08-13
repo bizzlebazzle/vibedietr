@@ -93,18 +93,7 @@
                     </div>
 
                     <div class="text-right text-sm text-gray-700 dark:text-slate-200">
-                      @php
-                        $values = collect($row['keys'])
-                          ->map(function ($unit, $key) use ($ingredient, $panel, $row) {
-                              $formatted = $this->formatNutritionValue(data_get($ingredient->nutriments, "{$panel['bucket']}.{$key}"), $row['integer'] ?? false);
-
-                              return $formatted !== null ? "{$formatted} {$unit}" : null;
-                          })
-                          ->filter(fn ($value) => $value !== null)
-                          ->values();
-                      @endphp
-
-                      {{ $values->isNotEmpty() ? $values->implode(' / ') : 'Not set' }}
+                      {{ $this->formatNutritionRow($panel['bucket'], $row['nutrients']) }}
                     </div>
                   </div>
                 @endforeach

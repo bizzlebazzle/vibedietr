@@ -12,7 +12,7 @@ final class NutrientRegistry
     {
         return [
             self::definitionFor(Nutrient::EnergyKcal, 'Energy', NutrientUnit::Kilocalorie, NutrientUnit::Kilocalorie, 0, true, false, null, null, ['energy-kcal', 'energy kcal', 'calories', 'kcal']),
-            self::definitionFor(Nutrient::EnergyKj, 'Energy', NutrientUnit::Kilocalorie, NutrientUnit::Kilojoule, 0, false, true, Nutrient::EnergyKcal, '4.184', ['energy-kj', 'energy kj', 'kilojoules', 'kj']),
+            self::definitionFor(Nutrient::EnergyKj, 'Energy', NutrientUnit::Kilocalorie, NutrientUnit::Kilojoule, 0, false, true, Nutrient::EnergyKcal, EnergyConversion::KILOJOULES_PER_KILOCALORIE, ['energy-kj', 'energy kj', 'kilojoules', 'kj']),
             self::definitionFor(Nutrient::Fat, 'Fat', NutrientUnit::Gram, NutrientUnit::Gram, 1, aliases: ['fat']),
             self::definitionFor(Nutrient::SaturatedFat, 'Saturated fat', NutrientUnit::Gram, NutrientUnit::Gram, 1, aliases: ['saturated-fat', 'saturated fat', 'saturates']),
             self::definitionFor(Nutrient::Carbohydrates, 'Carbohydrate', NutrientUnit::Gram, NutrientUnit::Gram, 1, aliases: ['carbohydrate', 'carbohydrates', 'carbs']),
