@@ -17,6 +17,7 @@ edit-modal entry point. There is no Livewire delete method.
 | STB-FIND-002 | Direct guest Livewire save | Database error instead of authorization denial | Resolved by STB-03 |
 | STB-FIND-003 | Controller/Livewire unit aliases | Persisted-data inconsistency | Resolved by STB-04 |
 | STB-FIND-004 | Explicit nutrition zero | Non-canonical JSON type and zero display loss | Resolved by STB-05 |
+| STB-FIND-005 | Energy and supported-nutrient presentation | Independent conflicting energy and silently omitted nutrients | Resolved by STB-06 |
 
 ## STB-FIND-001 — Direct Livewire update bypasses owner authorization
 
@@ -120,6 +121,34 @@ edit-modal entry point. There is no Livewire delete method.
   values. `IngredientNutritionZeroTest` covers every FND-06 nutrient in both
   buckets, strict JSON zero/null/missing types, round trips, filtering, and
   zero-energy display.
+
+## STB-FIND-005 — Energy values diverge and supported nutrients are hidden
+
+- **Area/path:** Shared ingredient normalization, OpenFoodFacts mapping,
+  flattened Livewire nutrition state, and ingredient detail presentation.
+- **Observed behavior:** kcal and kJ were independently persisted with no
+  derivation or conflict authority. Protein, carbohydrate, fibre, and sodium
+  were imported but absent from the form and detail presentation. Display
+  used PHP floating-point rounding and component-local precision.
+- **Expected/documented behavior:** STB-06 requires kcal authority, exact
+  `1 kcal = 4.184 kJ` derivation, DEC-003 storage precision, DEC-004 display
+  formatting, and consistent exposure of every already-imported supported
+  nutrient.
+- **Resolution:** Resolved by STB-06. The shared write normalizer now derives
+  the energy pair from canonical kcal with Brick Math decimal arithmetic and a
+  single conversion constant. kJ-only input derives kcal once at the storage
+  boundary; a conflict keeps kcal and replaces normalized kJ. Provider source
+  observations remain in the existing `raw` bucket. Form inputs and ingredient
+  detail rows come from the FND-06 registry, and detail values use the shared
+  DEC-004 formatter.
+- **Regression tests:** `EnergyNormalizerTest` covers direction, conflict,
+  exact factor, zero, missing, and small non-zero energy.
+  `IngredientNutrientHandlingTest` covers both retained write paths,
+  OpenFoodFacts source preservation, protein, the complete supported set,
+  persistence types, and exact display strings.
+- **Remaining follow-up:** The JSON model has no per-normalized-value origin,
+  status, policy-version, or conflict metadata. NUT-05 remains responsible for
+  the versioned catalogue provenance model.
 
 ## Intentional controller/Livewire write differences
 

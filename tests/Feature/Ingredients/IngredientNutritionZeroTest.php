@@ -67,9 +67,11 @@ class IngredientNutritionZeroTest extends TestCase
 
         foreach (['per_100g', 'per_serving'] as $bucket) {
             foreach ($this->nutrientKeys() as $nutrient) {
-                $expected = $nutrient === 'salt'
-                    ? '0.004900000000000000'
-                    : '1.123456789012345679';
+                $expected = match ($nutrient) {
+                    'energy_kj' => '4.700543205227654321',
+                    'salt' => '0.004900000000000000',
+                    default => '1.123456789012345679',
+                };
 
                 $this->assertSame($expected, data_get($normalized, "nutriments.{$bucket}.{$nutrient}"));
             }

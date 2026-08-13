@@ -247,12 +247,18 @@ lookup. The two normalized buckets can contain:
 - `sodium`
 - `sugars`
 
-Only energy, fat, saturated fat, sugars, and salt are currently editable and
-rendered. The conventional controller accepts any array structure, so this
-shape is a Livewire convention rather than a domain-wide invariant.
+STB-04 makes the normalized bucket shape a shared controller/Livewire write
+contract, while STB-06 exposes every registered nutrient in the form and
+ingredient detail view. Form inputs use canonical units; detail output uses
+the registry's DEC-004 preferred display unit and precision.
 
-No unit metadata is stored alongside normalized values. The components treat
-energy as kJ/kcal and the displayed macronutrient values as grams.
+No unit metadata is stored alongside normalized values. Energy normalization
+uses kcal as the canonical basis and derives the normalized kJ pair exactly.
+When only kJ is supplied, kcal is calculated at guard precision and quantized
+once at the storage boundary before normalized kJ is regenerated. When both
+units conflict, kcal wins. The provider-shaped raw bucket retains the
+available source observations, but normalized fields still have no independent
+provenance metadata.
 
 ### Barcode and OpenFoodFacts product data
 

@@ -262,18 +262,22 @@ component uses up to three buckets:
 
 OpenFoodFacts lookup maps energy, carbohydrate, fat, fibre, protein, salt,
 saturated fat, sodium, and sugars into the normalized buckets when supplied.
-The current form exposes only energy, fat, saturated fat, sugars, and salt for
-manual editing and display. Other imported normalized values and the raw
-payload may remain stored but are not displayed.
-
-The owner has identified calories, fat, sugars, salt, and protein as the key
-nutrition values. Protein can be imported and stored, but the current form does
-not expose it for manual editing or display.
+The form and ingredient detail presentation expose that complete supported set
+through the FND-06 registry rather than component-local nutrient lists. The
+ingredient index intentionally remains a compact identity and quantity list.
 
 Normalized nutrition values are validated as non-negative DEC-003 decimals,
 stored as scale-18 decimal strings, and are not rounded to DEC-004 display
 precision during writes. Null or blank nutrient values remain missing, while
-numeric zero and string `"0"` remain explicit zero.
+numeric zero and string `"0"` remain explicit zero. The shared write normalizer
+uses kcal as the canonical energy basis: kcal-only derives kJ, kJ-only derives
+and stores canonical kcal before regenerating the normalized kJ pair, and kcal
+wins when both supplied values conflict. Conversion uses exact decimal
+arithmetic and one central `4.184` factor without intermediate display
+rounding. The OpenFoodFacts response is decoded with numeric tokens retained as
+exact decimal strings rather than PHP floats. Source observations, including a
+conflicting supplied kJ value, remain identifiable in the existing `raw`
+bucket.
 
 The code does not:
 
@@ -307,9 +311,11 @@ FND-06 adds application-owned definitions under `app/Domain/Nutrition` and
   including `T` and `t`, remain custom and preserve their original text.
 
 The ingredient Livewire form uses the shared unit catalogue for choices and
-OpenFoodFacts unit inference. STB-04 now makes controller and Livewire writes
-consume the same unit/nutrient validation and normalization contract.
-Component display-row mappings remain legacy presentation code for STB-06.
+OpenFoodFacts unit inference. STB-04 makes controller and Livewire writes
+consume the same unit/nutrient validation and normalization contract. STB-06
+now derives form and detail nutrient rows from the FND-06 registry and formats
+detail values with `NutrientDisplayFormatter`, including DEC-004 precision,
+small-positive limits, explicit zero, and `Not available` for missing values.
 
 The intended source rules are:
 
@@ -459,11 +465,10 @@ and additive migration rollback while preserving existing user/ingredient data.
 - Imported and manually edited nutrition values are blended in the same JSON
   record with no provenance. The UI cannot apply the accuracy distinction
   described in `AGENTS.md`.
-- Protein is part of the owner's key nutrition set but is not exposed by the
-  current nutrition form or show component.
-- The current form accepts kcal and kJ independently. The intended behavior is
-  to populate the other value automatically using `1 kcal = 4.184 kJ` when
-  either one is entered, with kcal as the owner's preferred display value.
+- The current JSON nutrition model retains provider-shaped observations in
+  `raw`, but normalized values still lack per-value origin, derivation,
+  normalization-policy version, and conflict metadata. NUT-05 owns that broader
+  provenance redesign.
 - Measurement display formatting remains duplicated between the Livewire list
   and show components. Unit lists, validation, normalization, and inference
   now use FND-06.

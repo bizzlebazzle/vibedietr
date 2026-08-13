@@ -340,6 +340,7 @@ changes, it is deliberately split across multiple items.
 
 ### STB-06 — P0 — Stabilize current energy and protein handling
 
+- **Status:** Complete (2026-08-13).
 - **Outcome:** Expose the full supported nutrient set already imported,
   including protein, and consistently derive kJ/kcal without destructive
   source rounding.

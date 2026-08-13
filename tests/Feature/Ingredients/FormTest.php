@@ -48,14 +48,14 @@ class FormTest extends TestCase
             ->set('quantity_unit', 'g')
             ->set('per_100g_energy_kcal', 123.6)
             ->set('per_100g_fat', 1.236)
-            ->set('per_100g_saturates', 0.994)
+            ->set('per_100g_saturated_fat', 0.994)
             ->set('per_serving_sugars', 10.555)
             ->set('per_serving_salt', 0.004)
             ->call('save')
             ->assertHasNoErrors()
             ->assertSet('per_100g_energy_kcal', 123.6)
             ->assertSet('per_100g_fat', 1.236)
-            ->assertSet('per_100g_saturates', 0.994)
+            ->assertSet('per_100g_saturated_fat', 0.994)
             ->assertSet('per_serving_sugars', 10.555)
             ->assertSet('per_serving_salt', 0.004);
 

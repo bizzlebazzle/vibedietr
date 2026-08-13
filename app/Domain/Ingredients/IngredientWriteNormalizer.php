@@ -3,10 +3,13 @@
 namespace App\Domain\Ingredients;
 
 use App\Domain\Measurements\MeasurementUnitParser;
+use App\Domain\Nutrition\EnergyNormalizer;
 use App\Domain\Shared\Decimal;
 
-final class IngredientWriteNormalizer
+final readonly class IngredientWriteNormalizer
 {
+    public function __construct(private EnergyNormalizer $energyNormalizer = new EnergyNormalizer) {}
+
     /**
      * @param  array<string, mixed>  $validated
      * @return array<string, mixed>
@@ -79,6 +82,8 @@ final class IngredientWriteNormalizer
                     ? 0
                     : Decimal::forStorage($decimal);
             }
+
+            $normalized = $this->energyNormalizer->normalize($normalized);
 
             if ($normalized === []) {
                 unset($nutriments[$bucket]);

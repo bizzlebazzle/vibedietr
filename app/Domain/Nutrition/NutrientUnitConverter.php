@@ -17,8 +17,8 @@ final class NutrientUnitConverter
         }
 
         return match ([$from, $to]) {
-            [NutrientUnit::Kilocalorie, NutrientUnit::Kilojoule] => $value->multipliedBy('4.184'),
-            [NutrientUnit::Kilojoule, NutrientUnit::Kilocalorie] => $value->dividedBy('4.184', Decimal::DIVISION_GUARD_SCALE, Decimal::ROUNDING_MODE),
+            [NutrientUnit::Kilocalorie, NutrientUnit::Kilojoule] => $value->multipliedBy(EnergyConversion::KILOJOULES_PER_KILOCALORIE),
+            [NutrientUnit::Kilojoule, NutrientUnit::Kilocalorie] => $value->dividedBy(EnergyConversion::KILOJOULES_PER_KILOCALORIE, Decimal::DIVISION_GUARD_SCALE, Decimal::ROUNDING_MODE),
             [NutrientUnit::Gram, NutrientUnit::Milligram] => $value->multipliedBy('1000'),
             [NutrientUnit::Milligram, NutrientUnit::Gram] => $value->dividedBy('1000', Decimal::DIVISION_GUARD_SCALE, Decimal::ROUNDING_MODE),
             default => throw new IncompatibleDimensions("Cannot convert nutrient unit {$from->value} to {$to->value}."),
