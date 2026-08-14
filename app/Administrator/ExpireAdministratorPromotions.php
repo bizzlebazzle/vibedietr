@@ -3,6 +3,7 @@
 namespace App\Administrator;
 
 use App\Models\AdministratorPromotionRequest;
+use App\Models\User;
 use App\Security\Notifications\SecurityEventType;
 use App\Security\Notifications\SecurityNotificationIntentService;
 use App\Security\SecurityAuditService;
@@ -28,7 +29,7 @@ final class ExpireAdministratorPromotions
                 if (! $locked instanceof AdministratorPromotionRequest || ! $locked->isPending() || $locked->expires_at->isFuture()) {
                     return null;
                 }
-                $target = \App\Models\User::query()->findOrFail($locked->target_user_id);
+                $target = User::query()->findOrFail($locked->target_user_id);
                 $locked->update(['status' => 'expired', 'expired_at' => Date::now()]);
                 $this->audit->system($target, 'promotion_expired', 'completed', 'ordinary', 'ordinary', $locked->correlation_id);
 
@@ -38,10 +39,10 @@ final class ExpireAdministratorPromotions
             if ($promotion instanceof AdministratorPromotionRequest) {
                 $expired++;
                 try {
-                    $this->notifications->create(SecurityEventType::PromotionExpired, \App\Models\User::query()->findOrFail($promotion->target_user_id), $promotion->correlation_id);
+                    $this->notifications->create(SecurityEventType::PromotionExpired, User::query()->findOrFail($promotion->target_user_id), $promotion->correlation_id);
                 } catch (\Throwable) {
                     try {
-                        $this->securityAudit->notification(\App\Models\User::query()->findOrFail($promotion->target_user_id), SecurityEventType::PromotionExpired->value, 'failed', 'affected_account', 'intent_failed', $promotion->correlation_id);
+                        $this->securityAudit->notification(User::query()->findOrFail($promotion->target_user_id), SecurityEventType::PromotionExpired->value, 'failed', 'affected_account', 'intent_failed', $promotion->correlation_id);
                     } catch (\Throwable) {
                         // Expiry remains complete even if failure evidence is unavailable.
                     }

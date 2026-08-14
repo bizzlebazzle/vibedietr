@@ -6,6 +6,7 @@ use App\Jobs\DeliverSecurityNotification;
 use App\Models\SecurityNotificationIntent;
 use App\Models\User;
 use App\Security\SecurityAuditService;
+use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 
 class SecurityNotificationIntentService
@@ -33,7 +34,7 @@ class SecurityNotificationIntentService
 
             foreach ($recipients as $entry) {
                 $recipient = $entry['user'];
-                $destinationVersion = hash_hmac('sha256', strtolower($recipient->email).'|'.($recipient->email_verified_at === null ? 'unverified' : \Illuminate\Support\Facades\Date::parse($recipient->email_verified_at)->toIso8601String()), (string) config('app.key'));
+                $destinationVersion = hash_hmac('sha256', strtolower($recipient->email).'|'.($recipient->email_verified_at === null ? 'unverified' : Date::parse($recipient->email_verified_at)->toIso8601String()), (string) config('app.key'));
                 $key = hash('sha256', implode('|', [$event->value, $recipient->getKey(), 'mail', $destinationVersion, $correlationId]));
                 $intent = SecurityNotificationIntent::query()->firstOrCreate(
                     ['idempotency_key' => $key],

@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\SecondFactor;
+use App\Models\SecondFactorRecoveryAuthorization;
 use App\Models\SecondFactorRecoveryCode;
 use App\Models\User;
 use App\Security\SecondFactor\PrivilegedWorkflowGuard;
@@ -18,6 +19,7 @@ use App\Security\SecondFactor\SecondFactorVerifier;
 use App\Security\SecondFactor\TotpEngine;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Date;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
@@ -148,7 +150,7 @@ class AdministratorSecondFactorTest extends TestCase
         $plain = 'AAAA1111-BBBB2222-CCCC3333-DDDD4444';
         $factor = $user->secondFactor()->firstOrFail();
         $record = new SecondFactorRecoveryCode;
-        $record->forceFill(['id' => $record->newUniqueId(), 'factor_id' => $factor->getKey(), 'code_hash' => \Illuminate\Support\Facades\Hash::make($plain)]);
+        $record->forceFill(['id' => $record->newUniqueId(), 'factor_id' => $factor->getKey(), 'code_hash' => Hash::make($plain)]);
         $record->save();
         $session = app('session.store');
         $recovery = app(SecondFactorRecoveryService::class);
@@ -193,7 +195,7 @@ class AdministratorSecondFactorTest extends TestCase
         [$target, $oldFactor] = $this->confirmedFactor(administrator: true);
         $service = app(RecoveryAuthorizationService::class);
         $issued = $service->issueCli($target, 'operator-opaque-reference', '01k2hclirecovery000000000000');
-        $authorization = \App\Models\SecondFactorRecoveryAuthorization::query()->findOrFail($issued->id);
+        $authorization = SecondFactorRecoveryAuthorization::query()->findOrFail($issued->id);
 
         $this->assertArrayNotHasKey('authorization_hash', $authorization->toArray());
         $session = app('session.store');
@@ -221,7 +223,7 @@ class AdministratorSecondFactorTest extends TestCase
         $record->forceFill([
             'id' => $record->newUniqueId(),
             'factor_id' => $oldFactor->getKey(),
-            'code_hash' => \Illuminate\Support\Facades\Hash::make($plain),
+            'code_hash' => Hash::make($plain),
         ]);
         $record->save();
         $session = app('session.store');

@@ -1,7 +1,11 @@
 <?php
 
+use App\Providers\AdministratorSecurityServiceProvider;
+use App\Providers\AppServiceProvider;
+use App\Providers\VoltServiceProvider;
+
 return [
-    App\Providers\AdministratorSecurityServiceProvider::class,
-    App\Providers\AppServiceProvider::class,
-    App\Providers\VoltServiceProvider::class,
+    AdministratorSecurityServiceProvider::class,
+    AppServiceProvider::class,
+    VoltServiceProvider::class,
 ];

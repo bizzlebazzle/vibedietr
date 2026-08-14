@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * @property \Carbon\CarbonImmutable $expires_at
+ * @property CarbonImmutable $expires_at
  * @property int $target_user_id
  * @property string $status
  * @property string $correlation_id

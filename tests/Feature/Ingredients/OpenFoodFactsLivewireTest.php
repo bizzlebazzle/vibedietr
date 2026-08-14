@@ -6,6 +6,7 @@ use App\Livewire\Ingredients\Form;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Livewire\Features\SupportTesting\Testable;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -100,7 +101,7 @@ class OpenFoodFactsLivewireTest extends TestCase
             ->assertDontSee('secret exception detail');
     }
 
-    private function lookup(): \Livewire\Features\SupportTesting\Testable
+    private function lookup(): Testable
     {
         return Livewire::actingAs(User::factory()->create())->test(Form::class)
             ->set('barcode', '1234567890123')

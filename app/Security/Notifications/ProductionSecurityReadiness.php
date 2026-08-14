@@ -3,6 +3,7 @@
 namespace App\Security\Notifications;
 
 use App\Models\SecurityNotificationHealth;
+use App\Models\User;
 use Illuminate\Support\Facades\Date;
 use RuntimeException;
 
@@ -51,7 +52,7 @@ final class ProductionSecurityReadiness
             $failures[] = 'A durable asynchronous queue connection is required.';
         }
 
-        if (\App\Models\User::query()->where('is_administrator', true)->whereNull('email_verified_at')->exists()) {
+        if (User::query()->where('is_administrator', true)->whereNull('email_verified_at')->exists()) {
             $failures[] = 'Every active administrator requires a verified notification destination.';
         }
 

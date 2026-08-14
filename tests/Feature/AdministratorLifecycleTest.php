@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Queue;
 use Mockery;
+use Mockery\Expectation;
 use RuntimeException;
 use Tests\TestCase;
 
@@ -89,7 +90,7 @@ class AdministratorLifecycleTest extends TestCase
         $this->configureBootstrap($target);
         $audit = Mockery::mock(AuditEventRecorder::class);
         $expectation = $audit->shouldReceive('record');
-        assert($expectation instanceof \Mockery\Expectation);
+        assert($expectation instanceof Expectation);
         $expectation->andThrow(new RuntimeException('audit unavailable'));
         $this->app->instance(AuditEventRecorder::class, $audit);
 
@@ -102,7 +103,7 @@ class AdministratorLifecycleTest extends TestCase
         $this->app->forgetInstance(AuditEventRecorder::class);
         $notifications = Mockery::mock(SecurityNotificationIntentService::class);
         $expectation = $notifications->shouldReceive('create');
-        assert($expectation instanceof \Mockery\Expectation);
+        assert($expectation instanceof Expectation);
         $expectation->andThrow(new RuntimeException('intent unavailable'));
         $this->app->instance(SecurityNotificationIntentService::class, $notifications);
         $this->artisan('administrator:bootstrap')

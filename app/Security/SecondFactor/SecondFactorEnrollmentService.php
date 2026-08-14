@@ -14,6 +14,7 @@ use Illuminate\Contracts\Session\Session;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use RuntimeException;
 use SensitiveParameter;
 
@@ -28,7 +29,7 @@ final class SecondFactorEnrollmentService
         private readonly SecurityNotificationIntentService $notifications,
     ) {}
 
-    public function begin(User $user, #[SensitiveParameter] string $password, RecentAuthentication $authentication, \Illuminate\Contracts\Session\Session $session): EnrollmentPresentation
+    public function begin(User $user, #[SensitiveParameter] string $password, RecentAuthentication $authentication, Session $session): EnrollmentPresentation
     {
         if ($user->email_verified_at === null || SecondFactor::query()->where('user_id', $user->getKey())->exists()) {
             throw new RuntimeException('Second-factor enrollment is not available for this account.');
@@ -140,7 +141,7 @@ final class SecondFactorEnrollmentService
                 $proof = $session?->get('auth.second_factor_recovery');
                 $correlationId = is_array($proof) && is_string($proof['correlation_id'] ?? null)
                     ? $proof['correlation_id']
-                    : strtolower((string) \Illuminate\Support\Str::ulid());
+                    : strtolower((string) Str::ulid());
 
                 if ($enrollment->recovery_authorization_id !== null) {
                     $correlationId = (string) SecondFactorRecoveryAuthorization::query()

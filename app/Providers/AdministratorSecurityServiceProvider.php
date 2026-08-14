@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use App\Http\Middleware\RequirePrivilegedAuthentication;
+use App\Models\SecondFactor;
+use App\Models\SecondFactorEnrollment;
 use App\Models\User;
 use App\Security\Notifications\LaravelMailSecurityNotificationTransport;
 use App\Security\Notifications\SecurityNotificationTransport;
@@ -21,7 +23,7 @@ final class AdministratorSecurityServiceProvider extends ServiceProvider
         Route::aliasMiddleware('privileged-auth', RequirePrivilegedAuthentication::class);
         Route::middleware('web')->group(base_path('routes/security.php'));
 
-        User::resolveRelationUsing('secondFactor', fn (User $user) => $user->hasOne(\App\Models\SecondFactor::class));
-        User::resolveRelationUsing('secondFactorEnrollment', fn (User $user) => $user->hasOne(\App\Models\SecondFactorEnrollment::class));
+        User::resolveRelationUsing('secondFactor', fn (User $user) => $user->hasOne(SecondFactor::class));
+        User::resolveRelationUsing('secondFactorEnrollment', fn (User $user) => $user->hasOne(SecondFactorEnrollment::class));
     }
 }
