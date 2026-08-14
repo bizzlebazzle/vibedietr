@@ -11,6 +11,7 @@ use App\Security\SecurityAuditService;
 use Illuminate\Contracts\Session\Session;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use SensitiveParameter;
 
 final class SecondFactorRecoveryService
@@ -45,7 +46,7 @@ final class SecondFactorRecoveryService
         }
 
         foreach ($factor->recoveryCodes()->whereNull('used_at')->get() as $code) {
-            /** @var \App\Models\SecondFactorRecoveryCode $code */
+            /** @var SecondFactorRecoveryCode $code */
             if (! Hash::check($value, $code->code_hash)) {
                 continue;
             }
@@ -53,7 +54,7 @@ final class SecondFactorRecoveryService
             $consumed = SecondFactorRecoveryCode::query()->whereKey($code->getKey())->whereNull('used_at')->update(['used_at' => Date::now()]);
 
             if ($consumed === 1) {
-                $correlationId = strtolower((string) \Illuminate\Support\Str::ulid());
+                $correlationId = strtolower((string) Str::ulid());
                 $this->throttle->succeeded($user);
                 $session->put('auth.second_factor_recovery', [
                     'user_id' => (int) $user->getKey(),

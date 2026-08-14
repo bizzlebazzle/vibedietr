@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Administrator\AdministratorBreakGlassReplacement;
+use App\Models\User;
 use Illuminate\Console\Command;
 use Throwable;
 
@@ -19,7 +20,7 @@ final class BreakGlassReplaceAdministrator extends Command
             $this->components->warn('Security-sensitive operation: break-glass administrator replacement');
             $this->line('Environment: '.app()->environment());
             $this->line('Configured replacement: '.$targets['replacement']->email);
-            $this->line('Configured compromised account: '.($targets['compromised'] instanceof \App\Models\User ? $targets['compromised']->email : 'none'));
+            $this->line('Configured compromised account: '.($targets['compromised'] instanceof User ? $targets['compromised']->email : 'none'));
 
             if (app()->environment('production') && ! $this->input->isInteractive()) {
                 $replacement->recordOperatorDeclined();

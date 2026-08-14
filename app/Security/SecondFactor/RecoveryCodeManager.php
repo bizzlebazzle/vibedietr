@@ -8,8 +8,10 @@ use App\Models\User;
 use App\Security\Notifications\SecurityEventType;
 use App\Security\Notifications\SecurityNotificationIntentService;
 use App\Security\SecurityAuditService;
+use Illuminate\Contracts\Session\Session;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use RuntimeException;
 use SensitiveParameter;
 
@@ -27,7 +29,7 @@ final class RecoveryCodeManager
         #[SensitiveParameter] string $password,
         #[SensitiveParameter] string $totpCode,
         string $sourceIp,
-        \Illuminate\Contracts\Session\Session $session,
+        Session $session,
     ): RecoveryCodeSet {
         if (! $this->authentication->confirmPrimary($user, $password, $session)) {
             throw new RuntimeException('Immediate password confirmation failed.');
@@ -53,7 +55,7 @@ final class RecoveryCodeManager
 
             return new RecoveryCodeSet($codes);
         });
-        $correlationId = strtolower((string) \Illuminate\Support\Str::ulid());
+        $correlationId = strtolower((string) Str::ulid());
         $this->audit->factor($user, $user, 'recovery_codes_regenerated', 'completed', 'factor_management', $correlationId);
         $this->notifications->create(SecurityEventType::RecoveryCodesRegenerated, $user, $correlationId);
 

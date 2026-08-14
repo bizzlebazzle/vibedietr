@@ -23,6 +23,7 @@ use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Route;
 use LogicException;
 use Mockery;
+use Mockery\Expectation;
 use RuntimeException;
 use Tests\TestCase;
 
@@ -45,7 +46,7 @@ class AdministratorLifecycleSecurityTest extends TestCase
         $session = $this->freshProof($administrator, $adminSecret, 'administrator.promotion.initiate');
         $audit = Mockery::mock(AuditEventRecorder::class);
         $expectation = $audit->shouldReceive('record');
-        assert($expectation instanceof \Mockery\Expectation);
+        assert($expectation instanceof Expectation);
         $expectation->andThrow(new RuntimeException('audit unavailable'));
         $this->app->instance(AuditEventRecorder::class, $audit);
 
@@ -61,7 +62,7 @@ class AdministratorLifecycleSecurityTest extends TestCase
         $session = $this->freshProof($administrator, $adminSecret, 'administrator.promotion.initiate', false);
         $notifications = Mockery::mock(SecurityNotificationIntentService::class);
         $expectation = $notifications->shouldReceive('create');
-        assert($expectation instanceof \Mockery\Expectation);
+        assert($expectation instanceof Expectation);
         $expectation->andThrow(new RuntimeException('intent unavailable'));
         $this->app->instance(SecurityNotificationIntentService::class, $notifications);
         try {
@@ -80,7 +81,7 @@ class AdministratorLifecycleSecurityTest extends TestCase
         $session = $this->freshProof($actor, $actorSecret, 'administrator.revoke');
         $audit = Mockery::mock(AuditEventRecorder::class);
         $expectation = $audit->shouldReceive('record');
-        assert($expectation instanceof \Mockery\Expectation);
+        assert($expectation instanceof Expectation);
         $expectation->andThrow(new RuntimeException('audit unavailable'));
         $this->app->instance(AuditEventRecorder::class, $audit);
         try {
@@ -95,7 +96,7 @@ class AdministratorLifecycleSecurityTest extends TestCase
         $session = $this->freshProof($actor, $actorSecret, 'administrator.revoke', false);
         $notifications = Mockery::mock(SecurityNotificationIntentService::class);
         $expectation = $notifications->shouldReceive('create');
-        assert($expectation instanceof \Mockery\Expectation);
+        assert($expectation instanceof Expectation);
         $expectation->andThrow(new RuntimeException('intent unavailable'));
         $this->app->instance(SecurityNotificationIntentService::class, $notifications);
         app(AdministratorRevocation::class)->revoke($actor, $target, $session);

@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Models\SecurityNotificationHealth;
 use App\Models\SecurityNotificationIntent;
+use App\Models\User;
 use App\Queue\Exceptions\NonRetryableJobException;
 use App\Queue\Exceptions\RetryableJobException;
 use App\Queue\JobFailureReporter;
@@ -58,7 +59,7 @@ final class DeliverSecurityNotification implements ShouldBeUnique, ShouldQueue
 
         $recipient = $intent->recipient;
 
-        if (! $recipient instanceof \App\Models\User) {
+        if (! $recipient instanceof User) {
             $this->permanentlyReject($intent, 'security_recipient_missing');
 
             return;

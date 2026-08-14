@@ -127,7 +127,7 @@ final class AdministratorBootstrap
 
                 return $lockedTarget->fresh();
             }, 3);
-        } catch (\Throwable $exception) {
+        } catch (Throwable $exception) {
             $this->recordRefusal($target, $operator, $correlationId, $exception);
             throw $exception;
         }
@@ -155,7 +155,7 @@ final class AdministratorBootstrap
         }
     }
 
-    private function recordRefusal(User $target, string $operator, string $correlationId, \Throwable $exception): void
+    private function recordRefusal(User $target, string $operator, string $correlationId, Throwable $exception): void
     {
         $state = AdministratorLifecycleState::query()->find(1);
         $count = User::query()->where('is_administrator', true)->count();
@@ -174,7 +174,7 @@ final class AdministratorBootstrap
                 $this->bootstrapPayload($count, $state?->bootstrap_completed_at !== null, true, 'refused', 'ordinary', $reason),
                 correlationId: $correlationId,
             );
-        } catch (\Throwable) {
+        } catch (Throwable) {
             // The command still fails closed when refusal evidence is itself unavailable.
         }
     }

@@ -12,6 +12,7 @@ use App\Security\SecondFactor\SecondFactorVerifier;
 use App\Security\SecurityAuditService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use RuntimeException;
@@ -56,7 +57,7 @@ final class SecondFactorController extends Controller
     ): RedirectResponse {
         $request->validate(['acknowledged' => ['accepted']]);
         $enrollment->acknowledgeRecoveryCodes($request->user(), $request->session());
-        $correlationId = strtolower((string) \Illuminate\Support\Str::ulid());
+        $correlationId = strtolower((string) Str::ulid());
         $audit->factor($request->user(), $request->user(), 'enrollment_confirmed', 'completed', 'enrollment', $correlationId);
         $notifications->create(SecurityEventType::FactorEnrollmentCompleted, $request->user(), $correlationId);
 
