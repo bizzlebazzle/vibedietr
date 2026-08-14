@@ -4,9 +4,11 @@ namespace App\Providers;
 
 use App\Models\AuditEvent;
 use App\Models\Ingredient;
+use App\Models\Recipe;
 use App\Models\User;
 use App\Policies\AuditEventPolicy;
 use App\Policies\IngredientPolicy;
+use App\Policies\RecipePolicy;
 use App\Queue\Reference\CacheReferenceTaskResultRecorder;
 use App\Queue\Reference\ReferenceTaskResultRecorder;
 use Illuminate\Support\Facades\Gate;
@@ -32,6 +34,7 @@ class AppServiceProvider extends ServiceProvider
     {
         Gate::policy(AuditEvent::class, AuditEventPolicy::class);
         Gate::policy(Ingredient::class, IngredientPolicy::class);
+        Gate::policy(Recipe::class, RecipePolicy::class);
         Gate::define('access-admin', fn (User $user): bool => User::query()->whereKey($user->getKey())->where('is_administrator', true)->exists());
     }
 }

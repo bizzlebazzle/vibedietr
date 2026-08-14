@@ -383,12 +383,31 @@ field. Failed, expired, malformed, rate-limited, unavailable, not-found, and
 permanent-failure lookups cannot create verified provenance. A failed
 re-import leaves existing verified metadata intact.
 
+## Implemented recipe-draft identity
+
+REC-01 adds a minimal `recipes` table and model with an integer identifier,
+required creator `user_id`, title, optional positive `DECIMAL(10,2)` serving
+count, string-backed lifecycle and intended-visibility enums, and timestamps.
+New recipes default to lifecycle `draft` and intended visibility `public`.
+Lifecycle and intended visibility are separate: every draft remains owner-only
+even when its eventual visibility preference is public.
+
+Authenticated users create and update drafts through one Livewire form hosted
+by conventional authenticated create/edit pages. Ownership and draft lifecycle
+are assigned server-side and excluded from mass assignment and Livewire state.
+A centralized recipe policy permits create for authenticated users and permits
+view/update only when `recipes.user_id` matches the current user. Guests follow
+the existing login redirect, while authenticated non-owners receive 403 for
+direct view/edit URLs and Livewire mutation. No public recipe route, publish or
+share record, ingredients, instructions, nutrition, versioning, or planning
+integration is introduced.
+
 ## Capabilities not represented
 
 There are no routes, models, migrations, policies, components, views, or tests
 for:
 
-- Recipes or recipe organisation.
+- Recipe organisation.
 - Structured recipe ingredient lines.
 - Preservation of the original text for a recipe ingredient line.
 - Matching a recipe ingredient line to an ingredient or food record.

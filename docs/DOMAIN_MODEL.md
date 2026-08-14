@@ -135,6 +135,35 @@ replacement; secrets are hidden from model serialization.
 evidence. Singleton health state records only readiness booleans, safe failure
 code, and provider, capacity, worker and monitor timestamps.
 
+### Recipe draft
+
+`App\Models\Recipe` is the persisted identity for an authenticated user's
+private recipe working state.
+
+Identity and ownership:
+
+- Auto-incrementing integer identifier.
+- Required `user_id` foreign key; `Recipe::owner()` belongs to one user and
+  `User::recipes()` exposes that user's recipes.
+- User deletion cascades to owned recipe drafts.
+- Creation and update timestamps.
+
+Draft metadata:
+
+- Required trimmed title, bounded to 255 characters.
+- Optional serving count stored as decimal `(10, 2)` and validated as greater
+  than zero when supplied.
+- Lifecycle stored as the string-backed `RecipeLifecycle` enum. REC-01 supports
+  only `draft`, which is assigned server-side.
+- Intended visibility stored separately as the string-backed
+  `RecipeVisibility` enum with `public` and `private`; the default is `public`
+  to preserve the finalized-recipe default from the product specification.
+
+The recipe policy grants view and update only to the owner. Draft lifecycle
+overrides intended visibility, so neither preference grants public or
+cross-user access. Publication, sharing, versioning and lifecycle transitions
+are not represented.
+
 ### Ingredient
 
 `App\Models\Ingredient` is a user-owned food record. Its current fields make it
@@ -468,7 +497,6 @@ lookup, so it is not a guaranteed record of the user's original text.
 The following concepts named in the project purpose have no current domain
 representation:
 
-- Recipe.
 - Recipe collection, folder, tag, or other organisation.
 - Recipe ingredient line.
 - Original recipe ingredient text.
