@@ -3,23 +3,39 @@
     notice: null,
     keywordInput: '',
     categoryInput: '',
+    notifyHandler: null,
+    barcodeHandler: null,
+    noticeTimer: null,
+    scanLookupPending: false,
 
     init() {
       // lightweight notifier
-      window.addEventListener('notify', e => {
+      this.notifyHandler = e => {
         const { message } = e.detail || {};
         this.notice = message || 'Done';
-        setTimeout(() => this.notice = null, 2500);
-      });
+        clearTimeout(this.noticeTimer);
+        this.noticeTimer = setTimeout(() => this.notice = null, 2500);
+      };
+      window.addEventListener('notify', this.notifyHandler);
 
       // handle barcode scanned -> set field + call OFF
-      window.addEventListener('barcode-scanned', e => {
+      this.barcodeHandler = e => {
         const code = e.detail?.text || '';
-        if (!code) return;
+        if (!code || this.scanLookupPending) return;
+        this.scanLookupPending = true;
         // Keep the field in sync, then fetch using the scanned code directly.
         $wire.set('barcode', code);
-        $wire.fetchFromOff(code);
-      });
+        Promise.resolve($wire.fetchFromOff(code)).finally(() => {
+          this.scanLookupPending = false;
+        });
+      };
+      window.addEventListener('barcode-scanned', this.barcodeHandler);
+    },
+
+    destroy() {
+      window.removeEventListener('notify', this.notifyHandler);
+      window.removeEventListener('barcode-scanned', this.barcodeHandler);
+      clearTimeout(this.noticeTimer);
     },
 
     addKeyword() {
@@ -92,7 +108,6 @@
                     facing="environment"
                     :autostart="false"
                     event-name="barcode-scanned"
-                    cdn="https://unpkg.com/@zxing/library@0.20.0/umd/index.min.js"
                 />
             </div>
         </details>

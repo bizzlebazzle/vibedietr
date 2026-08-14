@@ -390,6 +390,7 @@ changes, it is deliberately split across multiple items.
 
 - **Outcome:** Make scanner availability, versioning, privacy, and content
   security policy controllable by the application.
+- **Status:** Complete (2026-08-14).
 - **Dependencies:** STB-08.
 - **Acceptance criteria:** The scanner library is lock-file managed and bundled
   locally; camera cleanup and permission errors are handled; manual product

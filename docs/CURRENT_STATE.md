@@ -260,12 +260,32 @@ server-side success result. A successful lookup can populate:
 
 The browser form also contains a camera barcode scanner. It:
 
-- Loads ZXing 0.20.0 from `unpkg.com` at runtime.
-- Requests camera permission and enumerates available cameras.
-- Supports camera selection and prefers a rear-facing camera.
+- Imports the exactly pinned `@zxing/library` 0.20.0 package through the Vite
+  application bundle and makes no runtime scanner CDN request.
+- Decodes camera frames locally in the browser without sending them to ZXing or
+  another scanner service.
+- Enumerates cameras without prompting, prefers a rear-facing camera, and
+  requests camera permission only after the user selects **Start scan**.
+- Supports camera switching by releasing the active stream before starting the
+  selected replacement.
 - Requires HTTPS or localhost, as required by browser camera APIs.
-- Sends a successful scan to the Livewire form, which immediately starts an
-  OpenFoodFacts lookup.
+- Validates and accepts one decoder result per scan, then stops before sending
+  the barcode to the Livewire/OpenFoodFacts lookup flow.
+
+`resources/js/barcode-scanner-adapter.js` owns initialization, start, restart,
+switch, and idempotent stop/destroy behavior. Stop resets ZXing, stops remaining
+video tracks, clears the video source, and runs on a successful scan, manual
+stop, page hiding, Livewire navigation, or Alpine component destruction. The
+Livewire event bridge also removes its listeners on destruction and suppresses
+scan callbacks while an equivalent lookup is pending.
+
+Permission denial, missing or unsupported camera APIs, no cameras, reader
+initialization failure, an unavailable selected camera, and invalid scan data
+produce small safe states with a manual-entry message rather than raw browser
+errors. Manual product creation is available without initializing or starting
+the camera. Local camera testing uses HTTPS or `localhost`; deterministic
+coverage without a physical camera runs with
+`./vendor/bin/sail npm run test:scanner`.
 
 Before fetching through the Livewire form, the application checks for another
 ingredient with the same non-empty barcode owned by the current user. If one is
@@ -446,7 +466,11 @@ hard deletion, search, pagination, owner/non-owner/guest behavior, retained
 controller mutations, dormant edit-modal invocation, forged Livewire
 identifiers, stale ownership at save time, and ownership mass assignment.
 OpenFoodFacts failure responses and representative quantity mapping are now
-covered. Browser camera behavior remains uncovered.
+covered. A focused Node suite covers the scanner package/lock contract,
+permission and availability states, local result validation, duplicate
+callbacks, start/restart/stop/destroy, track release, navigation cleanup, and
+camera-switch recovery with deterministic browser and decoder doubles. A
+physical-camera browser/end-to-end suite remains unavailable.
 
 Administrator authorization tests cover migration defaults for existing and
 new users, persistence, mass-assignment and self-service input protection, the
@@ -496,8 +520,9 @@ and additive migration rollback while preserving existing user/ingredient data.
   v3.4 flat-nutrient compatibility profile; adopting the provider's latest
   v3.6 nutrition structure remains a mapper migration risk rather than an
   environment-only version change. No response cache is implemented.
-- The scanner depends on a third-party CDN at runtime. Scanner behavior has no
-  automated browser coverage.
+- The scanner is locally bundled and deterministically tested, but the
+  repository still has no physical-camera browser/end-to-end suite. Secure
+  context, permission, and hardware behavior therefore retain a manual check.
 - Nutrition remains JSON rather than a relational/versioned model. The shared
   write contract now restricts normalized buckets to registered nutrients and
   exact non-negative decimals, but the retained raw OpenFoodFacts bucket is

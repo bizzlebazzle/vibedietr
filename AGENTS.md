@@ -142,6 +142,13 @@ reloading, run this in a separate terminal:
 ./vendor/bin/sail composer test
 ```
 
+Run the deterministic barcode-scanner adapter and integration tests without a
+physical camera:
+
+```bash
+./vendor/bin/sail npm run test:scanner
+```
+
 ### Format code
 
 Apply the project's Laravel Pint formatting:
