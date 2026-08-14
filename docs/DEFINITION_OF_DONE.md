@@ -128,13 +128,15 @@ untested.
 
 **Desirable but not currently available**
 
-- There is no configured frontend linter, frontend unit-test runner,
-  browser/end-to-end suite, automated accessibility scanner, or visual
-  regression tool.
+- There is no configured general frontend linter, browser/end-to-end suite,
+  automated accessibility scanner, or visual regression tool. The barcode
+  scanner has a focused Node test suite with browser API and decoder doubles,
+  but it is not a general browser-testing framework.
 - These checks must not be reported as passing. Where the acceptance criteria
-  depend on behavior they would normally cover, use focused PHPUnit coverage
-  and documented manual verification, or report the task as conditionally
-  complete if adequate verification is not possible.
+  depend on behavior they would normally cover, use the focused scanner or
+  PHPUnit coverage where applicable and documented manual verification, or
+  report the task as conditionally complete if adequate verification is not
+  possible.
 
 ## 6. Continuous-integration quality gates
 

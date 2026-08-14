@@ -20,6 +20,7 @@ edit-modal entry point. There is no Livewire delete method.
 | STB-FIND-005 | Energy and supported-nutrient presentation | Independent conflicting energy and silently omitted nutrients | Resolved by STB-06 |
 | STB-FIND-006 | Direct OpenFoodFacts access | Unbounded, unidentified provider coupling in Livewire | Resolved by STB-07 |
 | STB-FIND-007 | Manual barcode persistence | User-controlled data could forge machine-import provenance | Resolved by STB-08 |
+| STB-FIND-008 | Runtime scanner CDN | Third-party script availability, lifecycle, and privacy exposure | Resolved by STB-09 |
 
 ## STB-FIND-001 — Direct Livewire update bypasses owner authorization
 
@@ -213,6 +214,30 @@ edit-modal entry point. There is no Livewire delete method.
 - **Remaining follow-up:** NUT-01/NUT-02 own shared-catalogue identity,
   de-duplication review, and migration mappings. NUT-05 owns versioned,
   per-nutrient provenance.
+
+## STB-FIND-008 — Barcode scanning loads executable code from a runtime CDN
+
+- **Area/path:** Barcode scanner Blade component and
+  `resources/js/scanner.js`.
+- **Observed behavior:** The form injected ZXing 0.20.0 from `unpkg.com` when
+  the scanner initialized. Camera failure states were not rendered, rapid
+  decoder callbacks had no explicit guard, and component destruction did not
+  own listener and camera cleanup.
+- **Expected/documented behavior:** STB-09 requires an exactly lock-file-managed
+  local scanner bundle, deliberate camera failure states, lifecycle cleanup,
+  duplicate-scan protection, and an independent manual-entry fallback.
+- **Privacy/reliability impact:** Medium. Camera frames were decoded locally,
+  but scanner availability and executable-code delivery depended on a third
+  party at runtime.
+- **Resolution:** Resolved by STB-09. The existing `@zxing/library` 0.20.0
+  package is pinned and imported through Vite. A small adapter owns start,
+  switch, restart, result validation, and idempotent teardown. Safe states cover
+  permission, API, device, initialization, and scan failures, and every state
+  leaves manual entry available. ZXing continues to decode locally.
+- **Regression tests:** `tests/Frontend/scanner.test.mjs` covers the
+  package/lock contract, absence of a CDN loader, failure states, successful and
+  duplicate results, invalid data, track release, repeated teardown, navigation
+  and destruction cleanup, restart, and recoverable camera switching.
 
 ## Intentional controller/Livewire write differences
 

@@ -179,6 +179,9 @@ jobs:
       - name: Install frontend dependencies from the lock file
         run: npm ci
 
+      - name: Run frontend scanner tests
+        run: npm run test:scanner
+
       - name: Validate documentation
         run: npm run docs:check
 
