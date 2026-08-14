@@ -407,6 +407,7 @@ changes, it is deliberately split across multiple items.
 
 - **Outcome:** Let an authenticated user create a private recipe draft with a
   title, serving count, lifecycle state, and visibility preference.
+- **Status:** Complete (2026-08-14).
 - **Dependencies:** FND-02, FND-03.
 - **Acceptance criteria:** Drafts belong to one creator, are private regardless
   of intended visibility, require a positive serving count when supplied, and

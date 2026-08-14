@@ -36,6 +36,9 @@ new class extends Component
                     <x-nav-link :href="route('ingredients.index')" :active="request()->routeIs('ingredients.*')">
                         Ingredients
                     </x-nav-link>
+                    <x-nav-link :href="route('recipes.create')" :active="request()->routeIs('recipes.*')">
+                        Recipes
+                    </x-nav-link>
                 </div>
             </div>
 
@@ -89,6 +92,9 @@ new class extends Component
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('ingredients.index')" :active="request()->routeIs('ingredients.*')">
                 Ingredients
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('recipes.create')" :active="request()->routeIs('recipes.*')">
+                Recipes
             </x-responsive-nav-link>
         </div>
 

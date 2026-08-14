@@ -7,6 +7,7 @@ use App\Administrator\LastAdministratorGuard;
 use Database\Factories\UserFactory;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -82,6 +83,11 @@ class User extends Authenticatable
     public function secondFactor(): HasOne
     {
         return $this->hasOne(SecondFactor::class);
+    }
+
+    public function recipes(): HasMany
+    {
+        return $this->hasMany(Recipe::class);
     }
 
     public function secondFactorEnrollment(): HasOne
