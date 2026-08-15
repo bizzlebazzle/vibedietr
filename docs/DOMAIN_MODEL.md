@@ -164,6 +164,46 @@ overrides intended visibility, so neither preference grants public or
 cross-user access. Publication, sharing, versioning and lifecycle transitions
 are not represented.
 
+### Recipe ingredient line
+
+`App\Models\RecipeIngredientLine` is one creator-authored line belonging to a
+recipe. It is not an `Ingredient`, shared catalogue food, provider product,
+parsed result, or food match.
+
+Identity, ownership, and order:
+
+- Auto-incrementing integer identifier and required `recipe_id` foreign key.
+- Authorization derives from the recipe creator through `RecipePolicy`.
+- Recipe deletion cascades to its lines; line deletion has no relationship to
+  user-owned ingredient or catalogue records.
+- Required zero-based `position`, unique within the recipe. The ordered recipe
+  relationship always sorts by this field.
+- Creation and update timestamps.
+
+Creator text and supplementary structure:
+
+- Required `original_text` stored as text. It is the authoritative text the
+  creator submitted and may contain leading/trailing/repeated whitespace,
+  punctuation, capitalization, and Unicode fractions.
+- Optional non-negative quantity stored as `DECIMAL(38,18)` using the shared
+  exact-decimal parsing and storage boundary.
+- Optional standard FND-06 unit identifier or separately preserved custom-unit
+  text up to 32 characters. These fields are mutually exclusive on writes.
+- Optional generic ingredient wording up to 255 characters and optional notes
+  up to 2,000 characters.
+
+Original text is never derived from these supplementary fields. Unit
+normalization, future parsing, matching, resizing, and nutrition work may read
+the original text and populate or use separate structure, but cannot rewrite
+it. A parser may fail without invalidating the line. Safe custom units and a
+complete absence of quantity/unit structure remain valid.
+
+Positions are contiguous. Append chooses the next last position while holding
+the recipe lock; deletion compacts the remaining positions; reorder requires
+the exact complete set of that recipe's line identifiers and writes the new
+order transactionally. `recipe_id` and `position` are not mass assignable.
+The current Livewire editor exposes add, edit, remove, and up/down reorder.
+
 ### Ingredient
 
 `App\Models\Ingredient` is a user-owned food record. Its current fields make it
@@ -316,11 +356,13 @@ not provide source revision or per-field nutrition provenance.
 ## Current relationships
 
 ```text
-User 1 ????? owns ????? 0..* Ingredient
-                              ?
-                              ??? amount and serving fields
-                              ??? keyword/category arrays
-                              ??? embedded nutrition JSON
+User 1 ---- owns ---- 0..* Ingredient
+  |
+  +------ owns ---- 0..* Recipe ---- contains ---- 0..* RecipeIngredientLine
+                                                        |
+                                                        +-- authoritative original text
+                                                        +-- optional structured fields
+                                                        +-- explicit recipe-local position
 ```
 
 An audit actor identity optionally references one user with `ON DELETE SET NULL`.
@@ -329,9 +371,9 @@ reference without a foreign key, allowing the mapping to be erased without
 mutating the append-only event. Non-user subjects use a bounded identifier and
 no hard domain foreign key. System actors have no identity mapping.
 
-There are no represented relationships between ingredients and recipes,
-recipe lines, meals, meal plans, diet plans, nutrition targets, or food-log
-entries.
+There is intentionally no represented relationship between the user-owned
+`Ingredient` food/product record and a recipe ingredient line. Meals, meal
+plans, diet plans, nutrition targets, and food-log entries are not represented.
 
 ## Current rules and constraints
 
@@ -341,6 +383,12 @@ Database-enforced rules:
 - Every ingredient belongs to an existing user.
 - User administrator status is non-null and defaults to false.
 - Deleting a user deletes their ingredients.
+- Every recipe ingredient line belongs to an existing recipe, and deleting the
+  recipe deletes its lines.
+- Original recipe ingredient text and a non-negative recipe-local position are
+  required.
+- Recipe and position are unique together; structured quantity, standard unit,
+  custom unit, generic wording, and notes may be null.
 - Ingredient name, quantity, and quantity unit cannot be null.
 - Barcode has a non-unique index.
 - Barcode provenance is restricted to the three stable enum values and defaults
@@ -488,9 +536,11 @@ browser; categories do not.
 
 ### Original user input
 
-There is no recipe ingredient line and no dedicated raw/original-text field.
-The ingredient name can be replaced by an OpenFoodFacts product name during a
-lookup, so it is not a guaranteed record of the user's original text.
+A recipe ingredient line has dedicated authoritative `original_text`. The
+Livewire update path is exempted narrowly from Laravel's automatic string trim,
+and application code does not normalize this value. The separate `Ingredient`
+name can still be replaced by an OpenFoodFacts product name during lookup and
+is not a record of recipe authoring text.
 
 ## Concepts not yet represented
 
@@ -498,8 +548,6 @@ The following concepts named in the project purpose have no current domain
 representation:
 
 - Recipe collection, folder, tag, or other organisation.
-- Recipe ingredient line.
-- Original recipe ingredient text.
 - Match between a recipe line and a food/ingredient record.
 - Recipe instructions, yield, portion, or serving.
 - Calculated or estimated recipe nutrition.
@@ -524,5 +572,3 @@ representation:
   treated only as transient import input?
 - Should OpenFoodFacts categories and keywords be normalized separately from
   user-authored organisation?
-- Where should the original ingredient text be stored once recipe ingredient
-  lines are introduced, and which normalization operations may alter it?
