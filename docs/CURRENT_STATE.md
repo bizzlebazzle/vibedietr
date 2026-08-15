@@ -461,6 +461,30 @@ duplicate reorder sets are rejected. Recipe, section, position, and stable IDs
 are not ordinary submitted attributes. The recipe show page renders steps in
 their explicit global order with any section name as a label.
 
+## Implemented draft recipe editor
+
+REC-04 replaces the three independently saved controls on the recipe edit page
+with one `Recipes\Form` editing workflow. Its explicit Livewire state contains
+only recipe metadata and allowlisted ingredient, section, and step values;
+ownership, lifecycle, parent assignment, positions, timestamps, and provenance
+remain server-controlled. The REC-01 create path remains a metadata-only first
+step and redirects to the draft after creation.
+
+An existing draft save validates the complete in-memory graph, then re-resolves,
+locks, and re-authorizes the recipe inside one database transaction. Persisted
+child identifiers must belong to that locked recipe, duplicate identifiers are
+rejected, and optional step section references use validated editor keys. The
+save reconciles creates, updates, and deletions before rebuilding ingredient,
+section, and global step positions as contiguous zero-based sequences.
+
+A locked fingerprint covers the editable recipe fields and complete ordered
+child graph. It is compared against locked database state before the first
+write; recipe or child changes made after mount reject the whole save and retain
+local input. Metadata edits, nested edits, additions, removals, and moves mark
+the editor unsaved. Errors keep that indication active; a successful save
+refreshes the fingerprint and clears it. A page-local navigation warning is
+also active while the editor has unsaved changes.
+
 ## Capabilities not represented
 
 There are no routes, models, migrations, policies, components, views, or tests

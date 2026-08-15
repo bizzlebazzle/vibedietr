@@ -451,6 +451,7 @@ changes, it is deliberately split across multiple items.
 - **Outcome:** Provide one Livewire workflow for editing recipe metadata,
   ingredient lines, and instructions with clear validation and unsaved-state
   feedback.
+- **Status:** Complete (2026-08-15).
 - **Dependencies:** REC-01, REC-02, REC-03.
 - **Acceptance criteria:** Creators can add, edit, remove, and reorder child
   records; validation errors do not discard inputs; another user cannot mutate

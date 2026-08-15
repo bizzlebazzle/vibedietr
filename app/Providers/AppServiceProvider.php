@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Domain\Recipes\NullRecipeDraftSaveHook;
+use App\Domain\Recipes\RecipeDraftSaveHook;
 use App\Models\AuditEvent;
 use App\Models\Ingredient;
 use App\Models\Recipe;
@@ -21,6 +23,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        $this->app->bind(RecipeDraftSaveHook::class, NullRecipeDraftSaveHook::class);
+
         $this->app->bind(
             ReferenceTaskResultRecorder::class,
             CacheReferenceTaskResultRecorder::class,
