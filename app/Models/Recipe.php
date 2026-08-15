@@ -36,4 +36,16 @@ class Recipe extends Model
     {
         return $this->hasMany(RecipeIngredientLine::class)->orderBy('position');
     }
+
+    /** @return HasMany<RecipeInstructionSection, $this> */
+    public function instructionSections(): HasMany
+    {
+        return $this->hasMany(RecipeInstructionSection::class)->orderBy('position');
+    }
+
+    /** @return HasMany<RecipeInstructionStep, $this> */
+    public function instructionSteps(): HasMany
+    {
+        return $this->hasMany(RecipeInstructionStep::class)->orderBy('position');
+    }
 }

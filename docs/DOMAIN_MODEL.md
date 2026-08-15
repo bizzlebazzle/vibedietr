@@ -204,6 +204,57 @@ the exact complete set of that recipe's line identifiers and writes the new
 order transactionally. `recipe_id` and `position` are not mass assignable.
 The current Livewire editor exposes add, edit, remove, and up/down reorder.
 
+### Recipe instruction section
+
+`App\Models\RecipeInstructionSection` is an optional recipe-owned label used
+to organize instruction steps. It is not a mandatory container or a nested
+subsection hierarchy.
+
+Persisted fields and relationships are:
+
+- Auto-incrementing integer identifier and required `recipe_id` foreign key.
+- Required human-readable name up to 255 characters. Names are trimmed for
+  section-name validation and storage; duplicate names within one recipe are
+  allowed because no uniqueness rule is specified.
+- Required zero-based `position`, unique within the recipe. The ordered recipe
+  relationship always sorts by this field.
+- Creation and update timestamps.
+
+Authorization derives from the owning recipe through `RecipePolicy`. Appending
+is last, deletion compacts section positions, and full-set reorder is
+transactional under the recipe lock. Deleting a section sets its steps'
+`section_id` to null; it never deletes or rewrites those steps.
+
+### Recipe instruction step
+
+`App\Models\RecipeInstructionStep` is one creator-authored instruction in a
+recipe-global sequence.
+
+Identity, ownership, and order:
+
+- Auto-incrementing integer identifier and required `recipe_id` foreign key.
+- Nullable `section_id`. When present, application writes require that section
+  to belong to the same recipe. A section is optional even when the recipe has
+  other sections.
+- Required zero-based `position`, unique within the recipe. Ordering is global
+  across the recipe rather than restarting within each section.
+- Creation and update timestamps.
+
+The required text column is creator-authored content. It may contain leading,
+trailing, or repeated whitespace, punctuation, capitalization, Unicode, and
+line breaks. Laravel's automatic string trimming is bypassed only for the
+Livewire `instructionText` update path. Validation uses `trim()` only to decide
+whether the input is blank; every accepted value is stored unchanged. Editing
+replaces the text only with the creator's exact newly submitted value.
+
+Global order makes section changes unambiguous: moving a step between sections
+or making it unsectioned changes only its nullable metadata and never creates a
+second section-local position. Append chooses the last global position,
+deletion compacts remaining positions, and reorder requires the exact complete
+set of the recipe's step IDs. Reordering is transactional and never rewrites
+text or section membership. The authenticated Livewire editor exposes add,
+edit, remove, optional assignment, and up/down reorder.
+
 ### Ingredient
 
 `App\Models\Ingredient` is a user-owned food record. Its current fields make it
@@ -358,11 +409,21 @@ not provide source revision or per-field nutrition provenance.
 ```text
 User 1 ---- owns ---- 0..* Ingredient
   |
-  +------ owns ---- 0..* Recipe ---- contains ---- 0..* RecipeIngredientLine
-                                                        |
-                                                        +-- authoritative original text
-                                                        +-- optional structured fields
-                                                        +-- explicit recipe-local position
+  +------ owns ---- 0..* Recipe
+                            |
+                            +-- contains 0..* RecipeIngredientLine
+                            |                 +-- authoritative original text
+                            |                 +-- optional structured fields
+                            |                 +-- explicit recipe-local position
+                            |
+                            +-- contains 0..* RecipeInstructionStep
+                            |                 +-- exact creator-authored text
+                            |                 +-- optional section reference
+                            |                 +-- explicit global recipe position
+                            |
+                            +-- contains 0..* RecipeInstructionSection
+                                              +-- name
+                                              +-- explicit recipe-local position
 ```
 
 An audit actor identity optionally references one user with `ON DELETE SET NULL`.
@@ -389,6 +450,17 @@ Database-enforced rules:
   required.
 - Recipe and position are unique together; structured quantity, standard unit,
   custom unit, generic wording, and notes may be null.
+- Every instruction section belongs to an existing recipe, and deleting the
+  recipe deletes its sections.
+- Every instruction step belongs to an existing recipe, and deleting the
+  recipe deletes its steps.
+- Instruction text and a non-negative global recipe position are required;
+  recipe and step position are unique together.
+- Instruction section membership is nullable. Deleting a section nulls that
+  membership while retaining the step, and application writes require a
+  selected section to belong to the step's recipe.
+- Section name and a non-negative recipe-local position are required; recipe
+  and section position are unique together. Section names are not unique.
 - Ingredient name, quantity, and quantity unit cannot be null.
 - Barcode has a non-unique index.
 - Barcode provenance is restricted to the three stable enum values and defaults
@@ -542,6 +614,11 @@ and application code does not normalize this value. The separate `Ingredient`
 name can still be replaced by an OpenFoodFacts product name during lookup and
 is not a record of recipe authoring text.
 
+A recipe instruction step has dedicated exact `text`. Its narrow Livewire trim
+exception and blank-only validation preserve every accepted nonblank value,
+including meaningful leading, trailing, repeated, multiline, and Unicode text.
+No current import workflow or legacy instruction store exists to migrate.
+
 ## Concepts not yet represented
 
 The following concepts named in the project purpose have no current domain
@@ -549,7 +626,7 @@ representation:
 
 - Recipe collection, folder, tag, or other organisation.
 - Match between a recipe line and a food/ingredient record.
-- Recipe instructions, yield, portion, or serving.
+- Recipe yield, portion, or serving.
 - Calculated or estimated recipe nutrition.
 - Meal.
 - Meal plan or schedule.
