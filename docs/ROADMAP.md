@@ -437,6 +437,7 @@ changes, it is deliberately split across multiple items.
 
 - **Outcome:** Let creators author ordered instruction steps, optionally
   grouped under named sections, without losing imported wording.
+- **Status:** Complete (2026-08-15).
 - **Dependencies:** REC-01.
 - **Acceptance criteria:** Steps preserve exact text, support stable ordering,
   may have no section, and a section name is not required for every recipe.

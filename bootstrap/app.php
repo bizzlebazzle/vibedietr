@@ -19,7 +19,10 @@ return Application::configure(basePath: dirname(__DIR__))
         ExpireAdministratorPromotionRequests::class,
     ])
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->trimStrings(except: ['components.*.updates.originalText']);
+        $middleware->trimStrings(except: [
+            'components.*.updates.originalText',
+            'components.*.updates.instructionText',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

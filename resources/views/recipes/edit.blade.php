@@ -5,5 +5,6 @@
     <div class="py-12"><div class="mx-auto max-w-2xl space-y-6 sm:px-6 lg:px-8">
         <div class="rounded-lg bg-white p-6 shadow dark:bg-slate-900">@livewire('recipes.form', ['recipe' => $recipe], key('recipe-edit-'.$recipe->id))</div>
         <div class="rounded-lg bg-white p-6 shadow dark:bg-slate-900">@livewire('recipes.ingredient-lines', ['recipe' => $recipe], key('recipe-ingredient-lines-'.$recipe->id))</div>
+        <div class="rounded-lg bg-white p-6 shadow dark:bg-slate-900">@livewire('recipes.instructions', ['recipe' => $recipe], key('recipe-instructions-'.$recipe->id))</div>
     </div></div>
 </x-app-layout>

@@ -42,4 +42,42 @@ class RecipeFactory extends Factory
             'ingredientLines'
         );
     }
+
+    /** @param array<string, mixed> $attributes */
+    public function withInstructionStep(array $attributes = []): static
+    {
+        return $this->has(
+            RecipeInstructionStepFactory::new()->state($attributes),
+            'instructionSteps'
+        );
+    }
+
+    public function withInstructionSteps(int $count = 3): static
+    {
+        return $this->has(
+            RecipeInstructionStepFactory::new()
+                ->count($count)
+                ->sequence(fn (Sequence $sequence): array => ['position' => $sequence->index]),
+            'instructionSteps'
+        );
+    }
+
+    /** @param array<string, mixed> $attributes */
+    public function withInstructionSection(array $attributes = []): static
+    {
+        return $this->has(
+            RecipeInstructionSectionFactory::new()->state($attributes),
+            'instructionSections'
+        );
+    }
+
+    public function withInstructionSections(int $count = 2): static
+    {
+        return $this->has(
+            RecipeInstructionSectionFactory::new()
+                ->count($count)
+                ->sequence(fn (Sequence $sequence): array => ['position' => $sequence->index]),
+            'instructionSections'
+        );
+    }
 }

@@ -399,7 +399,7 @@ A centralized recipe policy permits create for authenticated users and permits
 view/update only when `recipes.user_id` matches the current user. Guests follow
 the existing login redirect, while authenticated non-owners receive 403 for
 direct view/edit URLs and Livewire mutation. No public recipe route, publish or
-share record, instructions, nutrition, versioning, or planning
+share record, nutrition, versioning, or planning
 integration is introduced.
 
 ## Implemented ordered recipe ingredient lines
@@ -429,6 +429,38 @@ mutation re-resolves and authorizes the owning recipe; `recipe_id` and
 uses the explicitly ordered relationship. Empty drafts remain valid; the
 one-line minimum belongs to future finalization.
 
+## Implemented ordered recipe instructions
+
+REC-03 adds recipe-owned instruction sections and steps. Every step has a
+stable integer identifier, required creator-authored text, a contiguous
+zero-based recipe-global position, an optional section reference, and
+timestamps. Sections have their own stable identifier, recipe relationship,
+name, contiguous zero-based order, and timestamps. Recipes with no sections,
+unsectioned steps, and mixed sectioned/unsectioned steps are all valid.
+
+Instruction text is stored exactly as submitted. A narrow trim-middleware
+exception lets leading and trailing whitespace reach the Livewire component;
+validation uses a trimmed copy only to reject empty and whitespace-only text.
+Persistence does not trim, collapse whitespace, rewrite punctuation or
+capitalization, transform markup, or normalize Unicode. No legacy or imported
+instruction store exists, so REC-03 performs no wording migration or import
+backfill.
+
+Steps use one global recipe order, with section membership as optional
+organizational metadata. Appends are last, deletion compacts positions, and
+complete-set reorder persists atomically under a recipe lock without changing
+text or section membership. Sections use the same explicit ordering pattern.
+Deleting a section makes its steps unsectioned without deleting or rewriting
+them. Duplicate section names are allowed because no product rule requires
+recipe-local uniqueness.
+
+The existing recipe edit page now provides section and step add, edit, remove,
+assignment, and keyboard-accessible up/down controls. Every mutation re-resolves
+and authorizes the owning recipe; foreign nested identifiers and incomplete or
+duplicate reorder sets are rejected. Recipe, section, position, and stable IDs
+are not ordinary submitted attributes. The recipe show page renders steps in
+their explicit global order with any section name as a label.
+
 ## Capabilities not represented
 
 There are no routes, models, migrations, policies, components, views, or tests
@@ -436,7 +468,7 @@ for:
 
 - Recipe organisation.
 - Matching a recipe ingredient line to an ingredient or food record.
-- Recipe instructions, yield, or portions.
+- Recipe yield or portions.
 - Recipe nutrition estimates.
 - Meals, meal plans, calendars, or diet plans.
 - Nutrition targets, dietary constraints, or progress tracking.

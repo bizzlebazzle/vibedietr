@@ -23,6 +23,26 @@
                     </ol>
                 @endif
             </section>
+            <section aria-labelledby="recipe-instructions-heading">
+                <h3 id="recipe-instructions-heading" class="font-semibold">Instructions</h3>
+                @if ($recipe->instructionSteps->isEmpty())
+                    <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">No instruction steps yet.</p>
+                @else
+                    <ol class="mt-2 space-y-3">
+                        @foreach ($recipe->instructionSteps as $step)
+                            <li class="flex gap-3">
+                                <span class="font-medium text-gray-500 dark:text-gray-400">{{ $loop->iteration }}.</span>
+                                <div>
+                                    @if ($step->section !== null)
+                                        <p class="text-sm font-semibold text-blue-700 dark:text-blue-300">{{ $step->section->name }}</p>
+                                    @endif
+                                    <p class="whitespace-pre-wrap">{{ $step->text }}</p>
+                                </div>
+                            </li>
+                        @endforeach
+                    </ol>
+                @endif
+            </section>
             <a href="{{ route('recipes.edit', $recipe) }}" class="inline-flex rounded bg-blue-600 px-4 py-2 text-white">Edit draft</a>
         </div>
     </div></div>
