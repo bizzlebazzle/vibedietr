@@ -421,6 +421,7 @@ changes, it is deliberately split across multiple items.
 
 - **Outcome:** Save one or more ordered ingredient lines while preserving the
   exact text entered by the creator.
+- **Status:** Complete (2026-08-15).
 - **Dependencies:** REC-01, FND-06.
 - **Acceptance criteria:** Original text is immutable by parsing/normalization;
   optional quantity, unit, generic wording, and notes are stored separately;

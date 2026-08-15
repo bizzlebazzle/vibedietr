@@ -11,6 +11,18 @@
             <p><strong>Suggested servings:</strong> {{ $recipe->servings ?? 'Not supplied' }}</p>
             <p><strong>Intended visibility:</strong> {{ ucfirst($recipe->visibility->value) }}</p>
             <p class="text-sm text-gray-600 dark:text-gray-400">This draft is private regardless of its intended visibility.</p>
+            <section aria-labelledby="recipe-ingredients-heading">
+                <h3 id="recipe-ingredients-heading" class="font-semibold">Ingredients</h3>
+                @if ($recipe->ingredientLines->isEmpty())
+                    <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">No ingredient lines yet.</p>
+                @else
+                    <ol class="mt-2 list-decimal space-y-2 pl-5">
+                        @foreach ($recipe->ingredientLines as $line)
+                            <li class="whitespace-pre-wrap">{{ $line->original_text }}</li>
+                        @endforeach
+                    </ol>
+                @endif
+            </section>
             <a href="{{ route('recipes.edit', $recipe) }}" class="inline-flex rounded bg-blue-600 px-4 py-2 text-white">Edit draft</a>
         </div>
     </div></div>

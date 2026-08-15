@@ -8,6 +8,7 @@ use Database\Factories\RecipeFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Recipe extends Model
 {
@@ -28,5 +29,11 @@ class Recipe extends Model
     public function owner(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    /** @return HasMany<RecipeIngredientLine, $this> */
+    public function ingredientLines(): HasMany
+    {
+        return $this->hasMany(RecipeIngredientLine::class)->orderBy('position');
     }
 }

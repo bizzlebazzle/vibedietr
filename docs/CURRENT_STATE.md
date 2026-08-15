@@ -399,8 +399,35 @@ A centralized recipe policy permits create for authenticated users and permits
 view/update only when `recipes.user_id` matches the current user. Guests follow
 the existing login redirect, while authenticated non-owners receive 403 for
 direct view/edit URLs and Livewire mutation. No public recipe route, publish or
-share record, ingredients, instructions, nutrition, versioning, or planning
+share record, instructions, nutrition, versioning, or planning
 integration is introduced.
+
+## Implemented ordered recipe ingredient lines
+
+REC-02 adds recipe-owned `RecipeIngredientLine` records. Every line has a
+stable integer identifier, required `original_text`, a contiguous zero-based
+position, optional `DECIMAL(38,18)` quantity, mutually exclusive standard or
+custom unit storage, optional generic wording and notes, and timestamps.
+Deleting a recipe cascades to its lines. The existing user-owned `Ingredient`
+food/product record remains conceptually and relationally separate.
+
+The creator-authored `original_text` is authoritative. It is stored from the
+earliest reliable Livewire value and is never trimmed, normalized, parsed,
+reconstructed, or changed when supplementary fields change. A narrow Laravel
+trim-middleware exception covers the Livewire `originalText` update path so
+leading and trailing whitespace reach the component. Structured quantities
+use the shared exact decimal boundary. FND-06 aliases store a standard unit
+identifier; safe custom-unit text is preserved separately. Missing or failed
+structure never invalidates a non-blank line, including `salt to taste`.
+
+The authenticated recipe edit page supplies add, edit, remove, and keyboard-
+accessible up/down ordering controls. Appends are last, deletion compacts
+positions, and full-set reorder persists atomically under a recipe lock.
+Submitted duplicate, missing, or foreign identifiers are rejected. Every
+mutation re-resolves and authorizes the owning recipe; `recipe_id` and
+`position` are excluded from line mass assignment. The recipe show page always
+uses the explicitly ordered relationship. Empty drafts remain valid; the
+one-line minimum belongs to future finalization.
 
 ## Capabilities not represented
 
@@ -408,8 +435,6 @@ There are no routes, models, migrations, policies, components, views, or tests
 for:
 
 - Recipe organisation.
-- Structured recipe ingredient lines.
-- Preservation of the original text for a recipe ingredient line.
 - Matching a recipe ingredient line to an ingredient or food record.
 - Recipe instructions, yield, or portions.
 - Recipe nutrition estimates.
