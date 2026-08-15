@@ -6,6 +6,7 @@ use App\Domain\Measurements\MeasurementUnitRegistry;
 use App\Domain\Measurements\StandardUnit;
 use App\Domain\Recipes\RecipeDraftEditor;
 use App\Domain\Recipes\RecipeDraftFingerprint;
+use App\Domain\Recipes\RecipeFinalizer;
 use App\Domain\Recipes\RecipeVisibility;
 use App\Domain\Recipes\StaleRecipeDraft;
 use App\Domain\Shared\Decimal;
@@ -218,6 +219,70 @@ class Form extends Component
 
         $this->loadRecipe($recipe->fresh(), $fingerprint);
         session()->flash('status', 'Recipe draft saved.');
+    }
+
+    public function finalize(RecipeFinalizer $finalizer): void
+    {
+        if ($this->recipeId === null) {
+            $this->addError('finalize', 'Create the draft before finalizing it.');
+
+            return;
+        }
+
+        $user = auth()->user();
+        if (! $user instanceof User) {
+            abort(403);
+        }
+
+        $this->unsaved = true;
+        $enteredTitle = $this->title;
+        $this->title = trim($this->title);
+
+        try {
+            $rules = $this->rules();
+            $rules['servings'] = ['required', 'decimal:0,2', 'gt:0'];
+            $rules['ingredients'] = ['required', 'array', 'min:1'];
+            $rules['steps'] = ['required', 'array', 'min:1'];
+            $validated = $this->validate($rules);
+            $this->assertUniqueKeys();
+        } catch (ValidationException $exception) {
+            $this->title = $enteredTitle;
+
+            throw $exception;
+        }
+
+        try {
+            $version = $finalizer->finalize(
+                $this->recipeId,
+                $this->baselineFingerprint,
+                [
+                    'title' => $validated['title'],
+                    'servings' => $validated['servings'],
+                    'visibility' => $validated['visibility'],
+                ],
+                $validated['ingredients'],
+                $validated['sections'],
+                $validated['steps'],
+                $user,
+            );
+        } catch (StaleRecipeDraft $exception) {
+            $this->addError('conflict', $exception->getMessage());
+
+            return;
+        } catch (AuthorizationException|ValidationException $exception) {
+            throw $exception;
+        } catch (Throwable $exception) {
+            report($exception);
+            $this->addError(
+                'finalize',
+                'The recipe could not be finalized. The draft was not changed; please try again.',
+            );
+
+            return;
+        }
+
+        session()->flash('status', 'Recipe finalized as '.$version->getRawOriginal('visibility').'.');
+        $this->redirectRoute('recipes.show', ['recipe' => $this->recipeId], navigate: true);
     }
 
     public function render()

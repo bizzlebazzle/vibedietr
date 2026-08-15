@@ -162,6 +162,18 @@ authorization. FND-05 implements the audit authorization foundation described be
   plus selective purge/anonymization and a shared catalogue whose submitter is
   provenance rather than owner. Approved catalogue records survive deletion.
 
+REC-05 now implements the owner-only finalization mutation. Draft lifecycle
+remains private and plan-ineligible regardless of its intended visibility.
+Finalization requires the authoritative persisted aggregate to contain a title,
+positive servings, an ingredient line, and a nonblank instruction step. It
+atomically creates immutable version 1, changes lifecycle to `finalized`, keeps
+visibility separate, and records a minimized audit event. Public is the
+server-side default; an explicitly selected private visibility is preserved.
+A finalized private recipe is plan-eligible only for its owner under the
+currently represented rule, while a finalized public recipe is generally
+eligible. Public and non-owner recipe read authorization remains REC-06 work,
+and finalized-recipe draft revisions remain REC-07 work.
+
 These current behaviors remain facts until later implementation work changes
 them. This document does not change them.
 

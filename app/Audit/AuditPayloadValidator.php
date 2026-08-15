@@ -66,6 +66,7 @@ final class AuditPayloadValidator
             ),
             AuditAction::AdministratorLifecycleEvent => $this->validateLifecycleEvent($payload),
             AuditAction::CatalogueProposalApproved => $this->validateCatalogueApproval($payload),
+            AuditAction::RecipeFinalized => $this->validateRecipeFinalized($payload),
             AuditAction::RecipeNutritionOverrideApplied => $this->validateNutritionOverride($payload),
             AuditAction::PlanSnapshotRecorded => $this->validatePlanSnapshot($payload),
             AuditAction::AccountAnonymizationCompleted => $this->validateAnonymization($payload),
@@ -155,6 +156,18 @@ final class AuditPayloadValidator
                 'target_ineligible',
             ]);
         }
+
+        return $payload;
+    }
+
+    /** @param array<string, mixed> $payload */
+    private function validateRecipeFinalized(array $payload): array
+    {
+        $this->assertShape($payload, ['event', 'outcome', 'version_id', 'visibility'], ['event', 'outcome', 'version_id', 'visibility']);
+        $this->assertEnum($payload, 'event', ['finalized']);
+        $this->assertEnum($payload, 'outcome', ['completed']);
+        $this->assertEnum($payload, 'visibility', ['public', 'private']);
+        AuditReferenceValidator::validate($payload['version_id'], 'recipe version identifier');
 
         return $payload;
     }

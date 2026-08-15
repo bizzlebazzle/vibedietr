@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Domain\Recipes\RecipeLifecycle;
 use App\Domain\Recipes\RecipeVisibility;
 use Database\Factories\RecipeFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -23,6 +24,7 @@ class Recipe extends Model
             'servings' => 'decimal:2',
             'lifecycle' => RecipeLifecycle::class,
             'visibility' => RecipeVisibility::class,
+            'finalized_at' => 'immutable_datetime',
         ];
     }
 
@@ -47,5 +49,40 @@ class Recipe extends Model
     public function instructionSteps(): HasMany
     {
         return $this->hasMany(RecipeInstructionStep::class)->orderBy('position');
+    }
+
+    /** @return HasMany<RecipeVersion, $this> */
+    public function versions(): HasMany
+    {
+        return $this->hasMany(RecipeVersion::class)->orderBy('version_number');
+    }
+
+    /** @return BelongsTo<RecipeVersion, $this> */
+    public function currentVersion(): BelongsTo
+    {
+        return $this->belongsTo(RecipeVersion::class, 'current_recipe_version_id');
+    }
+
+    public function isFinalized(): bool
+    {
+        return $this->getRawOriginal('lifecycle') === RecipeLifecycle::Finalized->value
+            && $this->current_recipe_version_id !== null;
+    }
+
+    public function canBeUsedInPlansFor(?User $user): bool
+    {
+        if (! $this->isFinalized()) {
+            return false;
+        }
+
+        return $this->getRawOriginal('visibility') === RecipeVisibility::Public->value
+            || ($user !== null && $user->getKey() === $this->user_id);
+    }
+
+    /** @param Builder<Recipe> $query */
+    public function scopeFinalized(Builder $query): void
+    {
+        $query->where('lifecycle', RecipeLifecycle::Finalized->value)
+            ->whereNotNull('current_recipe_version_id');
     }
 }

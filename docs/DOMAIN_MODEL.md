@@ -152,17 +152,19 @@ Draft metadata:
 
 - Required trimmed title, bounded to 255 characters.
 - Optional serving count stored as decimal `(10, 2)` and validated as greater
-  than zero when supplied.
-- Lifecycle stored as the string-backed `RecipeLifecycle` enum. REC-01 supports
-  only `draft`, which is assigned server-side.
+  than zero when supplied; finalization requires it to be present.
+- Lifecycle stored as the string-backed `RecipeLifecycle` enum with `draft`
+  and `finalized`. It is assigned and transitioned only server-side.
 - Intended visibility stored separately as the string-backed
   `RecipeVisibility` enum with `public` and `private`; the default is `public`
-  to preserve the finalized-recipe default from the product specification.
+  and an explicit private choice survives finalization.
+- Nullable current-version ULID and finalization timestamp, populated together
+  only by successful finalization.
 
-The recipe policy grants view and update only to the owner. Draft lifecycle
-overrides intended visibility, so neither preference grants public or
-cross-user access. Publication, sharing, versioning and lifecycle transitions
-are not represented.
+The recipe policy grants view to the owner and update only while the owned
+recipe is a draft. Draft lifecycle overrides intended visibility, so neither
+preference grants public or cross-user access. REC-06 owns public read
+authorization; REC-07 owns editing finalized recipes through draft revisions.
 Draft editing is one atomic aggregate mutation. The editable aggregate consists
 of the recipe's title, servings and intended visibility plus its ordered
 ingredient lines, optional instruction sections, and globally ordered steps.
@@ -175,6 +177,41 @@ contiguous zero-based sequences during the transaction. A baseline fingerprint
 of recipe metadata and the complete nested graph prevents an editor opened
 before another recipe or child mutation from overwriting the newer state. A
 conflict changes nothing in the database and leaves the local aggregate dirty.
+
+First finalization is a single atomic aggregate mutation. It persists the
+validated visible editor state, rechecks the locked fingerprint and owner,
+validates authoritative metadata and child records, creates version 1, assigns
+the current-version reference and finalization time, changes lifecycle, and
+records the allowlisted audit event in the same transaction. A failure leaves
+the recipe a draft with no version or success event. A finalized recipe cannot
+be reset to draft or edited by the REC-04 mutation boundary.
+
+Plan eligibility is a model/application rule rather than a UI convention.
+`isFinalized()` requires both finalized lifecycle and a current stable version;
+`scopeFinalized()` applies the same database boundary. A finalized public
+recipe is eligible for planning. A finalized private recipe is eligible only
+for its owner under the currently represented rules. Every draft is
+ineligible, including one whose intended visibility is public.
+
+### Finalized recipe version
+
+`App\Models\RecipeVersion` is the immutable stable identity produced by
+finalization. It has:
+
+- An application-generated ULID.
+- Its owning recipe and a recipe-local positive version number, unique as a
+  pair.
+- Visibility at finalization and a server finalization timestamp.
+- An immutable snapshot containing title, servings, visibility, ingredient
+  lines with their complete stored supplementary fields and order, instruction
+  sections with order, and globally ordered steps with stable snapshot-local
+  section keys.
+
+The recipe points to its current version while also exposing an ordered
+one-to-many version relationship anticipated by REC-07. REC-05 creates only
+version 1 and exposes no history browser. Model update and direct delete are
+rejected. Deleting the owning recipe still removes its versions through the
+database relationship; broader retained-version rules remain later work.
 
 ### Recipe ingredient line
 

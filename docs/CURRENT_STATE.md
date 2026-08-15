@@ -485,6 +485,37 @@ the editor unsaved. Errors keep that indication active; a successful save
 refreshes the fingerprint and clears it. A page-local navigation warning is
 also active while the editor has unsaved changes.
 
+## Implemented recipe finalization
+
+REC-05 adds a one-time `draft` to `finalized` lifecycle transition without
+using visibility as lifecycle state. Finalized recipes remain either `public`
+or `private`; public is the server-side default and an explicitly selected
+private value is preserved. Drafts remain owner-only even when their intended
+visibility is public. Public and guest read routes remain REC-06 work.
+
+Finalization uses the visible validated REC-04 aggregate rather than silently
+using an older save. One outer transaction locks and re-authorizes the recipe,
+checks the aggregate fingerprint, saves the submitted metadata and ordered
+children, validates a nonblank title, positive servings, at least one
+ingredient line and at least one nonblank instruction step, creates immutable
+version 1, updates lifecycle/current-version state, and records the FND-05
+`recipe.finalized` event. Any failure rolls back the editor save, version,
+lifecycle, visibility and event together.
+
+`recipe_versions` gives each finalized version a ULID and recipe-local version
+number. Its immutable JSON snapshot contains title, servings, visibility,
+ordered ingredient-line content, ordered section labels, globally ordered
+steps and section grouping, plus the server finalization timestamp.
+`recipes.current_recipe_version_id` identifies the active stable version.
+Repeated finalization returns that same version. Editing finalized recipes and
+publishing replacement revisions remain deferred to REC-07.
+
+`Recipe::isFinalized()`, `scopeFinalized()` and
+`canBeUsedInPlansFor()` are the reusable plan-eligibility boundary. Drafts
+always fail. Finalized public recipes qualify; finalized private recipes
+qualify only for their owner under the currently represented rules. REC-05
+does not add meal-plan infrastructure.
+
 ## Capabilities not represented
 
 There are no routes, models, migrations, policies, components, views, or tests
