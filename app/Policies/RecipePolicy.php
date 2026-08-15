@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Domain\Recipes\RecipeLifecycle;
 use App\Models\Recipe;
 use App\Models\User;
 
@@ -18,6 +19,12 @@ class RecipePolicy
     }
 
     public function update(User $user, Recipe $recipe): bool
+    {
+        return $user->getKey() === $recipe->user_id
+            && $recipe->getRawOriginal('lifecycle') === RecipeLifecycle::Draft->value;
+    }
+
+    public function finalize(User $user, Recipe $recipe): bool
     {
         return $user->getKey() === $recipe->user_id;
     }

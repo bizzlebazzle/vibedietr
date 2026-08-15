@@ -465,6 +465,7 @@ changes, it is deliberately split across multiple items.
 
 - **Outcome:** Turn a valid draft into a usable finalized version without
   conflating lifecycle with visibility.
+- **Status:** Complete (2026-08-15).
 - **Dependencies:** REC-04, FND-05.
 - **Acceptance criteria:** Finalization requires title, positive servings, at
   least one ingredient line, and at least one instruction; it records a stable

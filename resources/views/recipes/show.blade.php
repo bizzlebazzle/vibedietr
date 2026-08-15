@@ -7,10 +7,15 @@
             @if (session('status'))
                 <x-auth-session-status :status="session('status')" />
             @endif
-            <p><strong>Lifecycle:</strong> Draft</p>
+            <p><strong>Lifecycle:</strong> {{ ucfirst($recipe->lifecycle->value) }}</p>
             <p><strong>Suggested servings:</strong> {{ $recipe->servings ?? 'Not supplied' }}</p>
-            <p><strong>Intended visibility:</strong> {{ ucfirst($recipe->visibility->value) }}</p>
-            <p class="text-sm text-gray-600 dark:text-gray-400">This draft is private regardless of its intended visibility.</p>
+            <p><strong>{{ $recipe->isFinalized() ? 'Visibility' : 'Visibility when finalized' }}:</strong> {{ ucfirst($recipe->visibility->value) }}</p>
+            @if ($recipe->isFinalized())
+                <p><strong>Stable version:</strong> {{ $recipe->current_recipe_version_id }}</p>
+                <p class="text-sm text-gray-600 dark:text-gray-400">This is a stable finalized recipe. Editing finalized recipes through draft revisions is deferred to REC-07.</p>
+            @else
+                <p class="text-sm text-gray-600 dark:text-gray-400">This draft is private and unavailable to meal plans regardless of its intended visibility.</p>
+            @endif
             <section aria-labelledby="recipe-ingredients-heading">
                 <h3 id="recipe-ingredients-heading" class="font-semibold">Ingredients</h3>
                 @if ($recipe->ingredientLines->isEmpty())
@@ -43,7 +48,9 @@
                     </ol>
                 @endif
             </section>
-            <a href="{{ route('recipes.edit', $recipe) }}" class="inline-flex rounded bg-blue-600 px-4 py-2 text-white">Edit draft</a>
+            @if (! $recipe->isFinalized())
+                <a href="{{ route('recipes.edit', $recipe) }}" class="inline-flex rounded bg-blue-600 px-4 py-2 text-white">Edit draft</a>
+            @endif
         </div>
     </div></div>
 </x-app-layout>

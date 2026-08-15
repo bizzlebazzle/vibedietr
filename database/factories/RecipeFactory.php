@@ -5,6 +5,7 @@ namespace Database\Factories;
 use App\Domain\Recipes\RecipeLifecycle;
 use App\Domain\Recipes\RecipeVisibility;
 use App\Models\Recipe;
+use App\Models\RecipeVersion;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\Sequence;
@@ -79,5 +80,59 @@ class RecipeFactory extends Factory
                 ->sequence(fn (Sequence $sequence): array => ['position' => $sequence->index]),
             'instructionSections'
         );
+    }
+
+    public function validDraft(): static
+    {
+        return $this->state(fn (): array => [
+            'title' => 'Valid draft',
+            'servings' => '2.00',
+            'lifecycle' => RecipeLifecycle::Draft,
+        ])->withIngredientLine()->withInstructionStep();
+    }
+
+    public function missingTitle(): static
+    {
+        return $this->validDraft()->state(fn (): array => ['title' => '']);
+    }
+
+    public function zeroServings(): static
+    {
+        return $this->validDraft()->state(fn (): array => ['servings' => '0']);
+    }
+
+    public function withoutIngredientLines(): static
+    {
+        return $this->state(fn (): array => ['title' => 'No ingredients', 'servings' => '2.00'])
+            ->withInstructionStep();
+    }
+
+    public function withoutInstructionSteps(): static
+    {
+        return $this->state(fn (): array => ['title' => 'No instructions', 'servings' => '2.00'])
+            ->withIngredientLine();
+    }
+
+    public function finalizedPublic(): static
+    {
+        return $this->finalized(RecipeVisibility::Public);
+    }
+
+    public function finalizedPrivate(): static
+    {
+        return $this->finalized(RecipeVisibility::Private);
+    }
+
+    private function finalized(RecipeVisibility $visibility): static
+    {
+        return $this->state(fn (): array => [
+            'servings' => '2.00',
+            'lifecycle' => RecipeLifecycle::Finalized,
+            'visibility' => $visibility,
+            'finalized_at' => now()->utc(),
+        ])->afterCreating(function (Recipe $recipe) use ($visibility): void {
+            $version = RecipeVersion::factory()->for($recipe)->create(['visibility' => $visibility]);
+            $recipe->forceFill(['current_recipe_version_id' => $version->getKey()])->save();
+        });
     }
 }
