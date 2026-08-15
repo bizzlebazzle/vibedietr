@@ -22,6 +22,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->trimStrings(except: [
             'components.*.updates.originalText',
             'components.*.updates.instructionText',
+            'components.*.updates.ingredients.*.original_text',
+            'components.*.updates.steps.*.text',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

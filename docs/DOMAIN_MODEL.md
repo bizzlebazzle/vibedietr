@@ -163,6 +163,18 @@ The recipe policy grants view and update only to the owner. Draft lifecycle
 overrides intended visibility, so neither preference grants public or
 cross-user access. Publication, sharing, versioning and lifecycle transitions
 are not represented.
+Draft editing is one atomic aggregate mutation. The editable aggregate consists
+of the recipe's title, servings and intended visibility plus its ordered
+ingredient lines, optional instruction sections, and globally ordered steps.
+The recipe creator and lifecycle are not editor inputs. All persisted nested
+identifiers are interpreted only after the authoritative recipe is locked and
+authorized, and they may identify records belonging to that recipe only.
+
+The editor's array order is the ordering intent; stored positions are rebuilt as
+contiguous zero-based sequences during the transaction. A baseline fingerprint
+of recipe metadata and the complete nested graph prevents an editor opened
+before another recipe or child mutation from overwriting the newer state. A
+conflict changes nothing in the database and leaves the local aggregate dirty.
 
 ### Recipe ingredient line
 
