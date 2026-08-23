@@ -703,6 +703,41 @@ another user's private bookmark while the owner foreign key still cascades
 when the bookmarking user's private data is deleted. Tombstones remain
 owner-removable.
 
+## Implemented private recipe collections and tags
+
+REC-12 adds authenticated owner-only collections and private organizational
+tags. Each record belongs to exactly one user, has a stable integer identifier,
+a required name of at most 100 characters, and timestamps. Names are trimmed
+and case-normalized for owner-scoped uniqueness; different users may
+independently use the same name. Private tags are a distinct model and
+relationship set from REC-13's still-unimplemented public recipe tags.
+
+Four explicit membership tables distinguish an owned durable recipe from an
+owned bookmark. A user may attach only a recipe whose owner is their own or a
+bookmark whose owner is their own. Organizing another creator's public recipe
+therefore uses the organizing user's bookmark, preserving REC-10 access and
+tombstone semantics. Membership actions re-resolve and authorize the
+collection/tag and target at the mutation boundary; no user identifier or
+polymorphic type is accepted from the client.
+
+Collection and private-tag pages list only the authenticated user's records and
+provide create, rename, delete, attach, remove, browse, and private-tag filtering
+flows. Membership insertion is idempotent through composite database keys.
+Ordering uses membership creation time and target identifier; REC-12 adds no
+manual ordering, sharing, nesting, collaboration, descriptions, or public URLs.
+
+Deleting a collection or private tag cascades only its membership rows. Deleting
+an owned recipe removes its direct organization memberships, and deleting a
+bookmark removes its collection/tag memberships, without deleting any
+organization record or unrelated target. A bookmark whose source becomes
+private or unavailable remains attached and renders the same content-free
+REC-10 tombstone; organization grants no additional recipe access.
+
+Public detail and discovery continue to use the explicit PublicRecipe and
+PublicRecipeSummary projections. Neither projection loads or serializes
+collections, private tags, memberships, or private organization counts. Public
+profiles do not yet exist, and no profile behavior was added.
+
 ## Implemented recipe remixes and lineage
 
 REC-11 adds an authenticated remix action to an accessible current finalized
@@ -756,7 +791,6 @@ event.
 There are no routes, models, migrations, policies, components, views, or tests
 for:
 
-- Recipe organisation.
 - Matching a recipe ingredient line to an ingredient or food record.
 - Recipe yield or portions.
 - Recipe nutrition estimates.
@@ -845,6 +879,12 @@ empty states, parameter validation, crafted-scope parameters, stable
 pagination/counts, query persistence, historical/current selection, active
 draft isolation, revision publication and abandonment, immediate unpublish,
 retained history, and direct-route authorization.
+
+Private-organization feature tests cover collection/private-tag CRUD, blank and
+owner-scoped duplicate names, guest and cross-user denial, direct owned-recipe
+and bookmark membership, crafted identifiers, idempotency, owner-only listing
+and filtering, deletion cleanup, REC-10 tombstones inside collections,
+factories, and exact public detail/discovery projection exclusion.
 
 Administrator authorization tests cover migration defaults for existing and
 new users, persistence, mass-assignment and self-service input protection, the

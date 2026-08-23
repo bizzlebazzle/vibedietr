@@ -6,7 +6,9 @@ use App\Domain\Recipes\PublicRecipeSummary;
 use App\Models\Bookmark;
 use App\Models\Recipe;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 
 final class BookmarkListing
@@ -30,7 +32,32 @@ final class BookmarkListing
                 (int) $recipe->getKey() => PublicRecipeSummary::fromCurrentVersion($recipe),
             ]);
 
-        return $bookmarks->through(fn (Bookmark $bookmark): BookmarkListItem => BookmarkListItem::fromBookmark(
+        return $bookmarks->through(
+            fn (Bookmark $bookmark): BookmarkListItem => BookmarkListItem::fromBookmark(
+                $bookmark,
+                $recipes->get((int) $bookmark->recipe_id),
+            ),
+        );
+    }
+
+    /**
+     * @param  EloquentCollection<int, Bookmark>  $bookmarks
+     * @return Collection<int, BookmarkListItem>
+     */
+    public function project(User $owner, EloquentCollection $bookmarks): Collection
+    {
+        Gate::forUser($owner)->authorize('viewAny', Bookmark::class);
+
+        $recipes = Recipe::query()
+            ->publiclyViewable()
+            ->whereKey($bookmarks->pluck('recipe_id'))
+            ->with('currentVersion')
+            ->get()
+            ->mapWithKeys(fn (Recipe $recipe): array => [
+                (int) $recipe->getKey() => PublicRecipeSummary::fromCurrentVersion($recipe),
+            ]);
+
+        return $bookmarks->map(fn (Bookmark $bookmark): BookmarkListItem => BookmarkListItem::fromBookmark(
             $bookmark,
             $recipes->get((int) $bookmark->recipe_id),
         ));

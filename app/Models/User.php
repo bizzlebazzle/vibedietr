@@ -96,6 +96,18 @@ class User extends Authenticatable
         return $this->hasMany(Bookmark::class);
     }
 
+    /** @return HasMany<RecipeCollection, $this> */
+    public function recipeCollections(): HasMany
+    {
+        return $this->hasMany(RecipeCollection::class);
+    }
+
+    /** @return HasMany<PrivateRecipeTag, $this> */
+    public function privateRecipeTags(): HasMany
+    {
+        return $this->hasMany(PrivateRecipeTag::class);
+    }
+
     public function secondFactorEnrollment(): HasOne
     {
         return $this->hasOne(SecondFactorEnrollment::class);

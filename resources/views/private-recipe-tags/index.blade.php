@@ -1,0 +1,1 @@
+@include('private-organization.index', ['items' => $tags, 'heading' => 'Private recipe tags', 'description' => 'Filter your personal recipe library with tags visible only to you.', 'routePrefix' => 'private-recipe-tags', 'noun' => 'private tag'])
