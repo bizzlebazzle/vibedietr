@@ -15,6 +15,12 @@
 
             <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:rounded-lg sm:p-8 dark:border-slate-800 dark:bg-slate-900/80">
                 <div class="max-w-xl">
+                    @include('profile.partials.public-attribution-settings')
+                </div>
+            </div>
+
+            <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:rounded-lg sm:p-8 dark:border-slate-800 dark:bg-slate-900/80">
+                <div class="max-w-xl">
                     <livewire:profile.theme-selection />
                 </div>
             </div>

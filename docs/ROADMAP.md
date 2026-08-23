@@ -598,6 +598,7 @@ changes, it is deliberately split across multiple items.
 
 - **Outcome:** Let a user choose public attribution, optional profile details,
   and whether a profile page lists their public recipes and remixes.
+- **Status:** Complete (2026-08-23).
 - **Dependencies:** REC-06, REC-11, FND-03.
 - **Acceptance criteria:** Email is never public; disabling a profile does not
   unpublish recipes; recipes retain selected attribution; private recipes and

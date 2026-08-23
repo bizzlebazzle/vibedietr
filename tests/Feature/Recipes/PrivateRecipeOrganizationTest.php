@@ -290,7 +290,7 @@ class PrivateRecipeOrganizationTest extends TestCase
         $public = PublicRecipe::fromCurrentVersion($recipe)->toArray();
         $summary = PublicRecipeSummary::fromCurrentVersion($recipe)->toArray();
         $this->assertSame(
-            ['id', 'title', 'servings', 'visibility', 'version', 'ingredients', 'instructions', 'tags', 'classifications'],
+            ['id', 'title', 'servings', 'visibility', 'version', 'attribution', 'ingredients', 'instructions', 'tags', 'classifications'],
             array_keys($public),
         );
         $this->assertSame(['id', 'title', 'servings', 'finalized_at', 'tags', 'classifications'], array_keys($summary));

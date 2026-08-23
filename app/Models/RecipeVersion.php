@@ -17,6 +17,7 @@ use LogicException;
  * @property int $version_number
  * @property RecipeVisibility $visibility
  * @property array<string, mixed> $snapshot
+ * @property string|null $public_attribution_name
  * @property CarbonImmutable $finalized_at
  */
 class RecipeVersion extends Model

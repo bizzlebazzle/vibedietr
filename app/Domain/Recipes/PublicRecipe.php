@@ -2,6 +2,7 @@
 
 namespace App\Domain\Recipes;
 
+use App\Domain\Profiles\PublicAttribution;
 use App\Models\ManagedRecipeTerm;
 use App\Models\Recipe;
 use App\Models\RecipeVersion;
@@ -24,6 +25,7 @@ final readonly class PublicRecipe
         public string $versionId,
         public int $versionNumber,
         public CarbonImmutable $finalizedAt,
+        public ?PublicAttribution $attribution,
         public array $ingredients,
         public array $instructions,
         public array $freeFormTags,
@@ -70,6 +72,7 @@ final readonly class PublicRecipe
             versionId: (string) $version->getKey(),
             versionNumber: $version->version_number,
             finalizedAt: $version->finalized_at,
+            attribution: PublicAttribution::fromVersion($recipe, $version),
             ingredients: $ingredients,
             instructions: $instructions,
             freeFormTags: $recipe->publicTags->pluck('name')->values()->all(),
@@ -86,6 +89,7 @@ final readonly class PublicRecipe
             'servings' => $this->servings,
             'visibility' => $this->visibility->value,
             'version' => ['id' => $this->versionId, 'number' => $this->versionNumber, 'finalized_at' => $this->finalizedAt->toIso8601String()],
+            'attribution' => $this->attribution?->toArray(),
             'ingredients' => $this->ingredients,
             'instructions' => $this->instructions,
             'tags' => $this->freeFormTags,

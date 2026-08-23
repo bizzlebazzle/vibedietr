@@ -3,6 +3,8 @@
 use App\Http\Controllers\BookmarkController;
 use App\Http\Controllers\IngredientController;
 use App\Http\Controllers\PrivateRecipeTagController;
+use App\Http\Controllers\PublicProfileController;
+use App\Http\Controllers\PublicProfileSettingsController;
 use App\Http\Controllers\RecipeCollectionController;
 use App\Http\Controllers\RecipeController;
 use App\Http\Controllers\RecipeDiscoveryController;
@@ -19,6 +21,10 @@ Route::view('profile', 'profile')
     ->middleware(['auth'])
     ->name('profile');
 
+Route::get('profiles/{publicProfile}', PublicProfileController::class)
+    ->whereUlid('publicProfile')
+    ->name('public-profiles.show');
+
 Route::get('recipes', RecipeDiscoveryController::class)
     ->name('recipes.index');
 
@@ -27,6 +33,8 @@ Route::get('recipes/{recipe}', [RecipeController::class, 'show'])
     ->name('recipes.show');
 
 Route::middleware(['auth'])->group(function () {
+    Route::patch('profile/public-attribution', [PublicProfileSettingsController::class, 'update'])
+        ->name('profile.public-attribution.update');
     Route::post('recipe-collections/{collection}/recipes', [RecipeCollectionController::class, 'storeRecipe'])
         ->whereNumber('collection')->name('recipe-collections.recipes.store');
     Route::delete('recipe-collections/{collection}/recipes/{recipe}', [RecipeCollectionController::class, 'destroyRecipe'])

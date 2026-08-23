@@ -41,6 +41,8 @@ The application currently provides:
 - A profile screen where a user can change their name, email address, and
   password or permanently delete their account.
 - Light, dark, and system theme choices. The preference is kept in browser
+- Separate public-attribution settings for a chosen public name, optional
+  public profile, and independently optional public recipe/remix listings.
   local storage rather than in the user record.
 - Email-verification routes and screens from the authentication scaffold.
 - Persistent administrator status that defaults to false and is excluded from
@@ -735,7 +737,7 @@ REC-10 tombstone; organization grants no additional recipe access.
 Public detail and discovery continue to use the explicit PublicRecipe and
 PublicRecipeSummary projections. Neither projection loads or serializes
 collections, private tags, memberships, or private organization counts. Public
-profiles do not yet exist, and no profile behavior was added.
+profiles use a separate explicit projection with the same exclusions.
 
 ## Implemented recipe remixes and lineage
 
@@ -763,13 +765,16 @@ remix-recipe foreign key cascades only when that remix is deleted. Opaque
 no source foreign keys, so source/version deletion cannot cascade into lineage
 or the independently owned remix. The recorded source version number remains
 stable when later source versions are published. A nullable internal
-`source_creator_user_id` uses `nullOnDelete`; DEC-018 prohibits exposing it
-or copying `users.name`, email, administrator state, or other profile data.
+`source_creator_user_id` uses `nullOnDelete`; DEC-018 prohibits exposing it or
+treating `users.name`, email, administrator state, or other account data as
+public attribution.
 
 Lineage display resolves the exact historical source version only after the
 source recipe is independently authorized for the current viewer. Accessible
 sources render `Remixed from [source recipe], version N` through the ordinary
-authorized recipe route. Private, deleted, or otherwise inaccessible sources
+authorized recipe route. REC-14 adds the source version's deliberately
+selected attribution label and enabled-profile link. Private, deleted, or
+otherwise inaccessible sources
 render only `Remixed from an unavailable recipe, version N`, with no title,
 link, creator label, or source content. The remix remains usable and editable
 by its owner in every source state. Creator erasure nulls the personal
@@ -784,6 +789,53 @@ the remix recipe, its payload contains only outcome and exact source-version
 reference, and the operation ULID is its correlation ID. Rollback hooks verify
 that failure at every copy/lineage stage leaves no partial remix or success
 event.
+
+## Implemented public attribution profiles
+
+REC-14 separates private account identity, public attribution, and an optional
+public page. `users.name`, email, password/session data, administrator status,
+second-factor and recovery state, and audit relationships remain private.
+`public_profiles` is a separate one-to-one record with an opaque stable ULID,
+an optional deliberately entered attribution name of at most 80 characters,
+and independent booleans for profile enablement, public-recipe listing, and
+public-remix listing. New accounts do not receive a profile or public consent
+implicitly. Email-shaped values, whitespace-only names, arbitrary HTML, owner
+identifiers, and profile identifiers are rejected at the authenticated
+owner-only settings boundary.
+
+First publication and later revision publication copy the then-selected public
+attribution name into the new immutable `RecipeVersion`. Existing version rows
+are not backfilled or rewritten. Changing the private account name/email or
+later changing public attribution therefore cannot silently change an already
+published version. A public recipe with no deliberately selected attribution
+omits attribution rather than falling back to private account identity.
+
+`PublicRecipe` contains either no attribution or an explicit two-field
+projection: the snapshotted display name and an optional public-profile ULID.
+The link is present only while that same owner's profile is enabled. Disabling
+the profile changes the profile route to 404 and removes recipe attribution
+links, but keeps the snapshotted attribution as escaped text and does not alter
+recipe visibility, public URLs, versions, bookmarks, or lineage. Accessible
+REC-11 source lineage applies the same source-version attribution rule;
+inaccessible lineage remains the existing content-free tombstone.
+
+`GET /profiles/{ULID}` is available to guests and authenticated users only for
+enabled profiles. `PublicProfilePage` exposes only its public ULID, current
+chosen attribution name, and the independently enabled recipe/remix arrays.
+Both arrays reuse `Recipe::scopePubliclyViewable()` and
+`PublicRecipeSummary`. The recipe array excludes remixes; the remix array
+requires immutable REC-11 lineage. Drafts, private recipes, historical
+versions, active revision content, and withdrawn recipes cannot enter either
+query.
+
+No bio, avatar, website, contact field, search, follow, messaging, or public
+organization feature is represented. Profile queries do not load or serialize
+bookmarks, collections, private tags, their memberships/counts, diary/plans,
+targets, audit data, or account/security relationships. Current account
+deletion is still immediate: the public-profile row and owned recipes cascade
+with the user, while another owner's remix lineage nulls its internal source-
+creator reference. DEP-08, not REC-14, remains responsible for implementing the
+documented recovery-period and retained former-user attribution policy.
 
 ## Capabilities not represented
 

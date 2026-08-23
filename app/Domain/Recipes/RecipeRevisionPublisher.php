@@ -7,6 +7,7 @@ use App\Audit\AuditEventRecorder;
 use App\Audit\AuditSubject;
 use App\Audit\Enums\AuditAction;
 use App\Audit\Enums\AuditSubjectType;
+use App\Domain\Profiles\PublicAttributionSnapshot;
 use App\Models\Recipe;
 use App\Models\RecipeDraftRevision;
 use App\Models\RecipeVersion;
@@ -23,6 +24,7 @@ final class RecipeRevisionPublisher
         private readonly RecipeVersionContent $content,
         private readonly AuditEventRecorder $audit,
         private readonly RecipeFinalizationHook $hook,
+        private readonly PublicAttributionSnapshot $attribution,
     ) {}
 
     /**
@@ -77,6 +79,7 @@ final class RecipeRevisionPublisher
                 'version_number' => $current->version_number + 1,
                 'visibility' => $recipe->visibility,
                 'snapshot' => $this->content->snapshot($recipe),
+                'public_attribution_name' => $this->attribution->forUser($actor),
                 'finalized_at' => $finalizedAt,
             ]);
             $version->recipe()->associate($recipe);

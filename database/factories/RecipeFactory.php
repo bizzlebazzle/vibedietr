@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Domain\Recipes\RecipeLifecycle;
 use App\Domain\Recipes\RecipeVisibility;
+use App\Models\PublicProfile;
 use App\Models\Recipe;
 use App\Models\RecipeDraftRevision;
 use App\Models\RecipeVersion;
@@ -174,7 +175,12 @@ class RecipeFactory extends Factory
             'visibility' => $visibility,
             'finalized_at' => now()->utc(),
         ])->afterCreating(function (Recipe $recipe) use ($visibility): void {
-            $version = RecipeVersion::factory()->for($recipe)->create(['visibility' => $visibility]);
+            $version = RecipeVersion::factory()->for($recipe)->create([
+                'visibility' => $visibility,
+                'public_attribution_name' => PublicProfile::query()
+                    ->where('user_id', $recipe->user_id)
+                    ->value('attribution_name'),
+            ]);
             $recipe->forceFill(['current_recipe_version_id' => $version->getKey()])->save();
         });
     }
