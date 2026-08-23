@@ -240,7 +240,9 @@ has an application-generated ULID, a unique durable `recipe_id`, and an
 explicit `base_recipe_version_id`. Its content is the recipe-owned mutable
 aggregate used by the existing editor rather than a second set of child tables.
 That aggregate is treated as revision-only working state whenever the revision
-row exists; finalized reads never consume it.
+row exists; ordinary finalized reads never consume it. The creator may
+explicitly preview its already-saved state through the owner-only REC-08 read
+mode without changing the current finalized version.
 
 Creation locks the recipe, authorizes its creator, and hydrates the aggregate
 from the current immutable snapshot exactly once. Repeat edit returns the same
@@ -286,6 +288,27 @@ normalization, future parsing, matching, resizing, and nutrition work may read
 the original text and populate or use separate structure, but cannot rewrite
 it. A parser may fail without invalidating the line. Safe custom units and a
 complete absence of quantity/unit structure remain valid.
+
+REC-08 defines resized quantity as derived presentation state:
+
+`original structured quantity × requested servings ÷ original saved servings`.
+
+The original saved servings and each line's original scale-18 decimal remain
+the calculation source on every request; a prior displayed result is never an
+input. Calculation uses exact base-10 decimals with FND-06's 24 division guard
+digits and half-up rounding. Three-decimal display rounding occurs once at the
+presentation boundary, with a positive value below that resolution displayed
+as `<0.001`.
+
+Standard unit identifiers keep their registered symbol without optimization or
+conversion. Numeric custom units and count units scale in the same way, while
+custom text remains unchanged. A line is reconstructed for display only when
+quantity, one valid unit, and generic wording are all present; its notes are
+carried through unchanged. Otherwise the authoritative `original_text` is
+shown exactly and no quantity is inferred. A null, zero, negative, or malformed
+original serving count disables resizing rather than selecting a fallback.
+Requested servings are untrusted GET presentation state and never enter model
+fillable data or a save path.
 
 Positions are contiguous. Append chooses the next last position while holding
 the recipe lock; deletion compacts the remaining positions; reorder requires

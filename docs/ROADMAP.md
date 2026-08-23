@@ -510,6 +510,7 @@ changes, it is deliberately split across multiple items.
 
 - **Outcome:** Show proportionally resized quantities without overwriting the
   stored original text or original structured amount.
+- **Status:** Complete (2026-08-23).
 - **Dependencies:** REC-02, FND-06.
 - **Acceptance criteria:** Standard and custom quantities scale from original
   servings; unquantified lines remain unchanged; display explains that

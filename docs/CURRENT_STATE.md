@@ -530,11 +530,12 @@ recipe content reaches the view.
 Finalized show pages use an explicit `PublicRecipe` projection built only from
 the immutable `currentVersion` snapshot. The projection allowlists recipe ID,
 title, servings, current visibility, version ID/number/finalization time,
-ordered ingredient text, section labels, and ordered instruction text. It does
-not load or serialize the owner, email, user ID, administrator/security state,
-audit events, mutable recipe children, private structured notes, or the wider
-Eloquent relationship graph. Draft owners continue to see the live draft
-aggregate.
+ordered ingredient text and resizing structure, section labels, and ordered
+instruction text. Ingredient notes are exposed only as recipe content when a
+complete structured line is rendered. The projection does not load or serialize
+the owner, email, user ID, administrator/security state, audit events, mutable
+recipe children, or the wider Eloquent relationship graph. Draft owners
+continue to see the live draft aggregate.
 
 Only the owner may change a finalized recipe between public and private. The
 transactional mutation re-resolves, locks, and authorizes the recipe, updates
@@ -588,6 +589,33 @@ and base/new version identifiers and numbers; recipe content is prohibited.
 Finalized-version update and direct-delete model operations remain rejected.
 Database-level immutability of snapshot JSON is not claimed; immutability is an
 application boundary backed by regression tests.
+
+## Implemented display-only recipe resizing
+
+REC-08 adds a serving control to the existing recipe read page. Positive
+serving requests with up to the recipe model's existing two decimal places
+derive presentation state only. The saved recipe servings remain the
+authoritative original amount, and every displayed quantity is calculated
+directly from the original structured quantity and original servings. Changing
+4 to 8 and then 6 therefore calculates 6 from the saved 4-serving source rather
+than the prior 8-serving display.
+
+`RecipeQuantityScaler` uses FND-06 Brick Math decimals, 24 division guard
+digits, and half-up rounding without PHP floating point. The presentation
+formatter applies the existing three-decimal measurement convention only at
+the final boundary and preserves positive sub-resolution quantities as
+`<0.001`. Standard mass, volume, and count identifiers retain their registered
+symbols; custom-unit text remains unchanged and is never converted.
+
+Complete structured lines render the derived quantity beside their unchanged
+generic wording and notes. Null-quantity or incomplete structured lines render
+their exact `original_text`; REC-08 does not parse or infer quantities.
+Invalid requests display the original quantities with an error. Missing, zero,
+negative, or invalid saved servings disable resizing rather than assuming a
+denominator. Guests and non-owners may resize public current versions only. An
+owner-only preview uses the saved REC-07 draft aggregate while ordinary
+finalized reads continue to use the immutable current version. No resize
+request writes a recipe, ingredient line, unit, original text, or version.
 
 ## Capabilities not represented
 

@@ -75,7 +75,7 @@ class RecipeRevisionTest extends TestCase
             $this->get(route('recipes.show', $recipe))
                 ->assertOk()
                 ->assertSee('Stable title')
-                ->assertSee('  2 tbsp olive oil  ')
+                ->assertSeeText('12.5 g olive oil, exact note')
                 ->assertDontSee('Secret replacement title')
                 ->assertDontSee('Secret replacement ingredient')
                 ->assertDontSee('draft revision')
