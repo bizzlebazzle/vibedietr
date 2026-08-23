@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Domain\Recipes\PublicRecipe;
+use App\Domain\Recipes\RecipeRevisionManager;
 use App\Domain\Recipes\RecipeVisibility;
 use App\Domain\Recipes\RecipeVisibilityChanger;
 use App\Models\Recipe;
@@ -31,6 +32,10 @@ class RecipeController extends Controller
 
         $this->authorize('view', $recipe);
 
+        if ($viewer instanceof User && $viewer->getKey() === $recipe->user_id) {
+            $recipe->load('activeRevision.baseVersion');
+        }
+
         if ($recipe->isFinalized()) {
             return view('recipes.show', [
                 'recipe' => $recipe,
@@ -43,11 +48,38 @@ class RecipeController extends Controller
         return view('recipes.show', ['recipe' => $recipe, 'publicRecipe' => null]);
     }
 
-    public function edit(Recipe $recipe): View
+    public function edit(Request $request, Recipe $recipe, RecipeRevisionManager $revisions): View
     {
+        $user = $request->user();
+        if (! $user instanceof User) {
+            abort(403);
+        }
+
+        if ($recipe->isFinalized()) {
+            $revisions->startOrResume((int) $recipe->getKey(), $user);
+            $recipe->refresh();
+        }
+
         $this->authorize('update', $recipe);
 
         return view('recipes.edit', compact('recipe'));
+    }
+
+    public function abandonRevision(
+        Request $request,
+        Recipe $recipe,
+        RecipeRevisionManager $revisions,
+    ): RedirectResponse {
+        $user = $request->user();
+        if (! $user instanceof User) {
+            abort(403);
+        }
+
+        $updated = $revisions->abandon((int) $recipe->getKey(), $user);
+
+        return redirect()
+            ->route('recipes.show', $updated)
+            ->with('status', 'Draft revision abandoned. The finalized version was not changed.');
     }
 
     public function updateVisibility(

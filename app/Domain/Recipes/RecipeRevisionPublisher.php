@@ -8,6 +8,7 @@ use App\Audit\AuditSubject;
 use App\Audit\Enums\AuditAction;
 use App\Audit\Enums\AuditSubjectType;
 use App\Models\Recipe;
+use App\Models\RecipeDraftRevision;
 use App\Models\RecipeVersion;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -15,7 +16,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
-final class RecipeFinalizer
+final class RecipeRevisionPublisher
 {
     public function __construct(
         private readonly RecipeDraftEditor $editor,
@@ -30,7 +31,7 @@ final class RecipeFinalizer
      * @param  list<array{id: int|null, key: string, name: string}>  $sections
      * @param  list<array{id: int|null, text: string, section_key: string|null}>  $steps
      */
-    public function finalize(
+    public function publish(
         int $recipeId,
         string $baselineFingerprint,
         array $metadata,
@@ -41,18 +42,22 @@ final class RecipeFinalizer
     ): RecipeVersion {
         return DB::transaction(function () use ($recipeId, $baselineFingerprint, $metadata, $ingredients, $sections, $steps, $actor): RecipeVersion {
             $authoritative = Recipe::query()->lockForUpdate()->findOrFail($recipeId);
-            Gate::forUser($actor)->authorize('finalize', $authoritative);
+            Gate::forUser($actor)->authorize('publishRevision', $authoritative);
+            $revision = $authoritative->activeRevision()->lockForUpdate()->first();
 
-            if ($authoritative->getRawOriginal('lifecycle') === RecipeLifecycle::Finalized->value) {
-                $version = $authoritative->currentVersion()->first();
-
-                if ($version instanceof RecipeVersion) {
-                    return $version;
+            if (! $revision instanceof RecipeDraftRevision) {
+                $current = $authoritative->currentVersion()->first();
+                if ($current instanceof RecipeVersion) {
+                    return $current;
                 }
 
-                throw ValidationException::withMessages([
-                    'finalize' => 'This recipe is finalized but its current stable version is unavailable.',
-                ]);
+                throw ValidationException::withMessages(['revision' => 'There is no active draft revision to publish.']);
+            }
+
+            $current = $authoritative->currentVersion()->lockForUpdate()->first();
+            if (! $current instanceof RecipeVersion
+                || $revision->base_recipe_version_id !== $current->getKey()) {
+                throw new StaleRecipeRevision;
             }
 
             $recipe = $this->editor->save(
@@ -69,7 +74,7 @@ final class RecipeFinalizer
             $finalizedAt = now()->utc();
             $version = new RecipeVersion;
             $version->forceFill([
-                'version_number' => 1,
+                'version_number' => $current->version_number + 1,
                 'visibility' => $recipe->visibility,
                 'snapshot' => $this->content->snapshot($recipe),
                 'finalized_at' => $finalizedAt,
@@ -78,22 +83,27 @@ final class RecipeFinalizer
             $version->save();
 
             $recipe->forceFill([
-                'lifecycle' => RecipeLifecycle::Finalized,
                 'current_recipe_version_id' => $version->getKey(),
                 'finalized_at' => $finalizedAt,
             ])->save();
 
+            $revisionId = (string) $revision->getKey();
+            $revision->delete();
+
             $this->audit->record(
-                AuditAction::RecipeFinalized,
+                AuditAction::RecipeRevisionPublished,
                 AuditActor::authenticatedUser($actor),
                 AuditSubject::resource(AuditSubjectType::Recipe, 'recipe:'.$recipe->getKey()),
                 [
-                    'event' => 'finalized',
+                    'event' => 'revision_published',
                     'outcome' => 'completed',
-                    'version_id' => $version->getKey(),
-                    'visibility' => $recipe->getRawOriginal('visibility'),
+                    'revision_id' => $revisionId,
+                    'base_version_id' => $current->getKey(),
+                    'base_version_number' => $current->version_number,
+                    'new_version_id' => $version->getKey(),
+                    'new_version_number' => $version->version_number,
                 ],
-                'recipe-finalize:'.Str::ulid(),
+                'recipe-revision-publish:'.Str::ulid(),
             );
 
             $this->hook->beforeCommit($recipe, $version);

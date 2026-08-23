@@ -5,6 +5,7 @@ namespace Database\Factories;
 use App\Domain\Recipes\RecipeLifecycle;
 use App\Domain\Recipes\RecipeVisibility;
 use App\Models\Recipe;
+use App\Models\RecipeDraftRevision;
 use App\Models\RecipeVersion;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -121,6 +122,48 @@ class RecipeFactory extends Factory
     public function finalizedPrivate(): static
     {
         return $this->finalized(RecipeVisibility::Private);
+    }
+
+    public function finalizedWithActiveRevision(RecipeVisibility $visibility = RecipeVisibility::Public): static
+    {
+        return $this->finalized($visibility)->afterCreating(function (Recipe $recipe): void {
+            $revision = new RecipeDraftRevision;
+            $revision->forceFill(['base_recipe_version_id' => $recipe->current_recipe_version_id]);
+            $revision->recipe()->associate($recipe);
+            $revision->save();
+        });
+    }
+
+    public function publicFinalizedWithActiveRevision(): static
+    {
+        return $this->finalizedWithActiveRevision(RecipeVisibility::Public);
+    }
+
+    public function privateFinalizedWithActiveRevision(): static
+    {
+        return $this->finalizedWithActiveRevision(RecipeVisibility::Private);
+    }
+
+    public function withMultipleHistoricalVersions(): static
+    {
+        return $this->finalizedPublic()->afterCreating(function (Recipe $recipe): void {
+            $version = RecipeVersion::factory()->for($recipe)->create([
+                'version_number' => 2,
+                'visibility' => $recipe->visibility,
+            ]);
+            $recipe->forceFill(['current_recipe_version_id' => $version->getKey()])->save();
+        });
+    }
+
+    public function withDraftBasedOnPreviousVersion(): static
+    {
+        return $this->withMultipleHistoricalVersions()->afterCreating(function (Recipe $recipe): void {
+            $base = $recipe->versions()->where('version_number', 1)->sole();
+            $revision = new RecipeDraftRevision;
+            $revision->forceFill(['base_recipe_version_id' => $base->getKey()]);
+            $revision->recipe()->associate($recipe);
+            $revision->save();
+        });
     }
 
     private function finalized(RecipeVisibility $visibility): static

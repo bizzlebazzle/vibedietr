@@ -495,6 +495,7 @@ changes, it is deliberately split across multiple items.
 
 - **Outcome:** Keep the current finalized version stable while its creator
   prepares and publishes a replacement.
+- **Status:** Complete (2026-08-23).
 - **Dependencies:** REC-05, FND-05.
 - **Acceptance criteria:** Editing finalized content creates or resumes one
   private draft revision; publishing assigns a new immutable version; the

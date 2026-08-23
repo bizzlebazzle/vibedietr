@@ -507,8 +507,8 @@ number. Its immutable JSON snapshot contains title, servings, visibility,
 ordered ingredient-line content, ordered section labels, globally ordered
 steps and section grouping, plus the server finalization timestamp.
 `recipes.current_recipe_version_id` identifies the active stable version.
-Repeated finalization returns that same version. Editing finalized recipes and
-publishing replacement revisions remain deferred to REC-07.
+Repeated initial finalization returns that same version. REC-07 now uses the
+same snapshot representation for replacement versions.
 
 `Recipe::isFinalized()`, `scopeFinalized()` and
 `canBeUsedInPlansFor()` are the reusable plan-eligibility boundary. Drafts
@@ -543,8 +543,51 @@ audit event containing the version reference and visibility transition.
 Making a recipe private immediately removes public-read eligibility without
 changing finalized lifecycle, its current-version reference, immutable version
 records, ingredient lines, or instructions. Making it public again restores
-read eligibility for the same stable version. Finalized content editing remains
-deferred to REC-07; public readability never grants edit permission.
+read eligibility for the same stable version. Finalized content editing is
+available only to the creator through the REC-07 private revision boundary;
+public readability never grants edit permission.
+
+## Implemented finalized-recipe draft revisions
+
+REC-07 keeps `Recipe` as the durable recipe identity and `RecipeVersion` as an
+application-immutable finalized snapshot. The additive `recipe_draft_revisions`
+table gives one private working revision a ULID, its recipe ID, and an explicit
+base-version ULID. A unique recipe constraint and recipe-row transaction lock
+permit at most one active revision. The foreign key requires the base version
+to exist, while the start/publish services verify that it belongs to the same
+locked recipe and is still current.
+
+Opening edit on a finalized recipe creates or resumes that revision. Creation
+copies the current snapshot once into the existing REC-04 mutable aggregate:
+title, servings, exact ingredient text and structured fields, ingredient order,
+exact instruction text, global step order, and section grouping. Reopening does
+not recopy or overwrite draft changes. The mutable aggregate is revision
+working state while the active-revision row exists; public and finalized owner
+reads continue to use only `current_recipe_version_id` and its immutable JSON
+snapshot. Current visibility remains on the durable recipe, is not editable in
+the revision form, and therefore cannot change merely because a revision is
+created, saved, published, or abandoned.
+
+Revision publication locks the recipe and revision, reauthorizes the creator,
+checks the REC-04 fingerprint and REC-05 content preconditions, and requires the
+explicit base ULID to equal the current version ULID. It assigns
+`current.version_number + 1` under that lock, with the existing unique
+recipe/version-number constraint as a second boundary. The new snapshot,
+current-version switch, revision removal, and minimized
+`recipe.revision_published` audit event commit atomically. Failure preserves the
+old current version and active draft. A replay after success returns the current
+version without another version or success event; an older-base revision is
+rejected rather than merged.
+
+Abandonment reauthorizes the creator, restores the mutable aggregate from the
+unchanged current snapshot, deletes the active revision and draft-only child
+state, and records `recipe.revision_abandoned`. It does not change visibility,
+current or historical versions, or reader output. Creation records
+`recipe.revision_created`. All three audit payloads contain only recipe/revision
+and base/new version identifiers and numbers; recipe content is prohibited.
+Finalized-version update and direct-delete model operations remain rejected.
+Database-level immutability of snapshot JSON is not claimed; immutability is an
+application boundary backed by regression tests.
 
 ## Capabilities not represented
 

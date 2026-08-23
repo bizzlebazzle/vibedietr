@@ -163,10 +163,13 @@ Draft metadata:
 
 The recipe policy grants view to the owner and to every viewer when the recipe
 is finalized, has a current stable version, and is currently public. Update
-remains owner-only and draft-only. Draft lifecycle overrides intended
+remains owner-only: initial drafts are editable, and finalized recipes are
+editable only while their explicit private revision exists. Draft lifecycle
+overrides intended
 visibility, so neither preference grants public or cross-user access.
 Unauthorized public-route lookups for drafts and private recipes resolve as
-404. REC-07 owns editing finalized recipes through draft revisions.
+404. Finalized edit creates or resumes the creator's single private draft
+revision; the finalized snapshot remains the read boundary.
 Draft editing is one atomic aggregate mutation. The editable aggregate consists
 of the recipe's title, servings and intended visibility plus its ordered
 ingredient lines, optional instruction sections, and globally ordered steps.
@@ -186,7 +189,9 @@ validates authoritative metadata and child records, creates version 1, assigns
 the current-version reference and finalization time, changes lifecycle, and
 records the allowlisted audit event in the same transaction. A failure leaves
 the recipe a draft with no version or success event. A finalized recipe cannot
-be reset to draft or edited by the REC-04 mutation boundary.
+be reset to draft. REC-04 aggregate mutation is allowed for finalized content
+only when REC-07 has created its active revision;
+visibility remains outside that revision mutation.
 
 Plan eligibility is a model/application rule rather than a UI convention.
 `isFinalized()` requires both finalized lifecycle and a current stable version;
@@ -222,10 +227,31 @@ finalization. It has:
   section keys.
 
 The recipe points to its current version while also exposing an ordered
-one-to-many version relationship anticipated by REC-07. REC-05 creates only
-version 1 and exposes no history browser. Model update and direct delete are
+one-to-many version relationship. REC-05 creates version 1; REC-07 creates
+monotonic replacement versions while retaining earlier rows. No history browser
+is exposed. Model update and direct delete are
 rejected. Deleting the owning recipe still removes its versions through the
 database relationship; broader retained-version rules remain later work.
+
+### Recipe draft revision
+
+`App\Models\RecipeDraftRevision` is the private editable-revision identity. It
+has an application-generated ULID, a unique durable `recipe_id`, and an
+explicit `base_recipe_version_id`. Its content is the recipe-owned mutable
+aggregate used by the existing editor rather than a second set of child tables.
+That aggregate is treated as revision-only working state whenever the revision
+row exists; finalized reads never consume it.
+
+Creation locks the recipe, authorizes its creator, and hydrates the aggregate
+from the current immutable snapshot exactly once. Repeat edit returns the same
+revision. Its fingerprint includes the current-version and active-revision
+references as well as metadata and all ordered children. Publication rejects a
+base that is no longer current, creates the next recipe-local version under the
+same lock and unique-number constraint, switches the current pointer, and
+removes the revision atomically. Abandon restores the current snapshot and
+removes draft-only rows. Both operations preserve durable recipe visibility.
+Conflict merging, branching, rollback, diffs, and historical browsing are not
+represented.
 
 ### Recipe ingredient line
 

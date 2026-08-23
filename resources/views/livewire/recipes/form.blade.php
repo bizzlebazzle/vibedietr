@@ -54,11 +54,11 @@
             <x-input-error :messages="$errors->get('servings')" class="mt-2" />
         </div>
         <fieldset>
-            <legend class="text-sm font-medium text-gray-700 dark:text-gray-300">Visibility when finalized</legend>
-            <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">The draft remains private. Finalized recipes are public by default; choose private explicitly to keep the finalized recipe owner-only.</p>
+            <legend class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ $isRevision ? 'Current recipe visibility' : 'Visibility when finalized' }}</legend>
+            <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">{{ $isRevision ? 'A revision is always private. Change public/private visibility separately from the finalized recipe page.' : 'The draft remains private. Finalized recipes are public by default; choose private explicitly to keep the finalized recipe owner-only.' }}</p>
             <div class="mt-3 space-y-2">
                 @foreach ($visibilityOptions as $option)
-                    <label class="flex items-center gap-2"><input wire:model="visibility" type="radio" value="{{ $option->value }}"><span>{{ ucfirst($option->value) }}</span></label>
+                    <label class="flex items-center gap-2"><input wire:model="visibility" type="radio" value="{{ $option->value }}" @disabled($isRevision)><span>{{ ucfirst($option->value) }}</span></label>
                 @endforeach
             </div>
             <x-input-error :messages="$errors->get('visibility')" class="mt-2" />
@@ -134,7 +134,7 @@
         <div class="flex flex-wrap justify-end gap-3">
             <x-primary-button>{{ $recipeId === null ? 'Create draft' : 'Save draft' }}</x-primary-button>
             @if ($recipeId !== null)
-                <button type="button" wire:click="finalize" wire:confirm="Finalize this recipe using the visible editor content? Later editing is deferred to recipe revisions." class="rounded bg-green-700 px-4 py-2 text-sm font-semibold text-white hover:bg-green-600">Finalize recipe</button>
+                <button type="button" wire:click="finalize" wire:confirm="{{ $isRevision ? 'Publish this private draft as the next immutable recipe version?' : 'Finalize this recipe using the visible editor content?' }}" class="rounded bg-green-700 px-4 py-2 text-sm font-semibold text-white hover:bg-green-600">{{ $isRevision ? 'Publish revision' : 'Finalize recipe' }}</button>
             @endif
         </div>
     </div>
