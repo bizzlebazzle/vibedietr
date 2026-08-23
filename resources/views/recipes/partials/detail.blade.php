@@ -5,12 +5,29 @@
         <x-auth-session-status :status="session('status')" />
     @endif
 
+    @if ($publicRecipe?->attribution !== null)
+        <p class="text-sm text-gray-600 dark:text-gray-400">
+            By
+            @if ($publicRecipe->attribution->profileId !== null)
+                <a href="{{ route('public-profiles.show', $publicRecipe->attribution->profileId) }}" class="text-blue-700 underline dark:text-blue-300">{{ $publicRecipe->attribution->name }}</a>
+            @else
+                <span>{{ $publicRecipe->attribution->name }}</span>
+            @endif
+        </p>
+    @endif
+
     @if ($remixAttribution !== null)
         <p class="rounded border border-gray-200 p-3 text-sm dark:border-slate-700">
             @if ($remixAttribution->sourceAvailable)
                 Remixed from
                 <a href="{{ route('recipes.show', $remixAttribution->sourceRecipeId) }}" class="text-blue-700 underline dark:text-blue-300">{{ $remixAttribution->sourceTitle }}</a>,
-                version {{ $remixAttribution->versionNumber }}.
+                version {{ $remixAttribution->versionNumber }}@if ($remixAttribution->sourceAttribution !== null) by
+                    @if ($remixAttribution->sourceAttribution->profileId !== null)
+                        <a href="{{ route('public-profiles.show', $remixAttribution->sourceAttribution->profileId) }}" class="text-blue-700 underline dark:text-blue-300">{{ $remixAttribution->sourceAttribution->name }}</a>
+                    @else
+                        {{ $remixAttribution->sourceAttribution->name }}
+                    @endif
+                @endif.
             @else
                 Remixed from an unavailable recipe, version {{ $remixAttribution->versionNumber }}.
             @endif

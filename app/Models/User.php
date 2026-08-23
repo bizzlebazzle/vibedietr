@@ -90,6 +90,12 @@ class User extends Authenticatable
         return $this->hasMany(Recipe::class);
     }
 
+    /** @return HasOne<PublicProfile, $this> */
+    public function publicProfile(): HasOne
+    {
+        return $this->hasOne(PublicProfile::class);
+    }
+
     /** @return HasMany<Bookmark, $this> */
     public function bookmarks(): HasMany
     {

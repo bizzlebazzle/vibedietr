@@ -39,6 +39,54 @@ The database relationship from `ingredients.user_id` means one user can own
 many ingredients. The code exposes only the inverse
 `Ingredient::user()` relationship; `User::ingredients()` is not defined.
 
+### Account identity
+
+The `User` row is private authentication and ownership state. Its name and
+email may be edited through the authenticated private profile, but neither is
+public merely because the account owns a public recipe or enables a public
+profile. Email, internal user ID, credentials, administrator status,
+second-factor/recovery state, sessions, notifications, and audit relationships
+are never public attribution fields. Public code does not serialize `User`.
+
+### Public attribution
+
+Public attribution is a deliberately entered display value, separate from the
+account name and email. One selected value supports the product-approved use of
+a username/display name or real name without storing a privacy-irrelevant
+classification of that string. It is optional until configured, at most 80
+characters, trimmed, non-blank, non-HTML, and cannot be email-shaped.
+
+At first finalization and every later revision publication, the selected value
+is copied into nullable `recipe_versions.public_attribution_name`. The version
+model's immutability makes attribution historical publication state: changing
+private account identity or current public-profile settings does not rewrite an
+already finalized version. Existing versions created before REC-14 remain null
+and do not fall back to account data. Public recipe attribution exposes only
+the snapshotted label and, while enabled, the related opaque profile ULID.
+
+### Public profile
+
+`App\Models\PublicProfile` is an optional one-to-one public projection owned by
+one `User`, not a public form of the User model. It has:
+
+- An application-generated stable ULID used by the public route.
+- A unique private `user_id` ownership foreign key that cascades on current
+  account deletion.
+- The current selected public attribution name.
+- Independent booleans for profile enablement, non-remix public-recipe
+  listing, and public-remix listing, all defaulting false.
+- Server timestamps.
+
+Only the authenticated owner mutates the record, and client input contains no
+target account/profile identifier. An enabled profile projects only its ULID,
+attribution name, and enabled lists. Both lists start from
+`Recipe::scopePubliclyViewable()` and use `PublicRecipeSummary`; recipe and
+remix membership are separated by immutable `RecipeRemixLineage`. Disabled
+profiles are 404 without altering any recipe. No email, bio, avatar, website,
+account/security state, draft/private/historical recipe, active revision,
+bookmark, collection, private tag/count, audit record, plan, diary, or target
+is part of this model's public projection.
+
 ### Audit actor identity
 
 `App\Models\AuditActorIdentity` is a separately erasable mapping used only by
@@ -234,6 +282,8 @@ finalization. It has:
   lines with their complete stored supplementary fields and order, instruction
   sections with order, and globally ordered steps with stable snapshot-local
   section keys.
+- A nullable selected public-attribution name copied at publication rather
+  than resolved from mutable account data.
 
 The recipe points to its current version while also exposing an ordered
 one-to-many version relationship. REC-05 creates version 1; REC-07 creates
@@ -337,7 +387,7 @@ Owner-only pages provide CRUD, deterministic membership listing, attach/remove
 controls, and private-tag filtering. There are no public organization routes.
 Public recipe detail and discovery remain explicit PublicRecipe and
 PublicRecipeSummary projections and include no organization relationships or
-counts. Public attribution profiles are not yet represented.
+counts. The REC-14 public-profile projection preserves the same exclusions.
 
 ### Recipe remix lineage
 
@@ -361,9 +411,10 @@ cascades finalized versions, so a restrictive, nulling, or cascading source
 constraint would respectively block deletion, lose exact lineage, or delete
 provenance. Opaque IDs remain non-identifying historical references after
 source deletion and never authorize source retrieval. The nullable creator
-reference supports a future REC-14 public attribution identity while ensuring
-current account erasure removes the personal link. DEC-018 prohibits copying or
-displaying the general account name, email, internal ID, or profile data.
+reference supports REC-14 lookup of an independently selected source-version
+attribution while ensuring current account erasure removes the personal link.
+DEC-018 prohibits treating the general account name, email, internal ID, or
+profile data as attribution.
 
 Creation locks and independently authorizes the current finalized source,
 rejects stale/historical version submissions, creates a new remixer-owned

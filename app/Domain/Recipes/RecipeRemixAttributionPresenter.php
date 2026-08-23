@@ -2,6 +2,7 @@
 
 namespace App\Domain\Recipes;
 
+use App\Domain\Profiles\PublicAttribution;
 use App\Models\Recipe;
 use App\Models\RecipeRemixLineage;
 use App\Models\RecipeVersion;
@@ -34,6 +35,7 @@ final class RecipeRemixAttributionPresenter
             sourceAvailable: true,
             sourceRecipeId: (int) $source->getKey(),
             sourceTitle: (string) ($version->snapshot['title'] ?? ''),
+            sourceAttribution: PublicAttribution::fromVersion($source, $version),
         );
     }
 }

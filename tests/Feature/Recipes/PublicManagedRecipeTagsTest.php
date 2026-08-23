@@ -167,7 +167,7 @@ class PublicManagedRecipeTagsTest extends TestCase
 
         $array = PublicRecipe::fromCurrentVersion($public->fresh()->load('currentVersion'))->toArray();
         $json = json_encode($array, JSON_THROW_ON_ERROR);
-        $this->assertSame(['id', 'title', 'servings', 'visibility', 'version', 'ingredients', 'instructions', 'tags', 'classifications'], array_keys($array));
+        $this->assertSame(['id', 'title', 'servings', 'visibility', 'version', 'attribution', 'ingredients', 'instructions', 'tags', 'classifications'], array_keys($array));
         $this->assertStringContainsString('Comfort food', $json);
         $this->assertStringContainsString('Dinner', $json);
         $this->assertStringNotContainsString('Pendingland', $json);
