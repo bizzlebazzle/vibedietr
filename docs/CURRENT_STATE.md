@@ -617,6 +617,54 @@ owner-only preview uses the saved REC-07 draft aggregate while ordinary
 finalized reads continue to use the immutable current version. No resize
 request writes a recipe, ingredient line, unit, original text, or version.
 
+## Implemented public recipe discovery
+
+REC-09 adds the read-only `GET /recipes` route for guests and authenticated
+users. The conventional controller and Blade page keep title search and
+pagination in ordinary query parameters without adding client-side discovery
+state. Empty input browses normally; submitted title input is trimmed,
+validated as a string no longer than 100 characters, and matched partially
+with deterministic case-folding for the configured database. The database
+expression uses a bound search pattern rather than interpolating submitted
+text.
+
+`PublicRecipeDiscovery` starts from the REC-06
+`Recipe::scopePubliclyViewable()` boundary. It searches through only the
+`currentVersion` relationship, eager-loads only that relationship, and never
+joins historical versions as candidates. The query therefore selects drafts,
+private recipes, and withdrawn versions zero times rather than hiding them
+after retrieval. Visibility/lifecycle/tag-shaped query parameters are ignored
+and cannot widen the public scope.
+
+The length-aware paginator returns 12 recipes per page, preserves the normalized
+title query, and orders by current publication time descending followed by
+durable recipe ID descending. One durable recipe produces at most one result,
+and the secondary ID makes equal-time page boundaries stable. Totals count only
+matching current public finalized recipes.
+
+Each row becomes an explicit `PublicRecipeSummary` containing only durable
+recipe ID, current snapshot title and servings, and current-version finalization
+time. The view links that ID to the independently authorized REC-06 public show
+route. It does not load or serialize the owner, user/account/security data,
+version or revision identifiers, mutable children, history, or audit/internal
+metadata. Browse and search have distinct generic empty states that disclose no
+hidden-match counts.
+
+REC-07 active draft revisions leave discovery on the current immutable
+snapshot. Publishing atomically changes the current version and therefore the
+discoverable title; abandoning restores working state without changing
+discovery. Making a recipe private removes it immediately while retaining its
+version history outside discovery.
+
+Public tag records and assignments do not yet exist: REC-13 still owns the
+creator-authored versus managed public-tag model and REC-12 owns private
+organizational tags. REC-09 therefore does not expose or accept a tag filter
+until REC-13 provides that boundary. No index migration was added at the current
+data scale. If discovery volume grows, likely candidates are a composite public
+eligibility/order index and an indexed normalized current-title projection;
+those should be justified with production query plans rather than a premature
+search subsystem.
+
 ## Capabilities not represented
 
 There are no routes, models, migrations, policies, components, views, or tests
@@ -704,6 +752,14 @@ callbacks, start/restart/stop/destroy, track release, navigation cleanup, and
 camera-switch recovery with deterministic browser and decoder doubles. A
 physical-camera browser/end-to-end suite remains unavailable.
 
+Recipe discovery feature tests cover guest/authenticated parity, authoritative
+public-scope exclusion, privacy-safe summary serialization and HTML, exact and
+partial current-title search, deterministic case behavior, empty search and
+empty states, parameter validation, crafted-scope parameters, stable
+pagination/counts, query persistence, historical/current selection, active
+draft isolation, revision publication and abandonment, immediate unpublish,
+retained history, and direct-route authorization.
+
 Administrator authorization tests cover migration defaults for existing and
 new users, persistence, mass-assignment and self-service input protection, the
 central gate, and protected-route behavior for administrators, ordinary users,
@@ -717,9 +773,10 @@ and additive migration rollback while preserving existing user/ingredient data.
 
 ## Incomplete areas and technical debt
 
-- The repository name and project instructions describe a recipe and diet
-  planner, but the current domain implementation stops at an ingredient
-  catalogue.
+- The repository now implements recipe drafting, finalization, public reads,
+  revisions, resizing, and title-based public discovery, but meal planning and
+  most nutrition workflows remain unimplemented. Public-tag discovery awaits
+  the REC-13 tag model.
 - The Laravel default README, welcome page, application name, favicon, and
   dashboard remain in place, so the product identity and primary workflow are
   not established in the UI.

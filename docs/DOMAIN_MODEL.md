@@ -207,6 +207,14 @@ mutable recipe children or serialize the owner relationship. Current visibility
 controls access independently of the version's recorded visibility at
 finalization.
 
+Public discovery starts from the same publicly-viewable scope and selects at
+most one result per durable recipe. Its title, servings, and finalization time
+come only from the immutable version referenced by
+`current_recipe_version_id`; historical versions and mutable active-revision
+state are neither searched nor rendered. Results use a separate minimized
+summary projection that excludes owner and version identifiers. Public recipe
+tags remain planned under REC-13 and are not yet part of discovery.
+
 The owner may change only the current recipe visibility between public and
 private. That mutation preserves finalized lifecycle, the current-version
 reference, every immutable version, and all current child records. It emits a

@@ -186,6 +186,14 @@ draft revision. Guests and non-owners cannot create, open, publish, or abandon
 it. Readers continue to receive only the current immutable version; publication
 and abandonment preserve durable visibility.
 
+REC-09 now provides guest and authenticated title browse/search through the
+same centralized public-readable scope. Discovery projects only durable recipe
+ID, current-version title and servings, and current finalization time. It does
+not load or serialize owners, account/security fields, mutable draft state,
+active-revision or historical-version identifiers, or private recipes. Public
+tag discovery remains deferred because REC-13 has not implemented the distinct
+public-tag records and assignments.
+
 These current behaviors remain facts until later implementation work changes
 them. This document does not change them.
 
