@@ -253,7 +253,7 @@ class PublicRecipeDiscoveryTest extends TestCase
         $summary = PublicRecipeSummary::fromCurrentVersion($recipe->fresh()->load('currentVersion'));
         $serialized = $summary->toArray();
 
-        $this->assertSame(['id', 'title', 'servings', 'finalized_at'], array_keys($serialized));
+        $this->assertSame(['id', 'title', 'servings', 'finalized_at', 'tags', 'classifications'], array_keys($serialized));
         $json = json_encode($serialized, JSON_THROW_ON_ERROR);
         $this->assertStringNotContainsString('owner-secret@example.test', $json);
         $this->assertStringNotContainsString('security-secret', $json);

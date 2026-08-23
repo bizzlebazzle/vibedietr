@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Domain\Recipes\ManagedRecipeTermSuggestionStatus;
 use App\Domain\Recipes\PublicRecipe;
 use App\Domain\Recipes\RecipeQuantityDisplay;
 use App\Domain\Recipes\RecipeQuantityPresenter;
@@ -9,6 +10,7 @@ use App\Domain\Recipes\RecipeRemixAttributionPresenter;
 use App\Domain\Recipes\RecipeRevisionManager;
 use App\Domain\Recipes\RecipeVisibility;
 use App\Domain\Recipes\RecipeVisibilityChanger;
+use App\Models\ManagedRecipeTerm;
 use App\Models\Recipe;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
@@ -41,6 +43,16 @@ class RecipeController extends Controller
 
         $this->authorize('view', $recipe);
         $isOwner = $viewer instanceof User && $viewer->getKey() === $recipe->user_id;
+
+        $activeManagedTerms = collect();
+        $pendingTagSuggestions = collect();
+        if ($isOwner) {
+            $activeManagedTerms = ManagedRecipeTerm::query()
+                ->where('is_active', true)->orderBy('category')->orderBy('name')->get();
+            $pendingTagSuggestions = $recipe->managedTermSuggestions()
+                ->where('status', ManagedRecipeTermSuggestionStatus::Pending->value)
+                ->with('term:id,category,name')->orderBy('created_at')->get();
+        }
 
         $bookmark = $viewer instanceof User
             ? $viewer->bookmarks()->where('recipe_id', $recipe->getKey())->first()
@@ -75,6 +87,8 @@ class RecipeController extends Controller
                 ),
                 'previewingRevision' => false,
                 'bookmark' => $bookmark,
+                'activeManagedTerms' => $activeManagedTerms,
+                'pendingTagSuggestions' => $pendingTagSuggestions,
                 'remixAttribution' => $remixAttribution,
                 'remixOperationId' => $remixOperationId,
             ]);
@@ -103,6 +117,8 @@ class RecipeController extends Controller
             ),
             'previewingRevision' => $previewingRevision,
             'bookmark' => null,
+            'activeManagedTerms' => $activeManagedTerms,
+            'pendingTagSuggestions' => $pendingTagSuggestions,
             'remixAttribution' => $remixAttribution,
             'remixOperationId' => $remixOperationId,
         ]);

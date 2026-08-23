@@ -108,6 +108,12 @@ class User extends Authenticatable
         return $this->hasMany(PrivateRecipeTag::class);
     }
 
+    /** @return HasMany<ManagedRecipeTermSuggestion, $this> */
+    public function managedRecipeTermSuggestions(): HasMany
+    {
+        return $this->hasMany(ManagedRecipeTermSuggestion::class, 'suggested_by_user_id');
+    }
+
     public function secondFactorEnrollment(): HasOne
     {
         return $this->hasOne(SecondFactorEnrollment::class);

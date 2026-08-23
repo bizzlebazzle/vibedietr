@@ -6,14 +6,14 @@
 
     <form method="GET" action="{{ route('recipes.index') }}" class="flex flex-col gap-3 sm:flex-row sm:items-end">
         <div class="min-w-0 flex-1">
-            <label for="recipe-search" class="block text-sm font-medium">Search by title</label>
+            <label for="recipe-search" class="block text-sm font-medium">Search recipes</label>
             <input
                 id="recipe-search"
                 name="q"
                 type="search"
                 maxlength="100"
                 value="{{ $search }}"
-                placeholder="Recipe title"
+                placeholder="Title, tag, or classification"
                 class="mt-1 w-full rounded border-gray-300 dark:border-slate-600 dark:bg-slate-800"
             >
         </div>
@@ -40,6 +40,12 @@
                             {{ $recipe->title }}
                         </a>
                     </h2>
+                    @if ($recipe->tags !== [])
+                        <p class="mt-2 text-sm text-gray-600 dark:text-slate-400">Tags: {{ implode(', ', $recipe->tags) }}</p>
+                    @endif
+                    @if ($recipe->classifications !== [])
+                        <p class="mt-1 text-sm text-gray-600 dark:text-slate-400">Classifications: {{ collect($recipe->classifications)->pluck('name')->implode(', ') }}</p>
+                    @endif
                     @if ($recipe->servings !== null)
                         <p class="mt-2 text-sm text-gray-600 dark:text-slate-400">Serves {{ rtrim(rtrim($recipe->servings, '0'), '.') }}</p>
                     @endif

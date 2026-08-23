@@ -66,6 +66,8 @@ final class AuditPayloadValidator
             ),
             AuditAction::AdministratorLifecycleEvent => $this->validateLifecycleEvent($payload),
             AuditAction::CatalogueProposalApproved => $this->validateCatalogueApproval($payload),
+            AuditAction::ManagedRecipeVocabularyChanged => $this->validateManagedRecipeVocabulary($payload),
+            AuditAction::RecipeTagSuggestionReviewed => $this->validateRecipeTagSuggestionReview($payload),
             AuditAction::RecipeFinalized => $this->validateRecipeFinalized($payload),
             AuditAction::RecipeVisibilityChanged => $this->validateRecipeVisibilityChanged($payload),
             AuditAction::RecipeRevisionCreated,
@@ -241,6 +243,33 @@ final class AuditPayloadValidator
         $this->assertShape($payload, ['decision_code', 'outcome'], ['decision_code', 'outcome']);
         $this->assertEnum($payload, 'decision_code', ['approved_as_submitted', 'approved_with_new_version']);
         $this->assertEnum($payload, 'outcome', ['approved']);
+
+        return $payload;
+    }
+
+    /** @param array<string, mixed> $payload */
+    private function validateManagedRecipeVocabulary(array $payload): array
+    {
+        $this->assertShape($payload, ['action', 'category', 'outcome'], ['action', 'category', 'outcome']);
+        $this->assertEnum($payload, 'action', ['created', 'renamed', 'activated', 'deactivated']);
+        $this->assertEnum($payload, 'category', ['dietary', 'cuisine', 'meal_type']);
+        $this->assertEnum($payload, 'outcome', ['completed']);
+
+        return $payload;
+    }
+
+    /** @param array<string, mixed> $payload */
+    private function validateRecipeTagSuggestionReview(array $payload): array
+    {
+        $this->assertShape(
+            $payload,
+            ['action', 'managed_term_id', 'outcome', 'recipe_id'],
+            ['action', 'managed_term_id', 'outcome', 'recipe_id'],
+        );
+        $this->assertEnum($payload, 'action', ['accepted', 'rejected']);
+        $this->assertEnum($payload, 'outcome', ['completed']);
+        AuditReferenceValidator::validate($payload['managed_term_id'], 'managed recipe term identifier');
+        $this->assertInteger($payload, 'recipe_id', minimum: 1, maximum: PHP_INT_MAX);
 
         return $payload;
     }

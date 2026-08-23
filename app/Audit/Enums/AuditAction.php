@@ -8,6 +8,8 @@ enum AuditAction: string
     case AdministratorBootstrapRefused = 'administrator.bootstrap_refused';
     case AdministratorLifecycleEvent = 'administrator.lifecycle_event';
     case CatalogueProposalApproved = 'catalogue.proposal_approved';
+    case ManagedRecipeVocabularyChanged = 'managed_recipe_vocabulary.changed';
+    case RecipeTagSuggestionReviewed = 'recipe_tag_suggestion.reviewed';
     case RecipeFinalized = 'recipe.finalized';
     case RecipeVisibilityChanged = 'recipe.visibility_changed';
     case RecipeRevisionCreated = 'recipe.revision_created';
@@ -27,6 +29,8 @@ enum AuditAction: string
             self::AdministratorBootstrapRefused,
             self::AdministratorLifecycleEvent => AuditPurpose::PrivilegedAccessAccountability,
             self::CatalogueProposalApproved => AuditPurpose::CatalogueProvenance,
+            self::ManagedRecipeVocabularyChanged,
+            self::RecipeTagSuggestionReviewed => AuditPurpose::ModerationAccountability,
             self::RecipeFinalized,
             self::RecipeVisibilityChanged,
             self::RecipeRevisionCreated,
@@ -48,6 +52,8 @@ enum AuditAction: string
             self::AdministratorBootstrapRefused,
             self::AdministratorLifecycleEvent => AuditRetentionClass::PrivilegedIdentityTwelveMonths,
             self::CatalogueProposalApproved => AuditRetentionClass::ProvenanceActiveVersionPlusTwelveMonths,
+            self::ManagedRecipeVocabularyChanged,
+            self::RecipeTagSuggestionReviewed => AuditRetentionClass::ModerationDecisionTwelveMonths,
             self::RecipeFinalized,
             self::RecipeVisibilityChanged,
             self::RecipeRevisionCreated,
@@ -81,6 +87,8 @@ enum AuditAction: string
                 AuditActorType::System,
             ],
             self::CatalogueProposalApproved => [AuditActorType::Administrator],
+            self::ManagedRecipeVocabularyChanged => [AuditActorType::Administrator],
+            self::RecipeTagSuggestionReviewed,
             self::RecipeFinalized,
             self::RecipeVisibilityChanged,
             self::RecipeRevisionCreated,
@@ -113,6 +121,8 @@ enum AuditAction: string
             self::AdministratorBootstrapRefused,
             self::AdministratorLifecycleEvent => [AuditSubjectType::UserAccount, AuditSubjectType::SystemOperation],
             self::CatalogueProposalApproved => [AuditSubjectType::CatalogueProposal],
+            self::ManagedRecipeVocabularyChanged => [AuditSubjectType::ManagedRecipeTerm],
+            self::RecipeTagSuggestionReviewed => [AuditSubjectType::RecipeTagSuggestion],
             self::RecipeFinalized,
             self::RecipeVisibilityChanged,
             self::RecipeRevisionCreated,

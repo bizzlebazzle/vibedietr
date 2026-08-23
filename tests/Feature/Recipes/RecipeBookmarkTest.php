@@ -291,7 +291,7 @@ class RecipeBookmarkTest extends TestCase
             array_keys($live),
         );
         $this->assertSame(
-            ['id', 'title', 'servings', 'finalized_at'],
+            ['id', 'title', 'servings', 'finalized_at', 'tags', 'classifications'],
             array_keys($live['recipe']),
         );
         $this->assertNull($tombstone['recipe']);

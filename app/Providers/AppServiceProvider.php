@@ -11,11 +11,15 @@ use App\Domain\Recipes\RecipeRemixCreationHook;
 use App\Models\AuditEvent;
 use App\Models\Bookmark;
 use App\Models\Ingredient;
+use App\Models\ManagedRecipeTerm;
+use App\Models\ManagedRecipeTermSuggestion;
 use App\Models\Recipe;
 use App\Models\User;
 use App\Policies\AuditEventPolicy;
 use App\Policies\BookmarkPolicy;
 use App\Policies\IngredientPolicy;
+use App\Policies\ManagedRecipeTermPolicy;
+use App\Policies\ManagedRecipeTermSuggestionPolicy;
 use App\Policies\RecipePolicy;
 use App\Queue\Reference\CacheReferenceTaskResultRecorder;
 use App\Queue\Reference\ReferenceTaskResultRecorder;
@@ -47,6 +51,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(AuditEvent::class, AuditEventPolicy::class);
         Gate::policy(Bookmark::class, BookmarkPolicy::class);
         Gate::policy(Ingredient::class, IngredientPolicy::class);
+        Gate::policy(ManagedRecipeTerm::class, ManagedRecipeTermPolicy::class);
+        Gate::policy(ManagedRecipeTermSuggestion::class, ManagedRecipeTermSuggestionPolicy::class);
         Gate::policy(Recipe::class, RecipePolicy::class);
         Gate::define('access-admin', fn (User $user): bool => User::query()->whereKey($user->getKey())->where('is_administrator', true)->exists());
     }

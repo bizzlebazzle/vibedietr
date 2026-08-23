@@ -525,8 +525,7 @@ changes, it is deliberately split across multiple items.
 
 - **Outcome:** Let visitors search and browse only current public finalized
   recipes.
-- **Status:** Partially complete (2026-08-23; title browse/search is complete,
-  while public-tag search awaits REC-13's public-tag model).
+- **Status:** Complete (2026-08-23; REC-13 adds accepted public-tag search).
 - **Dependencies:** REC-06.
 - **Acceptance criteria:** Search covers title and public tags; results are
   paginated and stable; drafts, private recipes, and withdrawn versions never
@@ -582,6 +581,9 @@ changes, it is deliberately split across multiple items.
 
 - **Outcome:** Support creator-authored public tags and administrator-managed
   dietary, cuisine, and meal-type vocabularies.
+- **Status:** Complete (2026-08-23). Nutrition-claim taxonomies and
+  verification remain deferred because recipe nutrition completeness is not
+  yet represented; REC-13 exposes no verified claim state.
 - **Dependencies:** REC-06, FND-04, FND-14.
 - **Acceptance criteria:** Managed and free-form tags remain distinguishable;
   suggestions require creator review; nutrition claims are not shown as
