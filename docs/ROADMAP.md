@@ -540,6 +540,7 @@ changes, it is deliberately split across multiple items.
 
 - **Outcome:** Let users save a pointer to another creator's live public
   recipe without copying it.
+- **Status:** Complete (2026-08-23).
 - **Dependencies:** REC-06.
 - **Acceptance criteria:** Bookmarking is idempotent; bookmarks are private to
   their owner; they follow the live finalized version; unavailable originals

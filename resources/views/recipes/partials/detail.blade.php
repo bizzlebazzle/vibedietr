@@ -6,6 +6,26 @@
     @if ($publicRecipe !== null)
         <p><strong>Suggested servings:</strong> {{ $publicRecipe->servings ?? 'Not supplied' }}</p>
         <p><strong>Visibility:</strong> {{ ucfirst($publicRecipe->visibility->value) }}</p>
+
+        @auth
+            @if ($bookmark !== null)
+                <form method="POST" action="{{ route('bookmarks.destroy', $bookmark) }}">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="rounded border px-4 py-2 text-sm font-semibold dark:border-slate-600">Remove bookmark</button>
+                </form>
+            @elseif ($recipe->isPubliclyViewable())
+                <form method="POST" action="{{ route('bookmarks.store', $recipe) }}">
+                    @csrf
+                    <button type="submit" class="rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white">Bookmark recipe</button>
+                </form>
+            @endif
+        @else
+            @if ($recipe->isPubliclyViewable())
+                <p class="text-sm text-gray-600 dark:text-gray-400"><a href="{{ route('login') }}" class="text-blue-700 underline dark:text-blue-300">Sign in</a> to bookmark this recipe.</p>
+            @endif
+        @endauth
+
         <p><strong>Stable version:</strong> {{ $publicRecipe->versionNumber }} ({{ $publicRecipe->versionId }})</p>
         <p class="text-sm text-gray-600 dark:text-gray-400">This page uses the current immutable finalized recipe version.</p>
 

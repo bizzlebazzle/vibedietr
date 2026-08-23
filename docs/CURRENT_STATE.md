@@ -665,6 +665,44 @@ eligibility/order index and an indexed normalized current-title projection;
 those should be justified with production query plans rather than a premature
 search subsystem.
 
+## Implemented private recipe bookmarks
+
+REC-10 adds an authenticated, owner-only recipe bookmark list and a bookmark
+toggle to the public recipe detail page. A bookmark stores only its owning user,
+the durable integer `recipes.id` reference, and timestamps. It does not copy a
+title, description, ingredient, instruction, nutrition value, version number,
+version identifier, or creator profile field. The product specification does
+not prohibit saving one's own public recipe, so the same public-eligibility rule
+applies to self-bookmarks.
+
+Creation resolves the submitted durable recipe identifier through REC-06's
+central `Recipe::scopePubliclyViewable()` boundary. Drafts, private finalized
+recipes, missing current versions, historical version identifiers, and deleted
+recipes therefore cannot be newly bookmarked. Ownership comes only from the
+authenticated user. A database unique constraint on `(user_id, recipe_id)` and
+an insert-first unique-conflict recovery path make repeated and concurrent adds
+idempotent.
+
+The list is ordered by bookmark creation time and bookmark ID descending and
+paginated 12 per page. It first retrieves only the current user's bookmarks,
+then batch-resolves their opaque recipe identifiers through
+`scopePubliclyViewable()` with the current immutable version. Available rows
+become the same privacy-safe `PublicRecipeSummary` used by discovery. The
+listing does not traverse an unrestricted bookmark-to-recipe relationship, so
+active private draft revisions never appear and publishing a replacement
+version changes the displayed title/content without updating the bookmark row.
+
+If a source becomes private or is hard-deleted, the bookmark remains and
+renders only `Recipe unavailable`, the generic statement
+`This recipe is no longer publicly available.`, and its bookmark date. No
+source or creator content is retained for that state. Making the same durable
+recipe public again restores its live projection automatically. The recipe
+reference intentionally has no foreign key because current recipe and account
+deletion are hard deletes; this prevents source deletion from cascading into
+another user's private bookmark while the owner foreign key still cascades
+when the bookmarking user's private data is deleted. Tombstones remain
+owner-removable.
+
 ## Capabilities not represented
 
 There are no routes, models, migrations, policies, components, views, or tests

@@ -90,6 +90,12 @@ class User extends Authenticatable
         return $this->hasMany(Recipe::class);
     }
 
+    /** @return HasMany<Bookmark, $this> */
+    public function bookmarks(): HasMany
+    {
+        return $this->hasMany(Bookmark::class);
+    }
+
     public function secondFactorEnrollment(): HasOne
     {
         return $this->hasOne(SecondFactorEnrollment::class);
