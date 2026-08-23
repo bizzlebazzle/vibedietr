@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
@@ -74,6 +75,25 @@ class Recipe extends Model
     public function remixLineage(): HasOne
     {
         return $this->hasOne(RecipeRemixLineage::class, 'remix_recipe_id');
+    }
+
+    /** @return HasMany<PublicRecipeTag, $this> */
+    public function publicTags(): HasMany
+    {
+        return $this->hasMany(PublicRecipeTag::class)->orderBy('name')->orderBy('id');
+    }
+
+    /** @return BelongsToMany<ManagedRecipeTerm, $this> */
+    public function managedTerms(): BelongsToMany
+    {
+        return $this->belongsToMany(ManagedRecipeTerm::class, 'managed_recipe_term_recipes')
+            ->withTimestamps()->orderBy('category')->orderBy('name')->orderBy('managed_recipe_terms.id');
+    }
+
+    /** @return HasMany<ManagedRecipeTermSuggestion, $this> */
+    public function managedTermSuggestions(): HasMany
+    {
+        return $this->hasMany(ManagedRecipeTermSuggestion::class);
     }
 
     public function isFinalized(): bool

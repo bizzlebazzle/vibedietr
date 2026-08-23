@@ -1,4 +1,6 @@
 <article class="space-y-5 rounded-lg bg-white p-6 shadow dark:bg-slate-900 dark:text-slate-100">
+
+    @include('recipes.partials.public-metadata')
     @if (session('status'))
         <x-auth-session-status :status="session('status')" />
     @endif

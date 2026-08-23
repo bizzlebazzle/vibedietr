@@ -183,7 +183,7 @@ class RecipeVisibilityTest extends TestCase
         $serialized = $projection->toArray();
 
         $this->assertSame(
-            ['id', 'title', 'servings', 'visibility', 'version', 'ingredients', 'instructions'],
+            ['id', 'title', 'servings', 'visibility', 'version', 'ingredients', 'instructions', 'tags', 'classifications'],
             array_keys($serialized),
         );
         $this->assertSame(

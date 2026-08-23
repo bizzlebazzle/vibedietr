@@ -211,9 +211,10 @@ Public discovery starts from the same publicly-viewable scope and selects at
 most one result per durable recipe. Its title, servings, and finalization time
 come only from the immutable version referenced by
 `current_recipe_version_id`; historical versions and mutable active-revision
-state are neither searched nor rendered. Results use a separate minimized
-summary projection that excludes owner and version identifiers. Public recipe
-tags remain planned under REC-13 and are not yet part of discovery.
+The minimized summary projection excludes owner and version identifiers and
+includes only accepted free-form tag wording plus managed term category/name.
+Private tags and pending/rejected suggestions are neither searched nor
+rendered.
 
 The owner may change only the current recipe visibility between public and
 private. That mutation preserves finalized lifecycle, the current-version
@@ -882,6 +883,35 @@ A recipe instruction step has dedicated exact `text`. Its narrow Livewire trim
 exception and blank-only validation preserve every accepted nonblank value,
 including meaningful leading, trailing, repeated, multiline, and Unicode text.
 No current import workflow or legacy instruction store exists to migrate.
+
+### Public recipe metadata
+
+`PublicRecipeTag` is creator wording attached directly to one durable recipe.
+Its display name is trimmed but otherwise preserved; a whitespace-collapsed,
+case-folded identity prevents duplicate variants on that recipe. It is not
+shared vocabulary and has no relationship to the user-owned
+`PrivateRecipeTag` organisation model.
+
+`ManagedRecipeTerm` is administrator-managed application vocabulary. Its ULID
+is stable across renames; category is the `ManagedRecipeTermCategory` enum
+(`dietary`, `cuisine`, or `meal_type`); and `is_active` controls future use.
+The `managed_recipe_term_recipes` relationship is accepted durable recipe
+metadata. Deactivated terms cannot be newly attached or approved but retained
+associations remain meaningful and visible.
+
+`ManagedRecipeTermSuggestion` separately records an administrator proposal,
+its recipe and stable term, source, pending/accepted/rejected state, nullable
+administrator identity, decision time, and a database-unique pending key.
+Creation never attaches the term. Only the locked recipe owner may accept or
+reject; acceptance also requires the term still be active and attaches it
+idempotently in the decision transaction.
+
+These metadata records do not modify `RecipeVersion.snapshot`. Public reads and
+discovery combine them only with the durable recipe selected by the existing
+current-public-finalized boundary. Public projections expose free-form wording
+and accepted term ID/category/name only; they omit suggestions, private tags,
+actors, internal states, and audits. There is no represented recipe-nutrition
+completeness or claim-verification concept, so no tag is presented as verified.
 
 ## Concepts not yet represented
 

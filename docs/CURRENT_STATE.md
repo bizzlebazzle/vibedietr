@@ -656,14 +656,13 @@ discoverable title; abandoning restores working state without changing
 discovery. Making a recipe private removes it immediately while retaining its
 version history outside discovery.
 
-Public tag records and assignments do not yet exist: REC-13 still owns the
-creator-authored versus managed public-tag model and REC-12 owns private
-organizational tags. REC-09 therefore does not expose or accept a tag filter
-until REC-13 provides that boundary. No index migration was added at the current
-data scale. If discovery volume grows, likely candidates are a composite public
-eligibility/order index and an indexed normalized current-title projection;
-those should be justified with production query plans rather than a premature
-search subsystem.
+REC-13 now adds creator free-form tags and accepted managed classifications to
+the same durable recipe selected by the REC-06 boundary. REC-09 searches those
+accepted records alongside only the current-version title. Private
+organizational tags and pending/rejected suggestions are never joined. No
+index migration was added at the current data scale. If discovery volume
+grows, likely candidates are a composite public eligibility/order index and
+indexed normalized title/tag projections justified by production query plans.
 
 ## Implemented private recipe bookmarks
 
@@ -710,7 +709,7 @@ tags. Each record belongs to exactly one user, has a stable integer identifier,
 a required name of at most 100 characters, and timestamps. Names are trimmed
 and case-normalized for owner-scoped uniqueness; different users may
 independently use the same name. Private tags are a distinct model and
-relationship set from REC-13's still-unimplemented public recipe tags.
+relationship set from REC-13's public recipe metadata relationships.
 
 Four explicit membership tables distinguish an owned durable recipe from an
 owned bookmark. A user may attach only a recipe whose owner is their own or a
@@ -897,21 +896,58 @@ references, allowlisted classifications and subjects, strict payload rejection,
 append-only model behavior, HMAC tamper detection, authorization boundaries,
 and additive migration rollback while preserving existing user/ingredient data.
 
+## Implemented public and managed recipe tags
+
+REC-13 adds durable recipe metadata in three deliberately separate domains.
+`PublicRecipeTag` records are creator-authored free-form wording scoped to one
+recipe, with preserved display text and a normalized per-recipe identity.
+`ManagedRecipeTerm` records are application vocabulary with stable ULIDs,
+application-owned `dietary`, `cuisine`, and `meal_type` categories, and an
+active/deactivated state. Accepted classifications use stable term references;
+renaming a term therefore updates current presentation without rewriting an
+immutable recipe-version snapshot. REC-12 `PrivateRecipeTag` records and their
+owner-only membership tables remain unrelated and are never queried by public
+discovery.
+
+Tags and classifications are durable recipe presentation metadata, like
+current visibility, rather than version-snapshot content. Creator changes take
+effect on the durable recipe immediately; historical `RecipeVersion` snapshots
+remain immutable, and REC-09 still selects only the durable recipe's current
+public finalized version. A private recipe remains private regardless of its
+metadata.
+
+Only the recipe owner may add or remove free-form tags and accepted managed
+classifications. Only centrally authorized administrators may list, create,
+rename, activate, deactivate, or suggest managed terms. Deactivation prevents
+new attachment, suggestion, and approval but preserves existing accepted
+associations and their public wording. Suggestions are separate pending records
+and become accepted metadata only through an atomic owner accept action;
+rejection attaches nothing. Pending/rejected records, actor identity, and audit
+metadata are absent from explicit public projections.
+
+Public discovery searches the title of only the current finalized version plus
+accepted free-form tags and accepted managed terms while retaining the REC-06
+public scope. Managed-vocabulary mutations and creator suggestion decisions use
+minimized allowlisted FND-05 audit events.
+
+Recipe-level nutrition calculation and its authoritative completeness state do
+not yet exist. REC-13 therefore defines no nutrition-claim category, threshold,
+verification algorithm, or badge. Creator wording such as `Low fat` remains an
+unverified free-form tag, and public projections contain no verification claim.
+
 ## Incomplete areas and technical debt
 
 - The repository now implements recipe drafting, finalization, public reads,
-  revisions, resizing, and title-based public discovery, but meal planning and
-  most nutrition workflows remain unimplemented. Public-tag discovery awaits
-  the REC-13 tag model.
+  revisions, resizing, and current title/public-tag discovery, but meal
+  planning and most nutrition workflows remain unimplemented.
 - The Laravel default README, welcome page, application name, favicon, and
   dashboard remain in place, so the product identity and primary workflow are
   not established in the UI.
 - Email verification is scaffolded and tested directly but is not enforced for
   `User` instances because the verification contract is not implemented.
-- Administrator persistence and central authorization are implemented, but no
-  production administrator can be assigned until the separately controlled
-  FND-14 bootstrap and lifecycle work is delivered with its second-factor,
-  audit, and notification dependencies.
+- Administrator persistence, central authorization, and the FND-14 production
+  bootstrap/lifecycle services are implemented. Production use still depends
+  on satisfying the documented FND-13 notification/readiness configuration.
 - Ingredient writes retain Livewire and conventional controller paths. Their
   ordinary field validation and normalization now share one contract. Livewire
   alone provides the provider lookup/scanner UI and its pre-fetch
