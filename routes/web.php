@@ -14,9 +14,15 @@ Route::view('profile', 'profile')
     ->middleware(['auth'])
     ->name('profile');
 
+Route::get('recipes/{recipe}', [RecipeController::class, 'show'])
+    ->whereNumber('recipe')
+    ->name('recipes.show');
+
 Route::middleware(['auth'])->group(function () {
     Route::resource('ingredients', IngredientController::class);
-    Route::resource('recipes', RecipeController::class)->only(['create', 'show', 'edit']);
+    Route::resource('recipes', RecipeController::class)->only(['create', 'edit']);
+    Route::patch('recipes/{recipe}/visibility', [RecipeController::class, 'updateVisibility'])
+        ->name('recipes.visibility.update');
 });
 
 require __DIR__.'/auth.php';

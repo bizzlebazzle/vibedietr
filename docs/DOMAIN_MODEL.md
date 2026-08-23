@@ -161,10 +161,12 @@ Draft metadata:
 - Nullable current-version ULID and finalization timestamp, populated together
   only by successful finalization.
 
-The recipe policy grants view to the owner and update only while the owned
-recipe is a draft. Draft lifecycle overrides intended visibility, so neither
-preference grants public or cross-user access. REC-06 owns public read
-authorization; REC-07 owns editing finalized recipes through draft revisions.
+The recipe policy grants view to the owner and to every viewer when the recipe
+is finalized, has a current stable version, and is currently public. Update
+remains owner-only and draft-only. Draft lifecycle overrides intended
+visibility, so neither preference grants public or cross-user access.
+Unauthorized public-route lookups for drafts and private recipes resolve as
+404. REC-07 owns editing finalized recipes through draft revisions.
 Draft editing is one atomic aggregate mutation. The editable aggregate consists
 of the recipe's title, servings and intended visibility plus its ordered
 ingredient lines, optional instruction sections, and globally ordered steps.
@@ -192,6 +194,18 @@ Plan eligibility is a model/application rule rather than a UI convention.
 recipe is eligible for planning. A finalized private recipe is eligible only
 for its owner under the currently represented rules. Every draft is
 ineligible, including one whose intended visibility is public.
+
+Public-read eligibility is centralized by `isPubliclyViewable()` and the
+corresponding query scopes. Finalized reads render the immutable current-version
+snapshot through an explicit privacy-safe projection; they do not render the
+mutable recipe children or serialize the owner relationship. Current visibility
+controls access independently of the version's recorded visibility at
+finalization.
+
+The owner may change only the current recipe visibility between public and
+private. That mutation preserves finalized lifecycle, the current-version
+reference, every immutable version, and all current child records. It emits a
+minimized product-history audit event with the version reference and transition.
 
 ### Finalized recipe version
 

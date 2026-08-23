@@ -69,6 +69,12 @@ class Recipe extends Model
             && $this->current_recipe_version_id !== null;
     }
 
+    public function isPubliclyViewable(): bool
+    {
+        return $this->isFinalized()
+            && $this->getRawOriginal('visibility') === RecipeVisibility::Public->value;
+    }
+
     public function canBeUsedInPlansFor(?User $user): bool
     {
         if (! $this->isFinalized()) {
@@ -84,5 +90,24 @@ class Recipe extends Model
     {
         $query->where('lifecycle', RecipeLifecycle::Finalized->value)
             ->whereNotNull('current_recipe_version_id');
+    }
+
+    /** @param Builder<Recipe> $query */
+    public function scopePubliclyViewable(Builder $query): void
+    {
+        $query->finalized()
+            ->where('visibility', RecipeVisibility::Public->value);
+    }
+
+    /** @param Builder<Recipe> $query */
+    public function scopeVisibleTo(Builder $query, ?User $user): void
+    {
+        $query->where(function (Builder $visible) use ($user): void {
+            $visible->publiclyViewable();
+
+            if ($user !== null) {
+                $visible->orWhere('user_id', $user->getKey());
+            }
+        });
     }
 }
