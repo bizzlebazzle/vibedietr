@@ -22,7 +22,23 @@ class RecipePolicy
     public function update(User $user, Recipe $recipe): bool
     {
         return $user->getKey() === $recipe->user_id
-            && $recipe->getRawOriginal('lifecycle') === RecipeLifecycle::Draft->value;
+            && ($recipe->getRawOriginal('lifecycle') === RecipeLifecycle::Draft->value
+                || ($recipe->isFinalized() && $recipe->activeRevision()->exists()));
+    }
+
+    public function startRevision(User $user, Recipe $recipe): bool
+    {
+        return $user->getKey() === $recipe->user_id && $recipe->isFinalized();
+    }
+
+    public function publishRevision(User $user, Recipe $recipe): bool
+    {
+        return $user->getKey() === $recipe->user_id && $recipe->isFinalized();
+    }
+
+    public function abandonRevision(User $user, Recipe $recipe): bool
+    {
+        return $user->getKey() === $recipe->user_id && $recipe->isFinalized();
     }
 
     public function finalize(User $user, Recipe $recipe): bool

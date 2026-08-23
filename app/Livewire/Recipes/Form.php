@@ -7,8 +7,10 @@ use App\Domain\Measurements\StandardUnit;
 use App\Domain\Recipes\RecipeDraftEditor;
 use App\Domain\Recipes\RecipeDraftFingerprint;
 use App\Domain\Recipes\RecipeFinalizer;
+use App\Domain\Recipes\RecipeRevisionPublisher;
 use App\Domain\Recipes\RecipeVisibility;
 use App\Domain\Recipes\StaleRecipeDraft;
+use App\Domain\Recipes\StaleRecipeRevision;
 use App\Domain\Shared\Decimal;
 use App\Models\Recipe;
 use App\Models\User;
@@ -29,6 +31,9 @@ class Form extends Component
 
     #[Locked]
     public string $baselineFingerprint = '';
+
+    #[Locked]
+    public bool $isRevision = false;
 
     public string $title = '';
 
@@ -221,7 +226,7 @@ class Form extends Component
         session()->flash('status', 'Recipe draft saved.');
     }
 
-    public function finalize(RecipeFinalizer $finalizer): void
+    public function finalize(RecipeFinalizer $finalizer, RecipeRevisionPublisher $revisionPublisher): void
     {
         if ($this->recipeId === null) {
             $this->addError('finalize', 'Create the draft before finalizing it.');
@@ -252,20 +257,33 @@ class Form extends Component
         }
 
         try {
-            $version = $finalizer->finalize(
-                $this->recipeId,
-                $this->baselineFingerprint,
-                [
-                    'title' => $validated['title'],
-                    'servings' => $validated['servings'],
-                    'visibility' => $validated['visibility'],
-                ],
-                $validated['ingredients'],
-                $validated['sections'],
-                $validated['steps'],
-                $user,
-            );
-        } catch (StaleRecipeDraft $exception) {
+            $recipe = Recipe::query()->findOrFail($this->recipeId);
+            $metadata = [
+                'title' => $validated['title'],
+                'servings' => $validated['servings'],
+                'visibility' => $validated['visibility'],
+            ];
+
+            $version = $recipe->isFinalized()
+                ? $revisionPublisher->publish(
+                    $this->recipeId,
+                    $this->baselineFingerprint,
+                    $metadata,
+                    $validated['ingredients'],
+                    $validated['sections'],
+                    $validated['steps'],
+                    $user,
+                )
+                : $finalizer->finalize(
+                    $this->recipeId,
+                    $this->baselineFingerprint,
+                    $metadata,
+                    $validated['ingredients'],
+                    $validated['sections'],
+                    $validated['steps'],
+                    $user,
+                );
+        } catch (StaleRecipeDraft|StaleRecipeRevision $exception) {
             $this->addError('conflict', $exception->getMessage());
 
             return;
@@ -281,7 +299,9 @@ class Form extends Component
             return;
         }
 
-        session()->flash('status', 'Recipe finalized as '.$version->getRawOriginal('visibility').'.');
+        session()->flash('status', $this->isRevision
+            ? 'Draft revision published as version '.$version->version_number.'.'
+            : 'Recipe finalized as '.$version->getRawOriginal('visibility').'.');
         $this->redirectRoute('recipes.show', ['recipe' => $this->recipeId], navigate: true);
     }
 
@@ -318,6 +338,7 @@ class Form extends Component
         $recipe->load(['ingredientLines', 'instructionSections', 'instructionSteps']);
         $sectionKeysById = $recipe->instructionSections->mapWithKeys(fn ($section): array => [$section->getKey() => 'section-'.$section->getKey()]);
         $this->recipeId = $recipe->getKey();
+        $this->isRevision = $recipe->isFinalized();
         $this->title = $recipe->title;
         $this->servings = $recipe->servings;
         $this->visibility = (string) $recipe->getRawOriginal('visibility');

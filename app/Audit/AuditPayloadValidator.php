@@ -68,6 +68,9 @@ final class AuditPayloadValidator
             AuditAction::CatalogueProposalApproved => $this->validateCatalogueApproval($payload),
             AuditAction::RecipeFinalized => $this->validateRecipeFinalized($payload),
             AuditAction::RecipeVisibilityChanged => $this->validateRecipeVisibilityChanged($payload),
+            AuditAction::RecipeRevisionCreated,
+            AuditAction::RecipeRevisionAbandoned,
+            AuditAction::RecipeRevisionPublished => $this->validateRecipeRevision($action, $payload),
             AuditAction::RecipeNutritionOverrideApplied => $this->validateNutritionOverride($payload),
             AuditAction::PlanSnapshotRecorded => $this->validatePlanSnapshot($payload),
             AuditAction::AccountAnonymizationCompleted => $this->validateAnonymization($payload),
@@ -186,6 +189,36 @@ final class AuditPayloadValidator
         $this->assertEnum($payload, 'previous_visibility', ['public', 'private']);
         $this->assertEnum($payload, 'resulting_visibility', ['public', 'private']);
         AuditReferenceValidator::validate($payload['version_id'], 'recipe version identifier');
+
+        return $payload;
+    }
+
+    /** @param array<string, mixed> $payload */
+    private function validateRecipeRevision(AuditAction $action, array $payload): array
+    {
+        $published = $action === AuditAction::RecipeRevisionPublished;
+        $allowed = ['event', 'outcome', 'revision_id', 'base_version_id', 'base_version_number'];
+
+        if ($published) {
+            $allowed = [...$allowed, 'new_version_id', 'new_version_number'];
+        }
+
+        $this->assertShape($payload, $allowed, $allowed);
+        $this->assertEnum($payload, 'event', [match ($action) {
+            AuditAction::RecipeRevisionCreated => 'revision_created',
+            AuditAction::RecipeRevisionAbandoned => 'revision_abandoned',
+            AuditAction::RecipeRevisionPublished => 'revision_published',
+            default => throw new InvalidArgumentException('Invalid recipe revision audit action.'),
+        }]);
+        $this->assertEnum($payload, 'outcome', ['completed']);
+        AuditReferenceValidator::validate($payload['revision_id'], 'recipe revision identifier');
+        AuditReferenceValidator::validate($payload['base_version_id'], 'base recipe version identifier');
+        $this->assertInteger($payload, 'base_version_number', minimum: 1, maximum: PHP_INT_MAX);
+
+        if ($published) {
+            AuditReferenceValidator::validate($payload['new_version_id'], 'new recipe version identifier');
+            $this->assertInteger($payload, 'new_version_number', minimum: 2, maximum: PHP_INT_MAX);
+        }
 
         return $payload;
     }

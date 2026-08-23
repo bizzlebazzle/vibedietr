@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Recipe extends Model
 {
@@ -61,6 +62,12 @@ class Recipe extends Model
     public function currentVersion(): BelongsTo
     {
         return $this->belongsTo(RecipeVersion::class, 'current_recipe_version_id');
+    }
+
+    /** @return HasOne<RecipeDraftRevision, $this> */
+    public function activeRevision(): HasOne
+    {
+        return $this->hasOne(RecipeDraftRevision::class);
     }
 
     public function isFinalized(): bool

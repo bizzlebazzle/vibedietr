@@ -9,6 +9,24 @@
         <p><strong>Stable version:</strong> {{ $publicRecipe->versionNumber }} ({{ $publicRecipe->versionId }})</p>
         <p class="text-sm text-gray-600 dark:text-gray-400">This page uses the current immutable finalized recipe version.</p>
 
+        @can('startRevision', $recipe)
+            @if ($recipe->activeRevision !== null)
+                <div class="rounded border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100">
+                    <p>A private draft revision exists, based on finalized version {{ $recipe->activeRevision->baseVersion->version_number }}.</p>
+                    <div class="mt-3 flex flex-wrap gap-3">
+                        <a href="{{ route('recipes.edit', $recipe) }}" class="inline-flex rounded bg-blue-600 px-4 py-2 font-semibold text-white">Return to draft revision</a>
+                        <form method="POST" action="{{ route('recipes.revision.destroy', $recipe) }}">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" onclick="return confirm('Abandon this private draft revision? The current finalized version will remain unchanged.')" class="rounded border border-red-300 px-4 py-2 font-semibold text-red-700 dark:border-red-800 dark:text-red-300">Abandon draft revision</button>
+                        </form>
+                    </div>
+                </div>
+            @else
+                <a href="{{ route('recipes.edit', $recipe) }}" class="inline-flex rounded bg-blue-600 px-4 py-2 text-white">Edit recipe</a>
+            @endif
+        @endcan
+
         <section aria-labelledby="recipe-ingredients-heading">
             <h2 id="recipe-ingredients-heading" class="font-semibold">Ingredients</h2>
             <ol class="mt-2 list-decimal space-y-2 pl-5">

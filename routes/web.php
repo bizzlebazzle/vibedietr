@@ -21,6 +21,8 @@ Route::get('recipes/{recipe}', [RecipeController::class, 'show'])
 Route::middleware(['auth'])->group(function () {
     Route::resource('ingredients', IngredientController::class);
     Route::resource('recipes', RecipeController::class)->only(['create', 'edit']);
+    Route::delete('recipes/{recipe}/revision', [RecipeController::class, 'abandonRevision'])
+        ->name('recipes.revision.destroy');
     Route::patch('recipes/{recipe}/visibility', [RecipeController::class, 'updateVisibility'])
         ->name('recipes.visibility.update');
 });

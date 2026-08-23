@@ -33,6 +33,8 @@ final class RecipeDraftFingerprint
                 'servings' => $recipe->servings,
                 'visibility' => $recipe->getRawOriginal('visibility'),
                 'lifecycle' => $recipe->getRawOriginal('lifecycle'),
+                'current_recipe_version_id' => $recipe->current_recipe_version_id,
+                'active_revision' => $recipe->activeRevision()->first()?->only(['id', 'base_recipe_version_id']),
                 'updated_at' => $recipe->getRawOriginal('updated_at'),
             ],
             'ingredients' => $ingredients->map(fn ($line): array => [

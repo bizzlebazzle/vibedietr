@@ -10,6 +10,9 @@ enum AuditAction: string
     case CatalogueProposalApproved = 'catalogue.proposal_approved';
     case RecipeFinalized = 'recipe.finalized';
     case RecipeVisibilityChanged = 'recipe.visibility_changed';
+    case RecipeRevisionCreated = 'recipe.revision_created';
+    case RecipeRevisionAbandoned = 'recipe.revision_abandoned';
+    case RecipeRevisionPublished = 'recipe.revision_published';
     case RecipeNutritionOverrideApplied = 'recipe.nutrition_override_applied';
     case PlanSnapshotRecorded = 'plan.snapshot_recorded';
     case AccountAnonymizationCompleted = 'account.anonymization_completed';
@@ -25,6 +28,9 @@ enum AuditAction: string
             self::CatalogueProposalApproved => AuditPurpose::CatalogueProvenance,
             self::RecipeFinalized,
             self::RecipeVisibilityChanged,
+            self::RecipeRevisionCreated,
+            self::RecipeRevisionAbandoned,
+            self::RecipeRevisionPublished,
             self::RecipeNutritionOverrideApplied,
             self::PlanSnapshotRecorded => AuditPurpose::ProductHistory,
             self::AccountAnonymizationCompleted => AuditPurpose::AccountErasureEvidence,
@@ -42,6 +48,9 @@ enum AuditAction: string
             self::CatalogueProposalApproved => AuditRetentionClass::ProvenanceActiveVersionPlusTwelveMonths,
             self::RecipeFinalized,
             self::RecipeVisibilityChanged,
+            self::RecipeRevisionCreated,
+            self::RecipeRevisionAbandoned,
+            self::RecipeRevisionPublished,
             self::RecipeNutritionOverrideApplied,
             self::PlanSnapshotRecorded => AuditRetentionClass::PrivateContentUntilFinalPurge,
             self::AccountAnonymizationCompleted => AuditRetentionClass::PurgeReceiptTwelveMonths,
@@ -70,7 +79,10 @@ enum AuditAction: string
             ],
             self::CatalogueProposalApproved => [AuditActorType::Administrator],
             self::RecipeFinalized,
-            self::RecipeVisibilityChanged => [AuditActorType::AuthenticatedUser],
+            self::RecipeVisibilityChanged,
+            self::RecipeRevisionCreated,
+            self::RecipeRevisionAbandoned,
+            self::RecipeRevisionPublished => [AuditActorType::AuthenticatedUser],
             self::RecipeNutritionOverrideApplied => [
                 AuditActorType::AuthenticatedUser,
                 AuditActorType::Administrator,
@@ -98,7 +110,10 @@ enum AuditAction: string
             self::AdministratorLifecycleEvent => [AuditSubjectType::UserAccount, AuditSubjectType::SystemOperation],
             self::CatalogueProposalApproved => [AuditSubjectType::CatalogueProposal],
             self::RecipeFinalized,
-            self::RecipeVisibilityChanged => [AuditSubjectType::Recipe],
+            self::RecipeVisibilityChanged,
+            self::RecipeRevisionCreated,
+            self::RecipeRevisionAbandoned,
+            self::RecipeRevisionPublished => [AuditSubjectType::Recipe],
             self::RecipeNutritionOverrideApplied => [
                 AuditSubjectType::Recipe,
                 AuditSubjectType::NutritionOverride,

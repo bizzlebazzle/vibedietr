@@ -39,6 +39,16 @@ final class RecipeDraftEditor
             $recipe = Recipe::query()->lockForUpdate()->findOrFail($recipeId);
             Gate::authorize('update', $recipe);
 
+            if ($recipe->isFinalized()) {
+                if ($metadata['visibility'] !== $recipe->getRawOriginal('visibility')) {
+                    throw ValidationException::withMessages([
+                        'visibility' => 'Change finalized recipe visibility from the recipe page, not from a draft revision.',
+                    ]);
+                }
+
+                unset($metadata['visibility']);
+            }
+
             $storedIngredients = $recipe->ingredientLines()->lockForUpdate()->get();
             $storedSections = $recipe->instructionSections()->lockForUpdate()->get();
             $storedSteps = $recipe->instructionSteps()->lockForUpdate()->get();
