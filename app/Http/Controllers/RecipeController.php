@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Domain\Recipes\PublicRecipe;
+use App\Domain\Recipes\RecipeQuantityDisplay;
+use App\Domain\Recipes\RecipeQuantityPresenter;
 use App\Domain\Recipes\RecipeRevisionManager;
 use App\Domain\Recipes\RecipeVisibility;
 use App\Domain\Recipes\RecipeVisibilityChanger;
@@ -11,6 +13,7 @@ use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
 class RecipeController extends Controller
@@ -22,8 +25,11 @@ class RecipeController extends Controller
         return view('recipes.create');
     }
 
-    public function show(Request $request, int $recipe): View
-    {
+    public function show(
+        Request $request,
+        int $recipe,
+        RecipeQuantityPresenter $quantityPresenter,
+    ): View {
         $viewer = $request->user();
         $recipe = Recipe::query()
             ->visibleTo($viewer instanceof User ? $viewer : null)
@@ -31,21 +37,56 @@ class RecipeController extends Controller
             ->findOrFail($recipe);
 
         $this->authorize('view', $recipe);
+        $isOwner = $viewer instanceof User && $viewer->getKey() === $recipe->user_id;
 
-        if ($viewer instanceof User && $viewer->getKey() === $recipe->user_id) {
+        if ($isOwner) {
             $recipe->load('activeRevision.baseVersion');
         }
 
-        if ($recipe->isFinalized()) {
+        $previewingRevision = $request->query('preview') === 'draft';
+        if ($previewingRevision && (! $isOwner || $recipe->activeRevision === null)) {
+            abort(404);
+        }
+
+        if ($recipe->isFinalized() && ! $previewingRevision) {
+            $publicRecipe = PublicRecipe::fromCurrentVersion($recipe);
+
             return view('recipes.show', [
                 'recipe' => $recipe,
-                'publicRecipe' => PublicRecipe::fromCurrentVersion($recipe),
+                'publicRecipe' => $publicRecipe,
+                'quantityDisplay' => $this->quantityDisplay(
+                    $request,
+                    $quantityPresenter,
+                    $publicRecipe->servings,
+                    $publicRecipe->ingredients,
+                ),
+                'previewingRevision' => false,
             ]);
         }
 
         $recipe->load(['ingredientLines', 'instructionSteps.section']);
+        $ingredients = $recipe->ingredientLines->map(fn ($line): array => [
+            'original_text' => $line->original_text,
+            'quantity' => $line->quantity,
+            'standard_unit' => $line->getRawOriginal('standard_unit'),
+            'custom_unit' => $line->custom_unit,
+            'generic_wording' => $line->generic_wording,
+            'notes' => $line->notes,
+        ])->values()->all();
+        $savedServings = $recipe->getRawOriginal('servings');
+        $originalServings = is_string($savedServings) ? $savedServings : null;
 
-        return view('recipes.show', ['recipe' => $recipe, 'publicRecipe' => null]);
+        return view('recipes.show', [
+            'recipe' => $recipe,
+            'publicRecipe' => null,
+            'quantityDisplay' => $this->quantityDisplay(
+                $request,
+                $quantityPresenter,
+                $originalServings,
+                $ingredients,
+            ),
+            'previewingRevision' => $previewingRevision,
+        ]);
     }
 
     public function edit(Request $request, Recipe $recipe, RecipeRevisionManager $revisions): View
@@ -107,5 +148,43 @@ class RecipeController extends Controller
         return redirect()
             ->route('recipes.show', $updated)
             ->with('status', 'Recipe visibility changed to '.$updated->getRawOriginal('visibility').'.');
+    }
+
+    /**
+     * @param  list<array{original_text: string, quantity: string|null, standard_unit: string|null, custom_unit: string|null, generic_wording: string|null, notes: string|null}>  $ingredients
+     */
+    private function quantityDisplay(
+        Request $request,
+        RecipeQuantityPresenter $presenter,
+        ?string $originalServings,
+        array $ingredients,
+    ): RecipeQuantityDisplay {
+        $requested = $request->query('servings');
+        $requestError = null;
+
+        if ($requested === null || $requested === '') {
+            $requested = $originalServings;
+        } else {
+            $validator = Validator::make(
+                ['servings' => $requested],
+                ['servings' => ['required', 'string', 'numeric', 'decimal:0,2', 'gt:0', 'max:99999999.99']],
+                [
+                    'servings.decimal' => 'Enter a valid serving count with no more than two decimal places.',
+                    'servings.gt' => 'Requested servings must be greater than zero.',
+                    'servings.max' => 'Requested servings are too large.',
+                    'servings.numeric' => 'Enter a valid serving count with no more than two decimal places.',
+                    'servings.string' => 'Enter a valid numeric serving count.',
+                ],
+            );
+
+            if ($validator->fails()) {
+                $requestError = $validator->errors()->first('servings');
+                $requested = $originalServings;
+            } else {
+                $requested = (string) $validator->validated()['servings'];
+            }
+        }
+
+        return $presenter->present($originalServings, $requested, $ingredients, $requestError);
     }
 }

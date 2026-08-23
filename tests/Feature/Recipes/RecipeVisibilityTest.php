@@ -191,7 +191,10 @@ class RecipeVisibilityTest extends TestCase
             array_keys($serialized['version']),
         );
         $this->assertSame(
-            ['position', 'text'],
+            [
+                'position', 'original_text', 'quantity', 'standard_unit',
+                'custom_unit', 'generic_wording', 'notes',
+            ],
             array_keys($serialized['ingredients'][0]),
         );
         $this->assertSame(
@@ -205,7 +208,7 @@ class RecipeVisibilityTest extends TestCase
         $this->assertStringNotContainsString('is_administrator', $json);
         $this->assertStringNotContainsString('user_id', $json);
         $this->assertStringNotContainsString('owner', $json);
-        $this->assertStringNotContainsString('private structured note', $json);
+        $this->assertSame('private structured note', $serialized['ingredients'][1]['notes']);
     }
 
     public function test_edit_routes_and_livewire_mutations_remain_creator_only(): void
