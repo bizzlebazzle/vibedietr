@@ -525,6 +525,8 @@ changes, it is deliberately split across multiple items.
 
 - **Outcome:** Let visitors search and browse only current public finalized
   recipes.
+- **Status:** Partially complete (2026-08-23; title browse/search is complete,
+  while public-tag search awaits REC-13's public-tag model).
 - **Dependencies:** REC-06.
 - **Acceptance criteria:** Search covers title and public tags; results are
   paginated and stable; drafts, private recipes, and withdrawn versions never
