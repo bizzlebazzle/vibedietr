@@ -294,6 +294,50 @@ is used for display. Consequently:
 - Hard deletion permanently leaves the opaque recipe identifier unresolved;
   title, owner, and version data are not retained to decorate the tombstone.
 
+### Recipe collection and private recipe tag
+
+RecipeCollection and PrivateRecipeTag are separate REC-12 organizational
+concepts, each owned by exactly one User. Both use an auto-incrementing stable
+integer identifier, a required display name of at most 100 characters, a
+case-normalized lookup name, and timestamps. The database makes normalized
+names unique per owner, not globally, so two users may independently create the
+same name. No description, visibility flag, sharing state, nesting,
+collaborator, cover, notes, or manual order is represented.
+
+A private recipe tag is not recipe metadata and is not related to REC-13's
+future public creator-defined or managed tags. It describes only one user's
+personal organization, is never searched by public discovery, and cannot be
+seen by the source recipe's creator unless that creator is also the organizing
+user.
+
+Each organization type has two explicit many-to-many relationships: a direct
+membership to a durable Recipe owned by the same user and a membership to a
+Bookmark owned by the same user. The distinction is persisted in four tables
+rather than a polymorphic target. Membership rows contain only both foreign
+keys and timestamps; they copy no content. Composite primary keys make repeat
+attachment idempotent.
+
+The application re-resolves the organization and target through the
+authenticated user's relationships and authorizes the organization at every
+mutation boundary. Owner IDs and target types are not accepted from submitted
+input. Direct membership may reference an owned draft or finalized recipe and
+changes neither ownership, lifecycle, visibility, content, nor publication
+state. Another user's public recipe must be organized through the organizing
+user's own Bookmark.
+
+Deleting a collection or private tag cascades only its membership rows.
+Deleting an owned recipe removes its direct memberships; deleting a bookmark
+removes its organization memberships. Neither operation deletes an
+organization record or unrelated target. A bookmark membership remains when
+only its source becomes private or unavailable and renders the content-free
+REC-10 tombstone. Organization never grants source-recipe access.
+
+Owner-only pages provide CRUD, deterministic membership listing, attach/remove
+controls, and private-tag filtering. There are no public organization routes.
+Public recipe detail and discovery remain explicit PublicRecipe and
+PublicRecipeSummary projections and include no organization relationships or
+counts. Public attribution profiles are not yet represented.
+
 ### Recipe remix lineage
 
 `App\Models\RecipeRemixLineage` is the immutable one-to-one provenance
@@ -622,6 +666,14 @@ User 1 ---- owns ---- 0..* Ingredient
                             +-- contains 0..* RecipeInstructionSection
                                               +-- name
                                               +-- explicit recipe-local position
+  |
+  +------ owns ---- 0..* Bookmark
+  |
+  +------ owns ---- 0..* RecipeCollection
+  |                         +-- contains owned Recipe or Bookmark memberships
+  |
+  +------ owns ---- 0..* PrivateRecipeTag
+                            +-- applies to owned Recipe or Bookmark memberships
 ```
 
 An audit actor identity optionally references one user with `ON DELETE SET NULL`.
@@ -672,6 +724,20 @@ Database-enforced rules:
   erasure cannot cascade to or mutate the event.
 - Audit purpose/time, retention/time, actor mapping, subject mapping, subject
   resource, occurrence time, and correlation fields have query indexes.
+- Every recipe collection and private recipe tag belongs to an existing user;
+  deleting that user deletes their private organization.
+- Collection and private-tag names and normalized names are required and
+  bounded to 100 characters. Normalized names are unique per owner.
+- Direct recipe membership references an existing organization and recipe.
+  Bookmark membership references an existing organization and bookmark.
+- Each collection/recipe, collection/bookmark, private-tag/recipe, and
+  private-tag/bookmark pair is unique through its composite primary key.
+- Deleting an organization cascades only its membership rows. Deleting a direct
+  recipe or bookmark target cascades only the corresponding membership rows.
+  No organization foreign key can cascade deletion into a recipe or bookmark.
+
+Application authorization also requires every membership target to have the
+same authenticated owner as its collection or private tag.
 
 Application-enforced audit rules:
 
@@ -822,7 +888,6 @@ No current import workflow or legacy instruction store exists to migrate.
 The following concepts named in the project purpose have no current domain
 representation:
 
-- Recipe collection, folder, tag, or other organisation.
 - Match between a recipe line and a food/ingredient record.
 - Recipe yield, portion, or serving.
 - Calculated or estimated recipe nutrition.

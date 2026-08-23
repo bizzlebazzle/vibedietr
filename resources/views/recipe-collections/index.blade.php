@@ -1,0 +1,1 @@
+@include('private-organization.index', ['items' => $collections, 'heading' => 'Private recipe collections', 'description' => 'Organize your owned recipes and bookmarks. Collections are visible only to you.', 'routePrefix' => 'recipe-collections', 'noun' => 'collection'])

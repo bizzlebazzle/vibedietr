@@ -42,6 +42,12 @@ new class extends Component
                     <x-nav-link :href="route('bookmarks.index')" :active="request()->routeIs('bookmarks.*')">
                         Bookmarks
                     </x-nav-link>
+                    <x-nav-link :href="route('recipe-collections.index')" :active="request()->routeIs('recipe-collections.*')">
+                        Collections
+                    </x-nav-link>
+                    <x-nav-link :href="route('private-recipe-tags.index')" :active="request()->routeIs('private-recipe-tags.*')">
+                        Private tags
+                    </x-nav-link>
                     <x-nav-link :href="route('recipes.create')" :active="request()->routeIs('recipes.create')">
                         Create recipe
                     </x-nav-link>
@@ -104,6 +110,12 @@ new class extends Component
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('bookmarks.index')" :active="request()->routeIs('bookmarks.*')">
                 Bookmarks
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('recipe-collections.index')" :active="request()->routeIs('recipe-collections.*')">
+                Collections
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('private-recipe-tags.index')" :active="request()->routeIs('private-recipe-tags.*')">
+                Private tags
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('recipes.create')" :active="request()->routeIs('recipes.create')">
                 Create recipe

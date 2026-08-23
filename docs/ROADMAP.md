@@ -568,6 +568,7 @@ changes, it is deliberately split across multiple items.
 
 - **Outcome:** Let users organise owned and bookmarked recipes without making
   that organisation public.
+- **Status:** Complete (2026-08-23).
 - **Dependencies:** REC-10.
 - **Acceptance criteria:** Collections and private tags belong to one user,
   can reference owned recipes and bookmarks, and are never included on public
