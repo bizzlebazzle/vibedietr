@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Domain\Recipes\PublicRecipe;
 use App\Domain\Recipes\RecipeQuantityDisplay;
 use App\Domain\Recipes\RecipeQuantityPresenter;
+use App\Domain\Recipes\RecipeRemixAttributionPresenter;
 use App\Domain\Recipes\RecipeRevisionManager;
 use App\Domain\Recipes\RecipeVisibility;
 use App\Domain\Recipes\RecipeVisibilityChanger;
@@ -14,6 +15,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class RecipeController extends Controller
@@ -29,6 +31,7 @@ class RecipeController extends Controller
         Request $request,
         int $recipe,
         RecipeQuantityPresenter $quantityPresenter,
+        RecipeRemixAttributionPresenter $attributionPresenter,
     ): View {
         $viewer = $request->user();
         $recipe = Recipe::query()
@@ -52,6 +55,12 @@ class RecipeController extends Controller
             abort(404);
         }
 
+        $recipe->load('remixLineage');
+        $remixAttribution = $recipe->remixLineage === null
+            ? null
+            : $attributionPresenter->present($recipe->remixLineage, $viewer instanceof User ? $viewer : null);
+        $remixOperationId = (string) Str::ulid();
+
         if ($recipe->isFinalized() && ! $previewingRevision) {
             $publicRecipe = PublicRecipe::fromCurrentVersion($recipe);
 
@@ -66,6 +75,8 @@ class RecipeController extends Controller
                 ),
                 'previewingRevision' => false,
                 'bookmark' => $bookmark,
+                'remixAttribution' => $remixAttribution,
+                'remixOperationId' => $remixOperationId,
             ]);
         }
 
@@ -92,6 +103,8 @@ class RecipeController extends Controller
             ),
             'previewingRevision' => $previewingRevision,
             'bookmark' => null,
+            'remixAttribution' => $remixAttribution,
+            'remixOperationId' => $remixOperationId,
         ]);
     }
 

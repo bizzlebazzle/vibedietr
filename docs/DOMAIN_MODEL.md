@@ -294,6 +294,53 @@ is used for display. Consequently:
 - Hard deletion permanently leaves the opaque recipe identifier unresolved;
   title, owner, and version data are not retained to decorate the tombstone.
 
+### Recipe remix lineage
+
+`App\Models\RecipeRemixLineage` is the immutable one-to-one provenance
+record for a remix recipe. A remix is otherwise an ordinary durable
+`Recipe`: it is owned only by the remixer, begins as a private draft, has its
+own mutable children, and may later create its own finalized versions.
+
+Lineage contains:
+
+- An application-generated ULID and server timestamps.
+- A unique `remix_recipe_id` foreign key that cascades only with the remix.
+- The opaque durable source recipe ID without a source foreign key.
+- The exact immutable source-version ULID without a source foreign key.
+- The source version's recipe-local number.
+- A nullable internal source-creator user foreign key using `nullOnDelete`.
+- A unique server-issued operation ULID for logical-request idempotency.
+
+The absent source foreign keys are deliberate. Current recipe deletion
+cascades finalized versions, so a restrictive, nulling, or cascading source
+constraint would respectively block deletion, lose exact lineage, or delete
+provenance. Opaque IDs remain non-identifying historical references after
+source deletion and never authorize source retrieval. The nullable creator
+reference supports a future REC-14 public attribution identity while ensuring
+current account erasure removes the personal link. DEC-018 prohibits copying or
+displaying the general account name, email, internal ID, or profile data.
+
+Creation locks and independently authorizes the current finalized source,
+rejects stale/historical version submissions, creates a new remixer-owned
+private draft, and recreates every versioned ingredient, section, and step row
+from the exact source snapshot. Recipe metadata, original and structured
+ingredient values, custom units, ordering, exact instruction text, and grouping
+are copied; record identities are not. The source and remix then evolve
+independently.
+
+Lineage presentation first authorizes the durable source recipe for the current
+viewer and then internally resolves the recorded version. An authorized source
+may expose its historical title and recorded version number as concise
+attribution without adding a historical-version route. An inaccessible source
+produces a content-free tombstone with only the recorded version number.
+Changing source visibility, publishing a replacement source version, deleting
+the source, or erasing its creator never changes or removes remix content.
+
+The operation ULID makes replay of one logical creation return its existing
+remix, while a new operation permits an intentional second remix. Recipe,
+children, lineage, and minimized `recipe.remixed` audit evidence share one
+transaction.
+
 ### Recipe ingredient line
 
 `App\Models\RecipeIngredientLine` is one creator-authored line belonging to a

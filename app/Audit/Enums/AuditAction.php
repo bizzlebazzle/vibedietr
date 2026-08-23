@@ -13,6 +13,7 @@ enum AuditAction: string
     case RecipeRevisionCreated = 'recipe.revision_created';
     case RecipeRevisionAbandoned = 'recipe.revision_abandoned';
     case RecipeRevisionPublished = 'recipe.revision_published';
+    case RecipeRemixed = 'recipe.remixed';
     case RecipeNutritionOverrideApplied = 'recipe.nutrition_override_applied';
     case PlanSnapshotRecorded = 'plan.snapshot_recorded';
     case AccountAnonymizationCompleted = 'account.anonymization_completed';
@@ -31,6 +32,7 @@ enum AuditAction: string
             self::RecipeRevisionCreated,
             self::RecipeRevisionAbandoned,
             self::RecipeRevisionPublished,
+            self::RecipeRemixed,
             self::RecipeNutritionOverrideApplied,
             self::PlanSnapshotRecorded => AuditPurpose::ProductHistory,
             self::AccountAnonymizationCompleted => AuditPurpose::AccountErasureEvidence,
@@ -51,6 +53,7 @@ enum AuditAction: string
             self::RecipeRevisionCreated,
             self::RecipeRevisionAbandoned,
             self::RecipeRevisionPublished,
+            self::RecipeRemixed,
             self::RecipeNutritionOverrideApplied,
             self::PlanSnapshotRecorded => AuditRetentionClass::PrivateContentUntilFinalPurge,
             self::AccountAnonymizationCompleted => AuditRetentionClass::PurgeReceiptTwelveMonths,
@@ -82,7 +85,8 @@ enum AuditAction: string
             self::RecipeVisibilityChanged,
             self::RecipeRevisionCreated,
             self::RecipeRevisionAbandoned,
-            self::RecipeRevisionPublished => [AuditActorType::AuthenticatedUser],
+            self::RecipeRevisionPublished,
+            self::RecipeRemixed => [AuditActorType::AuthenticatedUser],
             self::RecipeNutritionOverrideApplied => [
                 AuditActorType::AuthenticatedUser,
                 AuditActorType::Administrator,
@@ -113,7 +117,8 @@ enum AuditAction: string
             self::RecipeVisibilityChanged,
             self::RecipeRevisionCreated,
             self::RecipeRevisionAbandoned,
-            self::RecipeRevisionPublished => [AuditSubjectType::Recipe],
+            self::RecipeRevisionPublished,
+            self::RecipeRemixed => [AuditSubjectType::Recipe],
             self::RecipeNutritionOverrideApplied => [
                 AuditSubjectType::Recipe,
                 AuditSubjectType::NutritionOverride,

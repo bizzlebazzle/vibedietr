@@ -4,6 +4,7 @@ use App\Http\Controllers\BookmarkController;
 use App\Http\Controllers\IngredientController;
 use App\Http\Controllers\RecipeController;
 use App\Http\Controllers\RecipeDiscoveryController;
+use App\Http\Controllers\RecipeRemixController;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome');
@@ -28,6 +29,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('recipes/{recipe}/bookmark', [BookmarkController::class, 'store'])
         ->whereNumber('recipe')
         ->name('bookmarks.store');
+    Route::post('recipes/{recipe}/remix', [RecipeRemixController::class, 'store'])
+        ->whereNumber('recipe')
+        ->name('recipes.remix.store');
     Route::delete('bookmarks/{bookmark}', [BookmarkController::class, 'destroy'])
         ->whereNumber('bookmark')
         ->name('bookmarks.destroy');

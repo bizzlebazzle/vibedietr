@@ -71,6 +71,7 @@ final class AuditPayloadValidator
             AuditAction::RecipeRevisionCreated,
             AuditAction::RecipeRevisionAbandoned,
             AuditAction::RecipeRevisionPublished => $this->validateRecipeRevision($action, $payload),
+            AuditAction::RecipeRemixed => $this->validateRecipeRemixed($payload),
             AuditAction::RecipeNutritionOverrideApplied => $this->validateNutritionOverride($payload),
             AuditAction::PlanSnapshotRecorded => $this->validatePlanSnapshot($payload),
             AuditAction::AccountAnonymizationCompleted => $this->validateAnonymization($payload),
@@ -189,6 +190,17 @@ final class AuditPayloadValidator
         $this->assertEnum($payload, 'previous_visibility', ['public', 'private']);
         $this->assertEnum($payload, 'resulting_visibility', ['public', 'private']);
         AuditReferenceValidator::validate($payload['version_id'], 'recipe version identifier');
+
+        return $payload;
+    }
+
+    /** @param array<string, mixed> $payload */
+    private function validateRecipeRemixed(array $payload): array
+    {
+        $this->assertShape($payload, ['event', 'outcome', 'source_version_id'], ['event', 'outcome', 'source_version_id']);
+        $this->assertEnum($payload, 'event', ['remixed']);
+        $this->assertEnum($payload, 'outcome', ['completed']);
+        AuditReferenceValidator::validate($payload['source_version_id'], 'source recipe version identifier');
 
         return $payload;
     }

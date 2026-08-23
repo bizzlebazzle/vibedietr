@@ -70,6 +70,12 @@ class Recipe extends Model
         return $this->hasOne(RecipeDraftRevision::class);
     }
 
+    /** @return HasOne<RecipeRemixLineage, $this> */
+    public function remixLineage(): HasOne
+    {
+        return $this->hasOne(RecipeRemixLineage::class, 'remix_recipe_id');
+    }
+
     public function isFinalized(): bool
     {
         return $this->getRawOriginal('lifecycle') === RecipeLifecycle::Finalized->value

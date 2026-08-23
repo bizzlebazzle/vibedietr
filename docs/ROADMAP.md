@@ -554,6 +554,7 @@ changes, it is deliberately split across multiple items.
 
 - **Outcome:** Copy an accessible finalized recipe into an independently owned
   draft while retaining attribution and lineage.
+- **Status:** Complete (2026-08-23).
 - **Dependencies:** REC-07, FND-05.
 - **Acceptance criteria:** The remix preserves source version and attribution,
   is editable only by the remixer, starts private, and remains usable if the

@@ -48,6 +48,7 @@ Backlog relationships mean:
 | DEC-015 | Administrator second-factor mechanism and recovery | Decided | Product owner |
 | DEC-016 | Administrator security-notification delivery | Decided | Product owner |
 | DEC-017 | Culinary measurement jurisdictions | Decided | Product owner |
+| DEC-018 | Recipe remix attribution before public profiles | Decided | Product owner |
 
 ## DEC-001 — Food-matching confidence thresholds
 
@@ -1308,6 +1309,49 @@ Backlog relationships mean:
   deterministic is preferred to silent locale-dependent conversion. No part
   of this decision authorizes mass/volume, density, packing, shape, count-to-
   weight, or edible-portion assumptions.
+
+## DEC-018 — Recipe remix attribution before public profiles
+
+- **Question requiring resolution:** What human-readable attribution may REC-11
+  show before REC-14 provides user-selected public attribution identities, and
+  what survives source privacy changes or creator erasure?
+- **Why it matters:** The account currently has only a general-purpose
+  `users.name` field. Treating it as public would expose profile data without
+  an approved public choice, while copying it into remix lineage would create a
+  personal-data snapshot that could outlive renames or erasure.
+- **Status:** Decided.
+- **Owner:** Product owner.
+- **Alternatives:** Publish the current account name; snapshot a creator label
+  at remix time; delay all lineage presentation until REC-14; or present only
+  source recipe/version identity while retaining a nullable internal creator
+  reference for future approved attribution.
+- **Existing constraints from `PRODUCT_SPEC.md`:** A remix is an independently
+  owned copy with source attribution and lineage; email remains private;
+  independently owned remixes survive source removal and account deletion; and
+  deletion must not preserve unnecessary identifying data.
+- **Backlog relationships:** Resolution unblocks REC-11. It constrains REC-14
+  and DEP-08. `Related`: DEC-012, DEC-013.
+- **Resolution condition:** The product owner approves the pre-REC-14 display,
+  rename, source-unavailability, and creator-erasure behavior.
+- **Final decision and rationale:** Before REC-14, remix lineage stores the
+  exact opaque source recipe and finalized-version identities, the source
+  version number, and a nullable internal source-creator reference. The creator
+  reference uses `nullOnDelete`, is never exposed, and is not a copied
+  attribution label.
+
+  `users.name`, email, internal account identifiers, administrator state, and
+  other profile data are neither copied into lineage nor displayed as remix
+  attribution. While the source recipe is independently accessible to the
+  current viewer, the concise display is `Remixed from [source recipe],
+  version N` and may link through the ordinary authorized recipe route. If the
+  source is private, deleted, or otherwise inaccessible to that viewer, the
+  display is `Remixed from an unavailable recipe, version N` with no source
+  link, source title, or creator details.
+
+  Account renames have no remix-attribution effect before REC-14 because no
+  personal label is copied or displayed. Creator deletion or anonymization
+  nulls the internal creator reference while retaining only non-identifying
+  recipe/version lineage.
 
 ## Manual validation checklist
 

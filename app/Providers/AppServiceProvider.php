@@ -4,8 +4,10 @@ namespace App\Providers;
 
 use App\Domain\Recipes\NullRecipeDraftSaveHook;
 use App\Domain\Recipes\NullRecipeFinalizationHook;
+use App\Domain\Recipes\NullRecipeRemixCreationHook;
 use App\Domain\Recipes\RecipeDraftSaveHook;
 use App\Domain\Recipes\RecipeFinalizationHook;
+use App\Domain\Recipes\RecipeRemixCreationHook;
 use App\Models\AuditEvent;
 use App\Models\Bookmark;
 use App\Models\Ingredient;
@@ -29,6 +31,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->bind(RecipeDraftSaveHook::class, NullRecipeDraftSaveHook::class);
         $this->app->bind(RecipeFinalizationHook::class, NullRecipeFinalizationHook::class);
+        $this->app->bind(RecipeRemixCreationHook::class, NullRecipeRemixCreationHook::class);
 
         $this->app->bind(
             ReferenceTaskResultRecorder::class,
