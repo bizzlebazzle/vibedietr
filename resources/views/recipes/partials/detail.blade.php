@@ -3,6 +3,18 @@
         <x-auth-session-status :status="session('status')" />
     @endif
 
+    @if ($remixAttribution !== null)
+        <p class="rounded border border-gray-200 p-3 text-sm dark:border-slate-700">
+            @if ($remixAttribution->sourceAvailable)
+                Remixed from
+                <a href="{{ route('recipes.show', $remixAttribution->sourceRecipeId) }}" class="text-blue-700 underline dark:text-blue-300">{{ $remixAttribution->sourceTitle }}</a>,
+                version {{ $remixAttribution->versionNumber }}.
+            @else
+                Remixed from an unavailable recipe, version {{ $remixAttribution->versionNumber }}.
+            @endif
+        </p>
+    @endif
+
     @if ($publicRecipe !== null)
         <p><strong>Suggested servings:</strong> {{ $publicRecipe->servings ?? 'Not supplied' }}</p>
         <p><strong>Visibility:</strong> {{ ucfirst($publicRecipe->visibility->value) }}</p>
@@ -23,6 +35,25 @@
         @else
             @if ($recipe->isPubliclyViewable())
                 <p class="text-sm text-gray-600 dark:text-gray-400"><a href="{{ route('login') }}" class="text-blue-700 underline dark:text-blue-300">Sign in</a> to bookmark this recipe.</p>
+            @endif
+        @endauth
+
+        @auth
+            @can('remix', $recipe)
+                <form method="POST" action="{{ route('recipes.remix.store', $recipe) }}" class="rounded border border-gray-200 p-4 dark:border-slate-700">
+                    @csrf
+                    <input type="hidden" name="source_version_id" value="{{ $publicRecipe->versionId }}">
+                    <input type="hidden" name="operation_id" value="{{ $remixOperationId }}">
+                    <button type="submit" class="rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white">Create your own version</button>
+                    <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">Creates an independent private draft that you own and can edit.</p>
+                </form>
+            @endcan
+        @else
+            @if ($recipe->isPubliclyViewable())
+                <p class="text-sm text-gray-600 dark:text-gray-400">
+                    <a href="{{ route('login') }}" class="text-blue-700 underline dark:text-blue-300">Sign in</a>
+                    to create an independent private remix.
+                </p>
             @endif
         @endauth
 

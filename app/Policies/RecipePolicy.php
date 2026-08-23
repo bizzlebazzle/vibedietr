@@ -19,6 +19,11 @@ class RecipePolicy
             || ($user !== null && $user->getKey() === $recipe->user_id);
     }
 
+    public function remix(User $user, Recipe $recipe): bool
+    {
+        return $recipe->isFinalized() && $this->view($user, $recipe);
+    }
+
     public function update(User $user, Recipe $recipe): bool
     {
         return $user->getKey() === $recipe->user_id

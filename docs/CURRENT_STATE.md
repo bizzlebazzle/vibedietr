@@ -703,6 +703,54 @@ another user's private bookmark while the owner foreign key still cascades
 when the bookmarking user's private data is deleted. Tombstones remain
 owner-removable.
 
+## Implemented recipe remixes and lineage
+
+REC-11 adds an authenticated remix action to an accessible current finalized
+recipe. The mutation re-resolves and locks the durable source recipe through
+REC-06's visibility boundary, reauthorizes it, and requires the submitted
+server-issued source-version ULID still to equal the current immutable version.
+Public finalized sources may be remixed by any authenticated user. Under the
+currently represented private-access rules, only the source owner may remix a
+private finalized recipe. Drafts, guessed private identifiers, and stale or
+arbitrary historical-version requests are rejected.
+
+Creation is one database transaction. It creates a new durable `Recipe` owned
+only by the authenticated remixer, explicitly sets draft lifecycle and private
+visibility, copies title and servings from the immutable snapshot, and creates
+new ingredient lines, instruction sections, and instruction steps in their
+recorded order. Exact original ingredient text, structured quantities,
+standard/custom units, generic wording, notes, instruction text, and section
+grouping are preserved. No mutable child record is shared, and source and
+remix evolve independently through the ordinary REC-04/05/07 workflows.
+
+`recipe_remix_lineages` is immutable application-owned provenance. Its unique
+remix-recipe foreign key cascades only when that remix is deleted. Opaque
+`source_recipe_id` and `source_recipe_version_id` columns intentionally have
+no source foreign keys, so source/version deletion cannot cascade into lineage
+or the independently owned remix. The recorded source version number remains
+stable when later source versions are published. A nullable internal
+`source_creator_user_id` uses `nullOnDelete`; DEC-018 prohibits exposing it
+or copying `users.name`, email, administrator state, or other profile data.
+
+Lineage display resolves the exact historical source version only after the
+source recipe is independently authorized for the current viewer. Accessible
+sources render `Remixed from [source recipe], version N` through the ordinary
+authorized recipe route. Private, deleted, or otherwise inaccessible sources
+render only `Remixed from an unavailable recipe, version N`, with no title,
+link, creator label, or source content. The remix remains usable and editable
+by its owner in every source state. Creator erasure nulls the personal
+reference while leaving opaque version lineage and remix content intact.
+
+A server-generated operation ULID is unique at the lineage table. Replaying one
+logical operation for the same remixer returns its existing remix without
+another recipe, lineage row, or audit event; a new operation ULID deliberately
+creates another remix. Ingredient copy, instruction copy, lineage, and the
+minimized FND-05 `recipe.remixed` event commit atomically. The event subject is
+the remix recipe, its payload contains only outcome and exact source-version
+reference, and the operation ULID is its correlation ID. Rollback hooks verify
+that failure at every copy/lineage stage leaves no partial remix or success
+event.
+
 ## Capabilities not represented
 
 There are no routes, models, migrations, policies, components, views, or tests

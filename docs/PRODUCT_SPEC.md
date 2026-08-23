@@ -177,6 +177,17 @@ saved.
   meal-plan snapshots remain usable. Bookmarks show that the original is no
   longer available.
 
+Before REC-14 provides explicitly selected public attribution identities,
+DEC-018 permits remix attribution to display only the independently authorized
+source recipe title and exact source version number. The application must not
+treat the general account name as public or copy it, an email address, an
+internal account identifier, or other profile data into lineage. If the source
+is inaccessible, attribution becomes the non-linked wording `Remixed from an
+unavailable recipe, version N`. Lineage retains the opaque recipe/version
+identity, while its internal creator reference is nullable and removed on
+creator erasure. This does not make historical source versions independently
+browsable.
+
 ### Recipe organisation and tags
 
 Users can organise their own and bookmarked recipes with private collections
