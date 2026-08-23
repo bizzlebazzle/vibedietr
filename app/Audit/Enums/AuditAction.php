@@ -9,6 +9,7 @@ enum AuditAction: string
     case AdministratorLifecycleEvent = 'administrator.lifecycle_event';
     case CatalogueProposalApproved = 'catalogue.proposal_approved';
     case RecipeFinalized = 'recipe.finalized';
+    case RecipeVisibilityChanged = 'recipe.visibility_changed';
     case RecipeNutritionOverrideApplied = 'recipe.nutrition_override_applied';
     case PlanSnapshotRecorded = 'plan.snapshot_recorded';
     case AccountAnonymizationCompleted = 'account.anonymization_completed';
@@ -23,6 +24,7 @@ enum AuditAction: string
             self::AdministratorLifecycleEvent => AuditPurpose::PrivilegedAccessAccountability,
             self::CatalogueProposalApproved => AuditPurpose::CatalogueProvenance,
             self::RecipeFinalized,
+            self::RecipeVisibilityChanged,
             self::RecipeNutritionOverrideApplied,
             self::PlanSnapshotRecorded => AuditPurpose::ProductHistory,
             self::AccountAnonymizationCompleted => AuditPurpose::AccountErasureEvidence,
@@ -39,6 +41,7 @@ enum AuditAction: string
             self::AdministratorLifecycleEvent => AuditRetentionClass::PrivilegedIdentityTwelveMonths,
             self::CatalogueProposalApproved => AuditRetentionClass::ProvenanceActiveVersionPlusTwelveMonths,
             self::RecipeFinalized,
+            self::RecipeVisibilityChanged,
             self::RecipeNutritionOverrideApplied,
             self::PlanSnapshotRecorded => AuditRetentionClass::PrivateContentUntilFinalPurge,
             self::AccountAnonymizationCompleted => AuditRetentionClass::PurgeReceiptTwelveMonths,
@@ -66,7 +69,8 @@ enum AuditAction: string
                 AuditActorType::System,
             ],
             self::CatalogueProposalApproved => [AuditActorType::Administrator],
-            self::RecipeFinalized => [AuditActorType::AuthenticatedUser],
+            self::RecipeFinalized,
+            self::RecipeVisibilityChanged => [AuditActorType::AuthenticatedUser],
             self::RecipeNutritionOverrideApplied => [
                 AuditActorType::AuthenticatedUser,
                 AuditActorType::Administrator,
@@ -93,7 +97,8 @@ enum AuditAction: string
             self::AdministratorBootstrapRefused,
             self::AdministratorLifecycleEvent => [AuditSubjectType::UserAccount, AuditSubjectType::SystemOperation],
             self::CatalogueProposalApproved => [AuditSubjectType::CatalogueProposal],
-            self::RecipeFinalized => [AuditSubjectType::Recipe],
+            self::RecipeFinalized,
+            self::RecipeVisibilityChanged => [AuditSubjectType::Recipe],
             self::RecipeNutritionOverrideApplied => [
                 AuditSubjectType::Recipe,
                 AuditSubjectType::NutritionOverride,

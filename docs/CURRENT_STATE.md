@@ -491,7 +491,7 @@ REC-05 adds a one-time `draft` to `finalized` lifecycle transition without
 using visibility as lifecycle state. Finalized recipes remain either `public`
 or `private`; public is the server-side default and an explicitly selected
 private value is preserved. Drafts remain owner-only even when their intended
-visibility is public. Public and guest read routes remain REC-06 work.
+visibility is public.
 
 Finalization uses the visible validated REC-04 aggregate rather than silently
 using an older save. One outer transaction locks and re-authorizes the recipe,
@@ -515,6 +515,36 @@ publishing replacement revisions remain deferred to REC-07.
 always fail. Finalized public recipes qualify; finalized private recipes
 qualify only for their owner under the currently represented rules. REC-05
 does not add meal-plan infrastructure.
+
+## Implemented recipe visibility and public reads
+
+REC-06 makes the single conventional `GET /recipes/{recipe}` show route
+available without authentication. `Recipe::isPubliclyViewable()`,
+`scopePubliclyViewable()`, and `scopeVisibleTo()` centralize eligibility:
+only a finalized recipe with a current stable version and current `public`
+visibility is readable by guests or authenticated non-owners. The creator may
+also resolve their own draft and private recipes through that route.
+Unauthorized draft/private identifiers return a non-disclosing 404 before any
+recipe content reaches the view.
+
+Finalized show pages use an explicit `PublicRecipe` projection built only from
+the immutable `currentVersion` snapshot. The projection allowlists recipe ID,
+title, servings, current visibility, version ID/number/finalization time,
+ordered ingredient text, section labels, and ordered instruction text. It does
+not load or serialize the owner, email, user ID, administrator/security state,
+audit events, mutable recipe children, private structured notes, or the wider
+Eloquent relationship graph. Draft owners continue to see the live draft
+aggregate.
+
+Only the owner may change a finalized recipe between public and private. The
+transactional mutation re-resolves, locks, and authorizes the recipe, updates
+only current visibility, and records a minimized `recipe.visibility_changed`
+audit event containing the version reference and visibility transition.
+Making a recipe private immediately removes public-read eligibility without
+changing finalized lifecycle, its current-version reference, immutable version
+records, ingredient lines, or instructions. Making it public again restores
+read eligibility for the same stable version. Finalized content editing remains
+deferred to REC-07; public readability never grants edit permission.
 
 ## Capabilities not represented
 

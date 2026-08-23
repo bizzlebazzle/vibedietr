@@ -67,6 +67,7 @@ final class AuditPayloadValidator
             AuditAction::AdministratorLifecycleEvent => $this->validateLifecycleEvent($payload),
             AuditAction::CatalogueProposalApproved => $this->validateCatalogueApproval($payload),
             AuditAction::RecipeFinalized => $this->validateRecipeFinalized($payload),
+            AuditAction::RecipeVisibilityChanged => $this->validateRecipeVisibilityChanged($payload),
             AuditAction::RecipeNutritionOverrideApplied => $this->validateNutritionOverride($payload),
             AuditAction::PlanSnapshotRecorded => $this->validatePlanSnapshot($payload),
             AuditAction::AccountAnonymizationCompleted => $this->validateAnonymization($payload),
@@ -167,6 +168,23 @@ final class AuditPayloadValidator
         $this->assertEnum($payload, 'event', ['finalized']);
         $this->assertEnum($payload, 'outcome', ['completed']);
         $this->assertEnum($payload, 'visibility', ['public', 'private']);
+        AuditReferenceValidator::validate($payload['version_id'], 'recipe version identifier');
+
+        return $payload;
+    }
+
+    /** @param array<string, mixed> $payload */
+    private function validateRecipeVisibilityChanged(array $payload): array
+    {
+        $this->assertShape(
+            $payload,
+            ['event', 'outcome', 'previous_visibility', 'resulting_visibility', 'version_id'],
+            ['event', 'outcome', 'previous_visibility', 'resulting_visibility', 'version_id'],
+        );
+        $this->assertEnum($payload, 'event', ['visibility_changed']);
+        $this->assertEnum($payload, 'outcome', ['completed']);
+        $this->assertEnum($payload, 'previous_visibility', ['public', 'private']);
+        $this->assertEnum($payload, 'resulting_visibility', ['public', 'private']);
         AuditReferenceValidator::validate($payload['version_id'], 'recipe version identifier');
 
         return $payload;

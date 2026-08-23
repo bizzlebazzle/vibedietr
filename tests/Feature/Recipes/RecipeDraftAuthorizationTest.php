@@ -36,20 +36,20 @@ class RecipeDraftAuthorizationTest extends TestCase
         $this->assertSame(RecipeLifecycle::Draft, $recipe->lifecycle);
     }
 
-    public function test_non_owner_receives_forbidden_for_direct_view_and_edit_urls(): void
+    public function test_non_owner_receives_not_found_for_show_and_forbidden_for_edit(): void
     {
         $recipe = Recipe::factory()->create();
         $otherUser = User::factory()->create();
 
-        $this->actingAs($otherUser)->get(route('recipes.show', $recipe))->assertForbidden();
+        $this->actingAs($otherUser)->get(route('recipes.show', $recipe))->assertNotFound();
         $this->actingAs($otherUser)->get(route('recipes.edit', $recipe))->assertForbidden();
     }
 
-    public function test_guest_is_redirected_from_view_and_edit_urls(): void
+    public function test_guest_receives_not_found_for_show_and_login_redirect_for_edit(): void
     {
         $recipe = Recipe::factory()->create();
 
-        $this->get(route('recipes.show', $recipe))->assertRedirect(route('login'));
+        $this->get(route('recipes.show', $recipe))->assertNotFound();
         $this->get(route('recipes.edit', $recipe))->assertRedirect(route('login'));
     }
 
@@ -98,8 +98,8 @@ class RecipeDraftAuthorizationTest extends TestCase
         ]);
         $otherUser = User::factory()->create();
 
-        $this->get(route('recipes.show', $recipe))->assertRedirect(route('login'));
-        $this->actingAs($otherUser)->get(route('recipes.show', $recipe))->assertForbidden();
+        $this->get(route('recipes.show', $recipe))->assertNotFound();
+        $this->actingAs($otherUser)->get(route('recipes.show', $recipe))->assertNotFound();
         $this->assertSame(RecipeLifecycle::Draft, $recipe->lifecycle);
         $this->assertSame(RecipeVisibility::Public, $recipe->visibility);
     }

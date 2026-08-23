@@ -481,6 +481,7 @@ changes, it is deliberately split across multiple items.
 
 - **Outcome:** Allow logged-out and authenticated readers to view public
   finalized recipes while keeping private recipes owner-only.
+- **Status:** Complete (2026-08-23).
 - **Dependencies:** REC-05, FND-03.
 - **Acceptance criteria:** Only the creator can edit; public routes expose no
   private account data; draft/private identifiers cannot be enumerated into

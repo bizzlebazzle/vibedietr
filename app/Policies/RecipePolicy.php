@@ -13,9 +13,10 @@ class RecipePolicy
         return true;
     }
 
-    public function view(User $user, Recipe $recipe): bool
+    public function view(?User $user, Recipe $recipe): bool
     {
-        return $user->getKey() === $recipe->user_id;
+        return $recipe->isPubliclyViewable()
+            || ($user !== null && $user->getKey() === $recipe->user_id);
     }
 
     public function update(User $user, Recipe $recipe): bool
@@ -27,5 +28,11 @@ class RecipePolicy
     public function finalize(User $user, Recipe $recipe): bool
     {
         return $user->getKey() === $recipe->user_id;
+    }
+
+    public function changeVisibility(User $user, Recipe $recipe): bool
+    {
+        return $user->getKey() === $recipe->user_id
+            && $recipe->isFinalized();
     }
 }
