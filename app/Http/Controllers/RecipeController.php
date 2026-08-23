@@ -39,6 +39,10 @@ class RecipeController extends Controller
         $this->authorize('view', $recipe);
         $isOwner = $viewer instanceof User && $viewer->getKey() === $recipe->user_id;
 
+        $bookmark = $viewer instanceof User
+            ? $viewer->bookmarks()->where('recipe_id', $recipe->getKey())->first()
+            : null;
+
         if ($isOwner) {
             $recipe->load('activeRevision.baseVersion');
         }
@@ -61,6 +65,7 @@ class RecipeController extends Controller
                     $publicRecipe->ingredients,
                 ),
                 'previewingRevision' => false,
+                'bookmark' => $bookmark,
             ]);
         }
 
@@ -86,6 +91,7 @@ class RecipeController extends Controller
                 $ingredients,
             ),
             'previewingRevision' => $previewingRevision,
+            'bookmark' => null,
         ]);
     }
 

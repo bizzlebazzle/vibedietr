@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BookmarkController;
 use App\Http\Controllers\IngredientController;
 use App\Http\Controllers\RecipeController;
 use App\Http\Controllers\RecipeDiscoveryController;
@@ -23,6 +24,13 @@ Route::get('recipes/{recipe}', [RecipeController::class, 'show'])
     ->name('recipes.show');
 
 Route::middleware(['auth'])->group(function () {
+    Route::get('bookmarks', [BookmarkController::class, 'index'])->name('bookmarks.index');
+    Route::post('recipes/{recipe}/bookmark', [BookmarkController::class, 'store'])
+        ->whereNumber('recipe')
+        ->name('bookmarks.store');
+    Route::delete('bookmarks/{bookmark}', [BookmarkController::class, 'destroy'])
+        ->whereNumber('bookmark')
+        ->name('bookmarks.destroy');
     Route::resource('ingredients', IngredientController::class);
     Route::resource('recipes', RecipeController::class)->only(['create', 'edit']);
     Route::delete('recipes/{recipe}/revision', [RecipeController::class, 'abandonRevision'])

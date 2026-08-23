@@ -263,6 +263,37 @@ removes draft-only rows. Both operations preserve durable recipe visibility.
 Conflict merging, branching, rollback, diffs, and historical browsing are not
 represented.
 
+### Bookmark
+
+`App\Models\Bookmark` is a private pointer owned by exactly one user. Its
+auto-incrementing identifier is stable within the application, and its
+`recipe_id` stores the durable `recipes.id`, never a `RecipeVersion` or active
+draft-revision identifier. The row also has creation and update timestamps and
+contains no recipe or creator metadata.
+
+The database enforces one row per `(user_id, recipe_id)`. Application creation
+uses the authenticated user, REC-06 public eligibility, and insert-first
+unique-conflict recovery. The owner foreign key cascades when that user's
+private data is removed. The durable recipe reference is deliberately an
+indexed unsigned integer without a foreign-key constraint: current recipes are
+hard-deletable and a recipe foreign-key cascade would violate the required
+tombstone lifecycle.
+
+Bookmark reads begin with an owner-scoped bookmark query. Their source IDs are
+then resolved in a separate batch through
+`Recipe::scopePubliclyViewable()` and only the current-version
+`PublicRecipeSummary` is projected. No Eloquent bookmark-to-recipe relationship
+is used for display. Consequently:
+
+- The pointer automatically follows every newly published current finalized
+  version without changing the bookmark row.
+- An active private revision never affects or leaks through the bookmark.
+- A private, unpublished, missing-current-version, or deleted source becomes a
+  generic content-free tombstone while the bookmark remains removable.
+- Re-publication of an existing durable recipe restores the live projection.
+- Hard deletion permanently leaves the opaque recipe identifier unresolved;
+  title, owner, and version data are not retained to decorate the tombstone.
+
 ### Recipe ingredient line
 
 `App\Models\RecipeIngredientLine` is one creator-authored line belonging to a
