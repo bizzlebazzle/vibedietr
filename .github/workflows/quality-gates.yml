@@ -179,6 +179,12 @@ jobs:
       - name: Install frontend dependencies from the lock file
         run: npm ci
 
+      - name: Validate the development environment
+        run: npm run env:check
+
+      - name: Validate the Compose configuration
+        run: docker compose --env-file .env.example config --quiet
+
       - name: Run frontend scanner tests
         run: npm run test:scanner
 

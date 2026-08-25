@@ -11,12 +11,17 @@ It describes the code as it exists, not the intended end state in `AGENTS.md`.
 - Authentication and profile screens are based on Laravel Breeze and are
   implemented with Livewire/Volt.
 - Tailwind CSS, Alpine.js, and Vite provide the browser UI and asset pipeline.
-- The active local `.env` uses MySQL through the WSL/Docker-based Sail stack.
-  Sessions, cache, and queues are database-backed.
-- `.env.example` still defaults to SQLite.
-- A Laravel Sail configuration also exists. It provisions PHP 8.4, MySQL,
-  Redis, Meilisearch, Mailpit, and Selenium. The application code does not
-  currently contain a search integration or code specific to Meilisearch.
+- The supported local environment is Laravel Sail through Docker Compose with
+  PHP 8.4, container-supplied Node 22, and MySQL 8.0. `.env.example` provides
+  aligned non-secret MySQL defaults; host PHP, Composer, Node, and npm are not
+  required after the Docker Composer bootstrap.
+- Local sessions, cache, and queues are database-backed. Redis is provisioned
+  but is not a default driver. Mailpit receives local SMTP mail. Meilisearch
+  and Selenium remain provisioned by Compose, although the application has no
+  current search integration or general browser-test suite.
+- The actively verified host is Windows with WSL2 and Docker Desktop
+  integration. Standard Linux and macOS Sail use has no known
+  repository-specific blocker but is not exercised through Sail in project CI.
 - Larastan 3.10 with PHPStan 2.2 analyses application and test PHP at level 5.
   A 10-finding reviewed baseline isolates existing debt, and GitHub Actions
   runs analysis plus a deliberately invalid failure regression.
@@ -25,13 +30,16 @@ It describes the code as it exists, not the intended end state in `AGENTS.md`.
   workflow uses PHP 8.4, Node 22.18, and a clean MySQL 8.0 service database.
   Composer and npm package-download caches are lock-file keyed; dependency
   installation still uses `composer install` and `npm ci` on every run.
+  The frontend job also checks required `.env.example` values, important
+  Compose service alignment, and a complete `docker compose config` parse
+  before its existing scanner, documentation, and asset-build checks.
 - Documentation validation uses markdownlint-cli2 for structure and style,
   markdown-link-check for deterministic local links, and a small Node validator
   for decision IDs, fields, statuses, backlog references, stable identities,
   and deferred-product-decision coverage. The frontend CI job runs the combined
   check and its failure-regression fixtures after `npm ci`.
-- The public landing page and repository README are still the Laravel defaults.
-  The authenticated dashboard only confirms that the user is logged in.
+- The public landing page remains the Laravel default. The authenticated
+  dashboard only confirms that the user is logged in.
 
 ## Implemented user and account behavior
 
@@ -992,9 +1000,9 @@ unverified free-form tag, and public projections contain no verification claim.
 - The repository now implements recipe drafting, finalization, public reads,
   revisions, resizing, and current title/public-tag discovery, but meal
   planning and most nutrition workflows remain unimplemented.
-- The Laravel default README, welcome page, application name, favicon, and
-  dashboard remain in place, so the product identity and primary workflow are
-  not established in the UI.
+- The Laravel default welcome page, application name in parts of the UI,
+  favicon, and dashboard remain in place, so the product identity and primary
+  workflow are not established in the UI.
 - Email verification is scaffolded and tested directly but is not enforced for
   `User` instances because the verification contract is not implemented.
 - Administrator persistence, central authorization, and the FND-14 production
@@ -1047,8 +1055,9 @@ unverified free-form tag, and public projections contain no verification claim.
   four redundant ingredient-form expressions, and four assertions whose
   outcomes PHPStan knows in advance. These
   findings should be removed as the affected existing code is revised.
-- The active local baseline is the MySQL-based Sail stack, but `.env.example`
-  defaults to SQLite and the supported setup is not explained in the README.
+- Linux and macOS are not currently exercised through Sail by project CI;
+  CI validates the same committed environment values and MySQL 8.0 baseline
+  while intentionally using GitHub-hosted PHP and Node runtimes directly.
 
 ## Confirmed owner direction
 

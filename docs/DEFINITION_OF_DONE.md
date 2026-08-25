@@ -158,6 +158,21 @@ untested.
   marks an application check not applicable locally, but the proposed change
   must still receive every configured remote CI status before merge.
 
+**When development-environment configuration or setup documentation changes**
+
+- Required `.env.example` values and important Compose service references
+  remain aligned:
+
+  ```bash
+  ./vendor/bin/sail npm run env:check
+  ```
+
+- Docker Compose can parse the supported example configuration:
+
+  ```bash
+  docker compose --env-file .env.example config --quiet
+  ```
+
 ## 7. Database migrations and data safety
 
 **When relevant**
