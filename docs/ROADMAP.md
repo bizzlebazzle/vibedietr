@@ -1197,6 +1197,7 @@ changes, it is deliberately split across multiple items.
 - **Outcome:** Replace the default README and conflicting environment defaults
   with accurate Sail/MySQL setup, test, format, analysis, build, queue, and
   troubleshooting instructions.
+- **Status:** Complete (2026-08-25).
 - **Dependencies:** FND-07.
 - **Acceptance criteria:** A fresh checkout can follow the documentation
   without host PHP/Composer/Node; `.env.example` and Compose agree without

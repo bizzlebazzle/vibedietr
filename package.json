@@ -5,6 +5,7 @@
     "scripts": {
         "build": "vite build",
         "dev": "vite",
+        "env:check": "node scripts/validate-development-environment.mjs",
         "docs:check": "npm run docs:lint && npm run docs:links && npm run docs:decisions",
         "docs:decisions": "node scripts/docs/validate-decisions.mjs",
         "docs:links": "markdown-link-check --config .markdown-link-check.json ./*.md docs .github",

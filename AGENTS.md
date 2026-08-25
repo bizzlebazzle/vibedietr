@@ -67,12 +67,17 @@ Run commands from the repository root in WSL. This project uses Laravel Sail;
 Docker Desktop with WSL integration must be running. Do not rely on PHP,
 Composer or Node being installed directly in WSL.
 
+The supported baseline is Sail PHP 8.4 with container-supplied Node 22, MySQL
+8.0, database-backed queues/cache/sessions, and local Mailpit. `README.md`
+contains the complete fresh-checkout workflow and host-platform notes.
+
 ### Install dependencies
 
-On a fresh checkout, install Composer dependencies with Sail's PHP 8.4
-bootstrap image:
+On a fresh checkout, create `.env` and install Composer dependencies with
+Sail's PHP 8.4 bootstrap image:
 
 ```bash
+test -f .env || cp .env.example .env
 docker run --rm \
     -u "$(id -u):$(id -g)" \
     -v "$(pwd):/var/www/html" \
@@ -81,22 +86,14 @@ docker run --rm \
     composer install --ignore-platform-reqs
 ```
 
-Create the local environment file without overwriting an existing one:
+The checked-in `.env.example` is the non-secret MySQL/Sail development
+baseline. Keep real local or external credentials only in the ignored `.env`.
+
+Validate Compose, start Sail, generate an application key, and install the
+locked frontend dependencies:
 
 ```bash
-test -f .env || cp .env.example .env
-```
-
-Before starting Sail, configure the local `.env`. The checked-in
-`.env.example` defaults to SQLite and does not provide the `DB_HOST`,
-`DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, and `DB_PASSWORD` values referenced
-by `docker-compose.yml`. The currently verified development environment uses
-MySQL; do not commit local database credentials.
-
-Once `.env` is configured, start Sail, generate an application key, and
-install the locked frontend dependencies:
-
-```bash
+docker compose --env-file .env.example config --quiet
 ./vendor/bin/sail up -d
 ./vendor/bin/sail artisan key:generate
 ./vendor/bin/sail npm ci
@@ -110,16 +107,18 @@ Once `vendor` exists, PHP dependencies can be reinstalled with:
 
 ### Prepare a fresh development database
 
-After starting Sail with configured MySQL values and a newly created empty
-database volume, run:
+For a newly created disposable database only, run:
 
 ```bash
 ./vendor/bin/sail artisan migrate --seed
 ```
 
+The seeder creates one ordinary `test@example.com` user and is not idempotent.
+For an existing development database, use the safe normal command
+`./vendor/bin/sail artisan migrate`.
+
 Do not use `migrate:fresh`, `db:wipe`, or `sail down -v` against an existing
-development environment without explicit approval; those commands delete
-data.
+development environment without explicit approval; those commands erase data.
 
 ### Start the application
 
@@ -135,6 +134,18 @@ reloading, run this in a separate terminal:
 ```bash
 ./vendor/bin/sail npm run dev -- --host 0.0.0.0
 ```
+
+### Run the queue worker
+
+Basic application use does not require a worker. Administrator security
+notifications use the database queue and require:
+
+```bash
+./vendor/bin/sail artisan queue:work --queue=security-notifications,default
+```
+
+Stop an interactive worker with Ctrl+C. Request a graceful restart after code
+or configuration changes with `./vendor/bin/sail artisan queue:restart`.
 
 ### Run tests
 
@@ -193,6 +204,15 @@ analysis setup:
 
 ```bash
 ./vendor/bin/sail composer analyse:failure-regression
+```
+
+### Validate the development environment
+
+Check required `.env.example` values and important Compose alignment:
+
+```bash
+./vendor/bin/sail npm run env:check
+docker compose --env-file .env.example config --quiet
 ```
 
 ### Validate documentation
