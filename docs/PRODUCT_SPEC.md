@@ -468,6 +468,22 @@ link back through its recipe lineage.
 Documents and photographs uploaded for extraction are transient inputs and
 are deleted after processing. They are not kept as recipe attachments.
 
+DEC-005 fixes the non-OCR launch scope as local and deterministic. URL imports
+support only public server-rendered HTML, try Schema.org Recipe JSON-LD first,
+and fall back to safe visible-text parsing. Pasted plain text, Markdown, and
+HTML are accepted as inert source text. Uploaded documents support only TXT,
+Markdown, and HTML initially. PDF, DOCX, RTF, JavaScript-rendered pages,
+authenticated pages, browser automation, external parsing providers, and
+self-hosted language models are deferred; legacy, macro-enabled, and other
+Office formats are unsupported initially.
+
+The complete fetched webpage and uploaded file are transient. The import keeps
+the exact pasted or extracted recipe source text and source provenance for
+review, while parsed fields remain suggestions. Useful partial extraction may
+create a warning-marked private draft; input with no credible recipe structure
+does not create recipe content. Launch recipe source data is not transmitted to
+an external parsing provider.
+
 ## Privacy, export, deletion, and retention
 
 ### Privacy defaults
@@ -528,9 +544,9 @@ The following details are intentionally not fixed by this specification:
 
 - Exact match-score thresholds and the visual treatment of review warnings.
   Decision: DEC-001, DEC-002.
-- Import/OCR providers, supported document formats, and extraction quality
-  thresholds.
-  Decision: DEC-005, DEC-006, DEC-007.
+- OCR providers and formats, plus import and OCR extraction-quality thresholds.
+  Decision: DEC-006, DEC-007. Non-OCR launch providers and formats are resolved
+  by DEC-005.
 - The data-export file format.
   Decision: DEC-008.
 - Administrator assignment, escalation, and moderation service-level rules.

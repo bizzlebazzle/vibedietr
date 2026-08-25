@@ -35,7 +35,7 @@ Backlog relationships mean:
 | DEC-002 | Food-match review-warning treatment | Owner input required | Product owner |
 | DEC-003 | Nutrient storage precision | Decided | Product owner |
 | DEC-004 | Nutrient display precision | Decided | Product owner |
-| DEC-005 | Recipe-import providers and formats | Research required | Technical investigation |
+| DEC-005 | Recipe-import providers and formats | Decided | Product owner |
 | DEC-006 | OCR providers and formats | Research required | Technical investigation |
 | DEC-007 | Import and OCR extraction-quality thresholds | Research required | Technical investigation |
 | DEC-008 | Account data-export format | Owner input required | Product owner |
@@ -295,8 +295,8 @@ Backlog relationships mean:
 - **Why it matters:** Provider capabilities, licensing, privacy, failure modes,
   and format coverage shape the import architecture and production
   configuration.
-- **Status:** Research required.
-- **Owner:** Technical investigation.
+- **Status:** Decided.
+- **Owner:** Product owner.
 - **Alternatives:** In-application extraction; one external provider; a layered
   approach using structured webpage data with a provider or local fallback.
   Initial supported formats may be a documented subset of candidate formats.
@@ -305,13 +305,196 @@ Backlog relationships mean:
   begins as a private draft, preserves wording and provenance, requires user
   review, and cannot be planned before finalization. Uploaded extraction inputs
   are transient and deleted after processing.
-- **Backlog relationships:** `Blocked`: REC-16, DEP-02. `Constrained`: REC-15,
-  REC-17, DEP-03. `Related`: FND-09, UX-06.
+- **Backlog relationships:** Resolution removes DEC-005 as a blocker for
+  REC-16 and DEP-02. The recorded behavior constrains REC-15, REC-16, the
+  non-OCR portion of REC-17, and DEP-03. `Related`: FND-09, UX-06, DEC-006,
+  DEC-007.
 - **Resolution condition:** Compare viable approaches using representative
   sources, document supported and unsupported formats, privacy and data-flow
   implications, operational limits, costs, and failure behavior, then approve
   the initial provider/approach and format matrix.
-- **Final decision and rationale:** Unresolved.
+- **Final decision and rationale:** Recipe importing uses an application-owned,
+  layered, local-first architecture. All launch extraction and parsing runs on
+  application-controlled infrastructure. No paid parsing API, hosted model,
+  specialist recipe API, or self-hosted language model is approved at launch,
+  so launch variable provider cost is zero and no recipe-parser credential,
+  endpoint, model, or provider-retention setting is required. External and
+  self-hosted model fallbacks are deferred enhancements. Either requires an
+  explicit amendment or successor decision covering provider, cost, retention,
+  data flow, credentials, failure behavior, and operating limits; traffic
+  growth alone does not authorize one, and the application must never switch
+  silently to an unapproved provider.
+
+  Every route first preserves its authoritative source, extracts usable text or
+  structured content locally, applies deterministic local parsing, and returns
+  an application-owned result. A useful partial extraction creates a private
+  draft with structured warnings. An input with no credible recipe structure
+  fails without creating recipe content. No result finalizes, publishes, or
+  becomes plan-eligible automatically; the existing explicit finalization
+  boundary remains authoritative.
+
+  Future implementation should separate source-text extraction from recipe-
+  structure extraction through application-owned interfaces. Provider or
+  parser response shapes must not become the domain model. The stable result
+  contract permits absent fields and includes title and description candidates,
+  original yield wording and a servings/yield candidate, ordered ingredient
+  source lines and optional structured suggestions, instruction source text,
+  ordered step and section candidates, source channel/format/URL, parser and
+  extractor identifiers and immutable versions, per-stage provenance, warning
+  codes, and a completion classification. The complete preserved source is a
+  separate authoritative record. Parsed or normalized fields are suggestions
+  and never replace exact ingredient or instruction wording.
+
+  URL imports support only public HTML retrievable without login, cookies,
+  subscription or paywall circumvention, CAPTCHA solving, JavaScript rendering,
+  browser automation, or private-network access. The application fetches the
+  page locally, attempts Schema.org `Recipe` JSON-LD first, then uses safe
+  visible-page text and deterministic parsing when JSON-LD is absent, malformed,
+  conflicting, or incomplete. Extraction handles a Recipe object, top-level
+  arrays, `@graph`, multiple JSON-LD blocks and Recipe candidates, string or
+  array `@type`, text instructions, `HowToStep`, and `HowToSection`.
+  Ingredient strings and instruction text remain source wording. OpenGraph,
+  document title, and canonical metadata are supplementary only. Microdata and
+  RDFa are deferred. JavaScript-only or otherwise unsupported pages direct the
+  user to the paste route.
+
+  `robots.txt` is not a blocking rule for an individual user-requested import.
+  The importer still identifies itself, retrieves only the submitted page and
+  validated redirect chain, avoids crawling and dependent-resource loading,
+  respects technical access controls, and never circumvents restrictions.
+  Source-site terms, attribution, copyright, database rights, and cross-
+  jurisdiction operation require production legal review; this decision does
+  not claim every public-page import is lawful.
+
+  Pasted plain text, Markdown, and HTML are supported at launch. The exact UTF-8
+  input is retained, markup is inert and never executed, and formatting fidelity
+  is not promised. Deterministic parsing may suggest title, headings, sections,
+  servings/yield, ingredient boundaries, instruction steps or prose blocks, and
+  basic quantities, fractions, ranges, and units. Incomplete or ambiguous lines
+  remain valid and retain their exact source text.
+
+  Uploaded-document support at launch is exactly `.txt`, `.md`, and
+  `.html`. Extraction is local; HTML scripts, styles, external resources,
+  embedded media, and active content are ignored. PDF, DOCX, and RTF are
+  deferred optional enhancements. Legacy DOC, macro-enabled DOCM, ODT,
+  spreadsheets, presentations, archives, and arbitrary Office formats are
+  explicitly unsupported. Users may copy available PDF or DOCX text into the
+  paste form. Image-only and scanned PDFs belong to DEC-006 and are not
+  approved here.
+
+  | Route | Format | Launch status | Local mechanism | Fallback |
+  | --- | --- | --- | --- | --- |
+  | URL | Public HTML with Recipe JSON-LD | Supported | Safe fetch and JSON-LD extraction | Visible-text parser |
+  | URL | Public HTML without usable JSON-LD | Supported | Visible-text extraction and deterministic parser | Warning-marked partial draft |
+  | URL | JavaScript-rendered page | Deferred | None | Paste form |
+  | URL | Login, paywall, or CAPTCHA page | Unsupported | None | No circumvention |
+  | URL | Private/intranet destination | Unsupported | None | None |
+  | URL | Raw arbitrary file URL | Unsupported | None | Upload a supported file |
+  | Paste | Plain text | Supported | Deterministic parser | Manual review |
+  | Paste | Markdown | Supported | Inert text extraction and parser | Manual review |
+  | Paste | HTML | Supported | Inert HTML-to-text extraction and parser | Manual review |
+  | Upload | TXT, Markdown, or HTML | Supported | Local bounded text extraction | Manual review |
+  | Upload | Text PDF, DOCX, or RTF | Deferred | None | Paste copied text |
+  | Upload | Scanned/image PDF | DEC-006 | OCR route | Not defined by DEC-005 |
+  | Upload | Other or macro Office format | Unsupported | None | Convert to a supported format |
+
+  A durable import retains its owner/draft relationship through server-
+  authoritative identifiers, channel, source format, exact pasted or extracted
+  recipe source text, source and final validated URL where applicable, fetch or
+  upload time, parser/extractor identities and versions, structured-versus-text
+  origin, warnings, completion/failure classification, and safe correlation and
+  idempotency identifiers. Full fetched webpage HTML is transient and deleted
+  after processing; it is not durable provenance. Source URL presentation must
+  not expose credentials or secret query values.
+
+  At launch, recipe source data is not sent to an external parser. No parser
+  receives source text, URLs, files, account identity, email, internal user ID,
+  IP address, session data, cookies, authorization headers, or credentials. A
+  public source site necessarily sees the application server's network address
+  and identified User-Agent. Logs, metrics, audit events, exceptions, queue
+  payloads, and failed-job rows must omit source content, uploaded bytes, user-
+  supplied filenames, and URLs with query strings.
+
+  Uploads use private non-executable storage and application-generated names.
+  They are deleted after success, terminal failure, cancellation, timeout,
+  owner/import deletion, or retry exhaustion. A cleanup task removes abandoned
+  transient inputs no later than 24 hours after they can no longer legitimately
+  be processed. Extracted source retained for draft review follows the import,
+  recipe, and account-deletion lifecycle rather than the transient-file rule.
+
+  Initial categorical warnings include `title_uncertain`,
+  `servings_uncertain`, `ingredient_section_uncertain`,
+  `ingredient_quantity_uncertain`, `ingredient_unit_uncertain`,
+  `instruction_segmentation_uncertain`, `multiple_recipe_candidates`,
+  `structured_data_malformed`, `structured_data_conflict`, and
+  `extraction_incomplete`. They identify the affected field, line, section, or
+  stage where practical. Confidence percentages may supplement but never
+  replace categorical warnings and source comparison. DEC-007 may set quality
+  thresholds and acknowledgement requirements without weakening source
+  preservation or mandatory review.
+
+  Unsupported formats and blocked, oversized, spoofed, or malformed inputs are
+  permanent failures. Eligible fetch connection failures, HTTP 408, bounded
+  429 responses, and selected 5xx responses may retry. Redirects to prohibited
+  destinations fail permanently. Useful partial extraction is reviewable; no
+  credible recipe is a hard extraction failure. Every terminal upload path
+  performs cleanup, and no failure path creates finalized content.
+
+  URL retrieval is HTTP/HTTPS only on ports 80/443, with a 2,048-character URL
+  limit, no URL user information, at most five individually revalidated
+  redirects, loop detection, three-second connection and 15-second total
+  timeouts, and a two-MiB decoded HTML limit enforced while streaming. Every A
+  and AAAA destination is checked, including after redirects; loopback, private,
+  link-local, multicast, unspecified, carrier-grade NAT, reserved, and cloud-
+  metadata destinations are blocked, with DNS rebinding/address-drift
+  protection. Requests send no cookies, authentication, client certificates, or
+  user-supplied headers and do not fetch linked resources.
+
+  TXT, Markdown, and HTML uploads have a two-MiB limit. Extension, detected MIME,
+  and actual content must agree; browser MIME is not authoritative. Parsing has
+  bounded memory, CPU, output, nesting, and wall time. Submitted paths are never
+  used for filesystem access. Any future PDF/DOCX work must separately address
+  parser isolation, ZIP/XML bombs, embedded objects, external relationships,
+  macros, encryption, native tools, and page/resource limits.
+
+  New imports default to ten per authenticated user per hour, configurable
+  downward for production capacity or risk. Destination-host and global
+  concurrency limits prevent crawling or denial-of-service amplification.
+  Extraction uses idempotent, correlated queued work under FND-09: three total
+  attempts, 10/60-second backoff, a 60-second job timeout below `retry_after`,
+  no more than two concurrent import jobs per application instance initially,
+  stable operation-scoped idempotency, overlap protection, durable effect-level
+  idempotency, after-commit dispatch, sanitized failure classes, and identifier-
+  only job payloads. DEP-04 may change topology from measured capacity without
+  weakening bounded retry, timeout ordering, privacy, or idempotency.
+
+  DEP-02 documents the non-secret import enablement flag, allowed formats,
+  source and redirect limits, timeouts, User-Agent, queue, attempts/backoff,
+  concurrency, throttles, private transient disk, cleanup deadline, and parser
+  versions. Production readiness fails safely if private storage, safe URL
+  retrieval, queue operation, cleanup, or DEP-05 monitoring is unavailable.
+  Monitoring covers queue health, processing time, safe fetch outcomes, parser
+  result categories, retry/failure rates, overdue cleanup, throttles, and SSRF/
+  size-limit blocks without recording source content.
+
+  Ordinary CI uses saved synthetic HTML/JSON-LD and text fixtures, synthetic
+  TXT/Markdown/HTML uploads, HTTP fakes, malformed/oversized/MIME-spoofed
+  inputs, redirect and network-address cases, parser result fixtures, wording/
+  provenance assertions, idempotency and cleanup tests, and privacy assertions.
+  It never depends on live recipe sites, paid APIs, or external network access.
+  Required JSON-LD cases include complete and missing-servings recipes, text,
+  `HowToStep` and `HowToSection` instructions, multiple objects/graphs,
+  missing JSON-LD, and malformed data. Required text cases include headings,
+  unquantified and ambiguous ingredients, numbered steps, prose, Markdown, and
+  pasted HTML.
+
+  Local processing gives launch imports zero variable provider cost, avoids
+  external source disclosure and provider outages, keeps normal CI
+  deterministic, and limits vendor lock-in. The accepted trade-off is more
+  partial extraction and manual correction than a capable model might provide.
+  Legal uncertainty, site variation, malicious or stale markup, and
+  deterministic parser limits remain residual risks; OCR remains DEC-006 and
+  quality thresholds remain DEC-007.
 
 ## DEC-006 — OCR providers and formats
 

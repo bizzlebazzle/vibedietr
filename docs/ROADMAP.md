@@ -616,7 +616,10 @@ changes, it is deliberately split across multiple items.
 - **Acceptance criteria:** Parsing runs as idempotent, correlated queued work
   under FND-09; import never publishes automatically; uncertain parsing is
   visibly reviewable; original ingredient and instruction wording is retained;
-  failures leave no partial finalized content.
+  failures leave no partial finalized content. Plain text, Markdown, and pasted
+  HTML are preserved exactly and treated as inert input; deterministic local
+  parsing creates a warning-marked private draft only when it finds credible
+  recipe structure. No external or self-hosted model is used.
 - **Suggested automated tests:** Representative formats, ambiguous lines,
   malformed input, idempotent retry, provenance, and private-draft tests.
 - **Risk:** High.
@@ -626,11 +629,17 @@ changes, it is deliberately split across multiple items.
 
 - **Outcome:** Fetch a user-supplied URL safely and create a source-attributed,
   reviewable private draft.
-- **Dependencies:** REC-15, DEC-005, DEC-007, FND-09, DEP-04, DEP-05.
+- **Dependencies:** REC-15, DEC-007, FND-09, DEP-04, DEP-05.
 - **Acceptance criteria:** Fetch and extraction run as idempotent, correlated
   queued work under FND-09; network access is protected against SSRF and size/
   timeout abuse; structured data and fallback extraction preserve source URL
-  and wording; redirects and unsupported pages fail safely.
+  and wording; redirects and unsupported pages fail safely. Initial support is
+  public server-rendered HTML on HTTP/HTTPS ports 80/443: local Schema.org
+  Recipe JSON-LD extraction precedes local visible-text parsing. Login, paywall,
+  CAPTCHA, private/intranet, raw-file, and JavaScript/browser-automation routes
+  are unsupported or deferred. Fetches use an identified User-Agent but do not
+  block on `robots.txt`. DEC-005's URL, redirect, timeout, response-size,
+  throttle, DNS/address, privacy, and transient-HTML limits are enforced.
 - **Suggested automated tests:** Structured recipe, fallback page, redirects,
   private/local network denial, oversized response, timeout, and attribution
   tests.
@@ -645,7 +654,12 @@ changes, it is deliberately split across multiple items.
 - **Acceptance criteria:** Extraction runs as idempotent, correlated queued work
   under FND-09; type/size limits are enforced; uploads are private, malware-
   scanned where required, and deleted after success or failure; extracted
-  wording and confidence are reviewable.
+  wording and confidence are reviewable. Non-OCR launch uploads are exactly
+  TXT, Markdown, and HTML, processed locally with a two-MiB limit. PDF, DOCX,
+  and RTF are deferred; legacy, macro-enabled, and other Office formats are
+  unsupported. Image-only/scanned PDFs and photographs remain governed by
+  DEC-006. Abandoned transient inputs are cleaned within DEC-005's 24-hour
+  terminal-processing boundary.
 - **Suggested automated tests:** Supported/unsupported files, spoofed MIME,
   size limit, extraction failure, retry, storage privacy, and verified cleanup
   tests.
@@ -1213,13 +1227,17 @@ changes, it is deliberately split across multiple items.
 - **Outcome:** Document required production variables and fail safely when
   keys, URLs, storage, database, cache, queue, mail, or provider settings are
   missing or insecure.
-- **Dependencies:** DEP-01, FND-14, DEC-005, DEC-006.
+- **Dependencies:** DEP-01, FND-14, DEC-006.
 - **Acceptance criteria:** No secret has a committed value; production debug is
   off; secure cookies, trusted proxies/hosts, cache, queue, mail, and provider
   identifiers are explicit; administrator bootstrap/recovery enablement and
   target constraints, second-factor configuration, and reliable security-
   notification delivery are explicit; startup validation fails safely with
   actionable errors when any required administrator control is unavailable.
+  DEC-005's local non-OCR import configuration is documented without a parser
+  provider credential: enablement, formats, sizes, URL/redirect limits,
+  timeouts, User-Agent, queue/retry/concurrency, throttles, transient private
+  storage and cleanup, parser versions, and fail-closed readiness.
 - **Suggested automated tests:** Production-config test matrix, missing-secret
   failures, debug/cookie assertions, and configuration-cache smoke test.
 - **Risk:** High.
@@ -1233,7 +1251,11 @@ changes, it is deliberately split across multiple items.
 - **Acceptance criteria:** CSP supports locally bundled assets and required
   media; sensitive routes have documented throttles; request/upload limits are
   enforced; logs do not record secrets, raw passwords, or transient document
-  contents.
+  contents. Recipe imports enforce DEC-005's ten-per-user-per-hour default,
+  destination/global limits, two-MiB HTML/upload limits, URL and redirect
+  bounds, SSRF and DNS-rebinding controls, private non-executable storage,
+  content/MIME agreement, inert HTML handling, bounded parsing, and cleanup
+  outcomes.
 - **Suggested automated tests:** Header assertions, throttle boundaries, CSP
   browser smoke test, oversized request/upload, and log-redaction tests.
 - **Risk:** High.

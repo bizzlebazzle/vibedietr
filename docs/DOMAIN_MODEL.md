@@ -972,9 +972,29 @@ representation:
 - Match between a recipe line and a food/ingredient record.
 - Recipe yield, portion, or serving.
 - Calculated or estimated recipe nutrition.
+- Recipe import operation, preserved import source, extraction result,
+  warnings, and parser provenance.
 - Meal.
 - Meal plan or schedule.
 - Diet plan, nutrition target, or dietary constraint.
+
+DEC-005 constrains the future recipe-import representation without claiming it
+exists today. One private import operation will identify its owner and resulting
+draft through server-authoritative references and retain its channel, source
+format, exact pasted or locally extracted recipe source text, safe source URL
+where applicable, parser/extractor identifiers and versions, per-stage
+provenance, structured warnings, completion/failure classification, correlation
+ID, and stable idempotency identity. Full fetched HTML and uploaded files are
+transient rather than durable provenance.
+
+The provider-independent extraction result permits absent fields and contains
+title/description and yield candidates, ordered ingredient source lines with
+optional structured suggestions, instruction source text with optional ordered
+steps and sections, source channel/format/URL, parser identity/version,
+warnings, and completion state. The preserved source remains authoritative;
+the result never replaces exact ingredient or instruction wording. No current
+model, migration, route, queue job, parser, or upload store implements this
+contract.
 
 ## Questions requiring owner input
 
