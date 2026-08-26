@@ -987,6 +987,21 @@ provenance, structured warnings, completion/failure classification, correlation
 ID, and stable idempotency identity. Full fetched HTML and uploaded files are
 transient rather than durable provenance.
 
+DEC-006 further constrains the unimplemented OCR representation. A provider-
+independent OCR result may contain ordered page/line text, normalized confidence
+and bounding evidence, detected-language evidence, warnings, and pinned engine/
+model, trained-data, and preprocessing versions. After transient-source
+deletion, provenance retains the import ID, source type, sanitized basename,
+validated media type and dimensions, page count, processing time, correlation
+ID, fallback state, outcome, warnings, and preserved OCR wording. It excludes
+client paths, source hashes, EXIF/GPS/device/capture metadata, full provider
+responses, and original/canonical images.
+
+OCR remains untrusted source text and enters the DEC-005 parser. It does not
+itself represent recipe entities, catalogue matches, nutrition, or a finalized
+recipe. No current model, migration, route, queue job, OCR adapter, or upload
+store implements this contract.
+
 The provider-independent extraction result permits absent fields and contains
 title/description and yield candidates, ordered ingredient source lines with
 optional structured suggestions, instruction source text with optional ordered
