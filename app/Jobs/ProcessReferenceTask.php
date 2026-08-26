@@ -7,6 +7,7 @@ use App\Queue\CorrelationId;
 use App\Queue\Exceptions\NonRetryableJobException;
 use App\Queue\Exceptions\RetryableJobException;
 use App\Queue\JobFailureReporter;
+use App\Queue\QueueName;
 use App\Queue\Reference\ReferenceTaskOutcome;
 use App\Queue\Reference\ReferenceTaskResultRecorder;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
@@ -53,7 +54,7 @@ final class ProcessReferenceTask implements ShouldBeUnique, ShouldQueue
         );
         $this->correlationId = CorrelationId::resolve($correlationId);
 
-        $this->onQueue('default');
+        $this->onQueue(QueueName::DEFAULT);
         $this->afterCommit();
     }
 

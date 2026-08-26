@@ -22,9 +22,12 @@ use App\Policies\IngredientPolicy;
 use App\Policies\ManagedRecipeTermPolicy;
 use App\Policies\ManagedRecipeTermSuggestionPolicy;
 use App\Policies\RecipePolicy;
+use App\Queue\FailedJobPruner;
+use App\Queue\PrivacyAwareFailedJobProvider;
 use App\Queue\Reference\CacheReferenceTaskResultRecorder;
 use App\Queue\Reference\ReferenceTaskResultRecorder;
 use Illuminate\Http\Middleware\TrustProxies;
+use Illuminate\Queue\Failed\FailedJobProviderInterface;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -43,6 +46,12 @@ class AppServiceProvider extends ServiceProvider
             ReferenceTaskResultRecorder::class,
             CacheReferenceTaskResultRecorder::class,
         );
+        $this->app->extend('queue.failer', function (FailedJobProviderInterface $provider): FailedJobProviderInterface {
+            return new PrivacyAwareFailedJobProvider(
+                $provider,
+                $this->app->make(FailedJobPruner::class),
+            );
+        });
     }
 
     /**

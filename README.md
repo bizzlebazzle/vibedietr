@@ -174,7 +174,13 @@ command if it is not managed by a process supervisor:
 ```
 
 Tests do not need a worker because PHPUnit sets `QUEUE_CONNECTION=sync`.
-Production worker topology and monitoring are outside this development setup.
+Production uses separate single-process workers for
+`security-notifications` and `default`, plus a supervised UTC scheduler.
+The canonical container commands and limits are in
+`compose.production-operations.yml`. See
+[`docs/QUEUE_OPERATIONS.md`](docs/QUEUE_OPERATIONS.md) for deployment,
+graceful restart, recovery, health and privacy procedures and
+[`docs/JOB_INVENTORY.md`](docs/JOB_INVENTORY.md) for per-job requirements.
 
 ## Tests and quality checks
 

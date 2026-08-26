@@ -18,6 +18,7 @@ final class ProductionConfigurationValidator
         $this->application($failures);
         $this->networkAndSession($failures);
         $this->persistence($failures);
+        $this->queueOperations($failures);
         $this->notifications($failures);
         $this->administratorControls($failures);
         $this->providers($failures);
@@ -139,6 +140,68 @@ final class ProductionConfigurationValidator
     }
 
     /** @param list<string> $failures */
+    private function queueOperations(array &$failures): void
+    {
+        if (config('queue-operations.enabled') !== true) {
+            $failures[] = 'QUEUE_OPERATIONS_ENABLED must be true after the worker and scheduler topology is deployed.';
+        }
+        if (config('queue-operations.supervision') !== 'container') {
+            $failures[] = 'QUEUE_SUPERVISION=container is the approved production process-supervision model.';
+        }
+        if (config('queue-operations.scheduler_enabled') !== true) {
+            $failures[] = 'QUEUE_SCHEDULER_ENABLED must be true after the supervised UTC scheduler is deployed.';
+        }
+
+        $retryAfter = config('queue.connections.database.retry_after');
+        $margin = config('queue-operations.retry_after_safety_margin_seconds');
+        $workers = config('queue-operations.workers');
+        $jobs = config('queue-operations.jobs');
+        $queues = config('queue-operations.queues');
+        if (! is_int($retryAfter) || ! is_int($margin) || ! is_array($workers) || ! is_array($jobs) || ! is_array($queues)) {
+            $failures[] = 'Queue timeout and worker inventory configuration must be present.';
+
+            return;
+        }
+
+        if ($queues !== ['security-notifications', 'default'] || $jobs === []) {
+            $failures[] = 'Production queue topology must contain security-notifications then default.';
+        }
+
+        $maximumWindow = 0;
+        foreach ($workers as $worker) {
+            if (! is_array($worker) || ($worker['processes'] ?? null) !== 1) {
+                $failures[] = 'Each approved production worker group must start with exactly one process.';
+
+                continue;
+            }
+            $maximumWindow = max($maximumWindow, (int) ($worker['timeout'] ?? 0));
+        }
+        foreach ($jobs as $jobClass => $job) {
+            if (! is_array($job) || ! in_array($job['failed_payload'] ?? null, ['metadata-only', 'personal'], true)) {
+                $failures[] = 'Every queued job must have an approved failed-payload classification.';
+
+                continue;
+            }
+            $maximumWindow = max($maximumWindow, (int) ($job['timeout'] ?? 0));
+            $workerName = $job['worker'] ?? null;
+            $queueName = $job['queue'] ?? null;
+            if (! is_string($jobClass) || ! class_exists($jobClass)
+                || ! is_string($workerName) || ! isset($workers[$workerName])
+                || ! is_string($queueName) || ! in_array($queueName, $queues, true)
+                || ! in_array($queueName, $workers[$workerName]['queues'] ?? [], true)) {
+                $failures[] = 'Every queued job must map to an implemented class, approved queue and worker group.';
+            }
+        }
+
+        if ($maximumWindow <= 0 || $retryAfter < $maximumWindow + $margin) {
+            $failures[] = 'DB_QUEUE_RETRY_AFTER must exceed every worker/job timeout by the configured safety margin.';
+        }
+        if (config('queue.failed.table') !== 'failed_jobs' || config('queue.connections.database.table') !== 'jobs') {
+            $failures[] = 'Production failed-job storage must use the failed_jobs table.';
+        }
+    }
+
+    /** @param list<string> $failures */
     private function notifications(array &$failures): void
     {
         $mailer = config('administrator-security.notifications.mailer');
@@ -152,8 +215,8 @@ final class ProductionConfigurationValidator
         if (config('administrator-security.notifications.sender_verified') !== true) {
             $failures[] = 'ADMIN_SECURITY_SENDER_VERIFIED must be true after provider verification.';
         }
-        if ($this->blank(config('administrator-security.notifications.queue'))) {
-            $failures[] = 'ADMIN_SECURITY_QUEUE must identify the monitored security-notification queue.';
+        if (config('administrator-security.notifications.queue') !== 'security-notifications') {
+            $failures[] = 'ADMIN_SECURITY_QUEUE must be the monitored security-notifications queue.';
         }
         if ($this->blank(config('administrator-security.notifications.application_instance'))) {
             $failures[] = 'APP_INSTANCE must identify this production application instance.';
