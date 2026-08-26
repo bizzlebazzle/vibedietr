@@ -1291,6 +1291,7 @@ changes, it is deliberately split across multiple items.
 - **Outcome:** Provide deployable, privacy-safe worker, scheduler, and failed-
   job lifecycle configuration for imports, refreshes, recalculation, exports,
   notifications, deletion, and other asynchronous work.
+- **Status:** Complete (2026-08-26).
 - **Dependencies:** FND-09, DEP-02.
 - **Production-enablement gate:** Complete this item before any queued or
   scheduled product workflow is implemented or enabled in production,
