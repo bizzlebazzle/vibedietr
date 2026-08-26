@@ -54,11 +54,21 @@ The application never derives trusted hosts from request headers.
 | `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` | Required secrets | Least-privilege object-storage identity | Blank values fail. |
 | `AWS_DEFAULT_REGION`, `AWS_BUCKET` | Required non-secret | Explicit region and private bucket | Blank values fail. |
 | `AWS_ENDPOINT`, `AWS_USE_PATH_STYLE_ENDPOINT` | Optional non-secret | S3-compatible endpoint behavior | Configure only when the selected service needs it. |
+| `DB_QUEUE_RETRY_AFTER` | Required non-secret | `90` | Must preserve at least the configured 20-second margin above every worker/job timeout. |
+| `QUEUE_OPERATIONS_ENABLED` | Required non-secret | `true` | Assert only after the documented worker topology is deployed. |
+| `QUEUE_SUPERVISION` | Required non-secret | `container` | Selects the sole approved DEP-04 process-supervision model. |
+| `QUEUE_SCHEDULER_ENABLED` | Required non-secret | `true` | Assert only after the supervised UTC scheduler is deployed. |
 
 The bucket remains private; DEP-02 does not authorize public visibility.
 Workers process `security-notifications,default`. Production operations monitor
 worker heartbeat and failed jobs; the command validates configuration, while
 FND-13 validates stored recent operational evidence.
+
+DEP-04 uses one worker for `security-notifications`, one for `default`, and
+one UTC scheduler process. Static validation checks topology declarations and
+timeout safety but cannot prove those processes are alive. Commands, resource
+limits, graceful deployment, failure retention and recovery are defined in
+[`QUEUE_OPERATIONS.md`](QUEUE_OPERATIONS.md).
 
 ## Mail and administrator security notifications
 

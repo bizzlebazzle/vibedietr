@@ -113,6 +113,10 @@ jobs:
           ADMIN_SECURITY_PROVIDER: synthetic-smtp
           ADMIN_SECURITY_SENDER_VERIFIED: 'true'
           ADMIN_SECURITY_QUEUE: security-notifications
+          DB_QUEUE_RETRY_AFTER: '90'
+          QUEUE_OPERATIONS_ENABLED: 'true'
+          QUEUE_SUPERVISION: container
+          QUEUE_SCHEDULER_ENABLED: 'true'
           APP_INSTANCE: ci-production-smoke
           MAIL_MAILER: smtp
           MAIL_SCHEME: tls

@@ -861,8 +861,8 @@ for:
 FND-09 establishes conventions for future asynchronous work in
 `QUEUED_JOB_CONVENTIONS.md`. Laravel 12.22.1 currently uses the database queue
 and database cache locally, while PHPUnit uses the synchronous queue and array
-cache. No product background workflow or production worker configuration has
-been added.
+cache. No product background workflow has been added. DEP-04's operational
+worker configuration is described below.
 
 `ProcessReferenceTask` is a harmless reference job with no route, command, or
 scheduler entry. It demonstrates a stable logical operation reference,
@@ -886,7 +886,29 @@ audit purpose; future jobs use FND-05 only for an allowlisted domain event.
 Laravel's current failed-job provider still stores the complete serialized job
 and exception text, so future payloads must contain only safe identifiers and
 expected exceptions must be sanitized. Failed-job pruning and production queue
-operation remain deferred to DEP-04.
+operation are supplied by DEP-04 below.
+
+DEP-04 makes that foundation operational with native database-backed Laravel
+workers and the native UUID failed-job store. Stable
+`security-notifications` and `default` queues have isolated one-process
+worker groups, bounded memory/job/time recycling, explicit worker timeouts and
+a tested 20-second margin below the 90-second `retry_after`. A canonical
+container operations file supervises both workers and one UTC scheduler.
+
+The scheduler runs administrator-promotion expiry hourly and failed-record
+retention daily with 10-minute shared database-cache overlap locks and
+one-server execution. Metadata-only failures are deleted at exactly 168 hours
+from final `failed_at`. A privacy-aware wrapper around Laravel's provider
+immediately removes final personal, unknown or malformed payload records while
+preserving native list, retry and forget commands; the daily command is a
+safety sweep.
+
+`JOB_INVENTORY.md` records enabled job timeouts, retries, idempotency,
+failure alerts, replay rules and privacy. `QUEUE_OPERATIONS.md` records the
+native-worker/Horizon/dead-letter decision, process supervision, graceful
+deployment, scheduler operation, health expectations, safe replay/forget and
+troubleshooting. Horizon and a separate dead-letter queue are not justified by
+the current low-volume topology.
 
 ## Implemented production configuration readiness
 

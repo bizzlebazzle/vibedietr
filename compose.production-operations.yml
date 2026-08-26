@@ -1,0 +1,58 @@
+x-app-runtime: &app-runtime
+  image: '${APP_IMAGE:-vibedietr-production:latest}'
+  env_file:
+    - '${APP_ENV_FILE:-/run/vibedietr/production.env}'
+  init: true
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options:
+      max-size: 10m
+      max-file: '3'
+
+services:
+  queue-security-notifications:
+    <<: *app-runtime
+    command:
+      - php
+      - artisan
+      - queue:work
+      - database
+      - --queue=security-notifications
+      - --sleep=3
+      - --timeout=40
+      - --tries=3
+      - --memory=256
+      - --max-jobs=500
+      - --max-time=3600
+    stop_grace_period: 60s
+    mem_limit: 384m
+    cpus: 0.50
+
+  queue-default:
+    <<: *app-runtime
+    command:
+      - php
+      - artisan
+      - queue:work
+      - database
+      - --queue=default
+      - --sleep=3
+      - --timeout=70
+      - --tries=3
+      - --memory=256
+      - --max-jobs=500
+      - --max-time=3600
+    stop_grace_period: 90s
+    mem_limit: 384m
+    cpus: 0.50
+
+  scheduler:
+    <<: *app-runtime
+    command:
+      - php
+      - artisan
+      - schedule:work
+    stop_grace_period: 30s
+    mem_limit: 192m
+    cpus: 0.25

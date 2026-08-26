@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Queue\Exceptions\NonRetryableJobException;
 use App\Queue\Exceptions\RetryableJobException;
 use App\Queue\JobFailureReporter;
+use App\Queue\QueueName;
 use App\Security\Notifications\SecurityNotificationTransport;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -31,7 +32,7 @@ final class DeliverSecurityNotification implements ShouldBeUnique, ShouldQueue
 
     public function __construct(public readonly string $intentId)
     {
-        $this->onQueue((string) config('administrator-security.notifications.queue'));
+        $this->onQueue(QueueName::SECURITY_NOTIFICATIONS);
         $this->afterCommit();
     }
 
@@ -65,6 +66,8 @@ final class DeliverSecurityNotification implements ShouldBeUnique, ShouldQueue
         if (! $recipient instanceof User) {
             $this->permanentlyReject($intent, 'security_recipient_missing');
 
+            $this->fail(new NonRetryableJobException('security_recipient_missing'));
+
             return;
         }
 
@@ -75,6 +78,7 @@ final class DeliverSecurityNotification implements ShouldBeUnique, ShouldQueue
             $intent->update(['status' => 'provider_accepted', 'provider_reference' => $providerReference, 'provider_accepted_at' => Date::now(), 'failure_code' => null]);
         } catch (NonRetryableJobException $exception) {
             $this->permanentlyReject($intent, $exception->safeErrorCode);
+            $this->fail($exception);
         } catch (RetryableJobException $exception) {
             $intent->update(['status' => 'deferred', 'failure_code' => $exception->safeErrorCode]);
             throw $exception;
@@ -100,7 +104,7 @@ final class DeliverSecurityNotification implements ShouldBeUnique, ShouldQueue
             $this->job?->uuid(),
             hash('sha256', $this->intentId),
             $intent === null ? 'unavailable' : $intent->correlation_id,
-            $this->queue ?? 'security-notifications',
+            $this->queue ?? QueueName::SECURITY_NOTIFICATIONS,
             $this->attempts(),
             $exception,
         );

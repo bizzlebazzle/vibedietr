@@ -37,6 +37,11 @@ from the OFF API can be treated as accurate.
   provider credential, session value, or notification body. Production
   administrator workflows must pass the FND-13 readiness boundary and must not
   use log, array, null, local-catcher, or unmonitored local delivery.
+- Add every new queued or scheduled job to `docs/JOB_INVENTORY.md` and the
+  queue operations configuration.
+- Preserve the tested worker/job timeout plus safety margin below
+  `retry_after`; document schedule locking and overlap behavior.
+- Follow `docs/QUEUE_OPERATIONS.md` for failed-job replay and forgetting.
 - Preserve the original ingredient text entered by the user.
 - Keep the application recognisably conventional Laravel and Livewire.
 - Prefer clear, maintainable code over clever abstractions.
