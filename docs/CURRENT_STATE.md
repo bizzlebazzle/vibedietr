@@ -888,6 +888,29 @@ and exception text, so future payloads must contain only safe identifiers and
 expected exceptions must be sanitized. Failed-job pruning and production queue
 operation remain deferred to DEP-04.
 
+## Implemented production configuration readiness
+
+DEP-02 centralizes config-cache-safe production validation behind
+`ProductionConfigurationValidator` and the non-mutating
+`app:production-check` command. Production web boot, administrator lifecycle
+readiness, and queued security delivery fail closed on invalid static settings.
+Errors name controls without including configured values.
+
+The production contract requires deliberate environment, valid encryption key,
+debug-off HTTPS URL, secure database sessions/cookies, explicit hosts/proxies,
+MySQL, database cache/queue/failed-job storage, private durable S3-compatible
+storage, an identified OpenFoodFacts client, local TOTP without password-only
+fallback, and DEC-016 transactional mail configuration. FND-13 continues to own
+live provider, destination, capacity, clock, audit, worker, and failure-monitor
+health.
+
+DEC-005 imports and DEC-006 OCR remain disabled features. Their bounded local
+configuration is represented, and incomplete enabled local OCR/import or
+optional EU Google OCR fallback configuration fails only at the applicable
+feature boundary. `.env.example` retains working Sail/Mailpit/local defaults
+and contains only empty secret placeholders; production overrides are defined
+in `PRODUCTION_CONFIGURATION.md`.
+
 ## Automated coverage
 
 The `Quality gates` workflow exposes these branch-protection job/check names:

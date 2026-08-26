@@ -225,6 +225,8 @@ Run one backend test file by passing its path through the Composer script:
 
 ## Project documentation
 
+- [`docs/PRODUCTION_CONFIGURATION.md`](docs/PRODUCTION_CONFIGURATION.md) defines
+  the fail-closed production environment and secret-handling contract.
 - [`docs/CURRENT_STATE.md`](docs/CURRENT_STATE.md) records implemented behavior.
 - [`docs/ROADMAP.md`](docs/ROADMAP.md) contains the sequenced backlog.
 - [`docs/DEFINITION_OF_DONE.md`](docs/DEFINITION_OF_DONE.md) defines required

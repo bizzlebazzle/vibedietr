@@ -3,6 +3,7 @@
 use App\Console\Commands\BootstrapAdministrator;
 use App\Console\Commands\BreakGlassReplaceAdministrator;
 use App\Console\Commands\ExpireAdministratorPromotionRequests;
+use App\Console\Commands\ProductionConfigurationCheck;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -17,8 +18,16 @@ return Application::configure(basePath: dirname(__DIR__))
         BootstrapAdministrator::class,
         BreakGlassReplaceAdministrator::class,
         ExpireAdministratorPromotionRequests::class,
+        ProductionConfigurationCheck::class,
     ])
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->trustHosts(
+            at: fn (): array => array_map(
+                fn (string $host): string => '^'.preg_quote($host, '/').'$',
+                config('production.trusted_hosts', []),
+            ),
+            subdomains: false,
+        );
         $middleware->trimStrings(except: [
             'components.*.updates.originalText',
             'components.*.updates.instructionText',

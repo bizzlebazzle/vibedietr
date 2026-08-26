@@ -87,6 +87,46 @@ jobs:
       - name: Run backend tests
         run: composer test
 
+      - name: Validate cached production configuration
+        env:
+          APP_ENV: production
+          APP_DEBUG: 'false'
+          APP_KEY: base64:a2tra2tra2tra2tra2tra2tra2tra2tra2tra2tra2s=
+          APP_URL: https://app.example.com
+          SESSION_SECURE_COOKIE: 'true'
+          SESSION_HTTP_ONLY: 'true'
+          SESSION_SAME_SITE: lax
+          TRUSTED_HOSTS: app.example.com
+          TRUSTED_PROXIES: none
+          TRUSTED_PROXY_HEADERS: x-forwarded-for,x-forwarded-host,x-forwarded-port,x-forwarded-proto
+          FILESYSTEM_DISK: s3
+          PRODUCTION_DURABLE_DISK: s3
+          AWS_ACCESS_KEY_ID: synthetic-storage-key
+          AWS_SECRET_ACCESS_KEY: synthetic-storage-secret
+          AWS_DEFAULT_REGION: eu-west-2
+          AWS_BUCKET: synthetic-private-bucket
+          ADMIN_SECURITY_FINGERPRINT_KEY: synthetic-fingerprint-secret
+          ADMIN_TOTP_ENABLED: 'true'
+          ADMIN_TOTP_ISSUER: VibeDietr
+          ADMIN_PASSWORD_ONLY_FALLBACK: 'false'
+          ADMIN_SECURITY_MAILER: smtp
+          ADMIN_SECURITY_PROVIDER: synthetic-smtp
+          ADMIN_SECURITY_SENDER_VERIFIED: 'true'
+          ADMIN_SECURITY_QUEUE: security-notifications
+          APP_INSTANCE: ci-production-smoke
+          MAIL_MAILER: smtp
+          MAIL_SCHEME: tls
+          MAIL_HOST: smtp.example.com
+          MAIL_PORT: 587
+          MAIL_USERNAME: synthetic-mail-user
+          MAIL_PASSWORD: synthetic-mail-secret
+          MAIL_FROM_ADDRESS: security@example.com
+          OPENFOODFACTS_USER_AGENT: VibeDietr/ci (https://app.example.com/contact)
+        run: |
+          php artisan config:cache
+          php artisan app:production-check
+          php artisan config:clear
+
   php-formatting:
     name: PHP formatting
     runs-on: ubuntu-latest

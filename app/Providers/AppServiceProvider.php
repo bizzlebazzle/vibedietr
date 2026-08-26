@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Configuration\ProductionConfigurationValidator;
 use App\Domain\Recipes\NullRecipeDraftSaveHook;
 use App\Domain\Recipes\NullRecipeFinalizationHook;
 use App\Domain\Recipes\NullRecipeRemixCreationHook;
@@ -23,6 +24,7 @@ use App\Policies\ManagedRecipeTermSuggestionPolicy;
 use App\Policies\RecipePolicy;
 use App\Queue\Reference\CacheReferenceTaskResultRecorder;
 use App\Queue\Reference\ReferenceTaskResultRecorder;
+use Illuminate\Http\Middleware\TrustProxies;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -48,6 +50,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        TrustProxies::at(config('production.trusted_proxies', []));
+        TrustProxies::withHeaders((int) config('production.trusted_proxy_headers'));
+
+        if ($this->app->environment('production') && ! $this->app->runningInConsole()) {
+            $this->app->make(ProductionConfigurationValidator::class)->assertReady();
+        }
+
         Gate::policy(AuditEvent::class, AuditEventPolicy::class);
         Gate::policy(Bookmark::class, BookmarkPolicy::class);
         Gate::policy(Ingredient::class, IngredientPolicy::class);

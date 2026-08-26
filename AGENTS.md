@@ -251,6 +251,19 @@ For link failures, resolve relative targets from the Markdown file containing
 the link, then check the filename spelling and letter case. The normal command
 does not contact external websites.
 
+### Validate production configuration
+
+Use synthetic or deployment-injected values; never place production secrets in
+shell history, repository files, or command output. The check is non-mutating:
+
+```bash
+./vendor/bin/sail artisan app:production-check
+```
+
+Run it before and after `./vendor/bin/sail artisan config:cache`. See
+`docs/PRODUCTION_CONFIGURATION.md` for required settings. Static readiness does
+not replace live FND-13 provider, worker, clock, audit, and destination health.
+
 ### Build frontend assets
 
 ```bash
