@@ -1238,6 +1238,7 @@ changes, it is deliberately split across multiple items.
 - **Outcome:** Document required production variables and fail safely when
   keys, URLs, storage, database, cache, queue, mail, or provider settings are
   missing or insecure.
+- **Status:** Complete (2026-08-26).
 - **Dependencies:** DEP-01, FND-14, DEC-006.
 - **Acceptance criteria:** No secret has a committed value; production debug is
   off; secure cookies, trusted proxies/hosts, cache, queue, mail, and provider

@@ -2,6 +2,7 @@
 
 namespace App\Security\Notifications;
 
+use App\Configuration\ProductionConfigurationValidator;
 use App\Models\SecurityNotificationHealth;
 use App\Models\User;
 use Illuminate\Support\Facades\Date;
@@ -9,6 +10,8 @@ use RuntimeException;
 
 final class ProductionSecurityReadiness
 {
+    public function __construct(private readonly ProductionConfigurationValidator $configuration) {}
+
     /** @return list<string> */
     public function failures(): array
     {
@@ -16,7 +19,7 @@ final class ProductionSecurityReadiness
             return [];
         }
 
-        $failures = [];
+        $failures = $this->configuration->failures();
         $mailer = (string) config('administrator-security.notifications.mailer');
         $transport = (string) config("mail.mailers.$mailer.transport");
 

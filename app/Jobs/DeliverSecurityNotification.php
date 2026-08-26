@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Configuration\ProductionConfigurationValidator;
 use App\Models\SecurityNotificationHealth;
 use App\Models\SecurityNotificationIntent;
 use App\Models\User;
@@ -51,6 +52,8 @@ final class DeliverSecurityNotification implements ShouldBeUnique, ShouldQueue
 
     public function handle(SecurityNotificationTransport $transport): void
     {
+        app(ProductionConfigurationValidator::class)->assertReady();
+
         $intent = SecurityNotificationIntent::query()->find($this->intentId);
 
         if ($intent === null || $intent->status === 'provider_accepted') {

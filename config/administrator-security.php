@@ -19,6 +19,9 @@ return [
         ],
     ],
     'totp' => [
+        'enabled' => env('ADMIN_TOTP_ENABLED', true),
+        'issuer' => env('ADMIN_TOTP_ISSUER', env('APP_NAME')),
+        'password_only_fallback' => env('ADMIN_PASSWORD_ONLY_FALLBACK', false),
         'digits' => 6,
         'period' => 30,
         'window' => 1,

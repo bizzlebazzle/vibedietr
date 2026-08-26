@@ -222,6 +222,14 @@ untested.
 - Security-sensitive changes include negative tests for unauthorized, forged,
   malformed, or cross-user input.
 
+- Production-sensitive configuration changes include focused invalid-setting
+  and secret-redaction tests, a representative `app:production-check` pass,
+  successful `config:cache`, and a second readiness pass using the cache.
+- Production administrator changes demonstrate both static DEP-02 readiness and
+  live FND-13 destination, provider, queue-worker, failed-job monitor, clock,
+  capacity, and audit-persistence readiness. Static configuration alone is not
+  reported as operational health.
+
 ## 9. Documentation updates
 
 **Every task**

@@ -46,6 +46,6 @@ final class TotpEngine
 
     public function provisioningUri(string $accountLabel, #[SensitiveParameter] string $secret): string
     {
-        return $this->google2fa->getQRCodeUrl((string) config('app.name'), $accountLabel, $secret);
+        return $this->google2fa->getQRCodeUrl((string) config('administrator-security.totp.issuer'), $accountLabel, $secret);
     }
 }

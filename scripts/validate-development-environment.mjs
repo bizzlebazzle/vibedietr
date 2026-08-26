@@ -25,6 +25,9 @@ const requiredValues = {
 const intentionallyBlankExternalCredentials = [
     'AWS_ACCESS_KEY_ID',
     'AWS_SECRET_ACCESS_KEY',
+    'RESEND_KEY',
+    'POSTMARK_TOKEN',
+    'GOOGLE_APPLICATION_CREDENTIALS',
     'ADMIN_SECURITY_FINGERPRINT_KEY',
     'ADMIN_SECURITY_PROVIDER',
 ];
