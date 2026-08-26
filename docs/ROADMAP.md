@@ -650,16 +650,23 @@ changes, it is deliberately split across multiple items.
 
 - **Outcome:** Extract an uploaded supported document or image into a private
   draft without retaining the source upload as an attachment.
-- **Dependencies:** REC-15, DEC-006, DEC-007, FND-09, DEP-04, DEP-05.
+- **Dependencies:** REC-15, DEC-007, FND-09, DEP-02, DEP-03, DEP-04, DEP-05.
 - **Acceptance criteria:** Extraction runs as idempotent, correlated queued work
   under FND-09; type/size limits are enforced; uploads are private, malware-
   scanned where required, and deleted after success or failure; extracted
   wording and confidence are reviewable. Non-OCR launch uploads are exactly
   TXT, Markdown, and HTML, processed locally with a two-MiB limit. PDF, DOCX,
   and RTF are deferred; legacy, macro-enabled, and other Office formats are
-  unsupported. Image-only/scanned PDFs and photographs remain governed by
-  DEC-006. Abandoned transient inputs are cleaned within DEC-005's 24-hour
-  terminal-processing boundary.
+  unsupported. OCR uses DEC-006's application-owned extractor with pinned
+  Tesseract 5/English data as local primary. One JPEG/JPG, PNG, or HEIC/HEIF
+  still image is supported up to 20 MiB compressed and 50 megapixels decoded;
+  HEIC is converted locally after orientation and metadata stripping. WebP,
+  TIFF, handwriting, supported non-English languages, PDFs, and multi-page
+  inputs are deferred. Optional Google Enterprise OCR fallback is disabled by
+  default, EU-only, and used only after eligible local failure or no usable
+  local text. Low-confidence usable output remains a warning-marked draft; no
+  usable text explicitly fails. Terminal files are deleted immediately where
+  possible and within 24 hours; abandoned inputs expire after seven days.
 - **Suggested automated tests:** Supported/unsupported files, spoofed MIME,
   size limit, extraction failure, retry, storage privacy, and verified cleanup
   tests.
@@ -1181,8 +1188,12 @@ changes, it is deliberately split across multiple items.
   matching food, building a plan, and correcting incomplete nutrition.
 - **Dependencies:** UX-01, REC-15, NUT-16, PLAN-03.
 - **Acceptance criteria:** Empty states offer only permitted next actions;
-  provider/import failures retain work and offer retry/manual alternatives;
-  guidance never implies nutrition estimates are exact or medical advice.
+  provider/import failures retain work and offer retry/manual alternatives.
+  OCR guidance distinguishes low-confidence reviewable drafts from explicit
+  no-text failure, identifies OCR provenance, discloses possible Google EU
+  processing when fallback is enabled, and explains that retry after terminal
+  cleanup requires re-upload. Guidance never implies nutrition estimates are
+  exact or medical advice.
 - **Suggested automated tests:** New-account state, each empty collection,
   import/provider failures, retry, permission-specific actions, and content
   assertions.
@@ -1238,6 +1249,14 @@ changes, it is deliberately split across multiple items.
   provider credential: enablement, formats, sizes, URL/redirect limits,
   timeouts, User-Agent, queue/retry/concurrency, throttles, transient private
   storage and cleanup, parser versions, and fail-closed readiness.
+  DEC-006 OCR configuration is conditional: pinned Tesseract 5/English data,
+  HEIC decoder/preprocessing versions, 20-MiB/50-megapixel/single-image limits,
+  bounded queue/concurrency/timeouts/retries, private storage, and terminal/
+  abandoned cleanup. Optional Google fallback configuration includes explicit
+  enablement, project/processor IDs, EU location/endpoint, pinned model,
+  authentication, request timeout, and quota/budget safeguards. Incomplete
+  enabled fallback configuration fails closed for fallback without disabling
+  local OCR or unrelated functionality.
 - **Suggested automated tests:** Production-config test matrix, missing-secret
   failures, debug/cookie assertions, and configuration-cache smoke test.
 - **Risk:** High.
@@ -1255,7 +1274,12 @@ changes, it is deliberately split across multiple items.
   destination/global limits, two-MiB HTML/upload limits, URL and redirect
   bounds, SSRF and DNS-rebinding controls, private non-executable storage,
   content/MIME agreement, inert HTML handling, bounded parsing, and cleanup
-  outcomes.
+  outcomes. OCR images additionally enforce DEC-006 content detection,
+  extension/type/container agreement, decompression-bomb and multi-frame
+  rejection, 20-MiB/50-megapixel/single-image limits, private metadata-stripping
+  conversion, bounded native decoding/OCR resources, provider-abuse controls,
+  and exclusion of source bytes, OCR text, filenames, and provider payloads
+  from logs.
 - **Suggested automated tests:** Header assertions, throttle boundaries, CSP
   browser smoke test, oversized request/upload, and log-redaction tests.
 - **Risk:** High.

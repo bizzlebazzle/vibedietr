@@ -36,7 +36,7 @@ Backlog relationships mean:
 | DEC-003 | Nutrient storage precision | Decided | Product owner |
 | DEC-004 | Nutrient display precision | Decided | Product owner |
 | DEC-005 | Recipe-import providers and formats | Decided | Product owner |
-| DEC-006 | OCR providers and formats | Research required | Technical investigation |
+| DEC-006 | OCR providers and formats | Decided | Product owner |
 | DEC-007 | Import and OCR extraction-quality thresholds | Research required | Technical investigation |
 | DEC-008 | Account data-export format | Owner input required | Product owner |
 | DEC-009 | Initial administrator assignment | Decided | Product owner |
@@ -504,8 +504,8 @@ Backlog relationships mean:
 - **Why it matters:** OCR choice determines extraction capability, privacy,
   upload validation, production configuration, cost, and the quality evidence
   available to the review workflow.
-- **Status:** Research required.
-- **Owner:** Technical investigation.
+- **Status:** Decided.
+- **Owner:** Product owner.
 - **Alternatives:** Local OCR; one external OCR provider; a primary provider
   with a documented fallback. Initial image/document formats may be a
   documented subset of candidate formats.
@@ -513,13 +513,144 @@ Backlog relationships mean:
   uploaded-document imports create private drafts and require review. Original
   wording and source provenance are retained. Uploads are transient extraction
   inputs, not recipe attachments, and are deleted after processing.
-- **Backlog relationships:** `Blocked`: REC-17, DEP-02. `Constrained`: DEP-03.
-  `Related`: FND-09, UX-06.
+- **Backlog relationships:** Resolution removes DEC-006 as a blocker for
+  REC-17 and DEP-02. The decision constrains REC-17, DEP-03, FND-09, and UX-06.
+  `Related`: DEC-005, DEC-007, DEP-04, DEP-05.
 - **Resolution condition:** Benchmark viable OCR approaches and format support
   on representative inputs; document privacy, retention, cost, reliability,
   language, and operational constraints; then approve the initial provider and
   format matrix.
-- **Final decision and rationale:** Unresolved.
+- **Final decision and rationale:** OCR is local-first behind an
+  application-owned `OcrExtractor`. Pinned Tesseract 5, pinned English trained
+  data, and versioned preprocessing are primary. Local OCR has no per-request
+  vendor charge and keeps the normal path application-controlled, but still
+  costs native-library/container maintenance, CPU, RAM, monitoring, patching,
+  and testing.
+
+  Google Document AI Enterprise Document OCR is the only optional fallback. It
+  is disabled by default, must be explicitly and completely configured, and
+  uses a pinned stable GA processor in Google's `eu` location and endpoint.
+  No second provider or automatic model upgrade is approved. Fallback occurs
+  only after eligible Tesseract execution failure following bounded retries or
+  no usable local text. It does not run merely for low confidence or after
+  validation, corruption, conversion, format, or limit failure.
+
+  The pipeline is `transient source -> validation -> canonical image -> local
+  OCR -> optional managed fallback -> preserved OCR text -> DEC-005 parser ->
+  private reviewable draft`. Results contain provider-independent ordered text,
+  pages/lines, optional normalized confidence/bounds/language, warnings, and
+  engine/model/preprocessing provenance. OCR does not create recipe entities,
+  catalogue matches, nutrition, finalized recipes, or plan-eligible content.
+
+  Usable low-confidence or language-uncertain output creates a warning-marked
+  private draft. User-facing evidence uses categorical `needs_review`,
+  `low_confidence_text`, `possible_extraction_error`, and
+  `language_uncertain` states rather than normally showing raw confidence.
+  Raw OCR wording and parsing lines are preserved, but OCR is never described
+  as exact transcription. No usable text explicitly fails without an empty
+  draft; retry after terminal cleanup requires re-upload. DEC-007 owns
+  deterministic, versioned usability/warning thresholds and may later make
+  low-confidence output a hard failure.
+
+  Initial input is one non-animated still image, up to 20 MiB compressed and
+  50 megapixels decoded:
+
+  | Input | Format | Initial status | Preprocessing | OCR path |
+  | --- | --- | --- | --- | --- |
+  | Photograph/scan | JPEG/JPG | Supported initially | Orient, strip metadata, enforce limits | Tesseract; optional Google fallback |
+  | Photograph/scan | PNG | Supported initially | Strip metadata, normalize safe background, enforce limits | Tesseract; optional Google fallback |
+  | Phone photograph | HEIC/HEIF | Supported initially | Local conversion to metadata-free JPEG/PNG | Tesseract; optional Google fallback |
+  | Image | WebP | Deferred | None | None |
+  | Scan | TIFF/multi-page TIFF | Deferred | None | None |
+  | Document | Scanned/image-only PDF | Deferred | Future bounded rasterization | Future OCR |
+  | Document | Text PDF | DEC-005/deferred | Normal extraction first | OCR only if later approved and text is insufficient |
+  | Document | Mixed PDF | Deferred | Future page classification | Normal extraction first; OCR image-only pages |
+  | Document | DOCX/TXT/Markdown/HTML | Not an OCR format | DEC-005 extraction | No OCR |
+  | Image | Animated/ambiguous multi-frame | Unsupported initially | None | None |
+  | Document | Password-protected PDF | Unsupported | None | None |
+
+  HEIC/HEIF is supported for phone users. A maintained pinned decoder validates
+  the container, selects one unambiguous still, applies orientation, and creates
+  deterministic metadata-free JPEG/PNG. Video, auxiliary images, depth maps,
+  and sequences are ignored or rejected. Only canonical output may reach
+  Google. No PDF OCR is initially supported. Future text PDFs use DEC-005 first,
+  scanned PDFs use OCR, and mixed PDFs OCR only pages lacking usable extracted
+  text; pipelines must not duplicate text. Multi-page handling remains deferred.
+
+  Initial language support is printed English. Other languages are best-effort
+  but unsupported until tested. Handwriting is deferred. Preprocessing is
+  conservative and deterministic: content validation, orientation, metadata
+  stripping, HEIC conversion, safe transparency/background handling, and limit
+  enforcement. Deskew, crop, contrast, grayscale, denoise, sharpening, and
+  thresholding remain deferred pending benchmark evidence.
+
+  Validation derives MIME from content. Extension, detected type, container,
+  decoder, and decoded content must agree. Corrupt, malformed, oversized,
+  decompression-bomb, multi-frame, unsupported encoding/color, embedded-content,
+  and unsafe filename/path cases fail. Decoding/OCR uses pinned supported
+  dependencies, least privilege, bounded resources/time, and no unnecessary
+  network. OCR is untrusted text; downstream parsers or LLMs must never treat
+  image content as instructions.
+
+  Local OCR sends no source externally. When Google fallback is enabled, the UI
+  discloses possible Google EU processing without per-import consent. Only the
+  metadata-free canonical source is sent: never email, account identity,
+  unrelated data, or filename. Authentication uses workload identity where
+  possible or a narrowly scoped service account. DEP-02 revalidates official EU
+  processing, encryption, retention, data terms, and model-improvement policy
+  before production. Fallback remains disabled if these cannot be evidenced;
+  no undocumented provider deletion guarantee is claimed.
+
+  Sources pass through private transient receipt, validation, canonicalization,
+  queued local OCR, optional fallback, normalized output/provenance, then draft
+  or terminal failure. Original and canonical files are deleted immediately
+  where possible after terminal outcome and within 24 hours at latest.
+  Abandoned or never-started uploads expire after seven days. Sources survive
+  only bounded retries; orphan cleanup is required but not implemented here.
+
+  Durable provenance retains import ID, source type, sanitized length-limited
+  basename, media type/dimensions/page count, engine/provider and exact version,
+  trained-data/model/preprocessing versions, processing time, correlation ID,
+  fallback state, warnings/outcome, raw OCR wording, and parsing lines. It
+  excludes paths, hashes, EXIF/GPS/device/time metadata, full provider responses,
+  and images after cleanup.
+
+  OCR follows FND-09 even when Google is synchronous inside the job:
+  identifier-only after-commit jobs, correlation, overlap prevention,
+  effect-level idempotency, explicit timeouts below queue visibility, and safe
+  failures without private content. Initial work uses three attempts and
+  10/60-second backoff. Timeout, rate-limit, and temporary provider failures may
+  retry; permanent content/format failures do not. Low quality is not an
+  infrastructure retry.
+
+  CI uses fake adapters, versioned normalized/redacted provider fixtures,
+  legally safe images, deterministic preprocessing, and local Tesseract
+  contract/integration tests where practical; it needs no cloud credential,
+  paid call, or network. REC-17 benchmarks print, phone photos, skew, low
+  contrast, multi-column/section ordering, typography, and incidental
+  handwriting, measuring text error, preservation, latency, failure, and
+  confidence usefulness. No benchmark ran during this decision because no OCR
+  stack/corpus exists and package addition was prohibited; quality/resource use
+  remain REC-17 risks.
+
+  Current Google pricing must be revalidated. The approved basic OCR cost basis
+  is the documented first 1,000 pages/month free, then USD 1.50/1,000 pages.
+  Thus 1, 10, 100, and 1,000 pages currently cost USD 0 within the allowance;
+  after it, marginal costs are USD 0.0015, 0.015, 0.15, and 1.50. The free tier
+  is not permanent policy. Tesseract has zero variable provider cost, not zero
+  infrastructure cost, and OCR concurrency must be bounded.
+
+  DEP-02 conditionally validates local enablement, pinned Tesseract/English
+  data, HEIC decoder, preprocessing, limits, queue/concurrency/timeouts/retries,
+  private storage, and cleanup. Managed configuration additionally requires
+  explicit enablement, Google project/processor IDs, EU location/endpoint,
+  pinned model, authentication, request timeout, and quota/budget safeguards.
+  Incomplete enabled fallback fails closed for fallback without disabling local
+  OCR or unrelated functionality. OCR itself may be disabled.
+
+  This unblocks REC-17 and DEP-02 and constrains DEP-03 upload/decoder/resource
+  controls, FND-09 private idempotent bounded work, and UX-06 provenance,
+  warnings, managed-flow disclosure, explicit failure, and re-upload recovery.
 
 ## DEC-007 — Import and OCR extraction-quality thresholds
 

@@ -477,6 +477,24 @@ authenticated pages, browser automation, external parsing providers, and
 self-hosted language models are deferred; legacy, macro-enabled, and other
 Office formats are unsupported initially.
 
+DEC-006 fixes OCR as local-first through an application-owned extractor.
+Tesseract 5 with pinned English data is primary. One JPEG/JPG, PNG, or
+HEIC/HEIF still image is supported initially, up to 20 MiB compressed and
+50 megapixels decoded; HEIC is converted locally to a metadata-free canonical
+JPEG or PNG. WebP, TIFF, handwriting, supported non-English languages, and all
+multi-page/PDF OCR are deferred. Google Document AI Enterprise OCR is the sole
+optional managed fallback, disabled by default and restricted to EU processing.
+It runs only after eligible local failure or no usable local text, never merely
+for low confidence. Usable low-confidence or language-uncertain text creates a
+warning-marked reviewable draft; no usable text explicitly fails extraction.
+
+Text PDFs remain a normal document-extraction concern under DEC-005 and use
+that route first when support is added. Image-only/scanned PDFs belong to
+future DEC-006 OCR support. Mixed PDFs must avoid duplicate text by OCRing only
+pages lacking usable normal extraction. Machine-readable documents are not OCR
+formats. Terminal sources are deleted immediately where possible and within
+24 hours; abandoned inputs expire after seven days.
+
 The complete fetched webpage and uploaded file are transient. The import keeps
 the exact pasted or extracted recipe source text and source provenance for
 review, while parsed fields remain suggestions. Useful partial extraction may
@@ -544,9 +562,9 @@ The following details are intentionally not fixed by this specification:
 
 - Exact match-score thresholds and the visual treatment of review warnings.
   Decision: DEC-001, DEC-002.
-- OCR providers and formats, plus import and OCR extraction-quality thresholds.
-  Decision: DEC-006, DEC-007. Non-OCR launch providers and formats are resolved
-  by DEC-005.
+- Import and OCR extraction-quality thresholds.
+  Decision: DEC-007. OCR providers and formats are resolved by DEC-006, and
+  non-OCR launch providers and formats are resolved by DEC-005.
 - The data-export file format.
   Decision: DEC-008.
 - Administrator assignment, escalation, and moderation service-level rules.
