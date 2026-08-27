@@ -6,6 +6,7 @@ use App\Configuration\ProductionConfigurationValidator;
 use App\Models\SecurityNotificationHealth;
 use App\Models\SecurityNotificationIntent;
 use App\Models\User;
+use App\Observability\OperationalTelemetry;
 use App\Queue\Exceptions\NonRetryableJobException;
 use App\Queue\Exceptions\RetryableJobException;
 use App\Queue\JobFailureReporter;
@@ -53,6 +54,7 @@ final class DeliverSecurityNotification implements ShouldBeUnique, ShouldQueue
 
     public function handle(SecurityNotificationTransport $transport): void
     {
+        $startedAt = microtime(true);
         app(ProductionConfigurationValidator::class)->assertReady();
 
         $intent = SecurityNotificationIntent::query()->find($this->intentId);
@@ -76,14 +78,23 @@ final class DeliverSecurityNotification implements ShouldBeUnique, ShouldQueue
         try {
             $providerReference = $transport->send($recipient, $intent);
             $intent->update(['status' => 'provider_accepted', 'provider_reference' => $providerReference, 'provider_accepted_at' => Date::now(), 'failure_code' => null]);
+            app(OperationalTelemetry::class)->timing('provider.request', (microtime(true) - $startedAt) * 1000, [
+                'provider' => 'security_mail',
+                'correlation_id' => $intent->correlation_id,
+                'operation' => 'security_notification.deliver',
+                'outcome' => 'success',
+            ]);
         } catch (NonRetryableJobException $exception) {
             $this->permanentlyReject($intent, $exception->safeErrorCode);
+            $this->recordProviderFailure($intent, $startedAt, 'permanent_failure');
             $this->fail($exception);
         } catch (RetryableJobException $exception) {
             $intent->update(['status' => 'deferred', 'failure_code' => $exception->safeErrorCode]);
+            $this->recordProviderFailure($intent, $startedAt, 'retryable_failure');
             throw $exception;
         } catch (Throwable $exception) {
             $intent->update(['status' => 'deferred', 'failure_code' => 'security_delivery_unexpected']);
+            $this->recordProviderFailure($intent, $startedAt, 'unexpected_failure');
             throw RetryableJobException::fromUnexpected($exception, 'security_delivery_unexpected');
         }
     }
@@ -119,5 +130,18 @@ final class DeliverSecurityNotification implements ShouldBeUnique, ShouldQueue
     private function markUnhealthy(string $code): void
     {
         SecurityNotificationHealth::query()->updateOrCreate(['id' => 1], ['channel_healthy' => false, 'last_failure_code' => $code]);
+    }
+
+    private function recordProviderFailure(SecurityNotificationIntent $intent, float $startedAt, string $outcome): void
+    {
+        $telemetry = app(OperationalTelemetry::class);
+        $labels = [
+            'provider' => 'security_mail',
+            'correlation_id' => $intent->correlation_id,
+            'operation' => 'security_notification.deliver',
+            'outcome' => $outcome,
+        ];
+        $telemetry->timing('provider.request', (microtime(true) - $startedAt) * 1000, $labels);
+        $telemetry->counter('provider.failure', $labels);
     }
 }

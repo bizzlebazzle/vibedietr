@@ -16,6 +16,12 @@ use App\Models\ManagedRecipeTerm;
 use App\Models\ManagedRecipeTermSuggestion;
 use App\Models\Recipe;
 use App\Models\User;
+use App\Observability\Alerts\AlertSink;
+use App\Observability\Alerts\LogAlertSink;
+use App\Observability\CorrelationContext;
+use App\Observability\Health\DependencyHealthProbe;
+use App\Observability\Health\LaravelDependencyHealthProbe;
+use App\Observability\Monitoring\QueueTelemetryListener;
 use App\Policies\AuditEventPolicy;
 use App\Policies\BookmarkPolicy;
 use App\Policies\IngredientPolicy;
@@ -29,6 +35,7 @@ use App\Queue\Reference\ReferenceTaskResultRecorder;
 use Illuminate\Http\Middleware\TrustProxies;
 use Illuminate\Queue\Failed\FailedJobProviderInterface;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -41,6 +48,9 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(RecipeDraftSaveHook::class, NullRecipeDraftSaveHook::class);
         $this->app->bind(RecipeFinalizationHook::class, NullRecipeFinalizationHook::class);
         $this->app->bind(RecipeRemixCreationHook::class, NullRecipeRemixCreationHook::class);
+        $this->app->scoped(CorrelationContext::class);
+        $this->app->bind(DependencyHealthProbe::class, LaravelDependencyHealthProbe::class);
+        $this->app->bind(AlertSink::class, LogAlertSink::class);
 
         $this->app->bind(
             ReferenceTaskResultRecorder::class,
@@ -65,6 +75,12 @@ class AppServiceProvider extends ServiceProvider
         if ($this->app->environment('production') && ! $this->app->runningInConsole()) {
             $this->app->make(ProductionConfigurationValidator::class)->assertReady();
         }
+
+        $listener = $this->app->make(QueueTelemetryListener::class);
+        Queue::before($listener->processing(...));
+        Queue::after($listener->processed(...));
+        Queue::exceptionOccurred($listener->exception(...));
+        Queue::failing($listener->failed(...));
 
         Gate::policy(AuditEvent::class, AuditEventPolicy::class);
         Gate::policy(Bookmark::class, BookmarkPolicy::class);

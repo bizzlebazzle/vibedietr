@@ -19,6 +19,7 @@ final class ProductionConfigurationValidator
         $this->networkAndSession($failures);
         $this->persistence($failures);
         $this->queueOperations($failures);
+        $this->observability($failures);
         $this->notifications($failures);
         $this->administratorControls($failures);
         $this->providers($failures);
@@ -135,6 +136,29 @@ final class ProductionConfigurationValidator
         foreach (['key' => 'AWS_ACCESS_KEY_ID', 'secret' => 'AWS_SECRET_ACCESS_KEY', 'region' => 'AWS_DEFAULT_REGION', 'bucket' => 'AWS_BUCKET'] as $key => $variable) {
             if ($this->blank(config("filesystems.disks.s3.$key"))) {
                 $failures[] = "$variable is required for durable production storage.";
+            }
+        }
+    }
+
+    /** @param list<string> $failures */
+    private function observability(array &$failures): void
+    {
+        if (! in_array(config('observability.adapter'), ['platform', 'hosted'], true)) {
+            $failures[] = 'OBSERVABILITY_ADAPTER must identify a deployed platform or hosted collector.';
+        }
+        if ($this->blank(config('observability.release')) || config('observability.release') === 'development') {
+            $failures[] = 'OBSERVABILITY_RELEASE must identify the deployed release.';
+        }
+        if (! in_array(config('observability.alert_recipient_role'), ['primary_administrator', 'operations_security'], true)) {
+            $failures[] = 'OBSERVABILITY_ALERT_RECIPIENT_ROLE must identify an approved recipient role.';
+        }
+        foreach ([
+            'worker_stale_seconds', 'scheduler_stale_seconds', 'prune_stale_seconds',
+            'queue_depth_warning', 'queue_depth_critical', 'oldest_job_warning_seconds',
+            'oldest_job_critical_seconds', 'failure_window_seconds',
+        ] as $setting) {
+            if ((int) config("observability.$setting") < 1) {
+                $failures[] = "Observability $setting must be a positive integer.";
             }
         }
     }

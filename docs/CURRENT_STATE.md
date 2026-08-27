@@ -910,6 +910,44 @@ deployment, scheduler operation, health expectations, safe replay/forget and
 troubleshooting. Horizon and a separate dead-letter queue are not justified by
 the current low-volume topology.
 
+## Implemented observability and health
+
+DEP-05 adds separate process liveness and runtime readiness surfaces.
+`/health/live` and Laravel's `/up` avoid dependency calls. `/health/ready`
+performs safe database, cache, queue-backend, durable-storage, configured
+worker, scheduler, pruning, and production FND-13 checks while returning only a
+minimal public state. `app:health` provides bounded internal reasons without
+configuration values or payloads.
+
+Every HTTP request receives a validated or generated correlation ID. It is
+returned in `X-Correlation-ID`, added to log context, automatically reused by
+new FND-09 jobs, and propagated into provider and failure events. Central
+allowlist-first telemetry drops unknown/private fields and unsafe dimension
+values. Laravel exception context contains only correlation, environment,
+release, exception class, and safe operation category; request bodies, sessions,
+users, raw messages, and serialized jobs are excluded.
+
+Laravel queue events maintain independent per-queue worker heartbeats,
+dispatch-to-start and execution timings, retry/final-failure counters, and safe
+job categories. Database queue monitoring reads metadata only for depth,
+oldest-waiting age, failed count, and failed age. Scheduler and successful
+failed-job pruning have distinct freshness signals; repeated replay failures
+use a hashed 24-hour counter. OpenFoodFacts and security-mail requests record
+provider latency/failure without source content.
+
+The UTC scheduler records a heartbeat and evaluates readiness, worker
+availability, backlog/age, pruning freshness, exception/final-failure spikes,
+and provider outage/latency every minute with one-server overlap locks. Alerts
+use a fakeable provider-neutral sink and safe role-based bodies. Initial
+thresholds and response procedures are documented in
+[Observability](OBSERVABILITY.md) and
+[Operations runbooks](OPERATIONS_RUNBOOKS.md).
+
+No observability SaaS is selected. Production configuration fails until a
+deployment identifies a platform/hosted collector and immutable release, then
+maps structured logs, dashboards, and alert recipient roles. Local/test use
+ordinary logs and deterministic fakes without provider credentials.
+
 ## Implemented production configuration readiness
 
 DEP-02 centralizes config-cache-safe production validation behind

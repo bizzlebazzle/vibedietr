@@ -18,6 +18,18 @@ return [
             'processes' => 1,
             'timeout' => 40,
             'sleep' => 3,
+            'schedules' => [
+                'observability:scheduler-heartbeat' => [
+                    'frequency' => 'every-minute',
+                    'overlap_lock_minutes' => 10,
+                    'one_server' => true,
+                ],
+                'observability:monitor' => [
+                    'frequency' => 'every-minute',
+                    'overlap_lock_minutes' => 10,
+                    'one_server' => true,
+                ],
+            ],
             'memory' => 256,
             'max_jobs' => 500,
             'max_time' => 3600,

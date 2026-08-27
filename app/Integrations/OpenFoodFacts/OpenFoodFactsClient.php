@@ -3,11 +3,13 @@
 namespace App\Integrations\OpenFoodFacts;
 
 use App\Domain\Shared\ExactJsonDecoder;
+use App\Observability\CorrelationContext;
+use App\Observability\OperationalTelemetry;
+use App\Queue\CorrelationId;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 use JsonException;
 
 final readonly class OpenFoodFactsClient
@@ -22,81 +24,90 @@ final readonly class OpenFoodFactsClient
 
     public function __construct(private OpenFoodFactsProductMapper $mapper) {}
 
-    public function lookup(string $barcode): OpenFoodFactsLookupResult
+    public function lookup(string $barcode, ?string $correlationId = null): OpenFoodFactsLookupResult
     {
         $barcode = trim($barcode);
-        $correlationId = (string) Str::ulid();
-        if (! $this->hasUsableConfiguration()) {
-            return $this->failure(OpenFoodFactsLookupStatus::PermanentFailure, $correlationId, $barcode, 0);
+        $correlationId = CorrelationId::resolve($correlationId ?? app(CorrelationContext::class)->get());
+        $startedAt = microtime(true);
+        try {
+            if (! $this->hasUsableConfiguration()) {
+                return $this->failure(OpenFoodFactsLookupStatus::PermanentFailure, $correlationId, $barcode, 0);
+            }
+
+            $attempts = max(1, (int) config('services.openfoodfacts.attempts', 2));
+            $lastResponse = null;
+
+            for ($attempt = 1; $attempt <= $attempts; $attempt++) {
+                try {
+                    $response = Http::acceptJson()
+                        ->withUserAgent((string) config('services.openfoodfacts.user_agent'))
+                        ->connectTimeout((float) config('services.openfoodfacts.connect_timeout', 2))
+                        ->timeout((float) config('services.openfoodfacts.timeout', 5))
+                        ->get($this->url($barcode), ['fields' => implode(',', self::FIELDS)]);
+                } catch (ConnectionException) {
+                    if ($attempt < $attempts) {
+                        $this->sleepBeforeRetry($attempt);
+
+                        continue;
+                    }
+
+                    return $this->failure(OpenFoodFactsLookupStatus::Unavailable, $correlationId, $barcode, $attempt);
+                }
+
+                $lastResponse = $response;
+
+                if ($response->notFound()) {
+                    return OpenFoodFactsLookupResult::failure(OpenFoodFactsLookupStatus::NotFound, $correlationId);
+                }
+
+                if ($this->isRateLimited($response)) {
+                    $retryAfter = $this->retryAfterSeconds($response);
+
+                    if ($attempt < $attempts && $retryAfter !== null && $this->safeToRetryAfter($retryAfter)) {
+                        $this->sleepSeconds($retryAfter);
+
+                        continue;
+                    }
+
+                    return $this->failure(OpenFoodFactsLookupStatus::RateLimited, $correlationId, $barcode, $attempt, $response->status());
+                }
+
+                if ($this->isTransient($response)) {
+                    if ($attempt < $attempts) {
+                        $this->sleepBeforeRetry($attempt);
+
+                        continue;
+                    }
+
+                    return $this->failure(OpenFoodFactsLookupStatus::Unavailable, $correlationId, $barcode, $attempt, $response->status());
+                }
+
+                if (! $response->successful()) {
+                    return $this->failure(OpenFoodFactsLookupStatus::PermanentFailure, $correlationId, $barcode, $attempt, $response->status());
+                }
+
+                try {
+                    $decoded = ExactJsonDecoder::decodeObject($response->body());
+                    $product = $this->mapper->map($decoded);
+
+                    if (trim($product->code) !== $barcode) {
+                        throw new InvalidOpenFoodFactsResponse;
+                    }
+                } catch (JsonException|InvalidOpenFoodFactsResponse) {
+                    return $this->failure(OpenFoodFactsLookupStatus::InvalidResponse, $correlationId, $barcode, $attempt, $response->status());
+                }
+
+                return OpenFoodFactsLookupResult::success($correlationId, $product);
+            }
+
+            return $this->failure(OpenFoodFactsLookupStatus::Unavailable, $correlationId, $barcode, $attempts, $lastResponse?->status());
+        } finally {
+            app(OperationalTelemetry::class)->timing('provider.request', (microtime(true) - $startedAt) * 1000, [
+                'provider' => self::PROVIDER,
+                'correlation_id' => $correlationId,
+                'operation' => 'product.lookup',
+            ]);
         }
-
-        $attempts = max(1, (int) config('services.openfoodfacts.attempts', 2));
-        $lastResponse = null;
-
-        for ($attempt = 1; $attempt <= $attempts; $attempt++) {
-            try {
-                $response = Http::acceptJson()
-                    ->withUserAgent((string) config('services.openfoodfacts.user_agent'))
-                    ->connectTimeout((float) config('services.openfoodfacts.connect_timeout', 2))
-                    ->timeout((float) config('services.openfoodfacts.timeout', 5))
-                    ->get($this->url($barcode), ['fields' => implode(',', self::FIELDS)]);
-            } catch (ConnectionException) {
-                if ($attempt < $attempts) {
-                    $this->sleepBeforeRetry($attempt);
-
-                    continue;
-                }
-
-                return $this->failure(OpenFoodFactsLookupStatus::Unavailable, $correlationId, $barcode, $attempt);
-            }
-
-            $lastResponse = $response;
-
-            if ($response->notFound()) {
-                return OpenFoodFactsLookupResult::failure(OpenFoodFactsLookupStatus::NotFound, $correlationId);
-            }
-
-            if ($this->isRateLimited($response)) {
-                $retryAfter = $this->retryAfterSeconds($response);
-
-                if ($attempt < $attempts && $retryAfter !== null && $this->safeToRetryAfter($retryAfter)) {
-                    $this->sleepSeconds($retryAfter);
-
-                    continue;
-                }
-
-                return $this->failure(OpenFoodFactsLookupStatus::RateLimited, $correlationId, $barcode, $attempt, $response->status());
-            }
-
-            if ($this->isTransient($response)) {
-                if ($attempt < $attempts) {
-                    $this->sleepBeforeRetry($attempt);
-
-                    continue;
-                }
-
-                return $this->failure(OpenFoodFactsLookupStatus::Unavailable, $correlationId, $barcode, $attempt, $response->status());
-            }
-
-            if (! $response->successful()) {
-                return $this->failure(OpenFoodFactsLookupStatus::PermanentFailure, $correlationId, $barcode, $attempt, $response->status());
-            }
-
-            try {
-                $decoded = ExactJsonDecoder::decodeObject($response->body());
-                $product = $this->mapper->map($decoded);
-
-                if (trim($product->code) !== $barcode) {
-                    throw new InvalidOpenFoodFactsResponse;
-                }
-            } catch (JsonException|InvalidOpenFoodFactsResponse) {
-                return $this->failure(OpenFoodFactsLookupStatus::InvalidResponse, $correlationId, $barcode, $attempt, $response->status());
-            }
-
-            return OpenFoodFactsLookupResult::success($correlationId, $product);
-        }
-
-        return $this->failure(OpenFoodFactsLookupStatus::Unavailable, $correlationId, $barcode, $attempts, $lastResponse?->status());
     }
 
     private function hasUsableConfiguration(): bool

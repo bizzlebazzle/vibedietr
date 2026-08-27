@@ -37,6 +37,10 @@ from the OFF API can be treated as accurate.
   provider credential, session value, or notification body. Production
   administrator workflows must pass the FND-13 readiness boundary and must not
   use log, array, null, local-catcher, or unmonitored local delivery.
+- Queued or scheduled product workflows are not production-ready until DEP-04
+  and DEP-05 are complete. Every future roadmap item introducing them must
+  declare both dependencies, inventory the work, and define privacy-safe
+  health, metrics, alerts, and runbook coverage.
 - Add every new queued or scheduled job to `docs/JOB_INVENTORY.md` and the
   queue operations configuration.
 - Preserve the tested worker/job timeout plus safety margin below
@@ -268,6 +272,22 @@ shell history, repository files, or command output. The check is non-mutating:
 Run it before and after `./vendor/bin/sail artisan config:cache`. See
 `docs/PRODUCTION_CONFIGURATION.md` for required settings. Static readiness does
 not replace live FND-13 provider, worker, clock, audit, and destination health.
+
+### Validate health and observability
+
+Public health routes are `/up`, `/health/live`, and `/health/ready`. Run safe
+internal diagnostics and the provider-neutral monitor with:
+
+```bash
+./vendor/bin/sail artisan app:health
+./vendor/bin/sail artisan observability:scheduler-heartbeat
+./vendor/bin/sail artisan observability:monitor
+./vendor/bin/sail test tests/Feature/ObservabilityTest.php
+```
+
+Production must select and deploy the `platform` or `hosted` observability
+adapter, release identifier, collector/dashboard, and role-based alert routing.
+Local and CI require no observability credentials.
 
 ### Build frontend assets
 
