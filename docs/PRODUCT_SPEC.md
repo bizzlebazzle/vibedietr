@@ -502,6 +502,27 @@ create a warning-marked private draft; input with no credible recipe structure
 does not create recipe content. Launch recipe source data is not transmitted to
 an external parsing provider.
 
+DEC-007 defines `reviewable`, `reviewable_with_strong_warnings`, and `failed`
+as the only user-facing outcomes. A draft may be created when meaningful
+recipe content and at least one reliable ingredient or instruction side are
+recoverable; a missing core side requires strong warnings. Extraction fails
+without a draft when neither side can be separated, no useful recipe content
+exists, or multiple plausible recipes have no deterministic winner.
+
+Provider confidence maps to `reliable`, `uncertain`, `unreliable`, or
+`unavailable` through provider-specific, versioned rules. It is an attention
+signal rather than verification and is not averaged across fields. Uncertain
+quantity and unit best guesses may populate highlighted inputs while original
+wording remains visible; unreliable suggestions stay blank. Low-confidence OCR
+wording remains in a clearly labelled recovered-text area.
+
+Missing title and servings never cause extraction failure. A missing title uses
+a visibly marked replaceable placeholder. Missing, non-numeric, ranged, or
+contradictory yield preserves original wording while structured servings remain
+empty. Nutrition remains independent of import quality. Strong warnings and
+field highlighting use accessible text and semantics and never rely on color
+alone.
+
 ## Privacy, export, deletion, and retention
 
 ### Privacy defaults
@@ -562,9 +583,6 @@ The following details are intentionally not fixed by this specification:
 
 - Exact match-score thresholds and the visual treatment of review warnings.
   Decision: DEC-001, DEC-002.
-- Import and OCR extraction-quality thresholds.
-  Decision: DEC-007. OCR providers and formats are resolved by DEC-006, and
-  non-OCR launch providers and formats are resolved by DEC-005.
 - The data-export file format.
   Decision: DEC-008.
 - Administrator assignment, escalation, and moderation service-level rules.

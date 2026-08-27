@@ -630,7 +630,7 @@ changes, it is deliberately split across multiple items.
 
 - **Outcome:** Fetch a user-supplied URL safely and create a source-attributed,
   reviewable private draft.
-- **Dependencies:** REC-15, DEC-007, FND-09, DEP-04, DEP-05.
+- **Dependencies:** REC-15, FND-09, DEP-04, DEP-05.
 - **Acceptance criteria:** Fetch and extraction run as idempotent, correlated
   queued work under FND-09; network access is protected against SSRF and size/
   timeout abuse; structured data and fallback extraction preserve source URL
@@ -641,6 +641,8 @@ changes, it is deliberately split across multiple items.
   are unsupported or deferred. Fetches use an identified User-Agent but do not
   block on `robots.txt`. DEC-005's URL, redirect, timeout, response-size,
   throttle, DNS/address, privacy, and transient-HTML limits are enforced.
+  DEC-007 quality tiers, candidate isolation, field warnings, minimum useful
+  draft threshold, confidence normalization, and failure rules are enforced.
 - **Suggested automated tests:** Structured recipe, fallback page, redirects,
   private/local network denial, oversized response, timeout, and attribution
   tests.
@@ -651,7 +653,7 @@ changes, it is deliberately split across multiple items.
 
 - **Outcome:** Extract an uploaded supported document or image into a private
   draft without retaining the source upload as an attachment.
-- **Dependencies:** REC-15, DEC-007, FND-09, DEP-02, DEP-03, DEP-04, DEP-05.
+- **Dependencies:** REC-15, FND-09, DEP-02, DEP-03, DEP-04, DEP-05.
 - **Acceptance criteria:** Extraction runs as idempotent, correlated queued work
   under FND-09; type/size limits are enforced; uploads are private, malware-
   scanned where required, and deleted after success or failure; extracted
@@ -666,8 +668,11 @@ changes, it is deliberately split across multiple items.
   inputs are deferred. Optional Google Enterprise OCR fallback is disabled by
   default, EU-only, and used only after eligible local failure or no usable
   local text. Low-confidence usable output remains a warning-marked draft; no
-  usable text explicitly fails. Terminal files are deleted immediately where
-  possible and within 24 hours; abandoned inputs expire after seven days.
+  usable text explicitly fails. DEC-007 quality tiers, field-specific OCR
+  confidence normalization, recovered-text behavior, highlighted best guesses,
+  strong warnings, and minimum useful draft threshold are enforced. Terminal
+  files are deleted immediately where possible and within 24 hours; abandoned
+  inputs expire after seven days.
 - **Suggested automated tests:** Supported/unsupported files, spoofed MIME,
   size limit, extraction failure, retry, storage privacy, and verified cleanup
   tests.
