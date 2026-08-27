@@ -375,6 +375,16 @@ untested.
   not copied into audit.
 - Jobs depending on newly written records dispatch after commit.
 - Tests exercise actual handler or deterministic test-worker behavior for
+- Any new queued or scheduled product behavior declares both DEP-04 and DEP-05
+  dependencies before production enablement. Local/test execution remains
+  available without production monitoring credentials.
+- The job/schedule is added to `docs/JOB_INVENTORY.md` and
+  `config/queue-operations.php` with queue, timeout/`retry_after` margin,
+  heartbeat, backlog/age threshold, failure/retry metric, privacy
+  classification, alert, replay, pruning, and overlap behavior.
+- Tests cover correlation propagation, structured allowlisted telemetry,
+  worker/backend distinction, relevant backlog/latency/failure thresholds, and
+  absence of private payload content from logs, metrics, health, and alerts.
   idempotency and failure; queue fakes are used only for dispatch assertions.
 - The task follows `docs/QUEUED_JOB_CONVENTIONS.md` and reports any operational
   worker, scheduler, pruning, replay, or monitoring infrastructure still

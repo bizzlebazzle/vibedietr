@@ -70,6 +70,38 @@ timeout safety but cannot prove those processes are alive. Commands, resource
 limits, graceful deployment, failure retention and recovery are defined in
 [`QUEUE_OPERATIONS.md`](QUEUE_OPERATIONS.md).
 
+## Observability and runtime health
+
+DEP-05 is a hard production gate with DEP-04. Static production validation
+requires a deployed collector category and immutable release; live readiness
+then verifies runtime dependencies and heartbeats. `app:production-check`
+validates configuration. `app:health` validates current runtime state.
+
+| Variable | Classification | Purpose/example | Requirement and failure |
+| --- | --- | --- | --- |
+| `OBSERVABILITY_ADAPTER` | Required non-secret | `platform` or `hosted` | Select only after collector, dashboards, retention, access, and alerts are deployed; `local` fails production. |
+| `OBSERVABILITY_RELEASE` | Required non-secret | Immutable build/git identifier | Blank or `development` fails. |
+| `OBSERVABILITY_ALERT_RECIPIENT_ROLE` | Required non-secret | `primary_administrator` or `operations_security` | Maps alerts to deployment-owned contacts; no address belongs in source. |
+| `OBSERVABILITY_WORKER_STALE_SECONDS` | Required non-secret | `180` | Per-queue worker critical freshness threshold. |
+| `OBSERVABILITY_SCHEDULER_STALE_SECONDS` | Required non-secret | `180` | Scheduler critical freshness threshold. |
+| `OBSERVABILITY_PRUNE_STALE_SECONDS` | Required non-secret | `93600` | 26-hour failed-job-pruning critical threshold. |
+| `OBSERVABILITY_QUEUE_DEPTH_WARNING` / `CRITICAL` | Required non-secret | `25` / `100` | Current waiting depth thresholds. |
+| `OBSERVABILITY_OLDEST_JOB_WARNING_SECONDS` / `CRITICAL_SECONDS` | Required non-secret | `300` / `900` | Oldest waiting age thresholds. |
+| `OBSERVABILITY_PROVIDER_SLOW_WARNING_MS` | Required non-secret | `3000` | Initial tuning threshold, not an SLA. |
+| `OBSERVABILITY_FAILURE_WINDOW_SECONDS` | Required non-secret | `300` | Rolling failure/exception/provider evaluation window. |
+| `OBSERVABILITY_FAILURE_WARNING_COUNT` / `CRITICAL_COUNT` | Required non-secret | `5` / `20` | Aggregate spike thresholds. |
+
+Health routes expose only state. Detailed reasons remain in `app:health` and
+protected telemetry. Production collection must disable/minimize request-body,
+session, user, cookie, IP, full-user-agent, and job-payload capture. Alert
+bodies follow [Observability](OBSERVABILITY.md); response procedures follow
+[Operations runbooks](OPERATIONS_RUNBOOKS.md).
+
+Before enablement, start supervised workers/scheduler, invoke the scheduler
+heartbeat and pruning once through the approved operation, run `app:health`,
+and verify that synthetic safe alerts reach the configured roles. Do not send a
+real security notification on routine readiness probes.
+
 ## Mail and administrator security notifications
 
 `ADMIN_SECURITY_MAILER` selects one qualifying transactional transport. Resend

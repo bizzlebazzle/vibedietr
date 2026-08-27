@@ -2,6 +2,8 @@
 
 namespace App\Queue;
 
+use App\Observability\Monitoring\OperationalState;
+use App\Observability\OperationalTelemetry;
 use App\Queue\Exceptions\JobOperationException;
 use Illuminate\Queue\MaxAttemptsExceededException;
 use Illuminate\Queue\TimeoutExceededException;
@@ -22,6 +24,15 @@ final class JobFailureReporter
         Throwable $exception,
     ): void {
         [$failureCategory, $safeErrorCode] = $this->classify($exception);
+        app(OperationalTelemetry::class)->counter('queue.final_failure', [
+            'job_type' => $jobClass,
+            'queue' => $queue,
+            'outcome' => 'failed',
+            'failure_category' => $failureCategory,
+        ]);
+        if ($jobIdentifier !== null && $attemptCount > 1) {
+            app(OperationalState::class)->recordReplayFailure($jobIdentifier);
+        }
 
         Log::error('queued_job_failed', [
             'job_class' => $jobClass,

@@ -1322,6 +1322,7 @@ changes, it is deliberately split across multiple items.
 
 - **Outcome:** Detect failures and performance regressions without exposing
   private recipe, diary, target, or import data.
+- **Status:** Complete (2026-08-27).
 - **Dependencies:** DEP-02, DEP-04.
 - **Production-enablement gate:** Complete this item before any queued or
   scheduled product workflow is enabled in production. Every later roadmap

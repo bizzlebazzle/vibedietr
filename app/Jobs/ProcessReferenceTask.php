@@ -3,6 +3,8 @@
 namespace App\Jobs;
 
 use App\Audit\AuditReferenceValidator;
+use App\Observability\CorrelationContext;
+use App\Observability\OperationalTelemetry;
 use App\Queue\CorrelationId;
 use App\Queue\Exceptions\NonRetryableJobException;
 use App\Queue\Exceptions\RetryableJobException;
@@ -52,7 +54,9 @@ final class ProcessReferenceTask implements ShouldBeUnique, ShouldQueue
             $targetReference,
             'target reference',
         );
-        $this->correlationId = CorrelationId::resolve($correlationId);
+        $this->correlationId = $correlationId === null && app()->bound(CorrelationContext::class)
+            ? app(CorrelationContext::class)->get()
+            : CorrelationId::resolve($correlationId);
 
         $this->onQueue(QueueName::DEFAULT);
         $this->afterCommit();
@@ -86,6 +90,14 @@ final class ProcessReferenceTask implements ShouldBeUnique, ShouldQueue
 
     public function handle(ReferenceTaskResultRecorder $resultRecorder): void
     {
+        $startedAt = microtime(true);
+        app(OperationalTelemetry::class)->event('queued_job_started', [
+            'correlation_id' => $this->correlationId,
+            'operation' => self::OPERATION_TYPE,
+            'job_type' => self::class,
+            'queue' => $this->queue ?? QueueName::DEFAULT,
+            'attempt_count' => $this->attempts(),
+        ]);
         try {
             $resultRecorder->recordOnce(
                 $this->idempotencyFingerprint(),
@@ -96,6 +108,13 @@ final class ProcessReferenceTask implements ShouldBeUnique, ShouldQueue
                 self::IDEMPOTENCY_LIFETIME_SECONDS,
             );
         } catch (NonRetryableJobException $exception) {
+            app(OperationalTelemetry::class)->timing('critical_workflow.reference_task', (microtime(true) - $startedAt) * 1000, [
+                'correlation_id' => $this->correlationId,
+                'operation' => self::OPERATION_TYPE,
+                'job_type' => self::class,
+                'queue' => $this->queue ?? QueueName::DEFAULT,
+                'outcome' => 'completed',
+            ]);
             $this->fail($exception);
         } catch (RetryableJobException $exception) {
             throw $exception;

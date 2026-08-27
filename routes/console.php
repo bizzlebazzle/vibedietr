@@ -8,6 +8,20 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
+Schedule::command('observability:scheduler-heartbeat')
+    ->everyMinute()
+    ->timezone('UTC')
+    ->name('observability-scheduler-heartbeat')
+    ->withoutOverlapping(10)
+    ->onOneServer();
+
+Schedule::command('observability:monitor')
+    ->everyMinute()
+    ->timezone('UTC')
+    ->name('observability-monitor')
+    ->withoutOverlapping(10)
+    ->onOneServer();
+
 Schedule::command('administrator:expire-promotions')
     ->hourly()
     ->timezone('UTC')

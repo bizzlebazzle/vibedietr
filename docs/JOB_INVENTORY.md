@@ -112,6 +112,38 @@ serialized payload, so the privacy classification is an operational control.
   Alerting must precede the next daily run because personal payload must not
   wait for convenience.
 
+## observability:scheduler-heartbeat
+
+- **Owner / purpose / enablement:** DEP-05; prove the Laravel scheduler is
+  invoked independently of web traffic. Enabled every minute in production.
+- **Execution:** Scheduler command, not a queued job. UTC every minute,
+  one-server execution and `withoutOverlapping(10)`.
+- **Concurrency / duration / resources:** One execution, normally under one
+  second, shared cache write only.
+- **Retry / idempotency / replay:** No automatic retry. Rewrites one freshness
+  timestamp idempotently; the next minute recovers a missed run.
+- **Failure / alert / privacy:** Staleness alerts at the documented threshold.
+  The cache value is a UTC timestamp and contains no user or payload data.
+- **Lock crash behavior:** A lock may live ten minutes, so lock failures are
+  visible as scheduler staleness rather than hidden by web traffic.
+
+## observability:monitor
+
+- **Owner / purpose / enablement:** DEP-05; evaluate readiness, queue,
+  heartbeat, failure, provider, and pruning signals. Every minute in production.
+- **Execution:** Scheduler command, not a queued job. UTC every minute,
+  one-server execution and `withoutOverlapping(10)`.
+- **Concurrency / duration / resources:** One execution; bounded database
+  metadata reads and cache counters, normally under one second.
+- **Retry / idempotency / replay:** No automatic retry. Read-only evaluation
+  plus safe log alerts; rerun is operationally safe and the next minute
+  recovers a miss. The deployment collector deduplicates repeated alert state.
+- **Failure / alert / privacy:** Command failure is itself scheduler staleness.
+  Events contain only allowlisted dimensions and aggregate counts; queue and
+  failed-job payloads are never deserialized or exported.
+- **Lock crash behavior:** A lock may live ten minutes. Investigate the
+  scheduler/monitor process and shared-cache lock; do not clear all cache.
+
 ## Defined future workloads
 
 DEC-005 recipe import and DEC-006 OCR remain disabled and have no job classes.
