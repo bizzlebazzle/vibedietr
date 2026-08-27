@@ -612,6 +612,7 @@ changes, it is deliberately split across multiple items.
 
 - **Outcome:** Convert pasted text into a reviewable private draft while
   preserving the full source text and parser provenance.
+- **Status:** Complete (2026-08-27).
 - **Dependencies:** REC-04, FND-09, DEP-04, DEP-05.
 - **Acceptance criteria:** Parsing runs as idempotent, correlated queued work
   under FND-09; import never publishes automatically; uncertain parsing is

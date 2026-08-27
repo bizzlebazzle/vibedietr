@@ -972,20 +972,37 @@ representation:
 - Match between a recipe line and a food/ingredient record.
 - Recipe yield, portion, or serving.
 - Calculated or estimated recipe nutrition.
-- Recipe import operation, preserved import source, extraction result,
-  warnings, and parser provenance.
 - Meal.
 - Meal plan or schedule.
 - Diet plan, nutrition target, or dietary constraint.
 
-DEC-005 constrains the future recipe-import representation without claiming it
-exists today. One private import operation will identify its owner and resulting
-draft through server-authoritative references and retain its channel, source
-format, exact pasted or locally extracted recipe source text, safe source URL
-where applicable, parser/extractor identifiers and versions, per-stage
-provenance, structured warnings, completion/failure classification, correlation
-ID, and stable idempotency identity. Full fetched HTML and uploaded files are
-transient rather than durable provenance.
+### Pasted-text recipe import
+
+`RecipeImport` is an owner-only ULID resource for one intentional import. REC-15
+implements type `pasted_text` and bounded statuses `pending`, `processing`,
+`review_ready`, and `failed`. It retains the exact accepted source text and its
+declared inert format, correlation and idempotency identities, parser identifier
+and version, structured warnings, safe completion/failure classifications,
+timestamps, minimal provenance, and a nullable server-controlled relationship
+to exactly one draft recipe. A second intentional submission is a new import,
+even when its source is identical; retries reuse the original import.
+
+The parser result is an internal provider-independent value object containing
+nullable title and servings candidates, ordered ingredient source lines,
+ordered instruction source chunks and sections, structured warning codes,
+uncertain-field names, completion classification, and parser provenance. It
+does not invent numeric confidence. Ingredient `original_text` and instruction
+`text` are copied from parser-selected source chunks; optional quantity, unit,
+generic wording, notes, and section assignment remain separate suggestions.
+
+Materialization locks the import and transactionally creates or resolves one
+owner-matched private draft, replaces its import-owned children, stores review
+metadata, records provenance, and moves the import to `review_ready`. Any
+persistence exception rolls back the draft and children. The resulting recipe
+remains in the REC-04/REC-05 draft lifecycle and cannot become finalized or
+public as an import side effect. Source text, child text, and raw parser data
+are excluded from queue payloads, failure logs, audit payloads, and public
+recipe projections.
 
 DEC-006 further constrains the unimplemented OCR representation. A provider-
 independent OCR result may contain ordered page/line text, normalized confidence
@@ -1002,14 +1019,9 @@ itself represent recipe entities, catalogue matches, nutrition, or a finalized
 recipe. No current model, migration, route, queue job, OCR adapter, or upload
 store implements this contract.
 
-The provider-independent extraction result permits absent fields and contains
-title/description and yield candidates, ordered ingredient source lines with
-optional structured suggestions, instruction source text with optional ordered
-steps and sections, source channel/format/URL, parser identity/version,
-warnings, and completion state. The preserved source remains authoritative;
-the result never replaces exact ingredient or instruction wording. No current
-model, migration, route, queue job, parser, or upload store implements this
-contract.
+Future URL and file channels may extend the provider-independent extraction
+contract with safe URL or transient-source provenance. REC-15 implements only
+pasted text and does not add a fetched-document or upload store.
 
 ## Questions requiring owner input
 

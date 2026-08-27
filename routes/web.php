@@ -8,6 +8,7 @@ use App\Http\Controllers\PublicProfileSettingsController;
 use App\Http\Controllers\RecipeCollectionController;
 use App\Http\Controllers\RecipeController;
 use App\Http\Controllers\RecipeDiscoveryController;
+use App\Http\Controllers\RecipeImportController;
 use App\Http\Controllers\RecipeRemixController;
 use Illuminate\Support\Facades\Route;
 
@@ -69,6 +70,10 @@ Route::middleware(['auth'])->group(function () {
         ->whereNumber('bookmark')
         ->name('bookmarks.destroy');
     Route::resource('ingredients', IngredientController::class);
+    Route::get('recipe-imports/create', [RecipeImportController::class, 'create'])->name('recipe-imports.create');
+    Route::post('recipe-imports', [RecipeImportController::class, 'store'])->middleware('throttle:10,60')->name('recipe-imports.store');
+    Route::get('recipe-imports/{recipeImport}', [RecipeImportController::class, 'show'])->whereUlid('recipeImport')->name('recipe-imports.show');
+    Route::post('recipe-imports/{recipeImport}/retry', [RecipeImportController::class, 'retry'])->whereUlid('recipeImport')->name('recipe-imports.retry');
     Route::resource('recipes', RecipeController::class)->only(['create', 'edit']);
     Route::delete('recipes/{recipe}/revision', [RecipeController::class, 'abandonRevision'])
         ->name('recipes.revision.destroy');

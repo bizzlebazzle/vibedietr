@@ -18,6 +18,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string|null $custom_unit
  * @property string|null $generic_wording
  * @property string|null $notes
+ * @property bool $requires_review
+ * @property array<int, string>|null $parser_warnings
+ * @property array<int, string>|null $uncertain_fields
  * @property-read Recipe $recipe
  */
 class RecipeIngredientLine extends Model
@@ -39,6 +42,9 @@ class RecipeIngredientLine extends Model
         return [
             'quantity' => 'decimal:18',
             'standard_unit' => StandardUnit::class,
+            'requires_review' => 'boolean',
+            'parser_warnings' => 'array',
+            'uncertain_fields' => 'array',
         ];
     }
 

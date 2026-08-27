@@ -3,6 +3,10 @@
 namespace App\Providers;
 
 use App\Configuration\ProductionConfigurationValidator;
+use App\Domain\RecipeImports\NullRecipeImportMaterializationHook;
+use App\Domain\RecipeImports\Parsing\DeterministicRecipeTextParser;
+use App\Domain\RecipeImports\Parsing\RecipeTextParser;
+use App\Domain\RecipeImports\RecipeImportMaterializationHook;
 use App\Domain\Recipes\NullRecipeDraftSaveHook;
 use App\Domain\Recipes\NullRecipeFinalizationHook;
 use App\Domain\Recipes\NullRecipeRemixCreationHook;
@@ -15,6 +19,7 @@ use App\Models\Ingredient;
 use App\Models\ManagedRecipeTerm;
 use App\Models\ManagedRecipeTermSuggestion;
 use App\Models\Recipe;
+use App\Models\RecipeImport;
 use App\Models\User;
 use App\Observability\Alerts\AlertSink;
 use App\Observability\Alerts\LogAlertSink;
@@ -27,6 +32,7 @@ use App\Policies\BookmarkPolicy;
 use App\Policies\IngredientPolicy;
 use App\Policies\ManagedRecipeTermPolicy;
 use App\Policies\ManagedRecipeTermSuggestionPolicy;
+use App\Policies\RecipeImportPolicy;
 use App\Policies\RecipePolicy;
 use App\Queue\FailedJobPruner;
 use App\Queue\PrivacyAwareFailedJobProvider;
@@ -48,6 +54,8 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(RecipeDraftSaveHook::class, NullRecipeDraftSaveHook::class);
         $this->app->bind(RecipeFinalizationHook::class, NullRecipeFinalizationHook::class);
         $this->app->bind(RecipeRemixCreationHook::class, NullRecipeRemixCreationHook::class);
+        $this->app->bind(RecipeImportMaterializationHook::class, NullRecipeImportMaterializationHook::class);
+        $this->app->bind(RecipeTextParser::class, DeterministicRecipeTextParser::class);
         $this->app->scoped(CorrelationContext::class);
         $this->app->bind(DependencyHealthProbe::class, LaravelDependencyHealthProbe::class);
         $this->app->bind(AlertSink::class, LogAlertSink::class);
@@ -88,6 +96,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(ManagedRecipeTerm::class, ManagedRecipeTermPolicy::class);
         Gate::policy(ManagedRecipeTermSuggestion::class, ManagedRecipeTermSuggestionPolicy::class);
         Gate::policy(Recipe::class, RecipePolicy::class);
+        Gate::policy(RecipeImport::class, RecipeImportPolicy::class);
         Gate::define('access-admin', fn (User $user): bool => User::query()->whereKey($user->getKey())->where('is_administrator', true)->exists());
     }
 }

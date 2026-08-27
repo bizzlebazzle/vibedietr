@@ -10,6 +10,7 @@ final class TelemetrySanitizer
         'job_class', 'job_identifier', 'job_type', 'metric', 'operation',
         'operation_type', 'outcome', 'provider', 'queue', 'recipient_role',
         'release', 'safe_error_code', 'state', 'threshold', 'value', 'window_seconds',
+        'resource_identifier',
     ];
 
     /** @return array<string, bool|float|int|string|null> */
