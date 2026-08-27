@@ -37,7 +37,7 @@ Backlog relationships mean:
 | DEC-004 | Nutrient display precision | Decided | Product owner |
 | DEC-005 | Recipe-import providers and formats | Decided | Product owner |
 | DEC-006 | OCR providers and formats | Decided | Product owner |
-| DEC-007 | Import and OCR extraction-quality thresholds | Research required | Technical investigation |
+| DEC-007 | Import and OCR extraction-quality thresholds | Decided | Product owner |
 | DEC-008 | Account data-export format | Owner input required | Product owner |
 | DEC-009 | Initial administrator assignment | Decided | Product owner |
 | DEC-010 | Moderation escalation and service levels | Owner input required | Product owner |
@@ -429,7 +429,7 @@ Backlog relationships mean:
   `structured_data_malformed`, `structured_data_conflict`, and
   `extraction_incomplete`. They identify the affected field, line, section, or
   stage where practical. Confidence percentages may supplement but never
-  replace categorical warnings and source comparison. DEC-007 may set quality
+  replace categorical warnings and source comparison. DEC-007 sets quality
   thresholds and acknowledgement requirements without weakening source
   preservation or mandatory review.
 
@@ -660,20 +660,178 @@ Backlog relationships mean:
 - **Why it matters:** Without defined boundaries, the product may silently
   accept unusable structure, reject recoverable content, or present provider
   confidence inconsistently.
-- **Status:** Research required.
-- **Owner:** Technical investigation.
+- **Status:** Decided.
+- **Owner:** Product owner.
 - **Alternatives:** One overall threshold; field-specific thresholds; tiers
-  combining confidence with completeness and mandatory user review.
+  combining provider-specific confidence, deterministic completeness, and
+  mandatory user review.
 - **Existing constraints from `PRODUCT_SPEC.md`:** Imports never publish
   automatically, always require review, retain original wording and
   provenance, and may not be used in plans while drafts. Uncertain parsing and
   incomplete nutrition remain visible rather than being silently guessed.
-- **Backlog relationships:** `Blocked`: REC-16, REC-17. `Constrained`: REC-15,
-  UX-06. `Related`: FND-09.
+- **Backlog relationships:** `Unblocks`: REC-16, REC-17. `Constrains`: REC-15,
+  UX-06. `Related`: FND-09, DEP-04, DEP-05.
 - **Resolution condition:** Establish representative extraction benchmarks,
   define measurable boundary outcomes for whole imports and important fields,
   and record the approved failure, warning, and review behavior.
-- **Final decision and rationale:** Unresolved.
+- **Final decision and rationale:** Import quality uses field-specific text
+  fidelity, deterministic completeness, uncertainty, and provider-specific
+  confidence. It never uses one universal percentage or arithmetic average.
+  Confidence directs attention and never proves correctness.
+
+  The only user-facing outcomes are `reviewable`,
+  `reviewable_with_strong_warnings`, and `failed`. A normal reviewable result
+  has meaningful content and both ingredient and instruction sides. A strong-
+  warning result has a useful private draft but a core side or important region
+  needs substantial attention. Severely degraded but recoverable imports stay
+  in that tier; there is no fourth tier. Every successful import still requires
+  review and remains private, unfinalized, unpublished, and ineligible for
+  plans.
+
+  Draft materialization requires meaningful recipe-like content and at least
+  one reliably separable ingredient or instruction side. One recoverable side
+  creates a strongly warned draft. Readable text with neither side separable
+  remains with the private import where retention permits, but extraction fails
+  without a recipe draft. An import draft need not yet satisfy REC-05.
+
+  Extraction also fails without a draft for no usable text, no plausible recipe
+  content, an unrecoverable malformed result, or a permanent technical,
+  validation, safety, limit, corruption, or unsupported-format failure.
+  Multiple plausible webpage recipes are never merged. One clearly dominant
+  candidate may create a strongly warned draft; no deterministic winner fails
+  unless a future candidate-selection workflow is approved.
+
+  Each field or region maps to `reliable`, `uncertain`, `unreliable`, or
+  `unavailable`. Missing confidence is unavailable, never numeric zero, and no
+  category means verified.
+
+  Initial versioned Tesseract 5 TSV word mappings are reliable at 90 or above,
+  uncertain from 70 to below 90, unreliable below 70, and unavailable when
+  absent or a non-word structural value such as `-1`. A line is reliable when
+  non-empty, with no unreliable word or uncertain critical token and no more
+  than 10 percent uncertain words. A readable line is uncertain when it has an
+  unreliable word, uncertain critical token, or more than 10 percent uncertain
+  words. It is unreliable when empty, an essential segment is missing, or more
+  than 40 percent of detected words are unreliable. Quantities, fractions,
+  ranges, units, temperatures, times, and servings are critical. Parser and
+  consistency evidence may downgrade a field regardless of score. One low word
+  does not discard a readable line, and a high average does not override a
+  critical-symbol warning.
+
+  Optional Google Document AI token or line `Layout.confidence` maps as reliable
+  at 0.90 or above, uncertain from 0.70 to below 0.90, unreliable below 0.70,
+  and unavailable when absent. Page image quality remains separate. A score
+  below Google's documented 0.5 defect-analysis boundary creates a page warning;
+  defect evidence does not independently prove transcription failure. Google
+  thresholds require benchmarking against the recipe corpus before managed
+  fallback is enabled. Similar numbers do not make Google and Tesseract scores
+  comparable.
+
+  Sources without numeric confidence use field presence, copied-versus-inferred
+  origin, schema validity, candidate count, structured/fallback agreement, core
+  recovery, section and ordering evidence, warnings, and credible content after
+  boilerplate removal.
+
+  Every ingredient keeps complete original wording separately from structured
+  fields. An uncertain quantity or unit best guess populates the structured
+  field and is highlighted with accessible text and an icon as well as color.
+  It is never described as verified. An unreliable or absent candidate leaves
+  the structured value blank while recovered wording stays visible. One
+  isolated uncertain quantity or unit is a field warning, not automatically a
+  strong import warning.
+
+  Readable instruction prose remains useful with weak segmentation and may
+  become one provisional step. Uncertain boundaries, order, or section
+  membership stay visible and warned; extraction never silently reorders or
+  omits readable wording. Missing instructions create a strong-warning draft
+  when ingredients are recoverable, and the inverse rule applies.
+
+  Missing title never causes failure. The draft uses a visibly marked,
+  replaceable placeholder and `title_missing`; placeholder wording must not look
+  extracted. A plausible uncertain title may be populated and highlighted.
+  Missing, non-numeric, ranged, or contradictory yield never causes failure.
+  Original wording is preserved, structured servings stay null, and warnings
+  distinguish missing, uncertain, and conflicting sources. No count is
+  fabricated. Missing sections do not fail; uncertain grouping stays warned,
+  and a section heading must not silently become an ingredient line.
+
+  OCR quality considers missing text, substitutions, critical measurements,
+  reading order, layout, sections, language, image defects, and page loss
+  rather than one average. Very low-confidence lines remain in a clearly
+  labelled recovered-text area stating that they may be inaccurate.
+  Unreliable structured values derived from them remain blank. Low quality is
+  not an infrastructure retry and does not independently invoke fallback.
+
+  The bounded warning taxonomy is:
+
+  - `extraction_incomplete`
+  - `multiple_recipe_candidates`
+  - `structured_data_malformed`
+  - `structured_data_conflict`
+  - `possible_extraction_error`
+  - `low_confidence_text`
+  - `language_uncertain`
+  - `title_missing`
+  - `title_uncertain`
+  - `servings_missing`
+  - `servings_uncertain`
+  - `ingredient_text_low_confidence`
+  - `ingredient_quantity_uncertain`
+  - `ingredient_unit_uncertain`
+  - `ingredient_section_uncertain`
+  - `instruction_text_low_confidence`
+  - `instruction_segmentation_uncertain`
+  - `instruction_order_uncertain`
+  - `section_assignment_uncertain`
+
+  Technical failure codes remain separate, and arbitrary provider prose is not
+  persisted or shown.
+
+  The prominent “This import needs careful review” treatment applies when a
+  core side is missing or materially incomplete; at least two important lines
+  are affected; at least 20 percent of recovered core lines contain important
+  uncertainty; reading or column order is uncertain; sources conflict;
+  malformed structured data required fallback; one candidate was selected from
+  several; OCR quality materially affects content; boilerplate may have
+  contaminated content; or extraction is materially incomplete but
+  recoverable. One isolated uncertain quantity or unit is highlighted locally.
+  Warnings never rely on color alone.
+
+  Review shows preserved pasted or extracted text, clearly labelled OCR text,
+  sanitized URL provenance where applicable, and suggestions distinguished
+  from source wording. Review does not extend transient source retention, and
+  OCR is never presented as exact transcription.
+
+  Durable quality provenance retains bounded provider/parser identifiers and
+  versions, preprocessing and trained-data versions, outcome, warnings,
+  normalized categories, completeness flags, timestamps, compact page
+  summaries, affected-line native summaries, and useful native values for
+  affected critical fields. It excludes full responses, arbitrary diagnostics,
+  unbounded token dumps, deleted images, device metadata, and provider messages
+  containing source content. Complete token scores belong only in synthetic
+  fixtures or short-lived privacy-safe diagnostics. Users see warning states,
+  not native numeric confidence.
+
+  DEP-05 aggregate telemetry may use bounded provider/version, outcome, warning
+  category, review/failure rate, fallback use, duration, and threshold-policy
+  version. User ID, recipe ID, URL, filename, source/OCR text, and uploaded
+  content are prohibited metric labels. Nutrition and food matching are
+  independent of extraction quality.
+
+  The synthetic benchmark covered 21 pasted, webpage, OCR, deferred, and
+  unsupported cases. Clean OCR was exact; usable phone and skew output included
+  individual scores in the mid-70s; severe low contrast returned no text; a
+  correct multi-column result included a word near 70; and a fractions page
+  averaged about 95.8 while changing a meaningful range character. This
+  demonstrates why average confidence cannot be the boundary. Thresholds are
+  versioned and require later calibration with a larger legal corpus.
+
+  This policy prefers recoverable private drafts because review and
+  finalization protect publication and planning. It fails when recovery would
+  create an arbitrary, empty, irrelevant, or misleading recipe. Residual risks
+  include the small synthetic corpus, provider drift, webpage boilerplate, real
+  phone-photo variation, warning density, and best guesses looking
+  authoritative if review styling is weak.
 
 ## DEC-008 — Account data-export format
 

@@ -1019,6 +1019,28 @@ itself represent recipe entities, catalogue matches, nutrition, or a finalized
 recipe. No current model, migration, route, queue job, OCR adapter, or upload
 store implements this contract.
 
+DEC-007 defines field and region quality as `reliable`, `uncertain`,
+`unreliable`, or `unavailable` and import outcomes as `reviewable`,
+`reviewable_with_strong_warnings`, or `failed`. These combine fidelity,
+completeness, uncertainty, and provider-specific evidence without treating
+confidence as verification or averaging unrelated scores.
+
+A materializable import needs meaningful recipe content and at least one
+reliably separable ingredient or instruction side. One side creates a strongly
+warned draft; neither side fails without a recipe. Multiple webpage recipes are
+never merged, and no deterministic winner fails without a draft.
+
+Uncertain ingredient quantity or unit suggestions may be stored as highlighted
+best guesses while original wording remains authoritative. Unreliable
+suggestions stay null. Missing title uses a marked placeholder; unsafe servings
+stay null. Very low-confidence OCR lines remain labelled recovered text while
+unreliable structured fields remain null.
+
+Future persistence may extend existing review metadata with bounded normalized
+categories, completeness flags, strong-warning reasons, and affected-region
+native summaries. Full provider responses and unbounded token confidence are
+not domain data. Users see warnings rather than numeric confidence.
+
 Future URL and file channels may extend the provider-independent extraction
 contract with safe URL or transient-source provenance. REC-15 implements only
 pasted text and does not add a fetched-document or upload store.
