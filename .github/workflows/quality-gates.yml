@@ -118,6 +118,8 @@ jobs:
           QUEUE_SUPERVISION: container
           QUEUE_SCHEDULER_ENABLED: 'true'
           APP_INSTANCE: ci-production-smoke
+          OBSERVABILITY_ADAPTER: platform
+          OBSERVABILITY_RELEASE: ci-production-smoke
           MAIL_MAILER: smtp
           MAIL_SCHEME: tls
           MAIL_HOST: smtp.example.com
