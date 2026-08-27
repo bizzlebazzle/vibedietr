@@ -22,6 +22,7 @@ final class JobFailureReporter
         string $queue,
         int $attemptCount,
         Throwable $exception,
+        ?string $resourceIdentifier = null,
     ): void {
         [$failureCategory, $safeErrorCode] = $this->classify($exception);
         app(OperationalTelemetry::class)->counter('queue.final_failure', [
@@ -45,6 +46,7 @@ final class JobFailureReporter
             'safe_error_code' => $safeErrorCode,
             'attempt_count' => $attemptCount,
             'queue' => $queue,
+            'resource_identifier' => $resourceIdentifier,
             'failed_at' => Date::now()->utc()->toIso8601String(),
         ]);
     }

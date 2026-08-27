@@ -51,6 +51,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'components.*.updates.instructionText',
             'components.*.updates.ingredients.*.original_text',
             'components.*.updates.steps.*.text',
+            'source_text',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
@@ -59,6 +60,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'authorization', 'cookie', 'session', 'recovery_code', 'totp', 'otp',
             'original_text', 'instruction_text', 'diary_entry', 'target_data',
             'import_source', 'ocr_text',
+            'source_text',
         ]);
         $exceptions->context(fn (): array => [
             'correlation_id' => app(CorrelationContext::class)->get(),

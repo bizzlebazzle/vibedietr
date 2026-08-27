@@ -14,6 +14,15 @@ class RecipeInstructionStep extends Model
 
     protected $fillable = ['text'];
 
+    protected function casts(): array
+    {
+        return [
+            'requires_review' => 'boolean',
+            'parser_warnings' => 'array',
+            'uncertain_fields' => 'array',
+        ];
+    }
+
     /** @return BelongsTo<Recipe, $this> */
     public function recipe(): BelongsTo
     {

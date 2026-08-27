@@ -1,6 +1,7 @@
 <?php
 
 use App\Jobs\DeliverSecurityNotification;
+use App\Jobs\ProcessPastedRecipeImport;
 use App\Jobs\ProcessReferenceTask;
 use App\Queue\QueueName;
 
@@ -54,6 +55,12 @@ return [
             'failed_payload' => 'metadata-only',
         ],
         ProcessReferenceTask::class => [
+            'queue' => QueueName::DEFAULT,
+            'worker' => 'default',
+            'timeout' => 60,
+            'failed_payload' => 'metadata-only',
+        ],
+        ProcessPastedRecipeImport::class => [
             'queue' => QueueName::DEFAULT,
             'worker' => 'default',
             'timeout' => 60,

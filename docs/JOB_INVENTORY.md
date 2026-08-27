@@ -74,6 +74,44 @@ serialized payload, so the privacy classification is an operational control.
   and is stored in the payload as a bounded non-secret reference.
 - **Scheduling:** None.
 
+## ProcessPastedRecipeImport
+
+- **Class / owner:** `App\Jobs\ProcessPastedRecipeImport`; REC-15
+  pasted-text recipe imports.
+- **Purpose / enablement:** Parse one already-persisted private pasted source
+  and atomically create or update its single private draft. Enabled only by an
+  authenticated import submission or bounded owner retry.
+- **Queue / worker / concurrency:** `default`; `default` worker group; one
+  configured process. The job also uses one logical-operation overlap lock;
+  DEC-005 permits at most two import jobs per application instance if measured
+  capacity later adds an isolated worker.
+- **Timeout / retry_after:** 60-second job timeout, 70-second worker timeout,
+  90-second database `retry_after`; the enforced 20-second maximum-window
+  margin covers termination and cleanup.
+- **Attempts / backoff:** Three attempts total; 10 seconds then 60 seconds.
+  Unexpected persistence failures are sanitized and retryable. No credible
+  recipe structure is permanent and stops immediately.
+- **Idempotency:** SHA-256 of `recipe_import.process|{import ULID}` for unique
+  dispatch and 75-second overlap protection. The durable unique import
+  idempotency key, unique import-to-draft relationship, locked import state,
+  and one materialization transaction are the effect boundary. Replay resolves
+  the same draft and replaces its import-owned children instead of appending
+  duplicates. A new import ULID creates a separate draft for identical source.
+- **Duration / resources:** Deterministic local text parsing and bounded
+  database writes; normally under one second and at most 60 seconds. It makes
+  no provider or network request and carries no source in its queue payload.
+- **Failure / alert:** Final failure writes one privacy-safe
+  `queued_job_failed` event and marks only safe category/code on the import.
+  Existing queue final-failure, retry, execution, depth, age, worker, and
+  pruning telemetry apply; the production collector uses DEP-05 thresholds.
+- **Replay:** Retry the same failed import only through the owner-authorized
+  bounded retry action or reviewed failed-job runbook. Confirm it is not
+  already `review_ready`; never create a replacement for a technical retry.
+- **Failed record / privacy:** Metadata-only import ULID and correlation ULID.
+  No source, ingredient, instruction, account email, parser result, or model is
+  serialized. Retain at most 168 hours under the native failed-job policy.
+- **Scheduling:** Event driven; not scheduled. Missing imports complete as obsolete.
+
 ## administrator:expire-promotions
 
 - **Owner / purpose / enablement:** FND-14; finalize expired administrator
@@ -146,13 +184,11 @@ serialized payload, so the privacy classification is an operational control.
 
 ## Defined future workloads
 
-DEC-005 recipe import and DEC-006 OCR remain disabled and have no job classes.
-Their defined bounds are three attempts, 10/60-second backoff, concurrency at
-most two, private transient storage, and 24-hour transient cleanup; OCR has a
-60-second job timeout and provider calls capped at 30 seconds. No worker is
-authorized for them by this inventory. The implementing REC-15/16/17 pull
-request must add concrete class names, payload classifications, idempotency
-lifetimes, replay effects, worker resource measurements and any isolation
-needed before changing either feature flag. Until then they cannot consume the
-current `default` worker merely because DEP-02 contains placeholder queue
-settings.
+REC-15 pasted-text work is inventoried above and may consume the bounded
+`default` worker. REC-16 URL/document extraction and DEC-006 OCR remain disabled
+and have no job classes. Their defined bounds are three attempts, 10/60-second
+backoff, concurrency at most two, private transient storage, and 24-hour
+transient cleanup; OCR has a 60-second job timeout and provider calls capped at
+30 seconds. Their implementing pull requests must add concrete job classes,
+payload classifications, replay effects, resource measurements, and any needed
+isolation before production enablement.

@@ -948,6 +948,29 @@ deployment identifies a platform/hosted collector and immutable release, then
 maps structured logs, dashboards, and alert recipient roles. Local/test use
 ordinary logs and deterministic fakes without provider credentials.
 
+## Implemented pasted-text recipe imports
+
+REC-15 lets an authenticated user submit up to 2 MiB of plain text, Markdown,
+or inert pasted HTML. A private `recipe_imports` record preserves the accepted
+source byte-for-byte and dispatches an identifier-only queued job after commit.
+The job uses the FND-09 timeout, bounded-retry, backoff, uniqueness,
+correlation, and minimized failure-reporting conventions.
+
+The DEC-005 deterministic application-owned parser produces ordered ingredient
+and instruction source chunks, optional title/servings/section suggestions,
+structured warning codes, and pinned parser provenance. Materialization runs in
+one transaction and creates or replaces exactly one owner-only private draft.
+Ingredient and instruction wording comes from the extracted source chunks, not
+normalized parser suggestions. Duplicate execution reuses the import and draft
+without duplicate children; persistence failure rolls back all draft changes.
+
+The existing REC-04 editor displays the imported state, high-level provenance,
+structured review warnings, and an owner-only link to the preserved source.
+Parser suggestions remain editable and non-authoritative. Imports never invoke
+REC-05, never finalize or publish, and remain absent from public routes and
+discovery until the owner separately completes the normal workflow. URL, OCR,
+image, document, bulk, and automatic-publication imports remain deferred.
+
 ## Implemented production configuration readiness
 
 DEP-02 centralizes config-cache-safe production validation behind
@@ -964,12 +987,12 @@ fallback, and DEC-016 transactional mail configuration. FND-13 continues to own
 live provider, destination, capacity, clock, audit, worker, and failure-monitor
 health.
 
-DEC-005 imports and DEC-006 OCR remain disabled features. Their bounded local
-configuration is represented, and incomplete enabled local OCR/import or
-optional EU Google OCR fallback configuration fails only at the applicable
-feature boundary. `.env.example` retains working Sail/Mailpit/local defaults
-and contains only empty secret placeholders; production overrides are defined
-in `PRODUCTION_CONFIGURATION.md`.
+DEC-005 pasted-text imports now use the bounded deterministic local parser;
+later URL/file/OCR channels remain disabled. DEC-006 OCR configuration is
+represented, and incomplete enabled OCR or optional EU Google OCR fallback
+configuration fails only at that feature boundary. `.env.example` retains
+working Sail/Mailpit/local defaults and contains only empty secret placeholders;
+production overrides are defined in `PRODUCTION_CONFIGURATION.md`.
 
 ## Automated coverage
 

@@ -138,6 +138,8 @@ class RecipeController extends Controller
 
         $this->authorize('update', $recipe);
 
+        $recipe->load('sourceImport');
+
         return view('recipes.edit', compact('recipe'));
     }
 

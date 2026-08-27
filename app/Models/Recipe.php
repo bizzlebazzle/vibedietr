@@ -71,6 +71,12 @@ class Recipe extends Model
         return $this->hasOne(RecipeDraftRevision::class);
     }
 
+    /** @return HasOne<RecipeImport, $this> */
+    public function sourceImport(): HasOne
+    {
+        return $this->hasOne(RecipeImport::class);
+    }
+
     /** @return HasOne<RecipeRemixLineage, $this> */
     public function remixLineage(): HasOne
     {
