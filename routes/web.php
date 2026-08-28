@@ -27,6 +27,7 @@ Route::get('profiles/{publicProfile}', PublicProfileController::class)
     ->name('public-profiles.show');
 
 Route::get('recipes', RecipeDiscoveryController::class)
+    ->middleware('throttle:public-search')
     ->name('recipes.index');
 
 Route::get('recipes/{recipe}', [RecipeController::class, 'show'])
@@ -71,14 +72,16 @@ Route::middleware(['auth'])->group(function () {
         ->name('bookmarks.destroy');
     Route::resource('ingredients', IngredientController::class);
     Route::get('recipe-imports/create', [RecipeImportController::class, 'create'])->name('recipe-imports.create');
-    Route::post('recipe-imports', [RecipeImportController::class, 'store'])->middleware('throttle:10,60')->name('recipe-imports.store');
-    Route::post('recipe-imports/webpage', [RecipeImportController::class, 'storeWebpage'])->middleware('throttle:10,60')->name('recipe-imports.webpage.store');
+    Route::post('recipe-imports', [RecipeImportController::class, 'store'])->middleware('throttle:recipe-import')->name('recipe-imports.store');
+    Route::post('recipe-imports/webpage', [RecipeImportController::class, 'storeWebpage'])->middleware('throttle:recipe-import')->name('recipe-imports.webpage.store');
     Route::get('recipe-imports/{recipeImport}', [RecipeImportController::class, 'show'])->whereUlid('recipeImport')->name('recipe-imports.show');
-    Route::post('recipe-imports/{recipeImport}/retry', [RecipeImportController::class, 'retry'])->whereUlid('recipeImport')->name('recipe-imports.retry');
+    Route::post('recipe-imports/{recipeImport}/retry', [RecipeImportController::class, 'retry'])
+        ->middleware('throttle:recipe-import')->whereUlid('recipeImport')->name('recipe-imports.retry');
     Route::resource('recipes', RecipeController::class)->only(['create', 'edit']);
     Route::delete('recipes/{recipe}/revision', [RecipeController::class, 'abandonRevision'])
         ->name('recipes.revision.destroy');
     Route::patch('recipes/{recipe}/visibility', [RecipeController::class, 'updateVisibility'])
+        ->middleware('throttle:sharing')
         ->name('recipes.visibility.update');
 });
 

@@ -156,6 +156,22 @@ class ProductionConfigurationTest extends TestCase
         $this->assertStringContainsString('quota and budget', $google);
     }
 
+    public function test_security_limits_and_private_transient_disk_fail_closed(): void
+    {
+        $this->assertSame([], $this->validator()->failures());
+
+        config(['security.requests.max_bytes' => 100, 'security.uploads.max_bytes' => 100]);
+        $this->assertStringContainsString('request-envelope headroom', implode(' ', $this->validator()->failures()));
+
+        $this->useValidProductionConfiguration();
+        config(['security.uploads.transient_disk' => 'public']);
+        $this->assertStringContainsString('private durable production disk', implode(' ', $this->validator()->failures()));
+
+        $this->useValidProductionConfiguration();
+        config(['security.throttles.import_global.attempts' => 5]);
+        $this->assertStringContainsString('global import ceiling', implode(' ', $this->validator()->failures()));
+    }
+
     public function test_complete_enabled_import_ocr_and_google_configuration_passes_within_bounds(): void
     {
         config([
@@ -289,6 +305,7 @@ class ProductionConfigurationTest extends TestCase
             'observability.adapter' => 'platform',
             'observability.release' => '2026.08.27-dep05',
             'observability.alert_recipient_role' => 'primary_administrator',
+            'security.uploads.transient_disk' => 's3',
             'filesystems.default' => 's3',
             'filesystems.disks.s3.key' => 'synthetic-storage-key',
             'filesystems.disks.s3.secret' => 'synthetic-storage-secret',

@@ -239,6 +239,15 @@ failure-regression fixtures:
 ./vendor/bin/sail npm run docs:test
 ```
 
+### Validate shared security controls
+
+Run the focused DEP-03 header, throttle, input, transient-storage, MIME,
+resource, cleanup and redaction checks with:
+
+```bash
+./vendor/bin/sail test tests/Feature/SecurityControlsTest.php tests/Feature/TransientInputSecurityTest.php tests/Feature/RedactionPrivacyTest.php
+```
+
 Decision-register entries use a `## DEC-NNN — Title` heading and the fields
 `Question requiring resolution`, `Why it matters`, `Status`, `Owner`,
 `Alternatives`, `Existing constraints from ...`, `Backlog relationships`,

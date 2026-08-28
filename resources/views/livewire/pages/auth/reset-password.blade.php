@@ -1,5 +1,7 @@
 <?php
 
+use App\Security\Limits\AbuseRateLimiter;
+use App\Security\Limits\LimiterIdentity;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
@@ -38,6 +40,13 @@ new #[Layout('layouts.guest')] class extends Component
             'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
         ]);
+
+        $limiter = app(AbuseRateLimiter::class);
+        $limiter->consume(
+            'password_reset', app(LimiterIdentity::class)->input(request(), $this->email),
+            (int) config('security.throttles.password_reset.attempts'),
+            (int) config('security.throttles.password_reset.decay_seconds'),
+        );
 
         // Here we will attempt to reset the user's password. If it is successful we
         // will update the password on an actual user model and persist it to the

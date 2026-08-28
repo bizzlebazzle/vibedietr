@@ -14,6 +14,8 @@ use App\Integrations\OpenFoodFacts\OpenFoodFactsClient;
 use App\Integrations\OpenFoodFacts\OpenFoodFactsLookupStatus;
 use App\Models\Ingredient;
 use App\Models\User;
+use App\Security\Limits\AbuseRateLimiter;
+use App\Security\Limits\LimiterIdentity;
 use Illuminate\Support\Arr;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -176,6 +178,19 @@ class Form extends Component
         }
 
         $this->validateOnly('barcode', $this->barcodeLookupRules());
+        $identities = app(LimiterIdentity::class);
+        $limiter = app(AbuseRateLimiter::class);
+        $limiter->consume(
+            'barcode_user', $identities->request(request()),
+            (int) config('security.throttles.barcode_user.attempts'),
+            (int) config('security.throttles.barcode_user.decay_seconds'),
+        );
+        $limiter->consume(
+            'barcode_global', 'global',
+            (int) config('security.throttles.barcode_global.attempts'),
+            (int) config('security.throttles.barcode_global.decay_seconds'),
+        );
+
         $result = app(OpenFoodFactsClient::class)->lookup($barcode);
 
         if ($result->status !== OpenFoodFactsLookupStatus::Success || $result->product === null) {

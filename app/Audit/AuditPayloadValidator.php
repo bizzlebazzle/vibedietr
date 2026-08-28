@@ -44,6 +44,15 @@ final class AuditPayloadValidator
         'evidence_content',
         'environment_value',
         'command_arguments',
+        'source_text',
+        'import_source',
+        'extraction_text',
+        'filename',
+        'storage_path',
+        'local_path',
+        'provider_payload',
+        'provider_request',
+        'provider_response',
     ];
 
     /**

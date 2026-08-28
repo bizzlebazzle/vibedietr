@@ -101,6 +101,21 @@ class OpenFoodFactsLivewireTest extends TestCase
             ->assertDontSee('secret exception detail');
     }
 
+    public function test_local_barcode_throttle_prevents_upstream_call_after_boundary(): void
+    {
+        config(['security.throttles.barcode_user.attempts' => 1]);
+        Http::fake(['*' => Http::response($this->validResponse())]);
+        $user = User::factory()->create();
+
+        $component = Livewire::actingAs($user)->test(Form::class)
+            ->set('barcode', '0123456789012')
+            ->call('fetchFromOff')
+            ->assertStatus(200);
+
+        $component->call('fetchFromOff')->assertStatus(429);
+        Http::assertSentCount(1);
+    }
+
     private function lookup(): Testable
     {
         return Livewire::actingAs(User::factory()->create())->test(Form::class)

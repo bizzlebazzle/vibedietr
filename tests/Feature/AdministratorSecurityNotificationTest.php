@@ -109,6 +109,7 @@ class AdministratorSecurityNotificationTest extends TestCase
             'cache.default' => 'database',
             'production.storage.durable_disk' => 's3',
             'filesystems.default' => 's3',
+            'security.uploads.transient_disk' => 's3',
             'filesystems.disks.s3.key' => 'synthetic-key',
             'filesystems.disks.s3.secret' => 'synthetic-secret',
             'filesystems.disks.s3.region' => 'eu-west-2',

@@ -1290,6 +1290,7 @@ changes, it is deliberately split across multiple items.
 
 - **Outcome:** Reduce browser and abuse risk around authentication, public
   search, barcode lookup, imports, sharing, and uploads.
+- **Status:** Complete (2026-08-28).
 - **Dependencies:** STB-09, DEP-02.
 - **Acceptance criteria:** CSP supports locally bundled assets and required
   media; security headers are applied consistently; authentication, public

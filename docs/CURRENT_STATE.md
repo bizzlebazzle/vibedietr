@@ -1016,6 +1016,43 @@ configuration fails only at that feature boundary. `.env.example` retains
 working Sail/Mailpit/local defaults and contains only empty secret placeholders;
 production overrides are defined in `PRODUCTION_CONFIGURATION.md`.
 
+## Implemented shared security controls
+
+DEP-03 adds central response headers and a nonce-backed CSP for public,
+authentication and authenticated pages. Production sources are first-party;
+local development alone permits the configured Vite HMR origin. The policy
+denies objects and framing, restricts forms/base URLs, removes the remote font
+dependency, applies private no-store behavior to sensitive routes and enables
+HSTS only for production HTTPS requests. Livewire's bundled Alpine evaluator
+still requires the documented narrow `unsafe-eval` concession.
+
+Named policies now throttle public recipe discovery, recipe visibility writes,
+security mutations and every import submit/retry route. Login retains its
+failure-only five-attempt policy with a hashed email-plus-IP key. Reset and
+confirmation actions use reusable hashed identities. Authenticated barcode
+lookups have per-user and global ceilings before OpenFoodFacts is called.
+DEC-005 imports default to ten submissions per authenticated user per hour and
+also have a configurable global ceiling; limiter keys contain no source or URL.
+
+A generic request guard returns safe 413 responses before route work when a
+declared body exceeds the configured 26 MiB envelope. The reusable upload
+ceiling is 25 MiB. Infrastructure must reject earlier at proxy/web/PHP layers;
+Laravel cannot protect bytes those layers have already accepted.
+
+Private transient inputs use a non-served disk and generated ULID keys rather
+than original filenames. Fileinfo inspection compares actual content, browser
+MIME and known extensions, lets callers supply stricter allowlists, and stores
+HTML/text only as inert bytes. Small parsing budgets cover bytes, characters,
+items, depth and cooperative elapsed time. Cleanup is idempotent and reports
+only source-free outcomes.
+
+Structured log context has secondary sensitive-key redaction; telemetry and
+audit remain allowlist-first. Sensitive exception requests receive a generic
+500 without request values, while safe exception-class telemetry replaces raw
+default exception logging. Existing identifier-only import jobs, privacy-aware
+failed-job removal and seven-day metadata pruning remain authoritative. See
+[Security controls](SECURITY_CONTROLS.md).
+
 ## Automated coverage
 
 The `Quality gates` workflow exposes these branch-protection job/check names:

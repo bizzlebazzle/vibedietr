@@ -66,6 +66,16 @@ Exception reporting adds only correlation, environment, release, exception
 class, and safe HTTP/console operation; never bodies, sessions, users,
 serialized jobs, raw messages, agents, IPs, or provider payloads.
 
+DEP-03 also applies a Monolog sensitive-key processor as secondary protection
+for structured context. Passwords, factor/recovery values, authorization and
+session material, import/OCR/extraction content, user filenames, storage paths
+and provider request/response payloads are redacted. Application code must
+still use safe allowlisted context and must never interpolate those values into
+a message. Sensitive exception requests receive a generic response, and raw
+default exception reporting stops after safe exception telemetry is recorded.
+Throttle/validation metrics may add only stable limiter, route-category,
+outcome and content-validation-result dimensions.
+
 ## Queue, scheduler, providers, and workflows
 
 Queue events record worker heartbeat, dispatch-to-start when bounded `pushedAt`
