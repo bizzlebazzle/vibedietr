@@ -630,6 +630,7 @@ changes, it is deliberately split across multiple items.
 
 - **Outcome:** Fetch a user-supplied URL safely and create a source-attributed,
   reviewable private draft.
+- **Status:** Complete (2026-08-27).
 - **Dependencies:** REC-15, FND-09, DEP-04, DEP-05.
 - **Acceptance criteria:** Fetch and extraction run as idempotent, correlated
   queued work under FND-09; network access is protected against SSRF and size/

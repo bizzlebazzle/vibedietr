@@ -29,7 +29,7 @@ final class RecipeImportMaterializer
                 return Recipe::query()->findOrFail($import->recipe_id);
             }
 
-            if (! in_array($import->status, [RecipeImportStatus::Pending, RecipeImportStatus::Processing], true)) {
+            if (! in_array($import->status, [RecipeImportStatus::Pending, RecipeImportStatus::Processing, RecipeImportStatus::Extracting], true)) {
                 throw new LogicException('The recipe import is not materializable.');
             }
 
@@ -103,12 +103,12 @@ final class RecipeImportMaterializer
                 'parser_version' => $result->parserVersion,
                 'requires_review' => true,
                 'warnings' => $result->warnings === [] ? null : $result->warnings,
-                'provenance' => [
-                    'channel' => RecipeImportType::PastedText->value,
+                'provenance' => array_merge($import->provenance ?? [], [
+                    'channel' => $import->type->value,
                     'parser' => $result->parserIdentifier,
                     'parser_version' => $result->parserVersion,
                     'parsed_at' => now()->utc()->toIso8601String(),
-                ],
+                ]),
                 'completion_classification' => $result->completionClassification,
                 'failure_category' => null,
                 'failure_code' => null,

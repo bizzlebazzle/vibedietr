@@ -81,7 +81,7 @@ final class DeterministicRecipeTextParser implements RecipeTextParser
             }
         }
 
-        if ($ingredients === [] || $steps === []) {
+        if ($ingredients === [] && $steps === []) {
             throw new NoCredibleRecipeStructure;
         }
 
@@ -94,12 +94,15 @@ final class DeterministicRecipeTextParser implements RecipeTextParser
             $warnings[] = 'servings_uncertain';
         }
         if ($title === null) {
-            $warnings[] = 'title_uncertain';
+            $warnings[] = 'title_missing';
         }
         if ($servings === null) {
-            $warnings[] = 'servings_uncertain';
+            $warnings[] = 'servings_missing';
         }
         if (! $sawMajorHeading) {
+            $warnings[] = 'extraction_incomplete';
+        }
+        if ($ingredients === [] || $steps === []) {
             $warnings[] = 'extraction_incomplete';
         }
 
@@ -116,7 +119,7 @@ final class DeterministicRecipeTextParser implements RecipeTextParser
             warnings: array_values(array_unique($warnings)),
             parserIdentifier: self::IDENTIFIER,
             parserVersion: (string) (config('production.imports.parser_version') ?: 'rec15-v1'),
-            completionClassification: $hasUncertainty ? 'partial_reviewable' : 'structured_reviewable',
+            completionClassification: ($ingredients === [] || $steps === [] || in_array('extraction_incomplete', $warnings, true)) ? 'reviewable_with_strong_warnings' : 'reviewable',
         );
     }
 

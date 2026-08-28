@@ -38,6 +38,6 @@ final class RecipeImportProcessor
             return $import->recipe_id === null ? null : Recipe::query()->find($import->recipe_id);
         }
 
-        return $this->materializer->materialize($importId, $this->parser->parse($import->source_text));
+        return $this->materializer->materialize($importId, $this->parser->parse((string) $import->source_text));
     }
 }

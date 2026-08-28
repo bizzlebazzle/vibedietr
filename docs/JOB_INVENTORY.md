@@ -112,6 +112,40 @@ serialized payload, so the privacy classification is an operational control.
   serialized. Retain at most 168 hours under the native failed-job policy.
 - **Scheduling:** Event driven; not scheduled. Missing imports complete as obsolete.
 
+## ProcessWebpageRecipeImport
+
+- **Class / owner:** `App\Jobs\ProcessWebpageRecipeImport`; REC-16 webpage
+  recipe imports.
+- **Purpose / enablement:** Safely fetch one submitted public HTML URL, extract
+  recipe source locally, and atomically create or update its single private
+  draft. Enabled only by authenticated submission or bounded owner retry.
+- **Queue / worker / concurrency:** `default`; `default` worker group; one
+  configured process and a global import overlap lock. This is stricter than
+  DEC-005's maximum of two concurrent imports per application instance.
+- **Timeout / retry_after:** 60-second job timeout, 70-second worker timeout,
+  90-second database `retry_after`. Fetch connect/total timeouts are 3/15
+  seconds, leaving cleanup and persistence margin.
+- **Attempts / backoff:** Three total attempts; 10 seconds then 60 seconds.
+  DNS/connect timeout, HTTP 408/429, and selected 5xx failures may retry.
+  Validation, SSRF, redirect, type, size, and extraction failures are permanent.
+- **Idempotency:** SHA-256 of
+  `recipe_webpage_import.process|{import ULID}`; unique dispatch, per-import
+  overlap protection, locked state, unique import-to-draft relationship, and
+  transactional replacement of import-owned children form the durable boundary.
+- **Duration / resources:** One manually redirected, DNS-pinned HTTP request
+  chain plus bounded local DOM/JSON parsing and database writes; maximum 60
+  seconds and two MiB decoded HTML.
+- **Failure / alert:** Safe webpage outcome, latency, queue retry, and final
+  failure telemetry use bounded categories and correlation. Follow provider
+  outage, backlog, and failure-spike runbooks.
+- **Replay:** Retry the same failed import through the owner-authorized action
+  or reviewed failed-job runbook. Never create a replacement import for a
+  technical retry.
+- **Failed record / privacy:** Payload contains only import and correlation
+  ULIDs. It excludes URL, HTML, extracted text, headers, user data, and parser
+  results; retain metadata-only failure rows at most 168 hours.
+- **Scheduling:** Event driven; not scheduled. Raw HTML is never durable.
+
 ## administrator:expire-promotions
 
 - **Owner / purpose / enablement:** FND-14; finalize expired administrator
@@ -184,8 +218,8 @@ serialized payload, so the privacy classification is an operational control.
 
 ## Defined future workloads
 
-REC-15 pasted-text work is inventoried above and may consume the bounded
-`default` worker. REC-16 URL/document extraction and DEC-006 OCR remain disabled
+REC-15 pasted-text and REC-16 webpage work are inventoried above and consume the
+bounded `default` worker. Document extraction and DEC-006 OCR remain disabled
 and have no job classes. Their defined bounds are three attempts, 10/60-second
 backoff, concurrency at most two, private transient storage, and 24-hour
 transient cleanup; OCR has a 60-second job timeout and provider calls capped at

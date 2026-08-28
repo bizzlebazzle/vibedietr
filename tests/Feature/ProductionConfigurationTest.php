@@ -162,6 +162,8 @@ class ProductionConfigurationTest extends TestCase
             'production.imports.enabled' => true,
             'production.imports.transient_disk' => 's3',
             'production.imports.parser_version' => 'parser-v1',
+            'production.imports.extractor_version' => 'extractor-v1',
+            'production.imports.user_agent' => 'VibeDietr/1.0 (https://app.example.test/contact)',
             'production.ocr.enabled' => true,
             'production.ocr.tesseract_version' => '5',
             'production.ocr.language' => 'eng',
