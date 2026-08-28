@@ -310,12 +310,17 @@ final class ProductionConfigurationValidator
         }
 
         if (config('production.imports.enabled') === true) {
-            $this->requiredFeatureSettings($failures, 'imports', ['transient_disk', 'parser_version', 'queue']);
+            $this->requiredFeatureSettings($failures, 'imports', ['transient_disk', 'parser_version', 'extractor_version', 'user_agent', 'queue']);
             if (config('production.imports.transient_disk') !== config('production.storage.durable_disk')) {
                 $failures[] = 'Enabled recipe imports require the configured private durable transient disk.';
             }
+            $importAgent = (string) config('production.imports.user_agent');
+            if (str_contains(strtolower($importAgent), 'development') || str_contains(strtolower($importAgent), 'localhost') || ! str_contains($importAgent, '(')) {
+                $failures[] = 'RECIPE_IMPORT_USER_AGENT must identify the production application and provide contact metadata.';
+            }
             if (config('production.imports.formats') !== ['txt', 'md', 'html']
                 || ! $this->within(config('production.imports.max_upload_bytes'), 1, 2097152)
+                || ! $this->within(config('production.imports.max_response_bytes'), 1, 2097152)
                 || ! $this->within(config('production.imports.max_url_length'), 1, 2048)
                 || ! $this->within(config('production.imports.max_redirects'), 0, 5)
                 || ! $this->within(config('production.imports.connect_timeout_seconds'), 1, 3)

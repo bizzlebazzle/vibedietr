@@ -82,8 +82,15 @@ failure/exception/provider counters through a replaceable `AlertSink`.
 
 OpenFoodFacts and security mail record duration and failure with stable
 dimensions. Slow calls increment `provider.slow`. Current critical workflows
-are the FND-09 reference task and DEC-016 security delivery. Unimplemented
-workflows have no fake metrics.
+include the FND-09 reference task, DEC-016 security delivery, pasted imports,
+and webpage imports.
+
+REC-16 emits `provider.request` fetch duration, `recipe_webpage.fetch`
+success/failure and SSRF-denial counters, and `recipe_webpage.extraction`
+duration/method outcomes. Labels are limited to stable provider, outcome,
+operation, and failure category. URL, hostname, resolved address,
+user/import/recipe identity, query string, HTML, and extracted text are
+prohibited metric dimensions. Correlation appears only in sanitized events.
 
 ## Initial alert matrix
 

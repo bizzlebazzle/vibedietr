@@ -968,8 +968,30 @@ The existing REC-04 editor displays the imported state, high-level provenance,
 structured review warnings, and an owner-only link to the preserved source.
 Parser suggestions remain editable and non-authoritative. Imports never invoke
 REC-05, never finalize or publish, and remain absent from public routes and
-discovery until the owner separately completes the normal workflow. URL, OCR,
-image, document, bulk, and automatic-publication imports remain deferred.
+discovery until the owner separately completes the normal workflow. OCR, image,
+document, bulk, and automatic-publication imports remain deferred.
+
+## Implemented webpage recipe imports
+
+REC-16 extends the same private import lifecycle with type `webpage_url`.
+Authenticated users may submit public HTTP/HTTPS HTML on port 80 or 443. The
+identifier-only job classifies every A/AAAA destination and pins the validated
+public address to the actual cURL connection. Redirects are manual, limited to
+five, and repeat scheme, port, DNS, and address validation at every hop.
+
+Fetches use an identified application User-Agent, three-second connection and
+15-second total timeouts, and a streamed two-MiB decoded-body limit. Only HTML
+is accepted. Login, paywall, CAPTCHA, private/intranet, alternate-port,
+raw-file, and JavaScript/browser-rendered sources are unsupported. No cookies,
+credentials, user headers, linked resources, or browser session are forwarded.
+
+Bounded Schema.org Recipe JSON-LD extraction precedes bounded visible-text
+fallback. Objects, arrays, `@graph`, multiple blocks, `HowToStep`, and
+`HowToSection` are supported under DEC-007 candidate and quality rules. The
+submitted/final URL, extraction method/version, extracted recipe source,
+warnings, timestamp, and correlation remain private provenance. Full fetched
+HTML exists only in job memory and is never persisted, queued, logged, audited,
+or placed in failed-job records.
 
 ## Implemented production configuration readiness
 
@@ -988,7 +1010,7 @@ live provider, destination, capacity, clock, audit, worker, and failure-monitor
 health.
 
 DEC-005 pasted-text imports now use the bounded deterministic local parser;
-later URL/file/OCR channels remain disabled. DEC-006 OCR configuration is
+later file/OCR channels remain disabled. DEC-006 OCR configuration is
 represented, and incomplete enabled OCR or optional EU Google OCR fallback
 configuration fails only at that feature boundary. `.env.example` retains
 working Sail/Mailpit/local defaults and contains only empty secret placeholders;

@@ -518,6 +518,13 @@ Resource-specific future checklist:
 | Deleted/anonymized content | Former private content is inaccessible through direct/nested routes; public recipe/catalogue attribution is non-identifying; independent copies/remixes survive; retained plan exposes only approved snapshots through its existing URL, accepts no new bookmark, is removed after its final bookmark, and cannot be reattributed after purge. |
 | Not-applicable resources | Assert no standalone recipe-share, weight/progress, or dietary-constraint endpoint is accidentally exposed if similarly named infrastructure is later introduced; add a full matrix row before implementing such a feature. |
 
+REC-16 makes webpage submissions current under the recipe-import row. The owner
+alone can view the submitted/final URL, extracted source, status, warnings, or
+resulting draft. Guests and other users cannot submit or dereference an import
+identifier. Public recipe serialization and discovery contain no draft
+provenance. Queue and failed-job payloads contain only import/correlation ULIDs;
+full URLs, query strings, HTML, extracted wording, and account data are absent.
+
 No automated tests are created by this documentation task.
 
 ## 9. Out of scope

@@ -976,11 +976,11 @@ representation:
 - Meal plan or schedule.
 - Diet plan, nutrition target, or dietary constraint.
 
-### Pasted-text recipe import
+### Recipe imports
 
 `RecipeImport` is an owner-only ULID resource for one intentional import. REC-15
-implements type `pasted_text` and bounded statuses `pending`, `processing`,
-`review_ready`, and `failed`. It retains the exact accepted source text and its
+implements `pasted_text`; REC-16 adds `webpage_url` and bounded fetch/extract
+states. It retains the exact accepted or extracted recipe source text and its
 declared inert format, correlation and idempotency identities, parser identifier
 and version, structured warnings, safe completion/failure classifications,
 timestamps, minimal provenance, and a nullable server-controlled relationship
@@ -1003,6 +1003,16 @@ remains in the REC-04/REC-05 draft lifecycle and cannot become finalized or
 public as an import side effect. Source text, child text, and raw parser data
 are excluded from queue payloads, failure logs, audit payloads, and public
 recipe projections.
+
+For `webpage_url`, the private import separately retains the original submitted
+URL and final validated redirect target plus extraction method, extractor
+identifier/version, extraction time, redirect count, and correlation. The
+submitted value is never overwritten by a redirect target. URL credentials are
+rejected; query strings remain authoritative private provenance but are omitted
+from telemetry. Full HTML is transient job-memory input, not durable recipe
+content or provenance. JSON-LD and visible-text extraction both produce the
+same application-owned parser result and enter the shared transactional
+materializer.
 
 DEC-006 further constrains the unimplemented OCR representation. A provider-
 independent OCR result may contain ordered page/line text, normalized confidence

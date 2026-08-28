@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Domain\RecipeImports\RecipeImportStatus;
 use App\Domain\RecipeImports\RecipeImportType;
 use App\Http\Requests\StorePastedRecipeImportRequest;
+use App\Http\Requests\StoreWebpageRecipeImportRequest;
 use App\Jobs\ProcessPastedRecipeImport;
+use App\Jobs\ProcessWebpageRecipeImport;
 use App\Models\RecipeImport;
 use App\Models\User;
 use App\Observability\CorrelationContext;
@@ -53,6 +55,34 @@ class RecipeImportController extends Controller
             ->with('status', 'Recipe import submitted. Parsing will run in the background.');
     }
 
+    public function storeWebpage(
+        StoreWebpageRecipeImportRequest $request,
+        CorrelationContext $correlation,
+    ): RedirectResponse {
+        $user = $request->user();
+        if (! $user instanceof User) {
+            abort(403);
+        }
+        $import = new RecipeImport;
+        $import->id = (string) Str::ulid();
+        $import->forceFill([
+            'type' => RecipeImportType::WebpageUrl,
+            'source_format' => 'html',
+            'source_text' => null,
+            'submitted_url' => $request->validated('source_url'),
+            'status' => RecipeImportStatus::Pending,
+            'correlation_id' => $correlation->get(),
+            'idempotency_key' => ProcessWebpageRecipeImport::OPERATION_TYPE.'|'.$import->id,
+            'requires_review' => true,
+        ]);
+        $import->owner()->associate($user);
+        $import->save();
+        ProcessWebpageRecipeImport::dispatch($import->id, $import->correlation_id);
+
+        return redirect()->route('recipe-imports.show', $import)
+            ->with('status', 'Webpage import submitted. Fetching and extraction will run in the background.');
+    }
+
     public function show(RecipeImport $recipeImport): View
     {
         $this->authorize('view', $recipeImport);
@@ -79,7 +109,10 @@ class RecipeImportController extends Controller
             return $import;
         });
 
-        ProcessPastedRecipeImport::dispatch($import->id, $import->correlation_id);
+        match ($import->type) {
+            RecipeImportType::PastedText => ProcessPastedRecipeImport::dispatch($import->id, $import->correlation_id),
+            RecipeImportType::WebpageUrl => ProcessWebpageRecipeImport::dispatch($import->id, $import->correlation_id),
+        };
 
         return redirect()->route('recipe-imports.show', $import)
             ->with('status', 'Recipe import retry queued.');

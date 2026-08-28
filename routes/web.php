@@ -72,6 +72,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('ingredients', IngredientController::class);
     Route::get('recipe-imports/create', [RecipeImportController::class, 'create'])->name('recipe-imports.create');
     Route::post('recipe-imports', [RecipeImportController::class, 'store'])->middleware('throttle:10,60')->name('recipe-imports.store');
+    Route::post('recipe-imports/webpage', [RecipeImportController::class, 'storeWebpage'])->middleware('throttle:10,60')->name('recipe-imports.webpage.store');
     Route::get('recipe-imports/{recipeImport}', [RecipeImportController::class, 'show'])->whereUlid('recipeImport')->name('recipe-imports.show');
     Route::post('recipe-imports/{recipeImport}/retry', [RecipeImportController::class, 'retry'])->whereUlid('recipeImport')->name('recipe-imports.retry');
     Route::resource('recipes', RecipeController::class)->only(['create', 'edit']);

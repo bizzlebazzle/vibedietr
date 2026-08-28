@@ -20,6 +20,7 @@ return [
         'enabled' => env('RECIPE_IMPORTS_ENABLED', false),
         'formats' => $csv(env('RECIPE_IMPORT_FORMATS', 'txt,md,html')),
         'max_upload_bytes' => (int) env('RECIPE_IMPORT_MAX_UPLOAD_BYTES', 2097152),
+        'max_response_bytes' => (int) env('RECIPE_IMPORT_MAX_RESPONSE_BYTES', 2097152),
         'max_url_length' => (int) env('RECIPE_IMPORT_MAX_URL_LENGTH', 2048),
         'max_redirects' => (int) env('RECIPE_IMPORT_MAX_REDIRECTS', 5),
         'connect_timeout_seconds' => (int) env('RECIPE_IMPORT_CONNECT_TIMEOUT', 3),
@@ -29,8 +30,10 @@ return [
         'backoff_seconds' => $csv(env('RECIPE_IMPORT_BACKOFF_SECONDS', '10,60')),
         'concurrency' => (int) env('RECIPE_IMPORT_CONCURRENCY', 2),
         'per_user_per_hour' => (int) env('RECIPE_IMPORT_PER_USER_PER_HOUR', 10),
+        'user_agent' => env('RECIPE_IMPORT_USER_AGENT', 'VibeDietr/development (http://localhost)'),
         'transient_disk' => env('RECIPE_IMPORT_TRANSIENT_DISK'),
         'cleanup_hours' => (int) env('RECIPE_IMPORT_CLEANUP_HOURS', 24),
+        'extractor_version' => env('RECIPE_IMPORT_EXTRACTOR_VERSION'),
         'parser_version' => env('RECIPE_IMPORT_PARSER_VERSION'),
     ],
     'ocr' => [

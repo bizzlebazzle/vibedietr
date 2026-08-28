@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
 
 /**
+ * @property array<string, mixed>|null $provenance
  * @property RecipeImportType $type
  * @property RecipeImportStatus $status
  */
@@ -41,6 +42,7 @@ class RecipeImport extends Model
             'warnings' => 'array',
             'provenance' => 'array',
             'manual_retry_count' => 'integer',
+            'extracted_at' => 'immutable_datetime',
             'started_at' => 'immutable_datetime',
             'completed_at' => 'immutable_datetime',
             'failed_at' => 'immutable_datetime',

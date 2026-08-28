@@ -164,8 +164,15 @@ non-secret settings.
 DEC-005 imports are local and disabled by default. When
 `RECIPE_IMPORTS_ENABLED=true`, readiness requires
 `RECIPE_IMPORT_TRANSIENT_DISK` to match the private durable disk,
-`RECIPE_IMPORT_PARSER_VERSION`, and a queue. Configuration records
-`txt,md,html`, two MiB, URL/redirect limits, 3/15-second timeouts, three
+`RECIPE_IMPORT_PARSER_VERSION`, `RECIPE_IMPORT_EXTRACTOR_VERSION`, an
+identified `RECIPE_IMPORT_USER_AGENT`, and a queue. Webpage import allows only
+HTTP/HTTPS ports 80/443, validates every redirect and A/AAAA response, and pins
+the validated address to the connection. The maximum URL length is 2,048,
+redirect count five, and decoded HTML is streamed through the
+`RECIPE_IMPORT_MAX_RESPONSE_BYTES=2097152` limit. The User-Agent must contain
+a production version and public contact but no account or recipe data.
+Configuration also records `txt,md,html`, two-MiB upload limits,
+3/15-second timeouts, three
 attempts with 10/60-second backoff, concurrency two, ten imports per user per
 hour, and 24-hour cleanup. There is no parser credential or silent fallback.
 

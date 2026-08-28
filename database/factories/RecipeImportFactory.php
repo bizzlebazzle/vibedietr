@@ -7,6 +7,7 @@ use App\Domain\RecipeImports\RecipeImportStatus;
 use App\Domain\RecipeImports\RecipeImportType;
 use App\Domain\Recipes\RecipeLifecycle;
 use App\Domain\Recipes\RecipeVisibility;
+use App\Jobs\ProcessWebpageRecipeImport;
 use App\Models\Recipe;
 use App\Models\RecipeImport;
 use App\Models\User;
@@ -41,13 +42,24 @@ class RecipeImportFactory extends Factory
         ]);
     }
 
+    public function webpage(): static
+    {
+        return $this->state(fn (array $attributes): array => [
+            'type' => RecipeImportType::WebpageUrl,
+            'source_format' => 'html',
+            'source_text' => null,
+            'submitted_url' => 'https://recipes.example.test/synthetic-soup',
+            'idempotency_key' => ProcessWebpageRecipeImport::OPERATION_TYPE.'|'.$attributes['id'],
+        ]);
+    }
+
     public function reviewReady(): static
     {
         return $this->state(fn (): array => [
             'status' => RecipeImportStatus::ReviewReady,
             'parser_identifier' => DeterministicRecipeTextParser::IDENTIFIER,
             'parser_version' => 'rec15-v1',
-            'completion_classification' => 'structured_reviewable',
+            'completion_classification' => 'reviewable',
             'provenance' => ['channel' => 'pasted_text', 'parser' => DeterministicRecipeTextParser::IDENTIFIER, 'parser_version' => 'rec15-v1'],
             'completed_at' => now()->utc(),
         ]);
@@ -67,7 +79,7 @@ class RecipeImportFactory extends Factory
     {
         return $this->reviewReady()->state(fn (): array => [
             'warnings' => ['servings_uncertain', 'extraction_incomplete'],
-            'completion_classification' => 'partial_reviewable',
+            'completion_classification' => 'reviewable_with_strong_warnings',
         ]);
     }
 

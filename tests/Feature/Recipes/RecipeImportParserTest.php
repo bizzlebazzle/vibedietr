@@ -44,7 +44,7 @@ class RecipeImportParserTest extends TestCase
         $freeForm = app(DeterministicRecipeTextParser::class)->parse($this->fixture('free-form.txt'));
         $ambiguous = app(DeterministicRecipeTextParser::class)->parse($this->fixture('ambiguous.txt'));
 
-        $this->assertSame('partial_reviewable', $freeForm->completionClassification);
+        $this->assertSame('reviewable_with_strong_warnings', $freeForm->completionClassification);
         $this->assertContains('extraction_incomplete', $freeForm->warnings);
         $this->assertSame('salt to taste', $ambiguous->ingredients[0]->originalText);
         $this->assertTrue($ambiguous->ingredients[0]->requiresReview());
