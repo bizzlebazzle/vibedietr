@@ -46,7 +46,7 @@ class LoginForm extends Form
      */
     protected function ensureIsNotRateLimited(): void
     {
-        if (! RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
+        if (! RateLimiter::tooManyAttempts($this->throttleKey(), (int) config('security.throttles.login.attempts'))) {
             return;
         }
 
@@ -67,6 +67,8 @@ class LoginForm extends Form
      */
     protected function throttleKey(): string
     {
-        return Str::transliterate(Str::lower($this->email).'|'.request()->ip());
+        return 'login:'.hash(
+            'sha256', Str::transliterate(Str::lower($this->email).'|'.request()->ip()),
+        );
     }
 }

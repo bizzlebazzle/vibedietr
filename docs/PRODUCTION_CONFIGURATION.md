@@ -70,6 +70,30 @@ timeout safety but cannot prove those processes are alive. Commands, resource
 limits, graceful deployment, failure retention and recovery are defined in
 [`QUEUE_OPERATIONS.md`](QUEUE_OPERATIONS.md).
 
+## Browser, abuse and input limits
+
+| Variable | Classification | Default/example | Requirement and failure |
+| --- | --- | --- | --- |
+| `SECURITY_HSTS_MAX_AGE` | Non-secret | `31536000` | One day through two years; emitted only for production HTTPS requests. |
+| `SECURITY_MAX_REQUEST_BYTES` | Non-secret | `27262976` (26 MiB) | Must be positive, bounded and greater than the generic upload limit. |
+| `SECURITY_MAX_UPLOAD_BYTES` | Non-secret | `26214400` (25 MiB) | Generic ceiling; a feature may impose a smaller approved limit. |
+| `SECURITY_TRANSIENT_DISK` | Non-secret | Production: `s3` | Must equal `PRODUCTION_DURABLE_DISK`, be private and not enable application serving. |
+| `SECURITY_BARCODE_GLOBAL_PER_MINUTE` | Non-secret | `300` | Positive bounded global OpenFoodFacts lookup ceiling. |
+| `RECIPE_IMPORT_PER_USER_PER_HOUR` | Non-secret | `10` | DEC-005 authenticated-user submission ceiling. |
+| `RECIPE_IMPORT_GLOBAL_PER_HOUR` | Non-secret | `500` | Positive and no lower than the per-user ceiling. |
+
+`VITE_DEV_SERVER_URL` is local-development-only CSP input. Do not configure a
+development origin in a production environment.
+
+The application request limit is not an edge limit. Configure the platform,
+reverse proxy and web server to reject oversized traffic before PHP, set PHP
+`post_max_size` at least to the request-envelope ceiling and
+`upload_max_filesize` at least to the intended upload ceiling, and keep any
+feature limit below both. A lower infrastructure limit returns that layer's
+413 before Laravel can format it. A higher infrastructure limit still permits
+Laravel's safe 413 but consumes more upstream capacity. Record and test the
+effective values in deployment configuration.
+
 ## Observability and runtime health
 
 DEP-05 is a hard production gate with DEP-04. Static production validation

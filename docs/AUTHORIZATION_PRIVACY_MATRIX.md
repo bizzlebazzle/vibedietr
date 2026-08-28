@@ -572,3 +572,15 @@ historical recipes, active revisions, bookmarks, collections, private tags and
 counts, plans, targets, and audit data are absent. Attribution is copied into
 each new immutable recipe version; profile disablement removes only the link
 and page, never the label, recipe publication, URL, history, or lineage.
+
+## DEP-03 transient-input privacy clarification
+
+The OCR/document/photo resource remains a planned REC-17 product flow. DEP-03
+now provides only its reusable private-input boundary: non-served storage,
+application-generated names, generic content-derived MIME comparison, caller-
+supplied allowlists, bounded-resource guards and idempotent cleanup outcomes.
+The primitive does not expose a public object URL and never uses the original
+filename as a path or telemetry field. Future jobs persist an opaque input
+record identifier and never serialize the handle, bytes, source text, filename,
+path or provider payload. REC-17 still owns format-specific authorization,
+limits, processing, retention execution and cleanup verification.

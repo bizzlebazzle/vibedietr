@@ -20,6 +20,7 @@ final class ProductionConfigurationValidator
         $this->persistence($failures);
         $this->queueOperations($failures);
         $this->observability($failures);
+        $this->securityControls($failures);
         $this->notifications($failures);
         $this->administratorControls($failures);
         $this->providers($failures);
@@ -105,6 +106,47 @@ final class ProductionConfigurationValidator
         }
         if (config('production.trusted_proxy_headers_setting') !== 'x-forwarded-for,x-forwarded-host,x-forwarded-port,x-forwarded-proto') {
             $failures[] = 'TRUSTED_PROXY_HEADERS must explicitly select the approved X-Forwarded header set.';
+        }
+    }
+
+    /** @param list<string> $failures */
+    private function securityControls(array &$failures): void
+    {
+        $requestBytes = config('security.requests.max_bytes');
+        $uploadBytes = config('security.uploads.max_bytes');
+        if (! $this->within($requestBytes, 1, 104_857_600)
+            || ! $this->within($uploadBytes, 1, 104_857_600)
+            || $requestBytes <= $uploadBytes) {
+            $failures[] = 'Security request and upload limits must be positive, bounded, and leave request-envelope headroom.';
+        }
+
+        $disk = config('security.uploads.transient_disk');
+        $diskConfiguration = is_string($disk) ? config("filesystems.disks.$disk") : null;
+        if ($this->blank($disk)
+            || ! is_array($diskConfiguration)
+            || $disk === 'public'
+            || ($diskConfiguration['serve'] ?? false) === true
+            || $disk !== config('production.storage.durable_disk')) {
+            $failures[] = 'SECURITY_TRANSIENT_DISK must select the private durable production disk with public serving disabled.';
+        }
+
+        foreach ([
+            'login', 'password_reset', 'password_reset_ip', 'password_confirmation',
+            'security', 'public_search', 'barcode_user', 'barcode_global', 'sharing',
+            'import_user', 'import_global',
+        ] as $limiter) {
+            if (! $this->within(config("security.throttles.$limiter.attempts"), 1, 1_000_000)
+                || ! $this->within(config("security.throttles.$limiter.decay_seconds"), 1, 86_400)) {
+                $failures[] = 'Every security throttle requires a positive bounded attempt count and window.';
+                break;
+            }
+        }
+
+        if ((int) config('security.throttles.import_global.attempts') < (int) config('security.throttles.import_user.attempts')) {
+            $failures[] = 'The global import ceiling must not be lower than the per-user import ceiling.';
+        }
+        if (! $this->within(config('security.headers.hsts_max_age'), 86_400, 63_072_000)) {
+            $failures[] = 'SECURITY_HSTS_MAX_AGE must be between one day and two years.';
         }
     }
 

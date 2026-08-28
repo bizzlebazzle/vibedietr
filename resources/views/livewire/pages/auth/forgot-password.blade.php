@@ -1,5 +1,7 @@
 <?php
 
+use App\Security\Limits\AbuseRateLimiter;
+use App\Security\Limits\LimiterIdentity;
 use Illuminate\Support\Facades\Password;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
@@ -18,6 +20,20 @@ new #[Layout('layouts.guest')] class extends Component
         ]);
 
         // We will send the password reset link to this user. Once we have attempted
+        $request = request();
+        $identities = app(LimiterIdentity::class);
+        $limiter = app(AbuseRateLimiter::class);
+        $limiter->consume(
+            'password_reset', $identities->input($request, $this->email),
+            (int) config('security.throttles.password_reset.attempts'),
+            (int) config('security.throttles.password_reset.decay_seconds'),
+        );
+        $limiter->consume(
+            'password_reset_ip', $identities->ip($request),
+            (int) config('security.throttles.password_reset_ip.attempts'),
+            (int) config('security.throttles.password_reset_ip.decay_seconds'),
+        );
+
         // to send the link, we will examine the response then see the message we
         // need to show to the user. Finally, we'll send out a proper response.
         $status = Password::sendResetLink(

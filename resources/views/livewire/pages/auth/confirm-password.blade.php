@@ -1,5 +1,7 @@
 <?php
 
+use App\Security\Limits\AbuseRateLimiter;
+use App\Security\Limits\LimiterIdentity;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
@@ -17,6 +19,13 @@ new #[Layout('layouts.guest')] class extends Component
         $this->validate([
             'password' => ['required', 'string'],
         ]);
+
+        $limiter = app(AbuseRateLimiter::class);
+        $limiter->consume(
+            'password_confirmation', app(LimiterIdentity::class)->request(request()),
+            (int) config('security.throttles.password_confirmation.attempts'),
+            (int) config('security.throttles.password_confirmation.decay_seconds'),
+        );
 
         if (! Auth::guard('web')->validate([
             'email' => Auth::user()->email,

@@ -389,3 +389,26 @@ untested.
 - The task follows `docs/QUEUED_JOB_CONVENTIONS.md` and reports any operational
   worker, scheduler, pruning, replay, or monitoring infrastructure still
   deferred.
+
+## 15. Additional requirements for shared security controls
+
+**When relevant**
+
+- Public, authentication, authenticated, sensitive and safe error responses
+  retain the central header/CSP policy; CSP changes are checked against current
+  Vite, Livewire, Alpine, scanner and local-HMR behavior.
+- New public queries, provider-backed actions, sharing writes, authentication
+  security flows and import submissions select a documented named limiter with
+  a content-free hashed or explicit global identity. Ordinary read behavior is
+  not throttled without a stated abuse reason.
+- Request and upload paths enforce central configurable bounds before costly
+  parsing/decoding/provider work and document proxy, web-server, PHP and
+  platform alignment where Laravel cannot reject first.
+- Transient uploads use a private non-served disk, application-generated key,
+  content-derived MIME inspection, feature-supplied allowlist and idempotent
+  cleanup. Original filenames never become paths or telemetry.
+- Parsers assert an approved byte/character/item/depth/time budget before or
+  during expensive work. Feature-specific image, document and provider limits
+  remain with their feature backlog item.
+- Synthetic-secret tests inspect logs, exception responses/context, audit and
+  metric metadata, queued serialization and failed-job behavior.
