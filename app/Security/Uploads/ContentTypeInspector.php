@@ -15,6 +15,8 @@ final class ContentTypeInspector
         'jpg' => ['image/jpeg'],
         'jpeg' => ['image/jpeg'],
         'png' => ['image/png'],
+        'heic' => ['image/heic', 'image/heif'],
+        'heif' => ['image/heic', 'image/heif'],
         'gif' => ['image/gif'],
         'webp' => ['image/webp'],
         'pdf' => ['application/pdf'],

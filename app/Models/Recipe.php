@@ -13,6 +13,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
+/**
+ * @property RecipeLifecycle $lifecycle
+ * @property RecipeVisibility $visibility
+ */
 class Recipe extends Model
 {
     /** @use HasFactory<RecipeFactory> */

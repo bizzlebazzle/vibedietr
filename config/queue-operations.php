@@ -3,6 +3,7 @@
 use App\Jobs\DeliverSecurityNotification;
 use App\Jobs\ProcessPastedRecipeImport;
 use App\Jobs\ProcessReferenceTask;
+use App\Jobs\ProcessUploadedRecipeImport;
 use App\Jobs\ProcessWebpageRecipeImport;
 use App\Queue\QueueName;
 
@@ -62,6 +63,12 @@ return [
             'failed_payload' => 'metadata-only',
         ],
         ProcessPastedRecipeImport::class => [
+            'queue' => QueueName::DEFAULT,
+            'worker' => 'default',
+            'timeout' => 60,
+            'failed_payload' => 'metadata-only',
+        ],
+        ProcessUploadedRecipeImport::class => [
             'queue' => QueueName::DEFAULT,
             'worker' => 'default',
             'timeout' => 60,

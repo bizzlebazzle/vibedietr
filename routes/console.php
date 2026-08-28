@@ -35,3 +35,10 @@ Schedule::command('queue:prune-operational-failures')
     ->name('queue-prune-operational-failures')
     ->withoutOverlapping(10)
     ->onOneServer();
+
+Schedule::command('recipe-imports:cleanup-transient')
+    ->hourly()
+    ->timezone('UTC')
+    ->name('recipe-imports-cleanup-transient')
+    ->withoutOverlapping(10)
+    ->onOneServer();

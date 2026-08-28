@@ -182,6 +182,8 @@ class ProductionConfigurationTest extends TestCase
             'production.imports.user_agent' => 'VibeDietr/1.0 (https://app.example.test/contact)',
             'production.ocr.enabled' => true,
             'production.ocr.tesseract_version' => '5',
+            'production.ocr.traineddata_path' => __FILE__,
+            'production.ocr.traineddata_sha256' => str_repeat('a', 64),
             'production.ocr.language' => 'eng',
             'production.ocr.heic_decoder_version' => 'decoder-v1',
             'production.ocr.preprocessing_version' => 'preprocess-v1',
@@ -189,12 +191,13 @@ class ProductionConfigurationTest extends TestCase
             'production.ocr.google.enabled' => true,
             'production.ocr.google.project_id' => 'synthetic-project',
             'production.ocr.google.location' => 'eu',
-            'production.ocr.google.endpoint' => 'eu-documentai.googleapis.com',
+            'production.ocr.google.endpoint' => 'https://eu-documentai.googleapis.com',
             'production.ocr.google.processor_id' => 'synthetic-processor',
             'production.ocr.google.model_version' => 'stable-v1',
-            'production.ocr.google.credentials_path' => '/run/secrets/google-credentials',
+            'production.ocr.google.credentials_path' => __FILE__,
             'production.ocr.google.monthly_page_quota' => 100,
             'production.ocr.google.monthly_budget_minor' => 1000,
+            'production.ocr.google.page_cost_minor' => 1,
         ]);
         $this->assertSame([], $this->validator()->failures());
 

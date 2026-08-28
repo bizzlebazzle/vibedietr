@@ -2,6 +2,7 @@
 
 namespace App\Observability\Health;
 
+use App\Domain\RecipeImports\Ocr\OcrRuntimeReadiness;
 use App\Observability\Monitoring\OperationalState;
 use App\Security\Notifications\ProductionSecurityReadiness;
 use Illuminate\Contracts\Cache\Repository;
@@ -17,6 +18,7 @@ final class LaravelDependencyHealthProbe implements DependencyHealthProbe
         private readonly FilesystemManager $storage,
         private readonly OperationalState $state,
         private readonly ProductionSecurityReadiness $securityReadiness,
+        private readonly OcrRuntimeReadiness $ocrReadiness,
     ) {}
 
     public function check(): array
@@ -29,6 +31,12 @@ final class LaravelDependencyHealthProbe implements DependencyHealthProbe
                 $checks[] = $this->state->workerHealth((string) $queue);
             }
             $checks[] = $this->state->pruningHealth();
+        }
+
+        if ((bool) config('production.ocr.enabled')) {
+            $checks[] = $this->ocrReadiness->failures() === []
+                ? HealthCheckResult::healthy('ocr_runtime')
+                : HealthCheckResult::unhealthy('ocr_runtime', 'readiness requirements not met');
         }
 
         if (app()->environment('production')) {

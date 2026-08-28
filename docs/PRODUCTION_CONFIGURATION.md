@@ -205,12 +205,45 @@ pinned `OCR_TESSERACT_VERSION=5`, `OCR_LANGUAGE=eng`, HEIC decoder and
 preprocessing versions, queue/concurrency, 20-MiB/50-megapixel/single-image
 limits, attempts/timeout, private durable transient storage, and cleanup.
 
+Production additionally supplies the Tesseract executable, English trained-
+data path and reviewed SHA-256. Live readiness executes Tesseract, verifies
+major version 5 and the trained-data hash, checks HEIC/HEIF decoder support,
+and compares the installed `libheif1` and `libheif-plugin-libde265` package
+versions with `OCR_HEIC_DECODER_VERSION`. Deployment images must install those
+exact reviewed packages; configuration validation does not install or upgrade
+dependencies.
+`docker/8.4/Dockerfile` is the reviewed local/Sail baseline and pins Tesseract
+5.3.4, the English trained-data package, libheif 1.17.6, and its libde265
+decoder plugin. Update those pins, the production configuration, and the
+reviewed trained-data SHA-256 together after testing any dependency change.
+`OCR_MAX_OUTPUT_BYTES` is capped at eight MiB and abandoned inputs expire at
+exactly seven days.
+
+TXT, Markdown and inert HTML are local-only. JPEG, PNG and HEIC/HEIF are
+locally decoded, oriented, flattened and stripped into canonical PNG before
+OCR. PDF, DOCX, RTF, legacy/macro Office, WebP, TIFF, animation, multi-page,
+handwriting and non-English OCR remain unsupported or deferred. There is no
+approved malware-scanning service in this repository, so REC-17 does not claim
+a scan occurred. Strict allowlisting, content/container/decoder agreement,
+inert document handling, non-executable private storage, resource bounds and
+deletion are the implemented launch controls. Selecting a scanner later needs
+a separate privacy, failure-mode and operations review.
+
 Google Document AI is the only approved optional fallback. Enabling
 `OCR_GOOGLE_FALLBACK_ENABLED` requires local OCR, project/processor IDs,
 `OCR_GOOGLE_LOCATION=eu`, EU endpoint, pinned model, mounted credential path
 in `GOOGLE_APPLICATION_CREDENTIALS`, timeout, and positive monthly page quota
 and budget. The credential file is a required secret. Incomplete Google
 configuration fails only that enabled feature and never causes a silent switch.
+
+Managed fallback also requires at most two attempts, one concurrent call, and
+a reviewed per-page cost in the same minor currency unit as the monthly budget.
+The enforced monthly call ceiling is the lesser of the page quota and budget
+divided by per-page cost. Only the metadata-free canonical PNG is transmitted,
+after eligible local technical failure or no usable local text. Runtime checks
+reject a non-EU endpoint even outside production validation. Reconcile the
+configured unit cost and usage counter against provider billing before every
+production release and after pricing changes.
 
 ## Secret handling, rotation, and troubleshooting
 

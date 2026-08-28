@@ -66,6 +66,8 @@ not alter infrastructure execution.
   server.
 - `queue:prune-operational-failures`: daily at 00:15 UTC, 10-minute overlap
   lock, one server.
+- `recipe-imports:cleanup-transient`: hourly UTC, 10-minute overlap lock, one
+  server; active future processing leases are excluded.
 
 The database cache provides shared locks across instances. A crashed task can
 block its own next execution for no more than 10 minutes. Locks are applied

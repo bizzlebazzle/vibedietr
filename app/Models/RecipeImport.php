@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Domain\RecipeImports\RecipeImportStatus;
 use App\Domain\RecipeImports\RecipeImportType;
+use Carbon\CarbonImmutable;
 use Database\Factories\RecipeImportFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,8 +13,10 @@ use Illuminate\Support\Str;
 
 /**
  * @property array<string, mixed>|null $provenance
+ * @property list<string>|null $warnings
  * @property RecipeImportType $type
  * @property RecipeImportStatus $status
+ * @property CarbonImmutable|null $processing_lease_until
  */
 class RecipeImport extends Model
 {
@@ -46,6 +49,12 @@ class RecipeImport extends Model
             'started_at' => 'immutable_datetime',
             'completed_at' => 'immutable_datetime',
             'failed_at' => 'immutable_datetime',
+            'processing_lease_until' => 'immutable_datetime',
+            'source_stored_at' => 'immutable_datetime',
+            'cleanup_completed_at' => 'immutable_datetime',
+            'source_bytes' => 'integer',
+            'image_width' => 'integer',
+            'image_height' => 'integer',
         ];
     }
 

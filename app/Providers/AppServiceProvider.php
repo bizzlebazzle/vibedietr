@@ -4,6 +4,11 @@ namespace App\Providers;
 
 use App\Configuration\ProductionConfigurationValidator;
 use App\Domain\RecipeImports\NullRecipeImportMaterializationHook;
+use App\Domain\RecipeImports\Ocr\DisabledManagedOcrExtractor;
+use App\Domain\RecipeImports\Ocr\GoogleDocumentAiOcrExtractor;
+use App\Domain\RecipeImports\Ocr\ManagedOcrExtractor;
+use App\Domain\RecipeImports\Ocr\OcrExtractor;
+use App\Domain\RecipeImports\Ocr\TesseractOcrExtractor;
 use App\Domain\RecipeImports\Parsing\DeterministicRecipeTextParser;
 use App\Domain\RecipeImports\Parsing\RecipeTextParser;
 use App\Domain\RecipeImports\RecipeImportMaterializationHook;
@@ -60,6 +65,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(RecipeRemixCreationHook::class, NullRecipeRemixCreationHook::class);
         $this->app->bind(RecipeImportMaterializationHook::class, NullRecipeImportMaterializationHook::class);
         $this->app->bind(RecipeTextParser::class, DeterministicRecipeTextParser::class);
+        $this->app->bind(OcrExtractor::class, TesseractOcrExtractor::class);
+        $this->app->bind(ManagedOcrExtractor::class, fn () => (bool) config('production.ocr.google.enabled')
+            ? app(GoogleDocumentAiOcrExtractor::class)
+            : app(DisabledManagedOcrExtractor::class));
         $this->app->bind(AddressResolver::class, NativeAddressResolver::class);
         $this->app->bind(WebpageTransport::class, CurlWebpageTransport::class);
         $this->app->scoped(CorrelationContext::class);

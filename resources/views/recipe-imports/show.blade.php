@@ -14,6 +14,13 @@
                         'unsupported_content_type' => 'This page type is not supported.',
                         'non_public_destination' => 'Only public HTTP/HTTPS recipe pages are supported.',
                         'recipe_structure_not_found', 'multiple_recipe_candidates' => 'No single usable recipe could be found on that page.',
+                        'image_too_large', 'stored_source_size_invalid' => 'The image is too large.',
+                        'image_pixel_limit' => 'The image exceeds the 50-megapixel limit.',
+                        'multiple_image_frames' => 'This image contains multiple frames and cannot be imported.',
+                        'image_type_mismatch', 'binary_text_content', 'unsupported_text_encoding', 'corrupt_or_unsupported_image' => 'This file type or content is not supported.',
+                        'no_usable_ocr_text' => 'No usable recipe text could be extracted.',
+                        'tesseract_timeout', 'tesseract_execution_failed' => 'Import processing failed. You can upload the source again.',
+                        'abandoned_input_expired' => 'The transient upload expired before it could be processed.',
                         default => 'That page could not be imported.',
                     };
                 @endphp
@@ -28,8 +35,8 @@
         </section>
         @if ($import->source_text !== null)
         <details class="rounded-lg bg-white p-6 shadow dark:bg-slate-900">
-            <summary class="cursor-pointer font-semibold">{{ $import->type->value === 'webpage_url' ? 'Extracted recipe source' : 'Original pasted source' }}</summary>
-            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">{{ $import->type->value === 'webpage_url' ? 'Extracted locally from the source page; the complete fetched HTML was not retained.' : 'Preserved exactly as accepted; parsed suggestions do not replace it.' }}</p>
+            <summary class="cursor-pointer font-semibold">{{ $import->type->value === 'uploaded_image' ? 'Recovered OCR text' : ($import->type->value === 'webpage_url' || $import->type->value === 'uploaded_text' ? 'Extracted recipe source' : 'Original pasted source') }}</summary>
+            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">{{ $import->type->value === 'uploaded_image' ? 'Recovered locally from the image; it may be inaccurate and is not an exact transcription.' : ($import->type->value === 'pasted_text' ? 'Preserved exactly as accepted; parsed suggestions do not replace it.' : 'Extracted locally; the transient source file was not retained.') }}</p>
             <pre class="mt-4 max-h-[40rem] overflow-auto whitespace-pre-wrap rounded bg-gray-100 p-4 text-sm text-gray-900 dark:bg-slate-950 dark:text-slate-100">{{ $import->source_text }}</pre>
         </details>
         @endif
