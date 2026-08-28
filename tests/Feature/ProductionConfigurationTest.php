@@ -268,6 +268,15 @@ class ProductionConfigurationTest extends TestCase
         }
     }
 
+    public function test_ci_cached_production_fixture_selects_the_private_durable_transient_disk(): void
+    {
+        $workflow = file_get_contents(base_path('.github/workflows/quality-gates.yml'));
+
+        $this->assertIsString($workflow);
+        $this->assertStringContainsString('PRODUCTION_DURABLE_DISK: s3', $workflow);
+        $this->assertStringContainsString('SECURITY_TRANSIENT_DISK: s3', $workflow);
+    }
+
     private function validator(): ProductionConfigurationValidator
     {
         return app(ProductionConfigurationValidator::class);

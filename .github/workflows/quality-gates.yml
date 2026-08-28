@@ -101,6 +101,7 @@ jobs:
           TRUSTED_PROXY_HEADERS: x-forwarded-for,x-forwarded-host,x-forwarded-port,x-forwarded-proto
           FILESYSTEM_DISK: s3
           PRODUCTION_DURABLE_DISK: s3
+          SECURITY_TRANSIENT_DISK: s3
           AWS_ACCESS_KEY_ID: synthetic-storage-key
           AWS_SECRET_ACCESS_KEY: synthetic-storage-secret
           AWS_DEFAULT_REGION: eu-west-2
