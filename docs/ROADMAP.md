@@ -656,27 +656,43 @@ changes, it is deliberately split across multiple items.
   draft without retaining the source upload as an attachment.
 - **Dependencies:** REC-15, FND-09, DEP-02, DEP-03, DEP-04, DEP-05.
 - **Acceptance criteria:** Extraction runs as idempotent, correlated queued work
-  under FND-09; type/size limits are enforced; uploads are private, malware-
-  scanned where required, and deleted after success or failure; extracted
-  wording and confidence are reviewable. Non-OCR launch uploads are exactly
-  TXT, Markdown, and HTML, processed locally with a two-MiB limit. PDF, DOCX,
+  under FND-09 and applies DEP-03's reusable import throttling, private-upload,
+  validation, bounded-resource, redaction, and cleanup controls. Uploads use
+  application-generated names in private non-executable storage, are malware-
+  scanned where required, and never publish automatically; extracted wording
+  and confidence remain reviewable. Non-OCR launch uploads are exactly TXT,
+  Markdown, and HTML, processed locally with a two-MiB limit, content/extension/
+  detected-MIME agreement, inert HTML handling, and bounded parsing. PDF, DOCX,
   and RTF are deferred; legacy, macro-enabled, and other Office formats are
   unsupported. OCR uses DEC-006's application-owned extractor with pinned
-  Tesseract 5/English data as local primary. One JPEG/JPG, PNG, or HEIC/HEIF
-  still image is supported up to 20 MiB compressed and 50 megapixels decoded;
-  HEIC is converted locally after orientation and metadata stripping. WebP,
-  TIFF, handwriting, supported non-English languages, PDFs, and multi-page
-  inputs are deferred. Optional Google Enterprise OCR fallback is disabled by
-  default, EU-only, and used only after eligible local failure or no usable
-  local text. Low-confidence usable output remains a warning-marked draft; no
-  usable text explicitly fails. DEC-007 quality tiers, field-specific OCR
-  confidence normalization, recovered-text behavior, highlighted best guesses,
-  strong warnings, and minimum useful draft threshold are enforced. Terminal
-  files are deleted immediately where possible and within 24 hours; abandoned
-  inputs expire after seven days.
-- **Suggested automated tests:** Supported/unsupported files, spoofed MIME,
-  size limit, extraction failure, retry, storage privacy, and verified cleanup
-  tests.
+  Tesseract 5/English data as local primary. Exactly one non-animated JPEG/JPG,
+  PNG, or HEIC/HEIF still image is supported up to 20 MiB compressed and 50
+  megapixels decoded. Content type, extension, container, decoder, and decoded
+  content must agree; corrupt, malformed, decompression-bomb, multi-frame, and
+  unsupported content is rejected. Orientation and metadata stripping happen
+  locally, and HEIC is converted to a metadata-free canonical JPEG or PNG
+  before OCR or provider use. Decoder and OCR execution use pinned dependencies,
+  least privilege, and bounded CPU, memory, output, concurrency, retry, and
+  wall-time limits. WebP, TIFF, handwriting, supported non-English languages,
+  PDFs, and multi-page inputs are deferred. Optional Google Enterprise OCR
+  fallback is disabled by default, EU-only, quota/budget/concurrency bounded,
+  and used only after eligible local failure or no usable local text. Source
+  bytes, OCR text, user-supplied filenames, paths, and full provider payloads
+  are excluded from logs, metrics, audit events, exceptions, queue payloads,
+  and failed-job records. Low-confidence usable output remains a warning-marked
+  draft; no usable text explicitly fails. DEC-007 quality tiers, field-specific
+  OCR confidence normalization, recovered-text behavior, highlighted best
+  guesses, strong warnings, and minimum useful draft threshold are enforced.
+  Original and canonical files are deleted on every terminal success, failure,
+  cancellation, timeout, owner/import deletion, or retry-exhaustion path,
+  immediately where possible and within 24 hours; abandoned inputs expire
+  after seven days.
+- **Suggested automated tests:** Supported and unsupported document/image
+  formats, spoofed MIME/container/content, size and decoded-pixel limits,
+  single-image and multi-frame rejection, decompression bombs, HEIC conversion,
+  orientation and metadata removal, bounded decoder/OCR/provider resources,
+  provider fallback and abuse limits, extraction failure and retry, private
+  storage, telemetry redaction, and every terminal/abandoned cleanup path.
 - **Risk:** High.
 - **Estimated size:** Large.
 
@@ -1274,22 +1290,32 @@ changes, it is deliberately split across multiple items.
 
 - **Outcome:** Reduce browser and abuse risk around authentication, public
   search, barcode lookup, imports, sharing, and uploads.
-- **Dependencies:** STB-09, REC-16, REC-17, DEP-02.
+- **Dependencies:** STB-09, DEP-02.
 - **Acceptance criteria:** CSP supports locally bundled assets and required
-  media; sensitive routes have documented throttles; request/upload limits are
-  enforced; logs do not record secrets, raw passwords, or transient document
-  contents. Recipe imports enforce DEC-005's ten-per-user-per-hour default,
-  destination/global limits, two-MiB HTML/upload limits, URL and redirect
-  bounds, SSRF and DNS-rebinding controls, private non-executable storage,
-  content/MIME agreement, inert HTML handling, bounded parsing, and cleanup
-  outcomes. OCR images additionally enforce DEC-006 content detection,
-  extension/type/container agreement, decompression-bomb and multi-frame
-  rejection, 20-MiB/50-megapixel/single-image limits, private metadata-stripping
-  conversion, bounded native decoding/OCR resources, provider-abuse controls,
-  and exclusion of source bytes, OCR text, filenames, and provider payloads
-  from logs.
-- **Suggested automated tests:** Header assertions, throttle boundaries, CSP
-  browser smoke test, oversized request/upload, and log-redaction tests.
+  media; security headers are applied consistently; authentication, public
+  search, barcode lookup, sharing, and import routes have documented throttle
+  policies; and generic request/upload limits reject oversized input before
+  expensive processing. Reusable import controls provide DEC-005's configurable
+  ten-per-authenticated-user-per-hour default and global abuse limits, private
+  non-executable transient storage with application-generated names, content-
+  derived MIME/content validation, inert-input handling, bounded parsing and
+  resource guards, and cleanup lifecycle hooks. Shared configuration exposes
+  limits without making provider response shapes or feature-specific formats
+  part of the platform layer. Reusable redaction prevents secrets, raw
+  passwords, import source bytes or text, user-supplied filenames, paths, and
+  provider payloads from entering logs, metrics, audit events, exceptions,
+  queue payloads, or failed-job records. REC-16 continues to own and verify its
+  DEC-005 destination, URL/redirect, SSRF, DNS-rebinding, HTML-size, timeout,
+  and webpage-extraction enforcement. REC-17 owns and verifies exact document/
+  image formats and limits, MIME/container agreement, image canonicalization,
+  decoder/OCR/provider bounds, feature-level redaction, and cleanup outcomes
+  using these reusable controls.
+- **Suggested automated tests:** Security-header assertions, authentication/
+  search/barcode/sharing/import throttle boundaries, CSP browser smoke test,
+  oversized generic request/upload rejection, private-storage and generated-
+  name behavior, reusable MIME/content mismatch and bounded-parser fixtures,
+  cleanup-hook behavior, and redaction tests using synthetic source/provider
+  data without requiring REC-17 to exist.
 - **Risk:** High.
 - **Estimated size:** Medium.
 
