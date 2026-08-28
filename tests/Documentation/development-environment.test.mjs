@@ -42,4 +42,11 @@ test('important environment and service drift is rejected', () => {
         ),
         /MAIL_HOST references missing Compose service "mailpit"/u,
     );
+    assert.throws(
+        () => validateDevelopmentEnvironment(
+            environmentText,
+            composeText.replace("context: './docker/8.4'", "context: './vendor/laravel/sail/runtimes/8.4'"),
+        ),
+        /docker-compose\.yml is missing expected baseline fragment: context: '\.\/docker\/8\.4'/u,
+    );
 });
