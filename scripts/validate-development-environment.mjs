@@ -120,7 +120,7 @@ export function validateDevelopmentEnvironment(environmentText, composeText) {
     }
 
     const requiredComposeFragments = [
-        "context: './vendor/laravel/sail/runtimes/8.4'",
+        "context: './docker/8.4'",
         "NODE_VERSION: '${NODE_VERSION:-22}'",
         "image: 'mysql/mysql-server:8.0'",
         "MYSQL_DATABASE: '${DB_DATABASE}'",

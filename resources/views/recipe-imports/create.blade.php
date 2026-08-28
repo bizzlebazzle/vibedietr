@@ -1,6 +1,26 @@
 <x-app-layout>
     <x-slot name="header"><h2 class="text-xl font-semibold text-gray-800 dark:text-slate-100">Import a recipe</h2></x-slot>
     <div class="py-12"><div class="mx-auto max-w-3xl space-y-8 sm:px-6 lg:px-8">
+        <form method="POST" enctype="multipart/form-data" action="{{ route('recipe-imports.upload.store') }}" class="space-y-6 rounded-lg bg-white p-6 shadow dark:bg-slate-900">
+            @csrf
+            <div>
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-slate-100">Import a document or photo</h3>
+                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Documents: TXT, Markdown, or HTML up to 2 MiB. Photos: one still JPEG, PNG, HEIC, or HEIF up to 20 MiB and 50 megapixels.</p>
+            </div>
+            <div>
+                <x-input-label for="recipe_file" value="Recipe document or photo" />
+                <input id="recipe_file" name="recipe_file" type="file" required accept=".txt,.md,.html,.jpg,.jpeg,.png,.heic,.heif,text/plain,text/markdown,text/html,image/jpeg,image/png,image/heic,image/heif" class="mt-1 block w-full text-sm text-gray-700 dark:text-slate-200" />
+                <x-input-error :messages="$errors->get('recipe_file')" class="mt-2" />
+            </div>
+            <div role="note" class="rounded border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-100">
+                The upload is private transient extraction input, never an attachment. It is deleted after processing. Photo text is recovered locally with Tesseract and may be inaccurate; every result remains a private draft for review.
+                @if (config('production.ocr.google.enabled'))
+                    If local OCR technically fails or finds no usable text, a metadata-free canonical image may be processed by Google Document AI in the EU.
+                @endif
+            </div>
+            <x-primary-button>Import upload as private draft</x-primary-button>
+        </form>
+
         <form method="POST" action="{{ route('recipe-imports.webpage.store') }}" class="space-y-6 rounded-lg bg-white p-6 shadow dark:bg-slate-900">
             @csrf
             <div>

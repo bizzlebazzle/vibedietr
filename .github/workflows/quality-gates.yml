@@ -12,7 +12,7 @@ permissions:
 jobs:
   backend-tests:
     name: Backend tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
 
     services:
@@ -50,9 +50,18 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
-          extensions: dom, fileinfo, pdo_mysql, xml, xmlwriter
+          extensions: dom, fileinfo, imagick, pdo_mysql, xml, xmlwriter
           coverage: none
           tools: composer:v2
+
+      - name: Install pinned OCR runtime
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends --yes \
+            tesseract-ocr=5.3.4-1build5 \
+            tesseract-ocr-eng=1:4.1.0-2 \
+            libheif1=1.17.6-1ubuntu4.8 \
+            libheif-plugin-libde265=1.17.6-1ubuntu4.8
 
       - name: Locate the Composer download cache
         id: composer-cache

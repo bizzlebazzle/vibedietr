@@ -146,6 +146,61 @@ serialized payload, so the privacy classification is an operational control.
   results; retain metadata-only failure rows at most 168 hours.
 - **Scheduling:** Event driven; not scheduled. Raw HTML is never durable.
 
+## ProcessUploadedRecipeImport
+
+- **Class / owner:** `App\Jobs\ProcessUploadedRecipeImport`; REC-17 document
+  and still-image recipe imports.
+- **Purpose / enablement:** Validate one private upload, extract locally, and
+  atomically create or update one reviewable private draft. Images are locally
+  canonicalized before OCR. Google Document AI is an optional disabled-by-
+  default fallback and receives only the canonical PNG.
+- **Queue / worker / concurrency:** `default`; `default` worker group; one
+  configured process, a global import overlap lock, and a per-import lock.
+- **Timeout / retry_after:** 60-second job timeout, 70-second worker timeout,
+  90-second database `retry_after`; the 20-second safety margin is preserved.
+  Tesseract is capped below the job timeout; Google calls are capped at 30
+  seconds. Imagick has explicit time, memory, map, disk and thread limits.
+- **Attempts / backoff:** Three attempts total; 10 seconds then 60 seconds.
+  Invalid format/content, resource-limit, unusable-text and structure failures
+  are permanent. Technical local OCR failure may use the managed fallback only
+  on the final local attempt; no-usable-text may use it immediately.
+- **Idempotency:** SHA-256 of `recipe_upload_import.process|{import ULID}`;
+  unique dispatch, overlap locks, locked import state, unique import-to-draft
+  relation and transactional child replacement form the durable boundary.
+- **Duration / resources:** One TXT/Markdown/inert-HTML input up to two MiB or
+  one JPEG/PNG/HEIC still up to 20 MiB and 50 megapixels. Queue payloads contain
+  only import and correlation ULIDs. Original and canonical inputs remain in
+  private non-executable storage and are never recipe attachments.
+- **Failure / alert:** Safe category/code and aggregate duration/quality/
+  cleanup counters only. Source bytes, extracted/OCR text, user filename,
+  storage key, provider payload and account data are prohibited from telemetry,
+  exceptions and failed records.
+- **Replay:** Owner retry is intentionally unavailable after terminal upload
+  cleanup; submit a new upload. Operator failed-job replay is allowed only
+  while the same source still exists and durable state confirms no terminal
+  result. Never reconstruct or copy source content from a failure record.
+- **Cleanup:** Best-effort immediate deletion after every terminal outcome and
+  owner deletion. The hourly safety sweep removes terminal inputs within 24
+  hours and marks/removes abandoned non-terminal inputs after seven days.
+- **Failed record / privacy:** Metadata-only import and correlation ULIDs;
+  retain no longer than 168 hours under the failed-job policy.
+- **Scheduling:** Upload-triggered; processing itself is not scheduled.
+
+## recipe-imports:cleanup-transient
+
+- **Owner / purpose / enablement:** REC-17 safety sweep for terminal and
+  abandoned original/canonical import inputs. Enabled hourly in UTC.
+- **Execution / locking:** Scheduler command, not a queued job; one server,
+  `withoutOverlapping(10)`. It works in 100-row chunks and skips active future
+  processing leases.
+- **Retry / idempotency / replay:** No automatic retry. Deletion and cleared
+  references are idempotent; the next hourly run safely retries failed cleanup.
+- **Failure / alert / privacy:** Non-zero scheduler failure is a retention
+  alert. Output and telemetry contain counts/outcomes only, never file content,
+  OCR text, filenames or storage keys.
+- **Lock crash behavior:** A crashed run can block this task for at most ten
+  minutes; the next hourly run then recovers it.
+
 ## administrator:expire-promotions
 
 - **Owner / purpose / enablement:** FND-14; finalize expired administrator
@@ -218,11 +273,8 @@ serialized payload, so the privacy classification is an operational control.
 
 ## Defined future workloads
 
-REC-15 pasted-text and REC-16 webpage work are inventoried above and consume the
-bounded `default` worker. Document extraction and DEC-006 OCR remain disabled
-and have no job classes. Their defined bounds are three attempts, 10/60-second
-backoff, concurrency at most two, private transient storage, and 24-hour
-transient cleanup; OCR has a 60-second job timeout and provider calls capped at
-30 seconds. Their implementing pull requests must add concrete job classes,
-payload classifications, replay effects, resource measurements, and any needed
-isolation before production enablement.
+REC-15 pasted-text, REC-16 webpage and REC-17 document/image work are
+inventoried above and consume the bounded `default` worker. Any later PDF,
+multi-page, handwriting, non-English or additional image-format workload must
+add concrete resource measurements, payload classification and isolation here
+before production enablement.

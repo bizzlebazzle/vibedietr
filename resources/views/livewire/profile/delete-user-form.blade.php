@@ -2,6 +2,7 @@
 
 use App\Administrator\LastAdministratorGuard;
 use App\Livewire\Actions\Logout;
+use App\Domain\RecipeImports\RecipeImportOwnerCleaner;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Auth;
@@ -14,7 +15,7 @@ new class extends Component
     /**
      * Delete the currently authenticated user.
      */
-    public function deleteUser(Logout $logout, LastAdministratorGuard $guard): void
+    public function deleteUser(Logout $logout, LastAdministratorGuard $guard, RecipeImportOwnerCleaner $importCleaner): void
     {
         $this->validate([
             'password' => ['required', 'string', 'current_password'],
@@ -22,6 +23,7 @@ new class extends Component
 
         $user = Auth::user();
         try {
+            $importCleaner->cancelAndCleanup((int) $user->getKey());
             DB::transaction(function () use ($guard, $user): void {
                 $guard->assertAccountDeletionAllowed($user);
                 $user->newQuery()->whereKey($user->getKey())->delete();

@@ -376,9 +376,12 @@ final class ProductionConfigurationValidator
             }
         }
         if (config('production.ocr.enabled') === true) {
-            $this->requiredFeatureSettings($failures, 'ocr', ['tesseract_version', 'language', 'heic_decoder_version', 'preprocessing_version', 'queue', 'transient_disk']);
+            $this->requiredFeatureSettings($failures, 'ocr', ['tesseract_executable', 'tesseract_version', 'traineddata_path', 'traineddata_sha256', 'language', 'heic_decoder_version', 'preprocessing_version', 'queue', 'transient_disk']);
             if (config('production.ocr.tesseract_version') !== '5' || config('production.ocr.language') !== 'eng') {
                 $failures[] = 'Enabled OCR requires pinned Tesseract 5 and English trained data.';
+            }
+            if (preg_match('/^[a-f0-9]{64}$/i', (string) config('production.ocr.traineddata_sha256')) !== 1) {
+                $failures[] = 'Enabled OCR requires a valid pinned English trained-data SHA-256.';
             }
             if (config('production.ocr.transient_disk') !== config('production.storage.durable_disk')) {
                 $failures[] = 'Enabled OCR requires the configured private durable transient disk.';
@@ -389,20 +392,33 @@ final class ProductionConfigurationValidator
                 || ! $this->within(config('production.ocr.attempts'), 1, 3)
                 || ! $this->within(config('production.ocr.timeout_seconds'), 1, 60)
                 || ! $this->within(config('production.ocr.concurrency'), 1, 2)
-                || ! $this->within(config('production.ocr.cleanup_hours'), 1, 24)) {
+                || ! $this->within(config('production.ocr.cleanup_hours'), 1, 24)
+                || (int) config('production.ocr.abandoned_days') !== 7
+                || ! $this->within(config('production.ocr.max_output_bytes'), 1, 8388608)) {
                 $failures[] = 'Enabled OCR exceeds the approved input, retry, timeout, concurrency, or cleanup bounds.';
             }
         }
         if (config('production.ocr.google.enabled') === true) {
             $this->requiredFeatureSettings($failures, 'ocr.google', ['project_id', 'endpoint', 'processor_id', 'model_version', 'credentials_path']);
-            if (config('production.ocr.enabled') !== true || config('production.ocr.google.location') !== 'eu') {
+            $endpointHost = parse_url((string) config('production.ocr.google.endpoint'), PHP_URL_HOST);
+            if (config('production.ocr.enabled') !== true
+                || config('production.ocr.google.location') !== 'eu'
+                || $endpointHost !== 'eu-documentai.googleapis.com') {
                 $failures[] = 'Google OCR fallback requires local OCR and the approved eu location.';
             }
-            if ((int) config('production.ocr.google.monthly_page_quota') < 1 || (int) config('production.ocr.google.monthly_budget_minor') < 1) {
+            if ((int) config('production.ocr.google.monthly_page_quota') < 1
+                || (int) config('production.ocr.google.monthly_budget_minor') < 1
+                || (int) config('production.ocr.google.page_cost_minor') < 1) {
                 $failures[] = 'Google OCR fallback requires positive quota and budget safeguards.';
             }
-            if (! $this->within(config('production.ocr.google.timeout_seconds'), 1, 30)) {
+            if (! $this->within(config('production.ocr.google.timeout_seconds'), 1, 30)
+                || ! $this->within(config('production.ocr.google.attempts'), 1, 2)
+                || (int) config('production.ocr.google.concurrency') !== 1) {
                 $failures[] = 'Google OCR fallback timeout must be between 1 and 30 seconds.';
+            }
+            $credentials = config('production.ocr.google.credentials_path');
+            if (! is_string($credentials) || ! is_readable($credentials)) {
+                $failures[] = 'Enabled Google OCR fallback requires a readable service-account credential file.';
             }
         }
     }

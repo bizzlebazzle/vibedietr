@@ -654,6 +654,7 @@ changes, it is deliberately split across multiple items.
 
 - **Outcome:** Extract an uploaded supported document or image into a private
   draft without retaining the source upload as an attachment.
+- **Status:** Complete (2026-08-28).
 - **Dependencies:** REC-15, FND-09, DEP-02, DEP-03, DEP-04, DEP-05.
 - **Acceptance criteria:** Extraction runs as idempotent, correlated queued work
   under FND-09 and applies DEP-03's reusable import throttling, private-upload,
