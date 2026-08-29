@@ -239,6 +239,44 @@ string zero is stored as JSON numeric `0`, while null, empty, and whitespace-
 only normalized values are represented by an omitted key. Both normalized
 buckets and both write paths use that convention.
 
+## Implemented shared catalogue identity schema
+
+NUT-01 adds the empty additive identity layer for the future shared food and
+product catalogue. It is FND-02's expand phase only: no legacy ingredient is
+copied, linked, normalized, reclassified, or changed, and all existing
+ingredient routes, queries, ownership, authorization, barcode imports, and
+user-deletion behavior remain authoritative.
+
+`catalogue_items` uses an application-owned bigint identity that is independent
+of barcode and provider identifiers. Explicit `manual` and `barcode` origins
+distinguish record kind. Barcode is a nullable 64-character string so leading
+zeroes survive; its global nullable unique index permits multiple manual rows
+without barcodes while reserving one catalogue identity per stored barcode.
+There is no approved withdrawn/retired state, so reuse in a future lifecycle is
+not decided here.
+
+The nullable `submitted_by_user_id` relationship is provenance, not ownership.
+It uses database-level `ON DELETE SET NULL`: deleting the submitter leaves the
+catalogue identity, source, timestamps, state, and versions in place. No
+catalogue serialization, policy, mutation workflow, or submitter control is
+introduced.
+
+Source is the application-owned `manual` or `openfoodfacts` identifier. The
+separate nullable bounded `source_identifier` is provider identity rather than
+the catalogue primary key or barcode. `(source, source_identifier)` is indexed
+for lookup but deliberately not unique because no current decision approves
+provider-identifier uniqueness. `introduced_at` records the UTC time the item
+entered the application catalogue and applies to both submissions and imports.
+
+One bounded status combines the currently approved lifecycle/moderation
+boundary: `pending`, `approved`, or `rejected`. No unapproved withdrawn,
+archived, or superseded state is added. Minimal ULID
+`catalogue_item_versions` rows make history structurally possible, and the
+identity has a nullable current-version pointer. The model rejects assigning a
+current version belonging to a different catalogue item. Package, serving,
+nutrition, version publication, moderation transitions, backfill, cut-over,
+search, and OpenFoodFacts refresh behavior remain later NUT tasks.
+
 ## OpenFoodFacts and barcode support
 
 The Livewire ingredient form can make a synchronous server-side request through

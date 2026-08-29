@@ -591,6 +591,55 @@ Nutrition data:
 - The Eloquent model casts the JSON fields to arrays and amount fields to
   fixed-scale decimal strings.
 
+### Shared catalogue item and version
+
+`App\Models\CatalogueItem` is the stable identity for a shared food or
+product. It is a separate concept from the legacy user-owned `Ingredient` and
+from a recipe's ingredient line. NUT-01 introduces its additive schema without
+making it an active read or write path.
+
+Identity and provenance:
+
+- Auto-incrementing bigint primary key owned by the application.
+- Explicit `CatalogueItemOrigin`: `manual` or `barcode`.
+- Nullable string barcode, globally unique when present and preserving leading
+  zeroes.
+- Nullable `submitted_by_user_id` provenance reference. `submitter()` belongs
+  to a user and `User::submittedCatalogueItems()` is the inverse; database user
+  deletion sets the reference to null rather than deleting or transferring the
+  item.
+- Explicit `CatalogueItemSource`: `manual` or `openfoodfacts`.
+- Nullable bounded source identifier, kept separate from both internal
+  identity and barcode. Source pairs are indexed but not assumed unique.
+- Non-null UTC `introduced_at` domain timestamp plus server timestamps.
+
+State uses one application-owned `CatalogueItemStatus` with `pending`,
+`approved`, and `rejected`. It currently combines usability and the basic
+moderation boundary approved by the product specification. Moderation workflow,
+escalation, transitions, withdrawal, archival, and supersession are not modeled
+by NUT-01.
+
+`App\Models\CatalogueItemVersion` is a minimal historical identity:
+
+- Application-generated ULID primary key.
+- Required parent `catalogue_item_id`, with cascade on identity deletion.
+- Per-item unsigned version number, unique within its parent.
+- Server timestamps.
+
+`CatalogueItem::versions()` exposes all versions and
+`CatalogueItem::currentVersion()` resolves the identity's nullable
+`current_catalogue_item_version_id`. Deleting a selected version nulls the
+pointer at database level. NUT-01 does not implement version publication or
+mutation workflows. The model's `setCurrentVersion()` operation verifies that
+the selected version belongs to the same catalogue item; this ownership
+invariant is application-enforced rather than a circular composite database
+foreign key.
+
+Both catalogue models are fully guarded against mass assignment. The schema
+does not grant the submitter edit, delete, provenance-change, moderation, or
+current-version authority. NUT-04 and NUT-05 own package and nutrition data;
+NUT-02/NUT-03 own backfill and cut-over.
+
 ### Measurement unit
 
 FND-06 represents measurement units in the application domain rather than as

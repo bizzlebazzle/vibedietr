@@ -703,6 +703,7 @@ changes, it is deliberately split across multiple items.
 
 - **Outcome:** Introduce a shared food/product record whose submitting user is
   provenance rather than ownership.
+- **Status:** Complete (2026-08-29).
 - **Dependencies:** FND-02, FND-03, FND-05.
 - **Acceptance criteria:** Barcode and manual records are distinguishable;
   submitter is nullable and nulls on user deletion; source identifier, import
