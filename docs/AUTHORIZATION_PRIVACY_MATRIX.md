@@ -308,6 +308,13 @@ accept or decline. Ordinary users cannot initiate or revoke, no browser route
 can bootstrap or perform break-glass, and administrator status alone still
 grants no security-audit browser or another account's delivery state.
 
+NUT-01 implements only the approved catalogue identity/provenance schema. Its
+nullable `submitted_by_user_id` is not an owner or authority field: submitting
+an item grants no edit, deletion, provenance-change, moderation, or
+current-version capability. Database user deletion sets that reference to null
+without deleting the catalogue item. Catalogue reads and workflows remain
+planned and the matrix's access rules are not activated by this schema alone.
+
 ## 6. Required scenario rulings
 
 1. **Logged-out access:** Logged-out visitors may read only explicitly public
