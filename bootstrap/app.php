@@ -1,6 +1,7 @@
 <?php
 
 use App\Console\Commands\ApplicationHealth;
+use App\Console\Commands\BackfillLegacyIngredients;
 use App\Console\Commands\BootstrapAdministrator;
 use App\Console\Commands\BreakGlassReplaceAdministrator;
 use App\Console\Commands\ExpireAdministratorPromotionRequests;
@@ -37,6 +38,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withCommands([
         ApplicationHealth::class,
+        BackfillLegacyIngredients::class,
         BootstrapAdministrator::class,
         BreakGlassReplaceAdministrator::class,
         ExpireAdministratorPromotionRequests::class,
