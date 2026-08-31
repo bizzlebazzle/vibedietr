@@ -72,6 +72,54 @@ non-destructive observations before repair.
 4. Before one replay, confirm provider acceptance and durable intent state.
 5. Restore live FND-13 readiness before administrator workflows resume.
 
+## Legacy ingredient catalogue backfill
+
+Legacy `ingredients` remain authoritative throughout NUT-02. Do not run this
+procedure against production until the dry-run classification and exceptions
+have manual technical and product/data-owner approval.
+
+1. Confirm the deployment contains completed NUT-01 and STB-08 migrations,
+   current backups/restore evidence required by local change control, and no
+   other backfill process.
+2. Run the read-only classification:
+
+   ```bash
+   php artisan catalogue:backfill-legacy-ingredients --dry-run
+   ```
+
+3. Record only aggregate reconciliation counts. Do not copy ingredient names,
+   barcodes, nutrition JSON, user identifiers, or snapshot payloads into
+   tickets/logs.
+4. Review all `ambiguous_barcode`, `duplicate`, failed, unprocessed, and
+   changed-source counts. DEC-011 forbids resolving these by merge, canonical
+   selection, or relationship redirection.
+5. After approval, run:
+
+   ```bash
+   php artisan catalogue:backfill-legacy-ingredients
+   ```
+
+   Use `--chunk=N` only when a reviewed database/operations limit requires a
+   value from 1 through 5000; the default is 500.
+6. Compare eligible, classification, failure/unprocessed, and total-mapped
+   counts with the approved dry run. Then run the command a second time; an
+   unchanged source must report zero newly processed rows.
+
+Interruption is safe between per-record transactions. Restart the same command;
+the unique legacy mapping is the resume checkpoint, and already completed
+candidate IDs are reused. If the command reports another run is active, do not
+bypass the lock. If it reports a source change or unexpected failure, keep the
+legacy path active, stop progression to NUT-03, diagnose using numeric IDs only
+through an approved database console, and rerun only after the source range is
+stable.
+
+There is no destructive rollback command. Recovery is to stop the backfill,
+leave `ingredients` authoritative, retain ledger/candidate evidence, correct
+the additive implementation, and rerun/reconcile. Deleting mappings or
+candidates requires a separate approved procedure proving every affected row
+was backfill-derived and has no moderation, user, cut-over, or other downstream
+consumer. Never edit or delete a legacy ingredient as rollback.
+
 ## Failed-job pruning stale
 
 1. Confirm the daily 00:15 UTC schedule and last prune heartbeat.

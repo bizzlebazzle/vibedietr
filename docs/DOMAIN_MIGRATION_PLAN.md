@@ -322,6 +322,30 @@ NUT-05, REC-01 through REC-03, and PLAN-01 are the identifiable foundations.
 Copy each legacy ingredient into a lossless migration candidate and create a
 target mapping only where the evidence and approved rules make that safe.
 
+### NUT-02 implementation status
+
+NUT-02 implements this phase with
+`php artisan catalogue:backfill-legacy-ingredients`. The
+`legacy_ingredient_catalogue_mappings` ledger is unique by legacy ID and by
+nullable target ID, retains nullable submitter provenance, a lossless source
+snapshot/checksum, bounded classification/reason, backfill version and time,
+and permits a null target for ambiguous or duplicate evidence.
+
+The command records an ID high-water mark, reads with `chunkById`, commits one
+new mapping/candidate per short transaction, and uses both a command lock and
+database uniqueness. `--dry-run` shares classification/reconciliation logic
+and writes nothing; `--chunk=500` is the bounded default. Existing matching
+mappings are reused. A changed source checksum or unexpected exception fails
+the run visibly while preserving earlier commits for resume.
+
+Manual and complete STB-08 imports create separate pending catalogue candidates.
+Ambiguous and duplicate rows are fully mapped but keep a null candidate
+reference. No catalogue version, promotion, merge, relationship redirect,
+legacy mutation, or audit event is created. Production execution still
+requires manual approval of the dry-run classification/exception report.
+DEC-011 remains unresolved and continues to prohibit all merge/de-duplication
+action.
+
 ### Proposed changes
 
 - Record pre-backfill counts and a stable source range/high-water mark.

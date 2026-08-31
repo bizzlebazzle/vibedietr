@@ -640,6 +640,43 @@ does not grant the submitter edit, delete, provenance-change, moderation, or
 current-version authority. NUT-04 and NUT-05 own package and nutrition data;
 NUT-02/NUT-03 own backfill and cut-over.
 
+### Legacy ingredient catalogue mapping
+
+`App\Models\LegacyIngredientCatalogueMapping` is NUT-02's durable additive
+ledger from one legacy `ingredients.id` to at most one catalogue candidate.
+The legacy ID is unique and intentionally has no foreign key: current account
+deletion still cascades the legacy ingredient, while migration traceability
+survives. `legacy_user_id` is nullable provenance with `ON DELETE SET NULL`;
+it is not ownership and is not duplicated in the retained snapshot. The
+nullable catalogue reference is also unique and nulls if a candidate is
+removed, preventing one candidate from silently representing multiple legacy
+rows.
+
+Every ledger row has exactly one `LegacyIngredientClassification`:
+`legacy_manual`, `verified_imported`, `ambiguous_barcode`, or
+`duplicate`. Review reasons are a bounded
+`LegacyIngredientReviewReason`: `malformed_barcode`,
+`unverified_legacy_barcode`, `missing_barcode`,
+`missing_import_source`, `missing_import_timestamp`,
+`conflicting_import_provenance`, or `duplicate_barcode`. The lossless
+snapshot contains all legacy factual fields, barcode provenance and timestamps;
+the dedicated columns carry the legacy ID and nullable submitter. A SHA-256
+checksum includes the complete source identity, submitter, and snapshot solely
+for change reconciliation. The ledger also stores backfill version and time.
+
+Manual and verified rows each create a distinct pending `CatalogueItem`.
+Verified rows use the unchanged trim-stable barcode as barcode and
+OpenFoodFacts source identifier. Ambiguous and duplicate rows deliberately
+retain a null catalogue reference because the evidence cannot satisfy the
+normal identity constraints without selecting or merging data. The pending
+state is a candidate/review boundary, not approval. NUT-02 creates no empty
+`CatalogueItemVersion` and leaves the current-version pointer null.
+
+The mapping is migration evidence only. No application read, write, policy, or
+legacy relationship resolves through it. DEC-011 still prohibits canonical
+selection, merge, de-duplication, nutrition/provenance combination, or
+relationship redirection. NUT-03 owns any later read cut-over.
+
 ### Measurement unit
 
 FND-06 represents measurement units in the application domain rather than as

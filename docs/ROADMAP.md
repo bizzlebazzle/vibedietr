@@ -719,6 +719,7 @@ changes, it is deliberately split across multiple items.
 
 - **Outcome:** Copy and classify current records into the new catalogue model
   without removing or silently merging user data.
+- **Status:** Complete (2026-08-31).
 - **Dependencies:** NUT-01, STB-08.
 - **Acceptance criteria:** The command is resumable and reports legacy manual,
   verified imported, ambiguous barcode, and duplicate records; source IDs map

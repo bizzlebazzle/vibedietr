@@ -277,6 +277,52 @@ current version belonging to a different catalogue item. Package, serving,
 nutrition, version publication, moderation transitions, backfill, cut-over,
 search, and OpenFoodFacts refresh behavior remain later NUT tasks.
 
+## Implemented legacy ingredient catalogue backfill
+
+NUT-02 implements FND-02's additive backfill phase through
+`catalogue:backfill-legacy-ingredients`. Every `ingredients` row at or below
+the command-start ID high-water mark is classified once in stable ID order.
+The command uses bounded chunks and a short transaction per newly mapped row.
+The `--dry-run` option performs the same classification and reconciliation
+without creating candidates, mappings, versions, or audit events; `--chunk=`
+accepts 1 through 5000 and defaults to 500.
+
+`legacy_ingredient_catalogue_mappings` is the durable migration ledger. Its
+unique legacy ingredient ID and unique nullable catalogue item ID enforce a
+one-to-zero-or-one mapping without treating possible duplicates as mergeable.
+It stores the nullable legacy submitter relationship, bounded classification
+and review reason, lossless legacy field snapshot and checksum, backfill
+version, and backfill timestamp. It deliberately has no foreign key to
+`ingredients`; deleting a user may retain the mapping while both submitter
+references null and current legacy ingredient deletion behavior continues.
+
+Rows are classified as `legacy_manual` only when they have no non-blank
+barcode and no import metadata; as `verified_imported` only when the complete
+STB-08 tuple is present (trim-stable barcode, `machine_imported`,
+`openfoodfacts`, and server import time); as `ambiguous_barcode` when that
+evidence is malformed, legacy-unknown, incomplete, or conflicting; and as
+`duplicate` when multiple otherwise verified rows share the exact barcode.
+Normalization remains trim-only and preserves leading zeroes. No name/fuzzy
+comparison is used.
+
+Safely materialized manual and verified rows receive separate pending catalogue
+identities. Verified candidates retain the barcode as the only legacy
+OpenFoodFacts source identifier; their `introduced_at` and mapping snapshot
+preserve the original server import time. Ambiguous and duplicate mappings have
+null target references
+and bounded review reasons. No catalogue version is created because NUT-01 has
+no factual version payload or publication workflow.
+
+A command lock plus database uniqueness prevents concurrent duplicate work.
+Reruns reuse checksum-matching mappings and create no duplicate candidates.
+Changed source rows are reported as reconciliation failures rather than
+silently rewriting migration evidence. Counts cover the bounded eligible
+population, pre-existing/new mappings, four mutually exclusive classifications,
+failures, unprocessed rows, changed sources, and final mapped total. Existing
+ingredient reads, writes, rows, relationships, ownership, and deletion behavior
+remain authoritative. DEC-011 remains unresolved: no canonical winner, merge,
+de-duplication, relationship redirect, or candidate promotion occurs.
+
 ## OpenFoodFacts and barcode support
 
 The Livewire ingredient form can make a synchronous server-side request through
