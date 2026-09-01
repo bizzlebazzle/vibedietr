@@ -702,6 +702,83 @@ version changes independently. The additive migration leaves all existing
 version fields null and performs no legacy ingredient, mapping, or barcode
 backfill. NUT-06 owns future OpenFoodFacts mapping into this structure.
 
+### Catalogue nutrition observation and normalized fact
+
+NUT-05 models shared-catalogue nutrition as version-owned facts rather than
+mutable columns on catalogue_items or embedded legacy ingredient JSON. The
+approved nutrient identities are energy_kcal, energy_kj, fat, saturated_fat,
+carbohydrates, sugars, fibre, protein, salt, and sodium. Catalogue bases are
+the explicit FND-06 subset per_100g, per_100ml, and per_serving; recipe,
+ingredient-quantity, and unapproved per-item catalogue semantics are not
+accepted by this write boundary.
+
+catalogue_nutrient_observations records immutable field-level supplied
+evidence:
+
+- ULID identity and a cascading foreign key to one catalogue item version.
+- Bounded nutrient, catalogue basis, source unit, value status, and provenance.
+- Nullable unsigned DECIMAL(38,18) value and threshold. Known/approximate
+  statuses require a value; below-limit requires only a threshold; missing,
+  trace, and not-significant-source require neither.
+- Imported, manually_submitted, or corrected provenance. Derived is reserved
+  for application-created normalized facts.
+- Nullable application-owned source (manual or openfoodfacts), bounded source
+  field identifier, source observation/import timestamps where known, source
+  fractional scale, precision-reduction flag, and normalization-policy version.
+- A catalogue-version/nutrient/basis lookup index. Observations are
+  intentionally not unique because conflicting supplied evidence may coexist.
+
+catalogue_nutrient_values records the selected application fact:
+
+- ULID identity, version foreign key, and required link to the attributable
+  observation; the model enforces that both belong to the same version.
+- Explicit nutrient, basis, canonical value/threshold, canonical unit, and
+  status.
+- Imported, manually_submitted, derived, or corrected provenance.
+- Nullable bounded energy derivation and normalization warning.
+- Normalization-policy version and server timestamps.
+- A unique catalogue-version/nutrient/basis constraint, defining one active
+  normalized fact while retaining any competing observations.
+
+CatalogueNutritionNormalizer is the sole shared write boundary. It validates
+the DTO nutrient/unit/basis/status combination, rejects negative or oversized
+decimal input and duplicate source fields, converts only deterministic
+same-dimension mass units, quantizes once at DEC-003 scale 18, records source
+scale reduction, persists observations first, and creates facts in one
+transaction. It refuses to write any version that already has nutrition;
+correction and refresh workflows must create a new version. Direct model
+updates and deletes are rejected. Database cascades remain available only when
+the containing catalogue identity/version is deliberately removed by a future
+approved lifecycle.
+
+Mass nutrients normalize to grams. Sodium source values may use FND-06 grams or
+milligrams and normalize to grams while displaying in milligrams. Kcal source
+observations require kcal and kJ observations require kJ; mass/energy
+cross-dimension combinations are invalid. Salt and sodium are independent and
+NUT-05 performs no conversion between them.
+
+FND-06 defines kcal as the canonical calculation unit for both energy
+representations. Kcal-only input produces an imported/manual/corrected kcal
+fact and a derived kJ display fact. KJ-only input derives canonical kcal once
+using exact division by 4.184, then the kJ display fact derives from that
+canonical value. When both are supplied, both observations survive; exact
+canonical disagreement records energy_source_conflict, kcal is selected, and
+kJ display is regenerated from kcal. There is no conversion loop.
+
+A per-serving fact has the same version foreign key as the NUT-04 serving
+definition. Copying or changing serving structure in a later version does not
+change the earlier per-serving fact. NUT-05 does not infer per-serving
+nutrition from per-100-g/per-100-ml nutrition or serving structure. Empty and
+partial panels are valid: missing nutrient keys remain absent, explicit missing
+status can remain a null fact, and no macros or zero values are fabricated.
+
+Public reads map selected facts through CatalogueNutrientReadModel. That DTO
+includes the full canonical value/unit, nutrient, basis, status, provenance,
+safe source identifier, derivation, warning, and separately formatted DEC-004
+display value. It never includes source-observation IDs, provider field keys,
+source/import timestamps, user/correction actor identifiers, moderation
+metadata, or raw provider payloads.
+
 ### Legacy ingredient catalogue mapping
 
 `App\Models\LegacyIngredientCatalogueMapping` is NUT-02's durable additive

@@ -11,6 +11,7 @@ final readonly class CatalogueItemReadModel
      * @param  list<string>  $keywords
      * @param  list<string>  $categories
      * @param  array<string, mixed>  $nutriments
+     * @param  list<CatalogueNutrientReadModel>  $nutritionFacts
      */
     public function __construct(
         public int $id,
@@ -25,12 +26,22 @@ final readonly class CatalogueItemReadModel
         public array $keywords,
         public array $categories,
         public array $nutriments,
+        public array $nutritionFacts,
         public bool $pending,
     ) {}
 
     public static function fromCatalogueItem(CatalogueItem $item): self
     {
         $snapshot = self::snapshot($item->getAttribute('migration_snapshot'));
+        $nutritionFacts = [];
+
+        if ($item->relationLoaded('currentVersion')
+            && $item->currentVersion?->relationLoaded('nutrientValues')) {
+            $nutritionFacts = $item->currentVersion->nutrientValues
+                ->map(static fn ($value): CatalogueNutrientReadModel => CatalogueNutrientReadModel::fromValue($value))
+                ->values()
+                ->all();
+        }
 
         return new self(
             id: (int) $item->getKey(),
@@ -45,6 +56,7 @@ final readonly class CatalogueItemReadModel
             keywords: self::stringList($snapshot['keywords'] ?? null),
             categories: self::stringList($snapshot['categories'] ?? null),
             nutriments: is_array($snapshot['nutriments'] ?? null) ? $snapshot['nutriments'] : [],
+            nutritionFacts: $nutritionFacts,
             pending: $item->status === CatalogueItemStatus::Pending,
         );
     }

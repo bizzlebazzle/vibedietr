@@ -328,6 +328,27 @@ explicitly available, targeted, or requested rather than always being paired
 with salt. Display rules alone do not authorize deriving a missing salt or
 sodium value.
 
+Shared catalogue nutrition belongs to an immutable catalogue version. Each
+selected fact explicitly identifies its nutrient, canonical decimal value and
+unit, basis (per 100 g, per 100 mL, or per serving), status, field-level
+provenance, normalization policy, and any derivation or conflict warning.
+Supplied observations remain separate from selected facts when needed to
+preserve conflicting source evidence. Imported, manually submitted, derived,
+and corrected values remain distinguishable.
+
+Known zero is a stored known value, while an absent nutrient or explicit
+missing status is not zero. Partial and empty nutrition panels remain valid and
+the application does not calculate missing macronutrients from energy.
+Per-serving nutrition belongs to the same catalogue version as its serving
+definition; changing serving structure creates a later version rather than
+changing the meaning of historical facts.
+
+Provider field names and raw payloads are not canonical nutrient identity.
+OpenFoodFacts fields map through application-owned nutrient definitions before
+storage. Kcal remains the canonical energy calculation value; supplied kJ is
+retained as source evidence and the application kJ display derives from kcal.
+No salt/sodium conversion or per-serving derivation is implied by this schema.
+
 ### Recipe nutrition sources and precedence
 
 Recipe nutrition values are expected on a per-serving basis. Whole-recipe

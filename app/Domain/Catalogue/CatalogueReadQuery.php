@@ -66,6 +66,7 @@ final class CatalogueReadQuery
     private function visibleQuery(?User $user): Builder
     {
         $query = CatalogueItem::query()
+            ->with(['currentVersion.nutrientValues.sourceObservation'])
             ->join(
                 'legacy_ingredient_catalogue_mappings',
                 'legacy_ingredient_catalogue_mappings.catalogue_item_id',

@@ -36,24 +36,48 @@
         </div>
     </div>
 
-    @foreach(['per_100g' => 'Nutrition per 100g', 'per_serving' => 'Nutrition per serving'] as $bucket => $heading)
-        @php($values = $item->nutriments[$bucket] ?? [])
-        @if(is_array($values) && $values !== [])
+    @if($item->nutritionFacts !== [])
+        @foreach(collect($item->nutritionFacts)->groupBy(fn ($fact) => $fact->basis) as $basis => $facts)
+            @php($heading = match($basis) {
+                'per_100g' => 'Nutrition per 100 g',
+                'per_100ml' => 'Nutrition per 100 mL',
+                'per_serving' => 'Nutrition per serving',
+            })
             <section class="rounded border border-gray-200 p-4 dark:border-slate-700">
                 <h2 class="font-semibold">{{ $heading }}</h2>
                 <dl class="mt-3 divide-y divide-gray-200 dark:divide-slate-700">
-                    @foreach($values as $nutrient => $value)
-                        @if(is_scalar($value))
-                            <div class="flex justify-between gap-4 py-2 text-sm">
-                                <dt>{{ str_replace('_', ' ', ucfirst($nutrient)) }}</dt>
-                                <dd>{{ $value }}</dd>
-                            </div>
-                        @endif
+                    @foreach($facts as $fact)
+                        <div class="flex justify-between gap-4 py-2 text-sm">
+                            <dt>{{ str_replace('_', ' ', ucfirst($fact->nutrient)) }}</dt>
+                            <dd class="text-right">
+                                <span>{{ $fact->display }}</span>
+                                <span class="block text-xs text-gray-500">{{ str_replace('_', ' ', $fact->provenance) }}</span>
+                            </dd>
+                        </div>
                     @endforeach
                 </dl>
             </section>
-        @endif
-    @endforeach
+        @endforeach
+    @else
+        @foreach(['per_100g' => 'Nutrition per 100g', 'per_serving' => 'Nutrition per serving'] as $bucket => $heading)
+            @php($values = $item->nutriments[$bucket] ?? [])
+            @if(is_array($values) && $values !== [])
+                <section class="rounded border border-gray-200 p-4 dark:border-slate-700">
+                    <h2 class="font-semibold">{{ $heading }}</h2>
+                    <dl class="mt-3 divide-y divide-gray-200 dark:divide-slate-700">
+                        @foreach($values as $nutrient => $value)
+                            @if(is_scalar($value))
+                                <div class="flex justify-between gap-4 py-2 text-sm">
+                                    <dt>{{ str_replace('_', ' ', ucfirst($nutrient)) }}</dt>
+                                    <dd>{{ $value }}</dd>
+                                </div>
+                            @endif
+                        @endforeach
+                    </dl>
+                </section>
+            @endif
+        @endforeach
+    @endif
 
     <div class="grid gap-4 sm:grid-cols-2">
         <section class="rounded border border-gray-200 p-4 dark:border-slate-700">
