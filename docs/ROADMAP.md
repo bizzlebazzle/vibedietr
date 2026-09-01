@@ -751,6 +751,7 @@ changes, it is deliberately split across multiple items.
 - **Outcome:** Represent package count, internal item type, amount per item,
   servings per item, and reliably derived serving amount without overloading
   one quantity field.
+- **Status:** Complete (2026-09-01).
 - **Dependencies:** NUT-01, FND-06.
 - **Acceptance criteria:** Unknown values are null rather than zero; paired
   values validate together; multipacks such as `4 cans × 400 g` retain every

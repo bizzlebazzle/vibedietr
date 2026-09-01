@@ -330,6 +330,10 @@ untested.
 - Energy handling follows the confirmed rule `1 kcal = 4.184 kJ`; kcal is
   authoritative when supplied kcal and kJ conflict. Storage and display
   rounding follow the decided DEC-003 and DEC-004 policies.
+- Persisted derived numeric values retain a bounded formula/basis rather than
+  only an `is_derived` flag. Changes to their source inputs atomically
+  recalculate or clear the derived value, and directly sourced values are not
+  silently replaced by calculations.
 - All affected supported nutrients are tested independently: kcal, kJ, fat,
   saturated fat, carbohydrates, sugars, fibre, protein, salt, and sodium.
 - Same-dimension conversions use defined conversions. A food-dependent
