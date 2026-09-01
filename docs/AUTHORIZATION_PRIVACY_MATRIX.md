@@ -312,8 +312,17 @@ NUT-01 implements only the approved catalogue identity/provenance schema. Its
 nullable `submitted_by_user_id` is not an owner or authority field: submitting
 an item grants no edit, deletion, provenance-change, moderation, or
 current-version capability. Database user deletion sets that reference to null
-without deleting the catalogue item. Catalogue reads and workflows remain
-planned and the matrix's access rules are not activated by this schema alone.
+without deleting the catalogue item. NUT-03 activates catalogue reads and
+NUT-06 activates trusted barcode creation without changing those authority rules.
+
+NUT-06 activates the approved barcode-import portion of that boundary. An
+authenticated scanner may cause a successful trusted OpenFoodFacts result to
+create an approved public shared item, but the scanner receives no ownership,
+update, delete, moderation, provenance-reassignment, or refresh authority.
+Later scanners reuse the same identity without replacing submitter provenance.
+Deleting the first scanner nulls the submitter reference while the approved
+item, its version, and public visibility remain. Provider failure and hidden
+pending/rejected identities do not create a user-owned fallback copy.
 
 ## 6. Required scenario rulings
 

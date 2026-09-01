@@ -778,6 +778,7 @@ changes, it is deliberately split across multiple items.
 
 ### NUT-06 — P1 — Import barcodes into the shared catalogue
 
+- **Status:** Complete (2026-09-01).
 - **Outcome:** Scan a barcode, reuse an existing shared product, or create one
   versioned OpenFoodFacts-backed catalogue record.
 - **Dependencies:** STB-07, STB-09, NUT-03, NUT-04, NUT-05.

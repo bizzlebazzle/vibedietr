@@ -2,6 +2,7 @@
 
 namespace App\Integrations\OpenFoodFacts;
 
+use App\Domain\Catalogue\Barcode;
 use App\Domain\Shared\ExactJsonDecoder;
 use App\Observability\CorrelationContext;
 use App\Observability\OperationalTelemetry;
@@ -10,6 +11,7 @@ use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use InvalidArgumentException;
 use JsonException;
 
 final readonly class OpenFoodFactsClient
@@ -26,7 +28,7 @@ final readonly class OpenFoodFactsClient
 
     public function lookup(string $barcode, ?string $correlationId = null): OpenFoodFactsLookupResult
     {
-        $barcode = trim($barcode);
+        $barcode = Barcode::normalize($barcode);
         $correlationId = CorrelationId::resolve($correlationId ?? app(CorrelationContext::class)->get());
         $startedAt = microtime(true);
         try {
@@ -90,10 +92,10 @@ final readonly class OpenFoodFactsClient
                     $decoded = ExactJsonDecoder::decodeObject($response->body());
                     $product = $this->mapper->map($decoded);
 
-                    if (trim($product->code) !== $barcode) {
+                    if (Barcode::normalize($product->code) !== $barcode) {
                         throw new InvalidOpenFoodFactsResponse;
                     }
-                } catch (JsonException|InvalidOpenFoodFactsResponse) {
+                } catch (InvalidArgumentException|JsonException|InvalidOpenFoodFactsResponse) {
                     return $this->failure(OpenFoodFactsLookupStatus::InvalidResponse, $correlationId, $barcode, $attempt, $response->status());
                 }
 

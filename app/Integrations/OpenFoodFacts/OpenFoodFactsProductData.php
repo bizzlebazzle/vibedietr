@@ -8,6 +8,7 @@ final readonly class OpenFoodFactsProductData
      * @param  list<string>  $keywords
      * @param  list<string>  $categories
      * @param  array<string, mixed>  $nutriments
+     * @param  list<OpenFoodFactsNutrientData>  $nutrientData
      */
     public function __construct(
         public string $code,
@@ -21,5 +22,7 @@ final readonly class OpenFoodFactsProductData
         public ?string $servingQuantityUnit,
         public ?string $imageUrl,
         public array $nutriments,
+        public OpenFoodFactsPackageData $package,
+        public array $nutrientData,
     ) {}
 }

@@ -475,13 +475,67 @@ verified barcode imports cannot be edited or deleted by ordinary users through
 controllers or Livewire. Pending submitters cannot edit, withdraw, delete,
 reassign, or approve. Administrators have the centralized `moderate` ability,
 but NUT-03 adds no moderation UI or direct silent edit/delete workflow.
-Barcode lookup first checks the same visible local catalogue; hidden pending
-imports do not leak and provider behavior is otherwise unchanged.
+Barcode lookup first checks the shared barcode identity. Hidden pending imports
+do not leak and are not sent to the provider as though the barcode were
+unknown.
 
 `CATALOGUE_READ_CUTOVER` defaults true. Setting it false disables the public
 catalogue routes and restores legacy index/detail read routing without deleting
 catalogue or mapping data. The verified-import and mapped-record mutation
 denials remain active because they are authorization rules, not read routing.
+
+## Shared-catalogue barcode import
+
+NUT-06 makes the default verified-barcode save path create or reuse the shared
+catalogue instead of creating a user-owned barcode ingredient. Barcode
+normalization remains the STB-07 trim-stable string rule: surrounding
+whitespace is removed, leading zeroes are preserved, and non-empty values are
+limited to 64 characters without guessing a symbology or check digit. The same
+canonical string drives local lookup, provider equality, database uniqueness,
+transaction rechecks, and collision recovery.
+
+An approved existing identity is returned before OpenFoodFacts is called and
+is never refreshed merely because it was scanned again. A pending or rejected
+barcode identity is not treated as provider-missing; authorized viewers may
+open it and other callers receive a non-disclosing unavailable result. NUT-02
+ambiguous and duplicate candidates retain null catalogue identities and are
+not selected, merged, or resolved.
+
+For an unknown barcode, the synchronous STB-07 client retains its six typed
+outcomes and bounded timeout/retry policy. Only a successful product-found
+envelope with a non-empty matching product code and object-shaped, possibly
+empty nutrition panel reaches persistence. Not-found, transport, rate-limit,
+permanent, and malformed-response outcomes create no catalogue identity,
+version, package structure, or nutrition rows. There is no provider-response
+cache and no queued barcode job.
+
+The OpenFoodFacts adapter maps a nullable provider name, bounded keyword and
+category lists, conservative single-item or explicit multipack structure,
+direct serving amount, supported nutrition observations, and a validated HTTPS
+OpenFoodFacts image reference. Unknown or uncertain facts remain null. It does
+not invent a name, zero, package count, serving, mass/volume conversion, or
+image. Multipacks such as 4 cans x 400 g preserve count 4, item type can,
+amount per item 400, and unit gram. Direct serving facts use the NUT-04 source
+basis; NUT-04 remains the only reliable serving-derivation boundary.
+
+Nutrient fields become NUT-05 imported observations with their provider field,
+unit, basis, lexical precision, OpenFoodFacts source, and local import time.
+CatalogueNutritionNormalizer remains the only selected-fact writer, so zero,
+missing data, source precision, mass-unit normalization, kcal authority, exact
+4.184 energy conversion, derived provenance, and conflict warnings retain
+their existing semantics. Full provider payloads are not stored in the shared
+catalogue.
+
+Creation rechecks the barcode inside one transaction and atomically writes one
+approved identity, one initial version, package/serving facts, normalized
+nutrition, and the current-version pointer. The NUT-01 unique barcode key is
+the final concurrency guard. A losing unique-key race loads and reuses the
+winner rather than returning a 500; duplicate provider calls can still occur
+before that database convergence. The first scanner is nullable submitter
+provenance only. Later scans do not replace it, and user deletion nulls it
+without changing public visibility. Low-cardinality telemetry records only
+provider and result category. No new audit action is emitted because the
+current FND-05 taxonomy has no approved barcode-import event.
 
 ## OpenFoodFacts and barcode support
 
@@ -541,14 +595,17 @@ the camera. Local camera testing uses HTTPS or `localhost`; deterministic
 coverage without a physical camera runs with
 `./vendor/bin/sail npm run test:scanner`.
 
-Before fetching through the Livewire form, the application checks for another
-ingredient with the same non-empty barcode owned by the current user. If one is
-found, it redirects to the existing record. This is an application check only:
-the database has a non-unique barcode index, and the conventional controller
-paths have no provider lookup action.
+With catalogue read cut-over enabled, the Livewire form checks the globally
+unique shared catalogue identity before fetching. Approved identities redirect
+to the shared detail; pending/rejected identities follow NUT-03 visibility and
+do not trigger a provider call. With the rollback flag disabled, the retained
+legacy flow still checks for another ingredient with the same non-empty barcode
+owned by the current user. The legacy ingredients table keeps its non-unique
+barcode index and conventional controller paths have no provider lookup action.
 
-For the current user-owned implementation, the owner has confirmed that barcode
-uniqueness should be scoped per user. There is no agreed de-duplication rule for
+The earlier per-user barcode-uniqueness direction now applies only to the
+rollback-compatible user-owned ingredient model. Native catalogue barcodes use
+the NUT-01 global unique key. There is no agreed de-duplication rule for
 manually entered products without a barcode.
 
 ## Nutrition handling
@@ -1424,9 +1481,10 @@ unverified free-form tag, and public projections contain no verification claim.
   machine-controlled.
 - Livewire is the preferred mutation path. The existing controller routes are
   to be retained until they are proven unused.
-- Barcode uniqueness is not a database invariant. Concurrent requests or the
-  controller path can create duplicates for one user, despite the intended
-  per-user uniqueness rule.
+- Legacy ingredient barcode uniqueness is not a database invariant. The
+  rollback controller path can still create duplicates for one user. Native
+  shared catalogue imports instead use the global NUT-01 database unique key
+  and collision recovery.
 - The legacy `ingredients` rows remain user-owned and account deletion still
   cascades those source rows. NUT-03 isolates that behavior behind the
   compatibility path: shared visibility comes from catalogue status, and the
@@ -1448,10 +1506,10 @@ unverified free-form tag, and public projections contain no verification claim.
   values can be blended and the raw bucket is unversioned. NUT-05 leaves those
   rows unchanged while shared catalogue versions now use relational normalized
   facts and immutable field-level observations.
-- NUT-06 still owns mapping new OpenFoodFacts barcode imports into the shared
-  catalogue nutrition and package structures. Existing mapped legacy reads
-  continue using their retained snapshots until a separately assigned
-  migration/cut-over changes them.
+- NUT-06 maps new OpenFoodFacts barcode imports into native shared catalogue
+  versions, package/serving structure, normalized nutrition, image reference,
+  and bounded provenance. Existing mapped legacy reads continue using retained
+  snapshots until a separately assigned migration changes them.
 - Measurement display formatting remains duplicated between the Livewire list
   and show components. Unit lists, validation, normalization, and inference
   now use FND-06.

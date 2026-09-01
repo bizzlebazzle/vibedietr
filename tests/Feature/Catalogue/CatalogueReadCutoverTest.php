@@ -161,10 +161,7 @@ class CatalogueReadCutoverTest extends TestCase
             'Hidden imported candidate',
             '0099999999999',
         );
-        Http::fake(['*' => Http::response([
-            'status' => 'failure',
-            'result' => ['id' => 'product_not_found'],
-        ], 404)]);
+        Http::fake();
 
         Livewire::actingAs($viewer)->test(Form::class)
             ->set('barcode', '0099999999999')
@@ -172,7 +169,7 @@ class CatalogueReadCutoverTest extends TestCase
             ->assertNoRedirect()
             ->assertSet('barcode', '0099999999999');
 
-        Http::assertSentCount(1);
+        Http::assertNothingSent();
     }
 
     public function test_public_projection_excludes_submitter_and_private_migration_fields(): void

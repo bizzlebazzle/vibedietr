@@ -2,7 +2,10 @@
 
 namespace App\Livewire\Ingredients;
 
-use App\Domain\Catalogue\CatalogueReadQuery;
+use App\Domain\Catalogue\Barcode;
+use App\Domain\Catalogue\CatalogueBarcodeImportStatus;
+use App\Domain\Catalogue\CatalogueVisibility;
+use App\Domain\Catalogue\ImportBarcodeIntoCatalogue;
 use App\Domain\Ingredients\ApplyOpenFoodFactsImport;
 use App\Domain\Ingredients\IngredientWriteContract;
 use App\Domain\Ingredients\IngredientWriteNormalizer;
@@ -99,7 +102,7 @@ class Form extends Component
     protected function barcodeLookupRules(): array
     {
         return [
-            'barcode' => ['required', 'string', 'max:64'],
+            'barcode' => ['required', 'string', 'max:'.Barcode::MAX_LENGTH],
         ];
     }
 
@@ -143,18 +146,31 @@ class Form extends Component
 
     protected function redirectToExistingBarcodeIngredient(?string $barcode): bool
     {
-        $barcode = trim((string) $barcode);
+        try {
+            $barcode = Barcode::normalize((string) $barcode);
+        } catch (\InvalidArgumentException) {
+            return false;
+        }
+
         $user = auth()->user();
 
-        if (config('catalogue.read_cutover') && $barcode !== '') {
-            $catalogueItem = app(CatalogueReadQuery::class)->findVisibleByBarcode(
-                $user instanceof User ? $user : null,
-                $barcode,
-            );
+        if (config('catalogue.read_cutover')) {
+            $catalogueItem = app(ImportBarcodeIntoCatalogue::class)->findExisting($barcode);
 
             if ($catalogueItem !== null) {
-                session()->flash('status', 'That barcode is already in the shared catalogue.');
-                $this->redirectRoute('catalogue.show', ['catalogueItem' => $catalogueItem], navigate: true);
+                if (app(CatalogueVisibility::class)->allows(
+                    $user instanceof User ? $user : null,
+                    $catalogueItem,
+                )) {
+                    session()->flash('status', 'That barcode is already in the shared catalogue.');
+                    $this->redirectRoute('catalogue.show', ['catalogueItem' => $catalogueItem], navigate: true);
+                } else {
+                    $this->dispatch(
+                        'notify',
+                        type: 'error',
+                        message: 'That barcode is not currently available for import.',
+                    );
+                }
 
                 return true;
             }
@@ -364,6 +380,20 @@ class Form extends Component
     {
         $ingredient = $this->authorizeMutation();
 
+        $pendingImport = $this->pendingImportForSave();
+
+        if ($this->pendingImportToken !== null && $pendingImport === null) {
+            $this->addError('barcode', 'The verified barcode lookup expired. Fetch it again before saving.');
+
+            return;
+        }
+
+        if ($pendingImport !== null && config('catalogue.read_cutover')) {
+            $this->saveCatalogueImport($pendingImport);
+
+            return;
+        }
+
         $this->prepareWriteInput();
 
         $validated = $this->validate($this->rules());
@@ -379,14 +409,6 @@ class Form extends Component
         $this->serving_quantity_unit = $payload['serving_quantity_unit'] ?? null;
         $this->recommended_servings = $payload['recommended_servings'] ?? null;
         $this->image_url = $payload['image_url'] ?? null;
-
-        $pendingImport = $this->pendingImportForSave();
-
-        if ($this->pendingImportToken !== null && $pendingImport === null) {
-            $this->addError('barcode', 'The verified barcode lookup expired. Fetch it again before saving.');
-
-            return;
-        }
 
         if ($ingredient) {
             $ingredient = Ingredient::query()->findOrFail($ingredient->getKey());
@@ -434,6 +456,39 @@ class Form extends Component
             $this->pendingImportToken,
             $user,
             $this->ingredientId,
+        );
+    }
+
+    protected function saveCatalogueImport(PendingIngredientImport $pendingImport): void
+    {
+        $user = auth()->user();
+
+        if (! $user instanceof User) {
+            abort(403);
+        }
+
+        $result = app(ImportBarcodeIntoCatalogue::class)->import(
+            $user,
+            $pendingImport->requestedBarcode,
+            $pendingImport->result,
+        );
+
+        if ($result->status === CatalogueBarcodeImportStatus::Unavailable || $result->item === null) {
+            $this->addError('barcode', 'That barcode is not currently available for import.');
+
+            return;
+        }
+
+        app(PendingIngredientImportStore::class)->forget($this->pendingImportToken);
+        $this->pendingImportToken = null;
+        $message = $result->status === CatalogueBarcodeImportStatus::Created
+            ? 'Product added to the shared catalogue.'
+            : 'That product is already in the shared catalogue.';
+        session()->flash('status', $message);
+        $this->redirectRoute(
+            'catalogue.show',
+            ['catalogueItem' => $result->item],
+            navigate: true,
         );
     }
 
