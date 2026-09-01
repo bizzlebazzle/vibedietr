@@ -320,8 +320,53 @@ silently rewriting migration evidence. Counts cover the bounded eligible
 population, pre-existing/new mappings, four mutually exclusive classifications,
 failures, unprocessed rows, changed sources, and final mapped total. Existing
 ingredient reads, writes, rows, relationships, ownership, and deletion behavior
-remain authoritative. DEC-011 remains unresolved: no canonical winner, merge,
-de-duplication, relationship redirect, or candidate promotion occurs.
+remain authoritative through NUT-02. DEC-011 remains unresolved: no canonical
+winner, merge, de-duplication, relationship redirect, or candidate promotion
+occurs.
+
+## Implemented shared catalogue read cut-over
+
+NUT-03 makes `/catalogue` and `/catalogue/{catalogueItem}` the canonical
+catalogue browse/search and detail routes. Approved records are public and
+read-only, including for guests. An authenticated submitter can also read and
+use their own pending manual candidate; administrators can read pending
+candidates. Other users and guests receive a 404 for hidden direct IDs, and
+visibility is applied in SQL before search, counts, ordering, and pagination.
+
+`CatalogueReadQuery` is the central read boundary and
+`CatalogueVisibility` supplies the matching policy predicate. The explicit
+public projection contains the catalogue ID and display fields only. It omits
+submitter IDs/accounts, migration metadata, moderation data, source payloads,
+audit references, and private timestamps. No catalogue result cache exists.
+
+NUT-04/NUT-05 structures are not introduced. During this migration phase the
+catalogue identity, `pending|approved|rejected` status, provenance, and NUT-02
+mapping are authoritative. Display name, barcode-adjacent package fields,
+keywords/categories, image, and the existing normalized nutrition buckets are
+read-only values from the unique mapping snapshot. The snapshot never controls
+visibility and is never serialized raw. A read cannot create or guess a
+mapping.
+
+`ingredients.index` is a temporary redirect that preserves only safe search
+and pagination parameters. Explicitly mapped legacy detail URLs re-authorize
+the target catalogue ID and redirect to its canonical URL. Missing/null-target
+mappings retain an owner-only legacy detail and a separate owner-only fallback
+list, so ambiguous and duplicate rows do not disappear or become shared.
+Recipe ingredient editors remain free-text and have no catalogue selector to
+cut over.
+
+Mapped legacy records, approved manual records, pending manual candidates, and
+verified barcode imports cannot be edited or deleted by ordinary users through
+controllers or Livewire. Pending submitters cannot edit, withdraw, delete,
+reassign, or approve. Administrators have the centralized `moderate` ability,
+but NUT-03 adds no moderation UI or direct silent edit/delete workflow.
+Barcode lookup first checks the same visible local catalogue; hidden pending
+imports do not leak and provider behavior is otherwise unchanged.
+
+`CATALOGUE_READ_CUTOVER` defaults true. Setting it false disables the public
+catalogue routes and restores legacy index/detail read routing without deleting
+catalogue or mapping data. The verified-import and mapped-record mutation
+denials remain active because they are authorization rules, not read routing.
 
 ## OpenFoodFacts and barcode support
 
@@ -1267,10 +1312,10 @@ unverified free-form tag, and public projections contain no verification claim.
 - Barcode uniqueness is not a database invariant. Concurrent requests or the
   controller path can create duplicates for one user, despite the intended
   per-user uniqueness rule.
-- The current ownership model conflicts with the intended shared catalogue:
-  access is owner-only and deleting the submitting user cascades deletion to
-  their ingredients, whereas the future submitting-user relationship is
-  intended only for logging.
+- The legacy `ingredients` rows remain user-owned and account deletion still
+  cascades those source rows. NUT-03 isolates that behavior behind the
+  compatibility path: shared visibility comes from catalogue status, and the
+  nullable catalogue submitter reference is provenance only.
 - In the shared catalogue, barcode-imported records must not be editable or
   deletable by users. Their submitting-user foreign key must become nullable,
   and deleting that user must set the reference to null rather than delete the
@@ -1316,9 +1361,12 @@ unverified free-form tag, and public projections contain no verification claim.
 - Barcode uniqueness applies per user in the current implementation.
 - The intended future model is a shared food/product catalogue. The submitting
   user should be retained for logging rather than ownership.
+- Approved catalogue records are publicly readable, including to logged-out
+  visitors. Pending manual candidates are submitter/admin read-only, and the
+  submitter cannot edit, withdraw, delete, reassign, or self-approve them.
 - Barcode-imported catalogue records must not be editable or deletable by
-  users. Deleting the submitting user must leave the record in place with a
-  null submitting-user reference.
+  ordinary users. Deleting the submitting user must leave the record in place
+  with a null submitting-user reference.
 - Null-barcode ingredients are intended to be manual entries; ingredients with
   barcodes are intended to be OpenFoodFacts machine imports. The barcode field
   must not be manually fillable during normal operation.
@@ -1334,5 +1382,3 @@ unverified free-form tag, and public projections contain no verification claim.
 - How should manually entered products without barcodes be de-duplicated?
 - In the shared catalogue, who may correct or remove a barcode-imported record
   when OpenFoodFacts data is wrong or obsolete?
-- What edit and delete permissions should apply to manually entered,
-  null-barcode catalogue records?

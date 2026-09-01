@@ -93,7 +93,7 @@ class IngredientBarcodeProvenanceTest extends TestCase
         $this->assertNull($ingredient->barcode_imported_at);
     }
 
-    public function test_manual_controller_update_preserves_verified_provenance(): void
+    public function test_manual_controller_update_denies_changes_to_verified_import(): void
     {
         $user = User::factory()->create();
         $ingredient = Ingredient::factory()->for($user)->barcodeImported()->create();
@@ -107,15 +107,15 @@ class IngredientBarcodeProvenanceTest extends TestCase
             'barcode_source' => 'forged-provider',
             'barcode_imported_at' => '2020-01-01T00:00:00Z',
             'barcode_provenance' => IngredientBarcodeProvenance::LegacyUnknown->value,
-        ])->assertRedirect(route('ingredients.index'));
+        ])->assertForbidden();
 
         $ingredient->refresh();
 
-        $this->assertSame('Legitimate rename', $ingredient->name);
+        $this->assertNotSame('Legitimate rename', $ingredient->name);
         $this->assertSame($original, $this->provenanceValues($ingredient));
     }
 
-    public function test_manual_livewire_update_preserves_verified_provenance(): void
+    public function test_manual_livewire_update_denies_changes_to_verified_import(): void
     {
         $user = User::factory()->create();
         $ingredient = Ingredient::factory()->for($user)->barcodeImported()->create();
@@ -125,11 +125,11 @@ class IngredientBarcodeProvenanceTest extends TestCase
             ->set('name', 'Livewire rename')
             ->set('barcode', '9999999999999')
             ->call('save')
-            ->assertHasNoErrors();
+            ->assertForbidden();
 
         $ingredient->refresh();
 
-        $this->assertSame('Livewire rename', $ingredient->name);
+        $this->assertNotSame('Livewire rename', $ingredient->name);
         $this->assertSame($original, $this->provenanceValues($ingredient));
     }
 
@@ -247,7 +247,7 @@ class IngredientBarcodeProvenanceTest extends TestCase
         Http::assertNothingSent();
     }
 
-    public function test_failed_reimport_preserves_existing_verified_provenance(): void
+    public function test_verified_import_cannot_be_reimported_by_ordinary_user(): void
     {
         $user = User::factory()->create();
         $ingredient = Ingredient::factory()->for($user)->barcodeImported()->create();
@@ -260,13 +260,12 @@ class IngredientBarcodeProvenanceTest extends TestCase
         Livewire::actingAs($user)->test(Form::class, ['ingredient' => $ingredient])
             ->set('barcode', '9999999999999')
             ->call('fetchFromOff')
-            ->set('name', 'Safe rename after failure')
-            ->call('save');
+            ->assertForbidden();
 
         $ingredient->refresh();
 
-        $this->assertSame('Safe rename after failure', $ingredient->name);
         $this->assertSame($original, $this->provenanceValues($ingredient));
+        Http::assertNothingSent();
     }
 
     public function test_failed_lookup_clears_an_earlier_successful_pending_import(): void

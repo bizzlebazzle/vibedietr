@@ -734,6 +734,7 @@ changes, it is deliberately split across multiple items.
 
 - **Outcome:** Make catalogue browsing global while protecting pending manual
   submissions and preventing ordinary-user edits of imported records.
+- **Status:** Complete (2026-08-31).
 - **Dependencies:** NUT-02, FND-03.
 - **Acceptance criteria:** Approved records are shared; pending manual records
   are visible only to submitter/admin; barcode imports cannot be edited or

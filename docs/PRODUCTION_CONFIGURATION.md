@@ -34,6 +34,7 @@ will remain healthy.
 | `SESSION_HTTP_ONLY` | Required non-secret | `true` | Disabling HttpOnly fails. |
 | `SESSION_SAME_SITE` | Required non-secret | `lax` or `strict` | `none` and null fail. |
 | `SESSION_DOMAIN` | Optional non-secret | Exact domain when deployment routing requires it | Leave unset for a host-only cookie. |
+| `CATALOGUE_READ_CUTOVER` | Temporary non-secret rollout flag | `true` | Defaults true for NUT-03. Set false only for the documented non-destructive read rollback; clear/rebuild config cache and run both legacy and canonical route smoke checks. |
 
 Direct TLS deployments use `TRUSTED_PROXIES=none`. A TLS-terminating proxy must
 appear in the explicit allow-list and send only the approved forwarded headers.

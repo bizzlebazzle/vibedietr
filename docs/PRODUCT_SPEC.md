@@ -214,6 +214,10 @@ The catalogue contains:
 - Barcode products imported primarily from OpenFoodFacts.
 - Rare manually submitted, non-barcode foods or products.
 
+Approved catalogue records are public and read-only to everyone, including
+logged-out visitors. Catalogue provenance does not expose the submitting
+user's account identity or grant that user ownership.
+
 Barcode should not be freely typed as a normal product-creation shortcut. A
 barcode record represents a successful machine import. The catalogue retains
 the submitting user only for provenance and moderation; the user does not own
@@ -257,6 +261,8 @@ a different catalogue product without changing the source recipe.
 
 - A manually created non-barcode food enters a pending moderation state.
 - Until approved, it is visible and usable only by its submitter.
+- The submitter cannot edit, withdraw, delete, reassign, or approve it while
+  pending.
 - Once an administrator approves it, it becomes part of the shared catalogue.
 - Rejection does not silently replace recipe lines that used the pending item;
   they must be left reviewable or unmatched.

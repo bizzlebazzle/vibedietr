@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use LogicException;
 
 /**
@@ -70,6 +71,12 @@ class CatalogueItem extends Model
     public function versions(): HasMany
     {
         return $this->hasMany(CatalogueItemVersion::class);
+    }
+
+    /** @return HasOne<LegacyIngredientCatalogueMapping, $this> */
+    public function legacyMapping(): HasOne
+    {
+        return $this->hasOne(LegacyIngredientCatalogueMapping::class);
     }
 
     /** @return BelongsTo<CatalogueItemVersion, $this> */
