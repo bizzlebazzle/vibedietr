@@ -33,8 +33,8 @@ new class extends Component
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" wire:navigate>
                         {{ __('Dashboard') }}
                     </x-nav-link>
-                    <x-nav-link :href="route('ingredients.index')" :active="request()->routeIs('ingredients.*')">
-                        Ingredients
+                    <x-nav-link :href="route('catalogue.index')" :active="request()->routeIs('catalogue.*') || request()->routeIs('ingredients.*')">
+                        Food catalogue
                     </x-nav-link>
                     <x-nav-link :href="route('recipes.index')" :active="request()->routeIs('recipes.index')">
                         Discover recipes
@@ -108,8 +108,8 @@ new class extends Component
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" wire:navigate>
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('ingredients.index')" :active="request()->routeIs('ingredients.*')">
-                Ingredients
+            <x-responsive-nav-link :href="route('catalogue.index')" :active="request()->routeIs('catalogue.*') || request()->routeIs('ingredients.*')">
+                Food catalogue
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('recipes.index')" :active="request()->routeIs('recipes.index')">
                 Discover recipes

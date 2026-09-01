@@ -513,8 +513,11 @@ a tested route back to the legacy path and preserving access to unmapped data.
 
 - Validation gate has passed with zero unexplained integrity/ownership errors.
 - FND-03 authorization/privacy matrix and NUT-03 policies/tests are approved.
-- NUT-04/NUT-05 representations needed by the cut-over path are implemented;
-  applicable DEC-003/DEC-004 outcomes are recorded.
+- NUT-01 identity/lifecycle records and explicit NUT-02 mappings are available.
+  During NUT-03, unmigrated factual fields may be projected read-only from the
+  mapped NUT-02 snapshot. NUT-04/NUT-05 package and normalized-nutrition
+  structures are deliberately not prerequisites for this identity/read
+  cut-over and must not be introduced early.
 - Monitoring, reconciliation, support procedure, and rollback trigger are
   documented. A restore point exists for any operation that could affect
   existing production data, even though cut-over should remain non-destructive.
@@ -525,6 +528,23 @@ Old and new paths coexist. Existing URLs either preserve their behavior or
 redirect intentionally with authorization intact. Every legacy row remains
 reachable by its owner until its handling is validated; no user loses a record
 because it is unmapped or pending.
+
+NUT-03 implements this phase with public canonical routes at
+`/catalogue` and `/catalogue/{catalogueItem}`. `CATALOGUE_READ_CUTOVER=true`
+is the default and is config-cache compatible. The shared identity, explicit
+status, and submitter provenance determine access. A privacy-safe projection
+reads factual display values only from the unique NUT-02 mapping snapshot;
+the snapshot never determines visibility and is never returned raw. Missing,
+ambiguous, and duplicate mappings remain in an authenticated owner-only legacy
+fallback. Reads never create or guess mappings.
+
+The legacy `ingredients.index` route redirects to the canonical catalogue
+while preserving only `q`, `page`, and `legacyPage`. A mapped legacy detail
+route resolves its explicit mapping, re-applies catalogue visibility, and
+redirects to the canonical catalogue ID. An unmapped or null-target legacy
+detail keeps the legacy owner policy. Legacy create/store remain temporarily;
+mapped catalogue rows and verified imports are immutable to ordinary users at
+both controller and Livewire mutation boundaries.
 
 ### Validation required
 
@@ -544,6 +564,14 @@ pre-approved compatibility process. Keep target tables and evidence intact for
 diagnosis. A rollback trigger includes ownership mismatch, inaccessible legacy
 records, unintended shared exposure, orphan creation, or irreconcilable write
 divergence.
+
+For the NUT-03 read increment, set `CATALOGUE_READ_CUTOVER=false`, clear and
+rebuild the configuration cache, and smoke-test the authenticated legacy index
+and detail routes. The public catalogue routes then return 404 and mapped
+legacy detail routes stop redirecting. Do not delete catalogue identities,
+mappings, snapshots, or legacy rows. The mutation denial for verified imports
+and catalogue-managed legacy rows remains a shared-catalogue authorization
+boundary rather than a read toggle.
 
 ### Approval required
 

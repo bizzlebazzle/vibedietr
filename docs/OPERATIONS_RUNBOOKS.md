@@ -120,6 +120,32 @@ candidates requires a separate approved procedure proving every affected row
 was backfill-derived and has no moderation, user, cut-over, or other downstream
 consumer. Never edit or delete a legacy ingredient as rollback.
 
+## Shared catalogue read cut-over rollback
+
+The NUT-03 read cut-over defaults to
+`CATALOGUE_READ_CUTOVER=true`. Before enabling it in a populated environment,
+confirm the NUT-02 dry run has zero failed, unprocessed, and changed-source
+rows; review every null-target ambiguous/duplicate mapping; and run the focused
+catalogue visibility and legacy-route tests.
+
+Rollback is non-destructive:
+
+1. Set `CATALOGUE_READ_CUTOVER=false`.
+2. Run `php artisan config:clear`, then rebuild the deployment's configuration
+   cache using its normal release procedure.
+3. Confirm `/catalogue` and catalogue detail routes return 404.
+4. Confirm an authenticated owner can browse the legacy ingredient index and
+   open mapped and unmapped legacy ingredient URLs without a redirect.
+5. Retain every catalogue item, mapping, snapshot, and legacy ingredient for
+   diagnosis and reconciliation.
+
+Do not delete or rewrite mappings, change statuses, or copy target data back
+into legacy rows as rollback. Verified imports and catalogue-managed legacy
+rows remain protected from ordinary-user edit/delete because that restriction
+is an authorization boundary, not read routing. Re-enable only after resolving
+the trigger and rerunning reconciliation, visibility, direct-route, pagination,
+and legacy compatibility checks.
+
 ## Failed-job pruning stale
 
 1. Confirm the daily 00:15 UTC schedule and last prune heartbeat.

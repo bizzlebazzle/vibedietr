@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Domain\Ingredients\IngredientBarcodeProvenance;
 use App\Models\Ingredient;
 use App\Models\User;
 
@@ -36,7 +37,7 @@ class IngredientPolicy
      */
     public function update(User $user, Ingredient $ingredient): bool
     {
-        return $user->id === $ingredient->user_id;
+        return $user->id === $ingredient->user_id && ! $this->isCatalogueManaged($ingredient);
     }
 
     /**
@@ -44,7 +45,7 @@ class IngredientPolicy
      */
     public function delete(User $user, Ingredient $ingredient): bool
     {
-        return $user->id === $ingredient->user_id;
+        return $user->id === $ingredient->user_id && ! $this->isCatalogueManaged($ingredient);
     }
 
     /**
@@ -61,5 +62,16 @@ class IngredientPolicy
     public function forceDelete(User $user, Ingredient $ingredient): bool
     {
         return false;
+    }
+
+    private function isCatalogueManaged(Ingredient $ingredient): bool
+    {
+        if ($ingredient->barcode_provenance === IngredientBarcodeProvenance::MachineImported) {
+            return true;
+        }
+
+        return $ingredient->catalogueMapping()
+            ->whereNotNull('catalogue_item_id')
+            ->exists();
     }
 }

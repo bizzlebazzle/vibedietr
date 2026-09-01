@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\BookmarkController;
+use App\Http\Controllers\CatalogueController;
 use App\Http\Controllers\IngredientController;
 use App\Http\Controllers\PrivateRecipeTagController;
 use App\Http\Controllers\PublicProfileController;
@@ -33,6 +34,14 @@ Route::get('recipes', RecipeDiscoveryController::class)
 Route::get('recipes/{recipe}', [RecipeController::class, 'show'])
     ->whereNumber('recipe')
     ->name('recipes.show');
+
+Route::get('catalogue', [CatalogueController::class, 'index'])
+    ->middleware('throttle:public-search')
+    ->name('catalogue.index');
+
+Route::get('catalogue/{catalogueItem}', [CatalogueController::class, 'show'])
+    ->whereNumber('catalogueItem')
+    ->name('catalogue.show');
 
 Route::middleware(['auth'])->group(function () {
     Route::patch('profile/public-attribution', [PublicProfileSettingsController::class, 'update'])

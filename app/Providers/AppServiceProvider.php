@@ -24,6 +24,7 @@ use App\Integrations\RecipeWebpages\NativeAddressResolver;
 use App\Integrations\RecipeWebpages\WebpageTransport;
 use App\Models\AuditEvent;
 use App\Models\Bookmark;
+use App\Models\CatalogueItem;
 use App\Models\Ingredient;
 use App\Models\ManagedRecipeTerm;
 use App\Models\ManagedRecipeTermSuggestion;
@@ -38,6 +39,7 @@ use App\Observability\Health\LaravelDependencyHealthProbe;
 use App\Observability\Monitoring\QueueTelemetryListener;
 use App\Policies\AuditEventPolicy;
 use App\Policies\BookmarkPolicy;
+use App\Policies\CatalogueItemPolicy;
 use App\Policies\IngredientPolicy;
 use App\Policies\ManagedRecipeTermPolicy;
 use App\Policies\ManagedRecipeTermSuggestionPolicy;
@@ -107,6 +109,7 @@ class AppServiceProvider extends ServiceProvider
 
         Gate::policy(AuditEvent::class, AuditEventPolicy::class);
         Gate::policy(Bookmark::class, BookmarkPolicy::class);
+        Gate::policy(CatalogueItem::class, CatalogueItemPolicy::class);
         Gate::policy(Ingredient::class, IngredientPolicy::class);
         Gate::policy(ManagedRecipeTerm::class, ManagedRecipeTermPolicy::class);
         Gate::policy(ManagedRecipeTermSuggestion::class, ManagedRecipeTermSuggestionPolicy::class);

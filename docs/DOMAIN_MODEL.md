@@ -672,10 +672,33 @@ normal identity constraints without selecting or merging data. The pending
 state is a candidate/review boundary, not approval. NUT-02 creates no empty
 `CatalogueItemVersion` and leaves the current-version pointer null.
 
-The mapping is migration evidence only. No application read, write, policy, or
-legacy relationship resolves through it. DEC-011 still prohibits canonical
-selection, merge, de-duplication, nutrition/provenance combination, or
-relationship redirection. NUT-03 owns any later read cut-over.
+The mapping remains migration evidence and the only permitted NUT-03
+compatibility bridge. `CatalogueReadQuery` inner-joins its unique non-null
+catalogue reference and projects an explicit safe read model from the retained
+snapshot. Catalogue identity and status determine visibility before search and
+pagination; legacy owner IDs and snapshot content never do. The projection
+does not expose submitter identity, mapping/checksum metadata, raw provider
+payload, moderation data, or audit identifiers.
+
+Approved catalogue identities are public read-only. Pending manual identities
+are readable only by their submitter and administrators; submitters have no
+edit, withdrawal, delete, provenance reassignment, or moderation ability.
+Administrators may moderate through the centralized ability but cannot silently
+edit/delete current catalogue truth. Pending barcode candidates are
+administrator-only until approved. User deletion nulls provenance: a pending
+candidate does not become public, while an approved identity stays public.
+
+Mapped legacy URLs resolve only through this ledger and re-apply catalogue
+visibility before redirecting. Null-target or absent mappings retain an
+owner-only legacy compatibility read. No read creates a mapping, selects a
+duplicate, or mutates the snapshot/source row. DEC-011 still prohibits
+canonical selection, merge, de-duplication, nutrition/provenance combination,
+or relationship redirection.
+
+This factual projection is temporary. NUT-04/NUT-05 may later replace package,
+serving, normalized-nutrition, and field-provenance values without changing
+the NUT-03 identity/visibility contract. The contract phase must remove the
+snapshot projection deliberately only after every dependent read has moved.
 
 ### Measurement unit
 

@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Ingredients;
 
+use App\Domain\Catalogue\CatalogueReadQuery;
 use App\Domain\Ingredients\ApplyOpenFoodFactsImport;
 use App\Domain\Ingredients\IngredientWriteContract;
 use App\Domain\Ingredients\IngredientWriteNormalizer;
@@ -142,6 +143,23 @@ class Form extends Component
 
     protected function redirectToExistingBarcodeIngredient(?string $barcode): bool
     {
+        $barcode = trim((string) $barcode);
+        $user = auth()->user();
+
+        if (config('catalogue.read_cutover') && $barcode !== '') {
+            $catalogueItem = app(CatalogueReadQuery::class)->findVisibleByBarcode(
+                $user instanceof User ? $user : null,
+                $barcode,
+            );
+
+            if ($catalogueItem !== null) {
+                session()->flash('status', 'That barcode is already in the shared catalogue.');
+                $this->redirectRoute('catalogue.show', ['catalogueItem' => $catalogueItem], navigate: true);
+
+                return true;
+            }
+        }
+
         $ingredient = $this->existingIngredientForBarcode($barcode);
 
         if (! $ingredient) {
@@ -387,8 +405,11 @@ class Form extends Component
             $this->dispatch('notify', type: 'success', message: 'Ingredient created.');
             $this->dispatch('ingredientSaved')->to(Index::class);
 
-            if (! request()->routeIs('ingredients.index')) {
-                $this->redirectRoute('ingredients.index', navigate: true);
+            if (! request()->routeIs('ingredients.index', 'catalogue.index')) {
+                $this->redirectRoute(
+                    config('catalogue.read_cutover') ? 'catalogue.index' : 'ingredients.index',
+                    navigate: true,
+                );
             }
         }
 
