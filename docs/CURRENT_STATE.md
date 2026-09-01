@@ -273,9 +273,55 @@ boundary: `pending`, `approved`, or `rejected`. No unapproved withdrawn,
 archived, or superseded state is added. Minimal ULID
 `catalogue_item_versions` rows make history structurally possible, and the
 identity has a nullable current-version pointer. The model rejects assigning a
-current version belonging to a different catalogue item. Package, serving,
-nutrition, version publication, moderation transitions, backfill, cut-over,
-search, and OpenFoodFacts refresh behavior remain later NUT tasks.
+current version belonging to a different catalogue item. Nutrition, version
+publication, moderation transitions, provider mapping/refresh, and later
+snapshot contraction remain later NUT tasks.
+
+## Implemented catalogue package and serving structure
+
+NUT-04 adds package and serving facts to `catalogue_item_versions`; mutable
+facts do not move onto stable `catalogue_items` identities or legacy
+`ingredients`. Each version can independently retain nullable `package_count`,
+bounded free-form `item_type`, the `amount_per_item`/standard-unit pair,
+`servings_per_item`, and the `serving_amount`/standard-unit pair plus its
+bounded `serving_amount_basis`.
+
+Structural decimal quantities use unsigned `DECIMAL(38,18)` columns and exact
+Brick Math values. Package count is a nullable unsigned integer. No field has a
+zero default: null means unknown/not supplied, while zero and negative values
+are rejected at the domain/model mutation boundary. Amount and unit fields are
+all-or-none pairs. Item type is separate from measurement unit, is trimmed
+safe text of at most 32 characters, and deliberately has no invented enum.
+
+`PackageStructure` is the central validation and calculation boundary. It
+accepts incomplete non-contradictory source data, but amount fields use only
+registered FND-06 standard units. Mass, volume, and count remain distinct;
+same-dimension conversion delegates to `UnitConverter`, unrelated count units
+and custom units are not converted, and no mass/volume, density, packing,
+shape, or food-specific inference exists.
+
+A missing direct serving amount is persisted as a derived value only when both
+amount per item and positive servings per item exist:
+
+```text
+serving amount = amount per item / servings per item
+```
+
+The derivation retains the amount-per-item unit, uses the shared 24-digit
+division guard and scale-18 storage boundary, and records
+`derived_amount_per_item_divided_by_servings_per_item`. A direct pair records
+`source` and takes precedence even when another value is mathematically
+derivable. The model validates every save, rejects stale derived rows, and the
+single replacement operation recalculates or clears all derived fields in one
+write. Package structure can be copied explicitly to a new catalogue version;
+later changes do not mutate the prior version.
+
+Thus `400 g` is `1` item with `400 gram` per item; `4 cans × 400 g` retains
+count `4`, type `can`, and `400 gram` separately; and `4 cans × 400 g, 2
+servings/can` additionally persists a derived `200 gram` serving. No redundant
+total-package amount is stored. Existing catalogue versions remain entirely
+null, and no legacy snapshot, ingredient, or barcode record is backfilled or
+rewritten.
 
 ## Implemented legacy ingredient catalogue backfill
 

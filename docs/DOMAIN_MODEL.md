@@ -619,11 +619,20 @@ moderation boundary approved by the product specification. Moderation workflow,
 escalation, transitions, withdrawal, archival, and supersession are not modeled
 by NUT-01.
 
-`App\Models\CatalogueItemVersion` is a minimal historical identity:
+`App\Models\CatalogueItemVersion` is a historical factual version:
 
 - Application-generated ULID primary key.
 - Required parent `catalogue_item_id`, with cascade on identity deletion.
 - Per-item unsigned version number, unique within its parent.
+- Nullable positive unsigned integer `package_count`.
+- Nullable safe free-form `item_type`, at most 32 characters and separate from
+  measurement unit.
+- Nullable positive exact-decimal `amount_per_item` and nullable FND-06
+  `amount_per_item_unit`, present or absent together.
+- Nullable positive exact-decimal `servings_per_item`.
+- Nullable positive exact-decimal `serving_amount`, nullable FND-06
+  `serving_amount_unit`, and nullable `ServingAmountBasis`, with all three
+  present or absent together.
 - Server timestamps.
 
 `CatalogueItem::versions()` exposes all versions and
@@ -637,8 +646,61 @@ foreign key.
 
 Both catalogue models are fully guarded against mass assignment. The schema
 does not grant the submitter edit, delete, provenance-change, moderation, or
-current-version authority. NUT-04 and NUT-05 own package and nutrition data;
-NUT-02/NUT-03 own backfill and cut-over.
+current-version authority. NUT-05 owns normalized nutrition data; NUT-02/NUT-03
+own backfill and cut-over.
+
+### Catalogue package and serving structure
+
+`PackageStructure` owns validation, normalization, conversion access, and
+serving derivation. All decimal values use the shared scale-18 exact storage
+boundary and never pass through PHP floating point. Package count is an integer;
+servings per item may be decimal. Every structural number is strictly positive
+when present. Null means unknown/not supplied and no structural column defaults
+to zero.
+
+Amount per item and its unit are an all-or-none pair. Serving amount and its
+unit are also an all-or-none pair, and a persisted serving pair always has one
+bounded `ServingAmountBasis`:
+
+- `source` means the serving amount was directly supplied and remains
+  canonical even if package inputs could produce another arithmetic result.
+- `derived_amount_per_item_divided_by_servings_per_item` means the persisted
+  value is exactly the application result of `amount_per_item /
+  servings_per_item` at the shared division and storage boundary.
+
+Derivation occurs only when amount per item, its FND-06 standard unit, and
+positive servings per item are all known and no direct serving pair was
+supplied. It retains the amount-per-item unit. Model saves revalidate the whole
+structure and reject stale derived values; `replacePackageStructure()` writes
+all structure fields together from a newly calculated value object.
+
+Only standard FND-06 units are valid for catalogue package amounts. Mass and
+volume units use exact same-dimension conversion through `UnitConverter`;
+count units use identity conversion of the same unit only. The structure does
+not infer density or perform mass/volume, cross-count-label, custom-unit,
+packing, shape, or food-specific conversions.
+
+Incomplete data remains valid when it is not contradictory. Examples include
+count only, count plus item type, an amount/unit pair without package count,
+and a directly sourced serving pair without package structure. Item type is a
+bounded descriptive string rather than an invented vocabulary, so `can`,
+`bottle`, `bar`, `sachet`, `pack`, `portion`, or `loaf` remain representable
+without conflating those descriptions with measurement units.
+
+Worked representations are:
+
+- `400 g`: package count `1`, amount per item `400`, unit `gram`; servings and
+  serving amount remain null.
+- `4 cans × 400 g`: package count `4`, item type `can`, amount per item `400`,
+  unit `gram`; no collapsed `1600 g` replacement is stored.
+- `4 cans × 400 g, 2 servings/can`: the same source components plus servings
+  per item `2`, serving amount `200`, unit `gram`, and the divided-by-servings
+  derivation basis.
+
+Package facts can be copied explicitly into a new version, after which each
+version changes independently. The additive migration leaves all existing
+version fields null and performs no legacy ingredient, mapping, or barcode
+backfill. NUT-06 owns future OpenFoodFacts mapping into this structure.
 
 ### Legacy ingredient catalogue mapping
 
