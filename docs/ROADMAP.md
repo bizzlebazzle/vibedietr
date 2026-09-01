@@ -765,6 +765,7 @@ changes, it is deliberately split across multiple items.
 
 - **Outcome:** Store all supported nutrients with basis, unit, source
   precision, catalogue version, and field-level provenance.
+- **Status:** Complete (2026-09-01).
 - **Dependencies:** NUT-01, FND-06.
 - **Acceptance criteria:** Per-100g and per-serving values are unambiguous;
   source values are not destructively rounded; kcal/kJ rules are applied;

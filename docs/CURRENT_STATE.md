@@ -323,6 +323,75 @@ total-package amount is stored. Existing catalogue versions remain entirely
 null, and no legacy snapshot, ingredient, or barcode record is backfilled or
 rewritten.
 
+## Implemented normalized catalogue nutrition and provenance
+
+NUT-05 adds version-coherent normalized catalogue nutrition without changing
+legacy ingredient nutrition. Two additive tables separate immutable supplied
+observations from the selected normalized facts used by the application. This
+is required because kcal remains authoritative while a conflicting supplied kJ
+observation must remain reproducible. A unique constraint permits one selected
+fact per catalogue version, nutrient, and basis; a bounded lookup index permits
+multiple competing observations without turning them into competing active
+facts.
+
+The supported nutrient set is energy_kcal, energy_kj, fat, saturated_fat,
+carbohydrates, sugars, fibre, protein, salt, and sodium. Catalogue facts use
+explicit per_100g, per_100ml, or per_serving bases. Per-serving facts and the
+serving definition belong to the same catalogue item version. NUT-05 stores
+supplied per-serving facts but does not derive them from package structure;
+NUT-14 owns broader reliable quantity conversion.
+
+Every observation records nutrient, source unit and basis, exact scale-18
+value or threshold, status, source fractional scale, whether scale reduction
+occurred, provenance, bounded provider/source field, applicable source/import
+times, and normalization-policy version. Normalized facts record their
+canonical unit, status, provenance, source observation, bounded derivation and
+warning. Provider record identity remains on catalogue_items; raw provider
+payloads are not duplicated into nutrition rows.
+
+Known and approximate values have a non-null amount. Known zero is stored as
+scale-18 zero. Missing, trace, and not-significant-source statuses have null
+amounts; below-limit has a null point amount and an exact threshold. An absent
+nutrient creates no row and no fake zero. All values use DEC-003
+DECIMAL(38,18) and exact decimal arithmetic. Source fractional scale is
+retained as metadata and over-scale half-up normalization is flagged; DEC-004
+formatting is applied only when presenting a fact.
+
+Imported, manually submitted, derived, and corrected selected values are
+distinct. Supplied observations cannot claim derived provenance. Observations
+and selected facts reject model updates/deletes; a correction, refresh, or
+changed normalization policy belongs to a new catalogue version. Switching the
+current-version pointer therefore leaves all earlier values, observations,
+serving facts, and provenance unchanged.
+
+Energy source observations accept kcal for energy_kcal and kJ for energy_kj.
+Normalized calculation values follow FND-06's canonical kcal unit. A kcal-only
+observation creates canonical kcal and a derived kJ display fact. A kJ-only
+observation derives canonical kcal once at 24 guard digits and then uses that
+canonical value for kJ display, avoiding iterative drift. When both source
+values conflict, both observations survive, kcal wins, and the selected energy
+facts carry energy_source_conflict. Salt and sodium remain independent; no
+conversion between them is introduced.
+
+Worked examples are:
+
+- Imported protein: 7.25 g per 100 g, imported from OpenFoodFacts with source
+  scale 2; the stored canonical value is 7.250000000000000000.
+- Manual zero: sugars 0 g per 100 g, manually submitted and known; it is not
+  missing.
+- Derived energy: source kcal 100, canonical kcal 100, and kJ display 418.4
+  from kcal × 4.184, with derived provenance on the kJ fact.
+- Mixed version: kcal and protein can be imported, fibre manually submitted,
+  salt corrected, and kJ derived, each retaining its own field provenance.
+
+Catalogue reads eager-load only the current version's bounded facts and source
+observations. The explicit public projection exposes nutrient, full canonical
+value/unit, basis, status, provenance, safe provider identity, derivation,
+warning, and display value. It excludes internal observation IDs, source field
+keys, correction internals, timestamps, and raw provider payloads. Existing
+legacy snapshot nutrition remains the compatibility fallback when a catalogue
+identity has no normalized current-version facts.
+
 ## Implemented legacy ingredient catalogue backfill
 
 NUT-02 implements FND-02's additive backfill phase through
@@ -1374,18 +1443,15 @@ unverified free-form tag, and public projections contain no verification claim.
 - The scanner is locally bundled and deterministically tested, but the
   repository still has no physical-camera browser/end-to-end suite. Secure
   context, permission, and hardware behavior therefore retain a manual check.
-- Nutrition remains JSON rather than a relational/versioned model. The shared
-  write contract now restricts normalized buckets to registered nutrients and
-  exact non-negative decimals, but the retained raw OpenFoodFacts bucket is
-  intentionally provider-shaped and unversioned.
-- Imported and manually edited nutrition values remain blended in the same JSON
-  record without per-value provenance. STB-08 identifies a verified barcode
-  import but does not provide the versioned field-level provenance needed to
-  apply the full accuracy distinction described in `AGENTS.md`.
-- The current JSON nutrition model retains provider-shaped observations in
-  `raw`, but normalized values still lack per-value origin, derivation,
-  normalization-policy version, and conflict metadata. NUT-05 owns that broader
-  provenance redesign.
+- Legacy ingredient nutrition remains provider-shaped JSON and intentionally
+  retains its pre-NUT-05 limitations: imported and manually edited normalized
+  values can be blended and the raw bucket is unversioned. NUT-05 leaves those
+  rows unchanged while shared catalogue versions now use relational normalized
+  facts and immutable field-level observations.
+- NUT-06 still owns mapping new OpenFoodFacts barcode imports into the shared
+  catalogue nutrition and package structures. Existing mapped legacy reads
+  continue using their retained snapshots until a separately assigned
+  migration/cut-over changes them.
 - Measurement display formatting remains duplicated between the Livewire list
   and show components. Unit lists, validation, normalization, and inference
   now use FND-06.

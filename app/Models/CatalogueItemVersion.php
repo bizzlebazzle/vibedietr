@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @property string $id
@@ -56,6 +57,18 @@ class CatalogueItemVersion extends Model
     public function catalogueItem(): BelongsTo
     {
         return $this->belongsTo(CatalogueItem::class);
+    }
+
+    /** @return HasMany<CatalogueNutrientObservation, $this> */
+    public function nutrientObservations(): HasMany
+    {
+        return $this->hasMany(CatalogueNutrientObservation::class);
+    }
+
+    /** @return HasMany<CatalogueNutrientValue, $this> */
+    public function nutrientValues(): HasMany
+    {
+        return $this->hasMany(CatalogueNutrientValue::class);
     }
 
     public function packageStructure(): PackageStructure
