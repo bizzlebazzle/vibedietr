@@ -67,7 +67,7 @@ final class CatalogueReadQuery
     {
         $query = CatalogueItem::query()
             ->with(['currentVersion.nutrientValues.sourceObservation'])
-            ->join(
+            ->leftJoin(
                 'legacy_ingredient_catalogue_mappings',
                 'legacy_ingredient_catalogue_mappings.catalogue_item_id',
                 '=',
@@ -75,6 +75,12 @@ final class CatalogueReadQuery
             )
             ->select('catalogue_items.*')
             ->addSelect('legacy_ingredient_catalogue_mappings.legacy_snapshot as migration_snapshot');
+        $query->leftJoin(
+            'catalogue_item_versions as current_catalogue_item_versions',
+            'current_catalogue_item_versions.id',
+            '=',
+            'catalogue_items.current_catalogue_item_version_id',
+        );
 
         return $this->visibility->apply($query, $user);
     }
@@ -92,7 +98,8 @@ final class CatalogueReadQuery
 
         return $query->where(function (Builder $match) use ($term): void {
             $match
-                ->whereRaw(
+                ->where('current_catalogue_item_versions.name', 'like', $term)
+                ->orWhereRaw(
                     "JSON_UNQUOTE(JSON_EXTRACT(legacy_ingredient_catalogue_mappings.legacy_snapshot, '$.name')) LIKE ?",
                     [$term],
                 )

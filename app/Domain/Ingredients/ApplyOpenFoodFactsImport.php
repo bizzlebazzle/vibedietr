@@ -2,6 +2,7 @@
 
 namespace App\Domain\Ingredients;
 
+use App\Domain\Catalogue\Barcode;
 use App\Integrations\OpenFoodFacts\OpenFoodFactsClient;
 use App\Integrations\OpenFoodFacts\OpenFoodFactsLookupResult;
 use App\Integrations\OpenFoodFacts\OpenFoodFactsLookupStatus;
@@ -23,13 +24,13 @@ final readonly class ApplyOpenFoodFactsImport
         string $requestedBarcode,
         OpenFoodFactsLookupResult $result,
     ): Ingredient {
-        $requestedBarcode = trim($requestedBarcode);
+        $requestedBarcode = Barcode::normalize($requestedBarcode);
         $product = $result->product;
 
         if ($result->status !== OpenFoodFactsLookupStatus::Success
             || $product === null
             || $requestedBarcode === ''
-            || trim($product->code) !== $requestedBarcode
+            || Barcode::normalize($product->code) !== $requestedBarcode
         ) {
             throw new InvalidArgumentException('A consistent successful provider result is required.');
         }

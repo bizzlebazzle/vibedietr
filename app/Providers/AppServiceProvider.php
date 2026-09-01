@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use App\Configuration\ProductionConfigurationValidator;
+use App\Domain\Catalogue\CatalogueImportCreator;
+use App\Domain\Catalogue\TransactionalCatalogueImportCreator;
 use App\Domain\RecipeImports\NullRecipeImportMaterializationHook;
 use App\Domain\RecipeImports\Ocr\DisabledManagedOcrExtractor;
 use App\Domain\RecipeImports\Ocr\GoogleDocumentAiOcrExtractor;
@@ -63,6 +65,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(RecipeDraftSaveHook::class, NullRecipeDraftSaveHook::class);
+        $this->app->bind(CatalogueImportCreator::class, TransactionalCatalogueImportCreator::class);
         $this->app->bind(RecipeFinalizationHook::class, NullRecipeFinalizationHook::class);
         $this->app->bind(RecipeRemixCreationHook::class, NullRecipeRemixCreationHook::class);
         $this->app->bind(RecipeImportMaterializationHook::class, NullRecipeImportMaterializationHook::class);

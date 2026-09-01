@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Domain\Catalogue\CatalogueItemSource;
 use App\Domain\Catalogue\PackageStructure;
 use App\Domain\Catalogue\ServingAmountBasis;
 use App\Domain\Measurements\StandardUnit;
@@ -16,6 +17,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $id
  * @property int $catalogue_item_id
  * @property int $version_number
+ * @property string|null $name
+ * @property list<string>|null $keywords
+ * @property list<string>|null $categories
+ * @property string|null $image_url
  * @property int|null $package_count
  * @property string|null $item_type
  * @property string|null $amount_per_item
@@ -24,6 +29,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string|null $serving_amount
  * @property StandardUnit|null $serving_amount_unit
  * @property ServingAmountBasis|null $serving_amount_basis
+ * @property CatalogueItemSource|null $name_source
+ * @property CatalogueItemSource|null $keywords_source
+ * @property CatalogueItemSource|null $categories_source
+ * @property CatalogueItemSource|null $package_source
+ * @property CatalogueItemSource|null $serving_source
+ * @property CatalogueItemSource|null $image_source
  */
 class CatalogueItemVersion extends Model
 {
@@ -43,6 +54,8 @@ class CatalogueItemVersion extends Model
     {
         return [
             'version_number' => 'integer',
+            'keywords' => 'array',
+            'categories' => 'array',
             'package_count' => 'integer',
             'amount_per_item' => 'decimal:18',
             'amount_per_item_unit' => StandardUnit::class,
@@ -50,6 +63,12 @@ class CatalogueItemVersion extends Model
             'serving_amount' => 'decimal:18',
             'serving_amount_unit' => StandardUnit::class,
             'serving_amount_basis' => ServingAmountBasis::class,
+            'name_source' => CatalogueItemSource::class,
+            'keywords_source' => CatalogueItemSource::class,
+            'categories_source' => CatalogueItemSource::class,
+            'package_source' => CatalogueItemSource::class,
+            'serving_source' => CatalogueItemSource::class,
+            'image_source' => CatalogueItemSource::class,
         ];
     }
 

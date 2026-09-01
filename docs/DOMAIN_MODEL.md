@@ -779,6 +779,57 @@ display value. It never includes source-observation IDs, provider field keys,
 source/import timestamps, user/correction actor identifiers, moderation
 metadata, or raw provider payloads.
 
+### Shared barcode import and reuse
+
+NUT-06 activates catalogue identity/version creation for new trusted
+OpenFoodFacts barcode results. Barcode normalization is the existing
+trim-stable string rule: trim surrounding whitespace, preserve leading zeroes,
+require a non-empty value no longer than 64 characters, and do not guess a
+symbology or repair malformed input. Lookup, provider-code equality,
+transaction recheck, the unique key, and collision recovery all use that same
+canonical string.
+
+An approved CatalogueItem with the barcode is reusable globally and prevents a
+provider call. Scanning it never creates a version or changes its original
+submitter. Pending and rejected barcode identities are not import candidates;
+their existing NUT-03 visibility applies and they are not disguised as a
+provider miss. NUT-02 ambiguous and duplicate ledger rows still have no
+catalogue identity, so import cannot select or merge them.
+
+A successful new import creates one barcode-origin, OpenFoodFacts-source,
+approved CatalogueItem. Its source identifier is the canonical provider
+barcode, introduced_at is the server import time, and the first scanner's
+nullable user reference is provenance only. The first CatalogueItemVersion
+stores nullable name, keywords, categories, and HTTPS OpenFoodFacts image
+reference in addition to the NUT-04 structure. Nullable name_source,
+keywords_source, categories_source, package_source, serving_source, and
+image_source columns identify which present fact groups came from the bounded
+application source enum. Missing facts have null values and null provenance;
+the full provider payload is not stored.
+
+Package mapping accepts only reliably parsed single quantities or explicit
+multipacks. A single 400 g package maps to count 1 plus 400 gram per item.
+An explicit 4 cans x 400 g maps to count 4, item type can, and 400 gram per
+item. Direct provider serving amount/unit pairs use the source serving basis.
+An incomplete amount/unit pair is discarded rather than persisted, and no
+density or mass-volume inference is performed.
+
+Each supported provider nutrient and basis becomes a
+CatalogueNutrientObservation with imported provenance, OpenFoodFacts source,
+provider field identifier, original lexical precision, source unit, and local
+import time. CatalogueNutritionNormalizer then owns canonical facts, zero and
+missing semantics, unit validation, source-scale retention, kcal authority,
+energy derivation, and conflict warnings. Empty and partial panels are valid.
+
+The provider request and mapping validation complete before database writes.
+TransactionalCatalogueImportCreator then rechecks the barcode under a
+transaction and writes identity, one version, package/serving fields, all
+nutrition observations/facts, and the current pointer atomically. The global
+unique barcode constraint handles concurrent requests that both missed the
+initial read. A losing unique-key request reloads the approved winner. This
+prevents duplicate identities and version graphs, although two bounded
+provider reads can still occur before database convergence.
+
 ### Legacy ingredient catalogue mapping
 
 `App\Models\LegacyIngredientCatalogueMapping` is NUT-02's durable additive

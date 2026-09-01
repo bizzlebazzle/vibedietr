@@ -2,7 +2,9 @@
 
 namespace App\Domain\Catalogue;
 
+use App\Domain\Measurements\MeasurementUnitRegistry;
 use App\Models\CatalogueItem;
+use App\Models\CatalogueItemVersion;
 use JsonException;
 
 final readonly class CatalogueItemReadModel
@@ -33,6 +35,8 @@ final readonly class CatalogueItemReadModel
     public static function fromCatalogueItem(CatalogueItem $item): self
     {
         $snapshot = self::snapshot($item->getAttribute('migration_snapshot'));
+        /** @var CatalogueItemVersion|null $version */
+        $version = $item->relationLoaded('currentVersion') ? $item->getRelation('currentVersion') : null;
         $nutritionFacts = [];
 
         if ($item->relationLoaded('currentVersion')
@@ -43,18 +47,44 @@ final readonly class CatalogueItemReadModel
                 ->all();
         }
 
+        $name = $snapshot['name'] ?? null;
+        $quantity = $snapshot['quantity'] ?? null;
+        $quantityUnit = $snapshot['quantity_unit'] ?? null;
+        $servingQuantity = $snapshot['serving_quantity'] ?? null;
+        $servingQuantityUnit = $snapshot['serving_quantity_unit'] ?? null;
+        $recommendedServings = $snapshot['recommended_servings'] ?? null;
+        $imageUrl = $snapshot['image_url'] ?? null;
+        $keywords = $snapshot['keywords'] ?? null;
+        $categories = $snapshot['categories'] ?? null;
+
+        if ($version !== null) {
+            $name = $version->name ?? $name;
+            $quantity = $version->amount_per_item ?? $quantity;
+            $quantityUnit = $version->amount_per_item_unit === null
+                ? $quantityUnit
+                : MeasurementUnitRegistry::definition($version->amount_per_item_unit)->symbol;
+            $servingQuantity = $version->serving_amount ?? $servingQuantity;
+            $servingQuantityUnit = $version->serving_amount_unit === null
+                ? $servingQuantityUnit
+                : MeasurementUnitRegistry::definition($version->serving_amount_unit)->symbol;
+            $recommendedServings = $version->servings_per_item ?? $recommendedServings;
+            $imageUrl = $version->image_url ?? $imageUrl;
+            $keywords = $version->keywords ?? $keywords;
+            $categories = $version->categories ?? $categories;
+        }
+
         return new self(
             id: (int) $item->getKey(),
-            name: trim((string) ($snapshot['name'] ?? '')) ?: 'Unnamed catalogue item',
+            name: trim((string) $name) ?: 'Unnamed catalogue item',
             barcode: $item->barcode,
-            quantity: self::nullableString($snapshot['quantity'] ?? null),
-            quantityUnit: self::nullableString($snapshot['quantity_unit'] ?? null),
-            servingQuantity: self::nullableString($snapshot['serving_quantity'] ?? null),
-            servingQuantityUnit: self::nullableString($snapshot['serving_quantity_unit'] ?? null),
-            recommendedServings: self::nullableString($snapshot['recommended_servings'] ?? null),
-            imageUrl: self::nullableString($snapshot['image_url'] ?? null),
-            keywords: self::stringList($snapshot['keywords'] ?? null),
-            categories: self::stringList($snapshot['categories'] ?? null),
+            quantity: self::nullableString($quantity),
+            quantityUnit: self::nullableString($quantityUnit),
+            servingQuantity: self::nullableString($servingQuantity),
+            servingQuantityUnit: self::nullableString($servingQuantityUnit),
+            recommendedServings: self::nullableString($recommendedServings),
+            imageUrl: self::nullableString($imageUrl),
+            keywords: self::stringList($keywords),
+            categories: self::stringList($categories),
             nutriments: is_array($snapshot['nutriments'] ?? null) ? $snapshot['nutriments'] : [],
             nutritionFacts: $nutritionFacts,
             pending: $item->status === CatalogueItemStatus::Pending,

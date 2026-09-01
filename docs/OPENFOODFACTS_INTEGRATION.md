@@ -100,6 +100,34 @@ existing buckets. The shared ingredient normalizer remains responsible for
 kcal authority, kJ derivation, DEC-003 storage precision, and explicit numeric
 zero. Display remains governed by STB-06 and DEC-004.
 
+NUT-06 also exposes conservative provider-independent package and nutrient
+DTOs. Explicit single-package amounts and multipacks retain package count,
+item type, amount per item, and standard FND-06 unit separately. Direct
+serving amount/unit pairs remain source-backed. Uncertain partial pairs and
+unsupported units are omitted rather than asserted.
+
+For shared-catalogue persistence, supported 100 g and serving nutrient fields
+retain their provider field identifier, lexical decimal value, provider unit,
+and basis. The OpenFoodFacts catalogue adapter creates NUT-05 imported
+observations; CatalogueNutritionNormalizer remains the sole selected-fact
+writer and therefore owns exact precision, zero, energy, derivation, and
+conflict behavior. The legacy normalized buckets remain available only for the
+rollback-compatible user-owned ingredient path.
+
+Only HTTPS image references on OpenFoodFacts-owned hosts are stored in native
+catalogue versions. Unsupported or malformed image references become null and
+do not make an otherwise usable product fail. The application does not
+download or cache provider images.
+
+The shared import first checks the globally unique canonical barcode and skips
+the provider for an approved existing identity. An unknown successful result
+is mapped completely before one transaction creates the identity, initial
+version, package/serving fields, normalized nutrition, and current pointer.
+The database unique key resolves concurrent inserts; the loser loads the
+winner. Provider misses, transient failures, rate limits, permanent failures,
+and invalid responses create no catalogue rows. Existing identities are not
+refreshed by a scan; refresh staging remains a separate roadmap workflow.
+
 ## Testing
 
 Use Laravel HTTP fakes; automated tests must never contact OpenFoodFacts:
