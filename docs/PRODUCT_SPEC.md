@@ -263,9 +263,28 @@ a different catalogue product without changing the source recipe.
 - Until approved, it is visible and usable only by its submitter.
 - The submitter cannot edit, withdraw, delete, reassign, or approve it while
   pending.
+- Manual identities are never merged automatically. Detection is advisory and
+  only an explicit submitter choice or authorized moderation decision may reuse
+  or consolidate an identity.
+- A strong exact normalized-name or approved-alias match with compatible known
+  identity attributes requires the submitter either to use the approved item or
+  continue with a brief private explanation of the distinction. It does not
+  block a genuinely distinct submission.
+- Fuzzy matching supplies suggestions only at launch. It cannot automatically
+  create a candidate, reject, block, or merge. Nutrition similarity may rank or
+  corroborate evidence but does not prove identity.
 - Once an administrator approves it, it becomes part of the shared catalogue.
-- Rejection does not silently replace recipe lines that used the pending item;
-  they must be left reviewable or unmatched.
+- Rejection as duplicate retains a non-selectable tombstone and an optional
+  suggested approved replacement. Existing references are not substituted:
+  their owner must accept the replacement or clear an editable match.
+- Two approved manual identities may be merged only after an authorized
+  moderator confirms identity and explicitly chooses the canonical survivor.
+  The merged identity remains a direct redirect/tombstone and its former primary
+  name normally remains a searchable alias.
+- Original identities, versions, factual provenance, immutable references,
+  snapshots, and historical calculations remain intact. Only explicitly
+  classified live references move to the canonical identity, and every move
+  must be traceable and reversible where still safe.
 
 ### Corrections and source refreshes
 
@@ -614,8 +633,6 @@ The following details are intentionally not fixed by this specification:
   Decision: DEC-008.
 - Administrator assignment, escalation, and moderation service-level rules.
   Decision: DEC-009, DEC-010.
-- De-duplication and merge rules for rare manual non-barcode catalogue records.
-  Decision: DEC-011.
 - Backup erasure timing and any narrowly required security or legal audit
   retention within the GDPR-aligned deletion policy.
   Decision: DEC-012, DEC-013.

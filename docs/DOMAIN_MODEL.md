@@ -881,9 +881,20 @@ candidate does not become public, while an approved identity stays public.
 Mapped legacy URLs resolve only through this ledger and re-apply catalogue
 visibility before redirecting. Null-target or absent mappings retain an
 owner-only legacy compatibility read. No read creates a mapping, selects a
-duplicate, or mutates the snapshot/source row. DEC-011 still prohibits
-canonical selection, merge, de-duplication, nutrition/provenance combination,
-or relationship redirection.
+duplicate, or mutates the snapshot/source row. NUT-02 remains migration
+provenance after DEC-011: it is not rewritten by a later merge, while a current
+read may eventually resolve its original target through a canonical redirect.
+
+DEC-011 defines the future manual-food identity boundary, but no duplicate or
+merge model is implemented yet. Detection evidence creates advisory candidates,
+never permission to merge. An approved merge retains the source identity as a
+direct canonical redirect/tombstone; source versions and factual provenance
+remain attached to it. Current discovery resolves to the canonical item, while
+historical/version-specific references retain their original identity and
+facts. Only declared live references may move, with reversible migration
+evidence. Rejected pending references remain tombstoned until their owner
+explicitly replaces or clears them. Merge redirects cannot be self-referential,
+chained, or cyclic.
 
 This factual projection is temporary. NUT-04/NUT-05 may later replace package,
 serving, normalized-nutrition, and field-provenance values without changing

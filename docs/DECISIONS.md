@@ -41,7 +41,7 @@ Backlog relationships mean:
 | DEC-008 | Account data-export format | Owner input required | Product owner |
 | DEC-009 | Initial administrator assignment | Decided | Product owner |
 | DEC-010 | Moderation escalation and service levels | Owner input required | Product owner |
-| DEC-011 | Manual-food de-duplication and merge rules | Owner input required | Product owner |
+| DEC-011 | Manual-food de-duplication and merge rules | Decided | Product owner |
 | DEC-012 | Backup erasure timing | Research required | Technical investigation |
 | DEC-013 | Security and legal audit retention | Decided | Product owner |
 | DEC-014 | Public meal plans after owner deletion | Decided | Product owner |
@@ -1004,22 +1004,129 @@ Backlog relationships mean:
 - **Why it matters:** Over-aggressive merging can corrupt food identity and
   recipe estimates, while no duplicate handling can fragment the shared
   catalogue.
-- **Status:** Owner input required.
+- **Status:** Decided.
 - **Owner:** Product owner.
 - **Alternatives:** Warn and allow separate submissions; prevent submission
-  above defined identity criteria; create a moderator-reviewed duplicate or
-  merge workflow that preserves aliases and references.
+  above defined identity criteria; create a moderator-reviewed workflow; or
+  combine deterministic warnings with human-reviewed identity decisions.
 - **Existing constraints from `PRODUCT_SPEC.md`:** Manual non-barcode foods are
   rare, begin pending, remain private to the submitter until approved, and are
   moderated. Rejection must not silently replace a recipe line's pending item.
   Catalogue provenance and versions are retained, and existing user data must
   not be silently merged or removed.
-- **Backlog relationships:** `Blocked`: NUT-08. `Constrained`: NUT-02, NUT-09.
-  `Related`: FND-02, NUT-03.
+- **Backlog relationships:** `Unblocked`: NUT-08. `Constrained`: NUT-02,
+  NUT-09. `Related`: FND-02, NUT-03.
 - **Resolution condition:** Approve identity evidence, candidate-detection
   boundaries, moderator and submitter actions, reference migration behavior,
   provenance requirements, and reversal or correction handling.
-- **Final decision and rationale:** Unresolved.
+- **Final decision and rationale:** VibeDietr uses a hybrid,
+  moderator-reviewed policy. Manual non-barcode identities are never merged
+  automatically. A submitter may explicitly reuse an approved item; otherwise
+  only an authorized moderator may confirm a duplicate and merge approved
+  identities. Similarity creates suggestions or candidates, never identity
+  authority.
+
+  Core identity evidence comprises generic-versus-branded classification,
+  brand or manufacturer where applicable, food form and preparation, treatment
+  or composition such as fortification or draining, nutrition basis, and
+  ingredients/composition where available. A duplicate requires compatible
+  applicable evidence and no unresolved material contradiction. Exact
+  normalized names, approved aliases, provenance, package-independent
+  descriptions, and nutrition similarity support a decision but are
+  insufficient alone. Small nutrition differences prove neither sameness nor
+  distinctness.
+
+  An exact normalized primary-name or approved-alias match automatically creates
+  a candidate only when known core attributes are compatible and none
+  materially contradicts the match. Missing evidence does not prove identity.
+  Fuzzy matching is suggestion/ranking-only at launch: it cannot automatically
+  create a candidate, block, reject, or merge. Nutrition similarity may rank or
+  corroborate but cannot independently create a candidate. Detection-policy
+  changes do not alter prior decisions. Candidate pairs are unordered and
+  unique, self-candidates are prohibited, and the bounded outcomes are pending
+  review, confirmed distinct, confirmed duplicate, and dismissed/cancelled.
+  Merge execution has separate state.
+
+  A strong possible duplicate requires the submitter either to use the existing
+  approved item or continue a distinct pending submission with a brief private,
+  bounded explanation. Submission remains allowed. Existing policy continues
+  after submission: submitters cannot edit, withdraw, delete, reassign,
+  self-approve, reject, or merge the pending identity.
+
+  An authorized catalogue moderator may mark a pair distinct, reject a pending
+  submission as duplicate with a suggested approved replacement, confirm an
+  approved pair as duplicate, dismiss a candidate, explicitly select the
+  canonical identity, apply the merge, or initiate correction. Pending
+  rejection and approved-record merge are distinct audited operations. Stale
+  or conflicting decisions fail visibly and require fresh review.
+
+  Rejection retains the pending identity as a non-selectable tombstone. Existing
+  references remain attached and show an unavailable/review-required state plus
+  the suggested replacement where authorized. An editable owner may explicitly
+  accept the replacement or clear the match; no substitution is automatic.
+  Historical or immutable references remain unchanged, and rejected private
+  content is not exposed to unauthorized viewers.
+
+  For a confirmed merge of approved identities, the moderator explicitly
+  chooses the survivor. The source identity is retained, never repurposed, and
+  points directly to the active canonical identity. It is no longer separately
+  selectable; current reads resolve to the canonical item while historical and
+  version-specific reads retain the source identity. Redirects are flattened;
+  self-merges, chains, descendants, and cycles are rejected.
+
+  The merged record's former primary name becomes a searchable canonical alias
+  by default, subject to moderator exclusion. Every other alias requires
+  explicit approval. An alias aids discovery only and does not transfer factual
+  meaning. Search exposes only the canonical selectable result.
+
+  Versions, nutrient observations and selected facts, package/serving facts,
+  sources, and field-level provenance remain under their original identities;
+  they are not reparented, combined, averaged, or renumbered. The canonical
+  current version does not change merely because of the merge. Adopting useful
+  source facts requires a separate reviewed correction and a new canonical
+  version. No historical calculation is rerun.
+
+  References are classified by semantics. NUT-02/import mappings, published
+  recipe versions, consumed or historical plan/diary entries, saved snapshots
+  and calculations, moderation records, and audit events retain the original
+  identity/version. Editable recipe matches, unconsumed editable future-plan
+  entries, and catalogue bookmarks or equivalent live pointers move to the
+  canonical identity after an approved merge, with original recipe text and
+  existing snapshots preserved. Search/current projections canonicalize.
+  Every automatic live-reference move records the merge, resource type and
+  bounded identifier, previous identity, and new identity so it can be
+  corrected without storing private content in generic metadata. New reference
+  types must declare live or historical semantics before use.
+
+  Each merge retains an immutable operation record containing the source,
+  canonical target, authorized actor, server time, bounded reason and optional
+  note, state, and any linked correction. The original identities, versions,
+  submitter/source provenance, candidate evidence, moderation history, aliases,
+  merge state, and reference-migration evidence remain traceable.
+
+  Erroneous merges use a moderator-assisted append-only corrective workflow,
+  not an unconditional one-click unmerge. Recorded live-reference moves are
+  restored automatically only when they remain current and restoration is safe;
+  later user choices, subsequent merges, new versions, and conflicts require
+  review. Historical references need no restoration because they were never
+  migrated.
+
+  FND-05 must add distinct allowlisted, minimized events for candidate creation,
+  distinct/duplicate/dismissed outcomes, pending duplicate rejection, merge
+  approval/application, live-reference migration, and reversal/correction.
+  Payloads contain bounded identifiers, outcomes, reasons, and correlation only,
+  never full food/nutrition records, explanations, recipe content, credentials,
+  or secrets. Candidate creation may be trusted application behavior; all
+  identity decisions, canonical selection, merges, and corrections require the
+  centralized catalogue-moderation ability. That authority grants no edit
+  access to user-owned recipes, plans, diary, bookmarks, or history.
+
+  Implementation must provide one consistent visible transaction boundary,
+  lock affected identities in a stable order, revalidate state and authority,
+  reject stale decisions, enforce pair uniqueness and redirect acyclicity, and
+  handle uniqueness conflicts or deadlocks safely. Exact schema, normalization,
+  fuzzy algorithm and thresholds, UI, service levels, barcode identity merges,
+  and implementation of NUT-08/NUT-09 remain outside this decision.
 
 ## DEC-012 — Backup erasure timing
 
