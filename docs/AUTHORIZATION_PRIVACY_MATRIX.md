@@ -347,8 +347,9 @@ pending/rejected identities do not create a user-owned fallback copy.
    The last two denials follow the proposed deny-unless-granted principle where
    the specification is silent.
 5. **Shared catalogue mutation:** Ordinary users cannot edit or delete
-   barcode-imported shared records. They submit correction proposals. Duplicate consolidation for approved manual records follows DEC-011; other edit
-   and removal behavior remains proposal/moderation-only until specified.
+   barcode-imported shared records. They submit correction proposals.
+   Duplicate consolidation for approved manual records follows DEC-011; other
+   edit and removal behavior remains proposal/moderation-only until specified.
 6. **Catalogue proposal review:** Pending manual additions are visible only to
    submitter and administrator. User corrections and provider refreshes are
    staged. An authorized administrator accepts or rejects; acceptance creates
