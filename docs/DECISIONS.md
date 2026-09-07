@@ -1127,6 +1127,7 @@ Backlog relationships mean:
   handle uniqueness conflicts or deadlocks safely. Exact schema, normalization,
   fuzzy algorithm and thresholds, UI, service levels, barcode identity merges,
   and implementation of NUT-08/NUT-09 remain outside this decision.
+
 ## DEC-012 — Backup erasure timing
 
 - **Question requiring resolution:** When and how does permanently erased
