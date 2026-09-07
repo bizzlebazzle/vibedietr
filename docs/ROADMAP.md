@@ -724,7 +724,7 @@ changes, it is deliberately split across multiple items.
 - **Acceptance criteria:** The command is resumable and reports legacy manual,
   verified imported, ambiguous barcode, and duplicate records; source IDs map
   old to new; no old row is changed or deleted; ambiguous cases await review;
-  no merge or de-duplication action is taken until DEC-011 is decided.
+  no merge or de-duplication action is performed by NUT-02.
 - **Suggested automated tests:** Empty database, mixed fixtures, duplicates,
   interruption/resume, dry run, row-count reconciliation, and rollback tests.
 - **Risk:** High.
