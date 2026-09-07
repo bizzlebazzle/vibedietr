@@ -435,9 +435,9 @@ silently rewriting migration evidence. Counts cover the bounded eligible
 population, pre-existing/new mappings, four mutually exclusive classifications,
 failures, unprocessed rows, changed sources, and final mapped total. Existing
 ingredient reads, writes, rows, relationships, ownership, and deletion behavior
-remain authoritative through NUT-02. DEC-011 remains unresolved: no canonical
-winner, merge, de-duplication, relationship redirect, or candidate promotion
-occurs.
+remain authoritative through NUT-02. DEC-011 is decided but not implemented:
+the command still performs no canonical selection, merge, de-duplication,
+relationship redirect, or candidate promotion.
 
 ## Implemented shared catalogue read cut-over
 
@@ -1534,6 +1534,12 @@ unverified free-form tag, and public projections contain no verification claim.
 - Approved catalogue records are publicly readable, including to logged-out
   visitors. Pending manual candidates are submitter/admin read-only, and the
   submitter cannot edit, withdraw, delete, reassign, or self-approve them.
+- DEC-011 prohibits automatic manual-food merging. Strong deterministic matches
+  require explicit reuse or a distinction explanation; fuzzy matches suggest
+  only. Authorized moderators explicitly select canonical items, merged
+  identities remain traceable redirects, live references move with reversible
+  evidence, and historical identities, versions, snapshots, and calculations
+  remain unchanged. This policy is not yet implemented.
 - Barcode-imported catalogue records must not be editable or deletable by
   ordinary users. Deleting the submitting user must leave the record in place
   with a null submitting-user reference.
@@ -1549,6 +1555,5 @@ unverified free-form tag, and public projections contain no verification claim.
 
 ## Questions requiring owner input
 
-- How should manually entered products without barcodes be de-duplicated?
 - In the shared catalogue, who may correct or remove a barcode-imported record
   when OpenFoodFacts data is wrong or obsolete?
