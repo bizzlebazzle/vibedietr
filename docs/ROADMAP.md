@@ -811,11 +811,14 @@ changes, it is deliberately split across multiple items.
   it awaits moderation.
 - **Dependencies:** NUT-03, NUT-04, NUT-05, DEC-011.
 - **Acceptance criteria:** Barcode is prohibited; status starts pending;
-  submitter/admin visibility is enforced; recipes may reference it; rejection
-  never silently substitutes another item.
+  submitter/admin visibility is enforced; recipes may reference it; strong
+  deterministic duplicate evidence requires explicit reuse or a bounded
+  distinction explanation; fuzzy matches suggest only; rejection retains a
+  non-selectable tombstone and never silently substitutes another item.
 - **Suggested automated tests:** Submission validation, privacy matrix,
-  recipe use, barcode rejection, duplicate handling, and rejection behavior
-  tests.
+  recipe use, barcode rejection, exact/alias candidate creation, fuzzy
+  suggestion-only behavior, reuse-or-explain choice, tombstone visibility, and
+  owner-confirmed replacement tests.
 - **Risk:** High.
 - **Estimated size:** Medium.
 
@@ -823,13 +826,19 @@ changes, it is deliberately split across multiple items.
 
 - **Outcome:** Allow administrators to approve or reject manual submissions
   with an auditable decision.
-- **Dependencies:** NUT-08, FND-04, FND-05, FND-14.
-- **Acceptance criteria:** Queue filters by state/type; decisions require an
-  administrator and optional note; approval makes the item shared; rejection
-  leaves dependent recipe lines reviewable or unmatched.
-- **Suggested automated tests:** Queue authorization, approve/reject,
-  double-decision race, audit event, visibility transition, and dependent-line
-  behavior tests.
+- **Dependencies:** NUT-08, FND-04, FND-05, FND-14, DEC-011.
+- **Acceptance criteria:** Queue filters by state/type; candidate pairs are
+  unordered and unique; decisions require centralized moderator authorization;
+  pending rejection and approved-record merge are distinct; the moderator
+  explicitly selects the canonical item; merged identities remain direct
+  redirects with original versions/provenance; declared live references move
+  with reversible evidence while history remains unchanged; correction is
+  append-only and auditable.
+- **Suggested automated tests:** Queue authorization, candidate
+  distinct/duplicate/dismissed outcomes, approve/reject, pending tombstones,
+  explicit canonical selection, aliases, live/history reference handling,
+  self/cycle/chain denial, concurrent decisions, correction, audit events, and
+  visibility transitions.
 - **Risk:** High.
 - **Estimated size:** Medium.
 
