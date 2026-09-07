@@ -343,8 +343,9 @@ Ambiguous and duplicate rows are fully mapped but keep a null candidate
 reference. No catalogue version, promotion, merge, relationship redirect,
 legacy mutation, or audit event is created. Production execution still
 requires manual approval of the dry-run classification/exception report.
-DEC-011 remains unresolved and continues to prohibit all merge/de-duplication
-action.
+DEC-011 is decided, but it does not retroactively turn this migration ledger
+into a merge workflow. NUT-02 still performs no merge, canonical selection,
+redirect, reference migration, or candidate moderation.
 
 ### Proposed changes
 
@@ -378,7 +379,8 @@ action.
   barcode rows can be distinguished reliably.
 - Backfill classification rules, batch size, locking/concurrency approach,
   and dry-run report are reviewed using production-representative data.
-- DEC-011 remains a hard prohibition on automatic merge while unresolved.
+- DEC-011 prohibits automatic manual-food merges. NUT-02 mappings remain
+  original migration provenance and are not rewritten by later moderation.
 
 ### Expected application compatibility
 
@@ -417,8 +419,9 @@ shared catalogue data.
 
 ### Follow-up implementation backlog items
 
-STB-08, NUT-01, NUT-02, NUT-04, and NUT-05. DEC-011 must be resolved before
-any implementation introduces manual-food merge behavior.
+STB-08, NUT-01, NUT-02, NUT-04, and NUT-05. DEC-011 is resolved; NUT-08 and
+NUT-09 own its future submission, candidate, merge, redirect, and correction
+behavior.
 
 ## 8. Validation phase
 
@@ -503,6 +506,10 @@ a tested route back to the legacy path and preserving access to unmapped data.
 - Direct new successful barcode imports to the target model using globally
   consistent identity and idempotency. Do not retrofit unverified legacy
   barcodes into this trusted path.
+- When NUT-09 later implements DEC-011, current reads may resolve a merged manual
+  identity directly to its canonical item. Keep NUT-02 mappings and historical
+  or version-specific references attached to their original identities; migrate
+  only reference classes already declared live and record reversible evidence.
 - Maintain dual-write or forward/reverse synchronization only where it is
   demonstrably safe and observable. Define which store is authoritative for
   each operation at every rollout step.
@@ -825,9 +832,10 @@ HAVING COUNT(*) > 1
 ORDER BY candidate_rows DESC;
 ```
 
-The second query identifies only exact candidate groups; it is not an approved
-identity, de-duplication, or merge rule. DEC-011 must be resolved before such
-candidates are acted upon.
+The second query identifies only exact candidate groups; it does not prove
+identity or authorize this backfill to merge them. Under decided DEC-011, only
+the later NUT-08/NUT-09 workflow may create actionable manual candidates and an
+authorized moderator must decide identity.
 
 ### Unsafe or ambiguous legacy shapes
 
@@ -924,7 +932,7 @@ leaving those behaviours open.
 | DEC-004 — Nutrient display precision | Decided and implemented by FND-06's nutrient metadata/formatter. It constrains STB-06 and later displays; cut-over must consume the shared table rather than invent local precision. |
 | DEC-009 — Initial administrator assignment | Decided. Its resolution enabled FND-04 administrator persistence and central authorization. Operational bootstrap and lifecycle are implemented by FND-14 through the DEC-009 controls. |
 | DEC-010 — Moderation escalation and service levels | Related to the eventual queue and constrained moderation operations. It does not block modelling basic states, but the migration cannot promise response times, escalation, or stale-item handling. |
-| DEC-011 — Manual-food de-duplication and merge rules | Constrains FND-02/NUT-02 and blocks NUT-08. Candidate detection/reporting is safe; reassignment, merging, or deletion is blocked. |
+| DEC-011 — Manual-food de-duplication and merge rules | Decided. NUT-08 is unblocked. NUT-02 remains unchanged and its mappings stay original provenance. Future current reads may resolve direct canonical redirects; only declared live references move with reversible evidence, while historical identities, versions, snapshots, and calculations remain unchanged. |
 | DEC-012 — Backup erasure timing | Explicitly constrains FND-02 and blocks DEP-06/DEP-08/DEP-09. It does not block additive planning, but destructive production contract work is blocked until backup retention and restore-time erasure handling are resolved. |
 | DEC-013 — Security and legal audit retention | Decided. It unblocks FND-05 and removes the DEC-013 dependency from DEP-08 and DEP-09. Migration provenance must be purpose-classified, data-minimized, access-controlled, and deleted under `AUDIT_RETENTION_SCHEDULE.md`; relevant purge receipts, actor-mapping destruction, hold handling, and deletion verification must be implemented before destructive contract work. DEC-012 still blocks final backup behavior. |
 | DEC-014 — Public meal plans after owner deletion | Decided. It does not affect current ingredient copying. Future planning structures must support automatic bookmark-qualified retention, immediate anonymization and unlisting at the deletion request, stable URLs, disabled new bookmarks, last-bookmark deletion, public-safe snapshot minimization, protected 30-day restoration, final removal of recovery attribution, non-reclaimable retained plans, independent-copy survival, and exceptional administrator removal without administrator restoration or transfer. |
