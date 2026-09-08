@@ -793,6 +793,7 @@ changes, it is deliberately split across multiple items.
 
 ### NUT-07 — P1 — Add catalogue search and manual match selection
 
+- **Status:** Complete (2026-09-08).
 - **Outcome:** Let recipe creators search approved catalogue records and
   explicitly attach or replace a line's food match.
 - **Dependencies:** REC-02, NUT-03.

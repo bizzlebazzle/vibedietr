@@ -38,6 +38,16 @@ class CatalogueItemFactory extends Factory
         ]);
     }
 
+    public function approved(): static
+    {
+        return $this->state(fn (): array => ['status' => CatalogueItemStatus::Approved]);
+    }
+
+    public function rejected(): static
+    {
+        return $this->state(fn (): array => ['status' => CatalogueItemStatus::Rejected]);
+    }
+
     public function barcodeBacked(?string $barcode = null): static
     {
         return $this->state(fn () => [

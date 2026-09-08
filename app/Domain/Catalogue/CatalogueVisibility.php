@@ -44,4 +44,18 @@ final class CatalogueVisibility
             && $item->origin === CatalogueItemOrigin::Manual
             && $item->submitted_by_user_id === $user->getKey();
     }
+
+    /** @param Builder<CatalogueItem> $query */
+    public function applySelectable(Builder $query, User $user): Builder
+    {
+        return $query->where(function (Builder $selectable) use ($user): void {
+            $selectable->where('catalogue_items.status', CatalogueItemStatus::Approved)
+                ->orWhere(function (Builder $pending) use ($user): void {
+                    $pending
+                        ->where('catalogue_items.status', CatalogueItemStatus::Pending)
+                        ->where('catalogue_items.origin', CatalogueItemOrigin::Manual)
+                        ->where('catalogue_items.submitted_by_user_id', $user->getKey());
+                });
+        });
+    }
 }

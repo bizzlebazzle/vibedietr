@@ -27,6 +27,11 @@ class CatalogueItemVersionFactory extends Factory
         ];
     }
 
+    public function current(): static
+    {
+        return $this->afterCreating(fn (CatalogueItemVersion $version) => $version->catalogueItem->setCurrentVersion($version));
+    }
+
     public function singleItem(): static
     {
         return $this->state(fn () => [

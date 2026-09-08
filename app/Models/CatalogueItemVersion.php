@@ -90,6 +90,12 @@ class CatalogueItemVersion extends Model
         return $this->hasMany(CatalogueNutrientValue::class);
     }
 
+    /** @return HasMany<RecipeIngredientLineMatch, $this> */
+    public function recipeIngredientLineMatches(): HasMany
+    {
+        return $this->hasMany(RecipeIngredientLineMatch::class);
+    }
+
     public function packageStructure(): PackageStructure
     {
         return PackageStructure::fromPersisted(

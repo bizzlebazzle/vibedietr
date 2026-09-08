@@ -4,6 +4,7 @@ namespace App\Domain\Recipes;
 
 use App\Models\Recipe;
 use App\Models\RecipeIngredientLine;
+use App\Models\RecipeIngredientLineMatch;
 use App\Models\RecipeInstructionSection;
 use App\Models\RecipeInstructionStep;
 use Illuminate\Validation\ValidationException;
@@ -37,6 +38,8 @@ final class RecipeVersionContent
     /** @return array<string, mixed> */
     public function snapshot(Recipe $recipe): array
     {
+        $recipe->loadMissing('ingredientLines.catalogueMatch.catalogueItemVersion');
+
         return [
             'title' => $recipe->title,
             'servings' => $recipe->servings,
@@ -49,6 +52,12 @@ final class RecipeVersionContent
                 'custom_unit' => $line->custom_unit,
                 'generic_wording' => $line->generic_wording,
                 'notes' => $line->notes,
+                'catalogue_match' => $line->catalogueMatch === null ? null : [
+                    'catalogue_item_id' => $line->catalogueMatch->catalogueItemVersion->catalogue_item_id,
+                    'catalogue_item_version_id' => $line->catalogueMatch->catalogue_item_version_id,
+                    'provenance' => $line->catalogueMatch->getRawOriginal('provenance'),
+                    'review_state' => $line->catalogueMatch->getRawOriginal('review_state'),
+                ],
             ])->values()->all(),
             'sections' => $recipe->instructionSections->map(fn ($section): array => [
                 'key' => 'section-'.$section->getKey(),
@@ -88,6 +97,19 @@ final class RecipeVersionContent
             ]);
             $line->recipe()->associate($recipe);
             $line->save();
+
+            $matchState = $state['catalogue_match'] ?? null;
+            if (is_array($matchState) && isset($matchState['catalogue_item_version_id'])) {
+                $match = new RecipeIngredientLineMatch;
+                $match->forceFill([
+                    'catalogue_item_version_id' => (string) $matchState['catalogue_item_version_id'],
+                    'selected_by_user_id' => $recipe->user_id,
+                    'provenance' => RecipeIngredientMatchProvenance::from((string) $matchState['provenance']),
+                    'review_state' => RecipeIngredientMatchReviewState::from((string) $matchState['review_state']),
+                ]);
+                $match->ingredientLine()->associate($line);
+                $match->save();
+            }
         }
 
         $sectionIds = [];

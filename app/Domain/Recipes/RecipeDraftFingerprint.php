@@ -46,6 +46,14 @@ final class RecipeDraftFingerprint
                 'custom_unit' => $line->custom_unit,
                 'generic_wording' => $line->generic_wording,
                 'notes' => $line->notes,
+                'catalogue_match' => $line->catalogueMatch === null ? null : [
+                    'id' => $line->catalogueMatch->getKey(),
+                    'catalogue_item_version_id' => $line->catalogueMatch->catalogue_item_version_id,
+                    'selected_by_user_id' => $line->catalogueMatch->selected_by_user_id,
+                    'provenance' => $line->catalogueMatch->getRawOriginal('provenance'),
+                    'review_state' => $line->catalogueMatch->getRawOriginal('review_state'),
+                    'updated_at' => $line->catalogueMatch->getRawOriginal('updated_at'),
+                ],
                 'updated_at' => $line->getRawOriginal('updated_at'),
             ])->values()->all(),
             'sections' => $sections->map(fn ($section): array => [
