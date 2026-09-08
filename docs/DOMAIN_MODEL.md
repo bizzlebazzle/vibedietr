@@ -498,6 +498,51 @@ the exact complete set of that recipe's line identifiers and writes the new
 order transactionally. `recipe_id` and `position` are not mass assignable.
 The current Livewire editor exposes add, edit, remove, and up/down reorder.
 
+### Recipe ingredient catalogue match
+
+A persisted recipe ingredient line has zero or one current
+`RecipeIngredientLineMatch`. The separate entity is appropriate because its
+catalogue association, actor, provenance, and review state must be present or
+absent together. Its unique, cascading `recipe_ingredient_line_id` enforces
+one active match per line. It stores one restricting
+`catalogue_item_version_id`; the stable catalogue item identity is derived
+from that version's required parent, making cross-item version combinations
+unrepresentable. It also stores a nullable `selected_by_user_id`, bounded
+match provenance and review state, and timestamps. User deletion nulls the
+actor reference rather than deleting recipe content.
+
+For NUT-07, `RecipeIngredientMatchProvenance` has
+`manually_selected_by_creator`. Explicit selection is represented as
+`RecipeIngredientMatchReviewState::Confirmed`; `NeedsReview` is reserved for
+later automatic or lifecycle review work. These values describe how the
+recipe line was linked and are distinct from catalogue-field provenance.
+There is no match score, confidence band, threshold version, candidate
+evidence, or automatic selection in NUT-07.
+
+Only the recipe owner may attach, replace, or clear a match while the recipe is
+an editable draft or has an active REC-07 revision. The transaction locks and
+reauthorizes the recipe and line, then independently reloads the requested
+catalogue identity/version through the selectable NUT-03 query. Approved items
+and the actor's own pending manual item are selectable when they have a current
+version. Search and selection exclude all other pending records, rejected
+records, and versionless identities. Selection requires the submitted version
+to remain the exact current version; a stale result fails rather than switching
+versions. Once stored, the version reference remains pinned.
+
+Match mutation never writes the line's `original_text`, quantity,
+`standard_unit`, `custom_unit`, `generic_wording`, notes, position, or
+recipe relationship. Replace updates the one match entity and clear removes it.
+Ordinary line edits and ordering retain it. The draft fingerprint includes the
+complete match so concurrent changes reject stale aggregate saves.
+
+Recipe-version snapshots retain catalogue item/version identity, provenance,
+and review state. Restoring a revision recreates the current match for the same
+recipe owner. Public recipe projection deliberately omits this internal match
+object and its actor. Remixes continue to copy only the pre-existing allowlist
+of ingredient wording and structure and therefore do not copy matches.
+Existing recipe lines stay unmatched unless their creator explicitly selects a
+candidate.
+
 ### Recipe instruction section
 
 `App\Models\RecipeInstructionSection` is an optional recipe-owned label used

@@ -537,6 +537,55 @@ without changing public visibility. Low-cardinality telemetry records only
 provider and result category. No new audit action is emitted because the
 current FND-05 taxonomy has no approved barcode-import event.
 
+## Implemented recipe-line catalogue search and manual matches
+
+NUT-07 adds catalogue matching to persisted lines in the existing REC-04
+recipe editor. Search uses `CatalogueReadQuery` and the NUT-03
+`CatalogueVisibility` SQL boundary before counts, deterministic ordering, and
+pagination. Only records with a current catalogue version are candidates.
+Approved records are selectable by authenticated recipe creators; a pending
+manual record is selectable only by its submitter. Another user's pending
+record, pending barcode candidate, rejected record, and a record without a
+current version are absent from result rows and totals and fail the same
+server-side selection check. Administrator catalogue visibility does not make
+another submitter's pending record selectable for an administrator's recipe.
+
+A deliberate Select/Replace action creates or updates the line's single
+`RecipeIngredientLineMatch`; search, result display, and keyboard focus do not
+write a match. The match references one exact `catalogue_item_version_id`, so
+its catalogue identity is derived through that version and an invalid
+item/version pair cannot be represented. Selection accepts only the exact
+version shown while it remains the item's current selectable version. If
+status or current version changes between search and selection, mutation fails
+without silently attaching the old or new version. A later current-version
+change does not rewrite an existing match.
+
+Manual matches record the selecting user through a nullable foreign key,
+bounded `manually_selected_by_creator` provenance, and `confirmed` review
+state. The reserved `needs_review` state supports later NUT-12 work but is not
+created by NUT-07. User deletion nulls the actor reference without deleting the
+match or ingredient line. Clear deletes the match row only. A unique line
+foreign key enforces one active match; line deletion cascades the match, while
+deleting a referenced catalogue version is restricted.
+
+Attach, replace, clear, catalogue search, and failed selection never rewrite
+`original_text`, quantity, standard/custom unit, generic wording, notes, or
+position. A later normal ingredient-text edit or reorder retains the explicit
+match unchanged; automatic clearing or review downgrading remains deferred.
+New unsaved lines must first be saved to receive their stable line identity.
+Search and failed selection preserve all unsaved REC-04 editor input.
+
+Finalization snapshots catalogue item/version identity, provenance, and review
+state with the ingredient line. REC-07 revision creation and abandonment
+restore that match for the same recipe, while publishing a replacement
+snapshot leaves the earlier immutable recipe version unchanged. Public recipe
+projection continues to expose creator wording and approved recipe fields
+only: match actor, provenance, review state, and catalogue version are not
+serialized. REC-11 remixes remain unmatched because match-copy/reset semantics
+are not yet specified; NUT-07 does not invent them. Existing lines receive no
+backfill or automatic name-based match, and no nutrition calculation or
+food-dependent quantity conversion is introduced.
+
 ## OpenFoodFacts and barcode support
 
 The Livewire ingredient form can make a synchronous server-side request through

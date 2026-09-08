@@ -3,8 +3,11 @@
 namespace Database\Factories;
 
 use App\Domain\Measurements\StandardUnit;
+use App\Models\CatalogueItemVersion;
 use App\Models\Recipe;
 use App\Models\RecipeIngredientLine;
+use App\Models\RecipeIngredientLineMatch;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /** @extends Factory<RecipeIngredientLine> */
@@ -23,6 +26,16 @@ class RecipeIngredientLineFactory extends Factory
             'generic_wording' => null,
             'notes' => null,
         ];
+    }
+
+    public function manuallyMatched(?CatalogueItemVersion $version = null, ?User $actor = null): static
+    {
+        return $this->afterCreating(function (RecipeIngredientLine $line) use ($version, $actor): void {
+            RecipeIngredientLineMatch::factory()->for($line, 'ingredientLine')->create([
+                'catalogue_item_version_id' => ($version ?? CatalogueItemVersion::factory()->current()->create())->getKey(),
+                'selected_by_user_id' => $actor?->getKey() ?? $line->recipe->user_id,
+            ]);
+        });
     }
 
     public function structured(): static

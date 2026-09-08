@@ -3,6 +3,7 @@
 namespace App\Domain\Catalogue;
 
 use App\Models\CatalogueItem;
+use App\Models\CatalogueItemVersion;
 use App\Models\Ingredient;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -38,6 +39,41 @@ final class CatalogueReadQuery
         return $this->visibleQuery($user)
             ->where('catalogue_items.barcode', $barcode)
             ->first();
+    }
+
+    /** @return LengthAwarePaginator<int, CatalogueMatchCandidate> */
+    public function paginateSelectable(User $user, string $search, int $page = 1, int $perPage = 8): LengthAwarePaginator
+    {
+        $paginator = $this->search($this->selectableQuery($user), $search)
+            ->whereNotNull('catalogue_items.current_catalogue_item_version_id')
+            ->orderByDesc('catalogue_items.introduced_at')
+            ->orderByDesc('catalogue_items.id')
+            ->paginate($perPage, ['*'], 'catalogueMatchPage', $page);
+
+        return $paginator->through(function (Model $item): CatalogueMatchCandidate {
+            assert($item instanceof CatalogueItem);
+
+            return CatalogueMatchCandidate::fromCatalogueItem($item);
+        });
+    }
+
+    public function findSelectableCurrentVersion(
+        User $user,
+        int $itemId,
+        string $versionId,
+        bool $lock = false,
+    ): ?CatalogueItemVersion {
+        $query = $this->selectableQuery($user)
+            ->where('catalogue_items.id', $itemId)
+            ->where('catalogue_items.current_catalogue_item_version_id', $versionId);
+
+        if ($lock) {
+            $query->lockForUpdate();
+        }
+
+        $item = $query->first();
+
+        return $item?->currentVersion;
     }
 
     public function project(CatalogueItem $item): CatalogueItemReadModel
@@ -83,6 +119,29 @@ final class CatalogueReadQuery
         );
 
         return $this->visibility->apply($query, $user);
+    }
+
+    /** @return Builder<CatalogueItem> */
+    private function selectableQuery(User $user): Builder
+    {
+        $query = CatalogueItem::query()
+            ->with('currentVersion')
+            ->leftJoin(
+                'legacy_ingredient_catalogue_mappings',
+                'legacy_ingredient_catalogue_mappings.catalogue_item_id',
+                '=',
+                'catalogue_items.id',
+            )
+            ->leftJoin(
+                'catalogue_item_versions as current_catalogue_item_versions',
+                'current_catalogue_item_versions.id',
+                '=',
+                'catalogue_items.current_catalogue_item_version_id',
+            )
+            ->select('catalogue_items.*')
+            ->addSelect('legacy_ingredient_catalogue_mappings.legacy_snapshot as migration_snapshot');
+
+        return $this->visibility->applySelectable($query, $user);
     }
 
     /** @param Builder<CatalogueItem> $query */

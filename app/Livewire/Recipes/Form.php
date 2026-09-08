@@ -2,17 +2,21 @@
 
 namespace App\Livewire\Recipes;
 
+use App\Domain\Catalogue\CatalogueReadQuery;
 use App\Domain\Measurements\MeasurementUnitRegistry;
 use App\Domain\Measurements\StandardUnit;
 use App\Domain\Recipes\RecipeDraftEditor;
 use App\Domain\Recipes\RecipeDraftFingerprint;
 use App\Domain\Recipes\RecipeFinalizer;
+use App\Domain\Recipes\RecipeIngredientMatchManager;
 use App\Domain\Recipes\RecipeRevisionPublisher;
 use App\Domain\Recipes\RecipeVisibility;
 use App\Domain\Recipes\StaleRecipeDraft;
 use App\Domain\Recipes\StaleRecipeRevision;
 use App\Domain\Shared\Decimal;
 use App\Models\Recipe;
+use App\Models\RecipeIngredientLine;
+use App\Models\RecipeIngredientLineMatch;
 use App\Models\User;
 use App\Rules\ValidMeasurementUnit;
 use Closure;
@@ -52,6 +56,18 @@ class Form extends Component
 
     public bool $unsaved = false;
 
+    /** @var array<int, string> */
+    public array $catalogueSearches = [];
+
+    /** @var array<int, list<array{item_id: int, version_id: string, name: string, barcode: string|null, pending: bool}>> */
+    public array $catalogueResults = [];
+
+    /** @var array<int, array{page: int, last_page: int, total: int}> */
+    public array $catalogueResultPages = [];
+
+    /** @var array<int, array{item_id: int, version_id: string, name: string, review_state: string}> */
+    public array $catalogueMatches = [];
+
     private bool $loading = false;
 
     public function mount(?Recipe $recipe = null): void
@@ -68,7 +84,7 @@ class Form extends Component
 
     public function updated(string $property): void
     {
-        if (! $this->loading && $property !== 'unsaved') {
+        if (! $this->loading && $property !== 'unsaved' && ! str_starts_with($property, 'catalogueSearches.')) {
             $this->unsaved = true;
         }
     }
@@ -305,6 +321,53 @@ class Form extends Component
         $this->redirectRoute('recipes.show', ['recipe' => $this->recipeId], navigate: true);
     }
 
+    public function searchCatalogue(int $index, CatalogueReadQuery $catalogue): void
+    {
+        $this->loadCatalogueResults($index, 1, $catalogue);
+    }
+
+    public function changeCataloguePage(int $index, int $page, CatalogueReadQuery $catalogue): void
+    {
+        $this->loadCatalogueResults($index, $page, $catalogue);
+    }
+
+    public function selectCatalogueMatch(
+        int $index,
+        int $catalogueItemId,
+        string $catalogueVersionId,
+        RecipeIngredientMatchManager $matches,
+        RecipeDraftFingerprint $fingerprint,
+    ): void {
+        $user = auth()->user();
+        if (! $user instanceof User || $this->recipeId === null) {
+            abort(403);
+        }
+
+        $line = $this->persistedIngredientLine($index);
+        $match = $matches->select($this->recipeId, (int) $line->getKey(), $catalogueItemId, $catalogueVersionId, $user);
+        $this->catalogueMatches[$line->getKey()] = $this->matchState($match);
+        $this->catalogueResults[$line->getKey()] = [];
+        $this->refreshFingerprint($fingerprint);
+        session()->flash('status', 'Catalogue match saved.');
+    }
+
+    public function clearCatalogueMatch(
+        int $index,
+        RecipeIngredientMatchManager $matches,
+        RecipeDraftFingerprint $fingerprint,
+    ): void {
+        $user = auth()->user();
+        if (! $user instanceof User || $this->recipeId === null) {
+            abort(403);
+        }
+
+        $line = $this->persistedIngredientLine($index);
+        $matches->clear($this->recipeId, (int) $line->getKey(), $user);
+        unset($this->catalogueMatches[$line->getKey()]);
+        $this->refreshFingerprint($fingerprint);
+        session()->flash('status', 'Catalogue match cleared.');
+    }
+
     public function render()
     {
         return view('livewire.recipes.form', [
@@ -335,7 +398,7 @@ class Form extends Component
     private function loadRecipe(Recipe $recipe, ?RecipeDraftFingerprint $fingerprint = null): void
     {
         $this->loading = true;
-        $recipe->load(['ingredientLines', 'instructionSections', 'instructionSteps']);
+        $recipe->load(['ingredientLines.catalogueMatch.catalogueItemVersion.catalogueItem', 'instructionSections', 'instructionSteps']);
         $sectionKeysById = $recipe->instructionSections->mapWithKeys(fn ($section): array => [$section->getKey() => 'section-'.$section->getKey()]);
         $this->recipeId = $recipe->getKey();
         $this->isRevision = $recipe->isFinalized();
@@ -348,6 +411,13 @@ class Form extends Component
             'unit' => $line->standard_unit instanceof StandardUnit ? MeasurementUnitRegistry::definition($line->standard_unit)->symbol : ($line->custom_unit ?? ''),
             'generic_wording' => $line->generic_wording ?? '', 'notes' => $line->notes ?? '',
         ])->values()->all();
+        $this->catalogueSearches = [];
+        $this->catalogueResults = [];
+        $this->catalogueResultPages = [];
+        $this->catalogueMatches = $recipe->ingredientLines
+            ->filter(fn ($line): bool => $line->catalogueMatch !== null)
+            ->mapWithKeys(fn ($line): array => [$line->getKey() => $this->matchState($line->catalogueMatch)])
+            ->all();
         $this->sections = $recipe->instructionSections->map(fn ($section): array => ['key' => $sectionKeysById->get($section->getKey()), 'id' => $section->getKey(), 'name' => $section->name])->values()->all();
         $this->steps = $recipe->instructionSteps->map(fn ($step): array => [
             'key' => 'step-'.$step->getKey(), 'id' => $step->getKey(), 'text' => $step->text,
@@ -357,6 +427,62 @@ class Form extends Component
         $this->unsaved = false;
         $this->resetValidation();
         $this->loading = false;
+    }
+
+    private function loadCatalogueResults(int $index, int $page, CatalogueReadQuery $catalogue): void
+    {
+        $user = auth()->user();
+        if (! $user instanceof User) {
+            abort(403);
+        }
+
+        $line = $this->persistedIngredientLine($index);
+        $lineId = (int) $line->getKey();
+        $search = $this->catalogueSearches[$lineId] ?? '';
+        validator(['search' => $search], ['search' => ['nullable', 'string', 'max:100']])->validate();
+        $results = $catalogue->paginateSelectable($user, $search, max(1, $page));
+        $this->catalogueResults[$lineId] = collect($results->items())
+            ->map(fn ($candidate): array => $candidate->toArray())
+            ->all();
+        $this->catalogueResultPages[$lineId] = [
+            'page' => $results->currentPage(),
+            'last_page' => $results->lastPage(),
+            'total' => $results->total(),
+        ];
+        $this->resetErrorBag('catalogue_match');
+    }
+
+    private function persistedIngredientLine(int $index): RecipeIngredientLine
+    {
+        if ($this->recipeId === null || ! isset($this->ingredients[$index]['id'])) {
+            abort(404);
+        }
+
+        $recipe = Recipe::query()->findOrFail($this->recipeId);
+        $this->authorize('update', $recipe);
+
+        return $recipe->ingredientLines()->findOrFail((int) $this->ingredients[$index]['id']);
+    }
+
+    /** @return array{item_id: int, version_id: string, name: string, review_state: string} */
+    private function matchState(RecipeIngredientLineMatch $match): array
+    {
+        $match->loadMissing('catalogueItemVersion.catalogueItem');
+        $version = $match->catalogueItemVersion;
+
+        return [
+            'item_id' => $version->catalogue_item_id,
+            'version_id' => (string) $version->getKey(),
+            'name' => trim((string) $version->name) ?: 'Unnamed catalogue item',
+            'review_state' => $match->getRawOriginal('review_state'),
+        ];
+    }
+
+    private function refreshFingerprint(RecipeDraftFingerprint $fingerprint): void
+    {
+        if ($this->recipeId !== null) {
+            $this->baselineFingerprint = $fingerprint->forRecipe(Recipe::query()->findOrFail($this->recipeId));
+        }
     }
 
     private function nonBlank(string $message): Closure

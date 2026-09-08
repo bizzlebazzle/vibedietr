@@ -85,6 +85,69 @@
                     </div>
                     <div><x-input-label for="ingredient-{{ $line['key'] }}-wording" value="Generic ingredient wording (optional)" /><x-text-input id="ingredient-{{ $line['key'] }}-wording" wire:model="ingredients.{{ $index }}.generic_wording" type="text" maxlength="255" class="mt-1 block w-full" /><x-input-error :messages="$errors->get('ingredients.'.$index.'.generic_wording')" class="mt-2" /></div>
                     <div><x-input-label for="ingredient-{{ $line['key'] }}-notes" value="Notes (optional)" /><textarea id="ingredient-{{ $line['key'] }}-notes" wire:model="ingredients.{{ $index }}.notes" rows="2" maxlength="2000" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"></textarea><x-input-error :messages="$errors->get('ingredients.'.$index.'.notes')" class="mt-2" /></div>
+                    @if ($line['id'] !== null)
+                        @php
+                            $lineId = (int) $line['id'];
+                            $currentMatch = $catalogueMatches[$lineId] ?? null;
+                            $resultPage = $catalogueResultPages[$lineId] ?? null;
+                        @endphp
+                        <section class="space-y-3 rounded bg-gray-50 p-3 dark:bg-slate-800" aria-label="Catalogue match for ingredient {{ $index + 1 }}">
+                            <div aria-live="polite">
+                                @if ($currentMatch)
+                                    <p class="text-sm text-gray-800 dark:text-gray-200">
+                                        Matched to <strong>{{ $currentMatch['name'] }}</strong>
+                                        <span class="text-gray-600 dark:text-gray-400">(confirmed manual selection)</span>
+                                    </p>
+                                @else
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">No catalogue match selected.</p>
+                                @endif
+                            </div>
+                            <div class="flex flex-col gap-2 sm:flex-row sm:items-end">
+                                <div class="grow">
+                                    <x-input-label for="ingredient-{{ $line['key'] }}-catalogue-search" value="Search catalogue by name or barcode" />
+                                    <x-text-input id="ingredient-{{ $line['key'] }}-catalogue-search" wire:model="catalogueSearches.{{ $lineId }}" type="search" maxlength="100" class="mt-1 block w-full" />
+                                    <x-input-error :messages="$errors->get('search')" class="mt-2" />
+                                </div>
+                                <button type="button" wire:click="searchCatalogue({{ $index }})" class="rounded border px-3 py-2 text-sm dark:border-slate-600">
+                                    {{ $currentMatch ? 'Search to replace' : 'Search' }}
+                                </button>
+                                @if ($currentMatch)
+                                    <button type="button" wire:click="clearCatalogueMatch({{ $index }})" wire:confirm="Clear this catalogue match? The ingredient line will remain unchanged." class="rounded border border-red-300 px-3 py-2 text-sm text-red-700 dark:border-red-800 dark:text-red-300">Clear match</button>
+                                @endif
+                            </div>
+                            <x-input-error :messages="$errors->get('catalogue_match')" />
+                            @if (array_key_exists($lineId, $catalogueResults))
+                                <p class="text-xs text-gray-600 dark:text-gray-400">{{ $resultPage['total'] ?? 0 }} selectable result(s). Pending manual foods appear only to their submitter.</p>
+                                @if ($catalogueResults[$lineId] === [])
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">No selectable catalogue records found.</p>
+                                @else
+                                    <ul class="space-y-2" aria-label="Catalogue search results">
+                                        @foreach ($catalogueResults[$lineId] as $candidate)
+                                            <li class="flex flex-wrap items-center justify-between gap-2 rounded border border-gray-200 bg-white p-2 text-sm dark:border-slate-700 dark:bg-slate-900">
+                                                <span>
+                                                    <strong>{{ $candidate['name'] }}</strong>
+                                                    @if ($candidate['barcode'])<span class="text-gray-600 dark:text-gray-400">Barcode {{ $candidate['barcode'] }}</span>@endif
+                                                    @if ($candidate['pending'])<span class="rounded bg-amber-100 px-1.5 py-0.5 text-xs text-amber-900 dark:bg-amber-900/40 dark:text-amber-100">Your pending item</span>@endif
+                                                </span>
+                                                <button type="button" wire:click="selectCatalogueMatch({{ $index }}, {{ $candidate['item_id'] }}, '{{ $candidate['version_id'] }}')" class="rounded border px-3 py-1 dark:border-slate-600">
+                                                    {{ $currentMatch ? 'Replace with this' : 'Select' }}
+                                                </button>
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                    @if ($resultPage && $resultPage['last_page'] > 1)
+                                        <nav class="flex items-center justify-between text-sm" aria-label="Catalogue result pages">
+                                            <button type="button" wire:click="changeCataloguePage({{ $index }}, {{ $resultPage['page'] - 1 }})" @disabled($resultPage['page'] <= 1) class="rounded border px-3 py-1 disabled:opacity-40 dark:border-slate-600">Previous</button>
+                                            <span>Page {{ $resultPage['page'] }} of {{ $resultPage['last_page'] }}</span>
+                                            <button type="button" wire:click="changeCataloguePage({{ $index }}, {{ $resultPage['page'] + 1 }})" @disabled($resultPage['page'] >= $resultPage['last_page']) class="rounded border px-3 py-1 disabled:opacity-40 dark:border-slate-600">Next</button>
+                                        </nav>
+                                    @endif
+                                @endif
+                            @endif
+                        </section>
+                    @else
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Save the draft before matching this new ingredient line.</p>
+                    @endif
                     <div class="flex flex-wrap gap-2">
                         <button type="button" wire:click="moveIngredientUp({{ $index }})" @disabled($loop->first) class="rounded border px-3 py-1 text-sm disabled:opacity-40 dark:border-slate-600">Up</button>
                         <button type="button" wire:click="moveIngredientDown({{ $index }})" @disabled($loop->last) class="rounded border px-3 py-1 text-sm disabled:opacity-40 dark:border-slate-600">Down</button>

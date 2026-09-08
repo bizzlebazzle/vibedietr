@@ -7,6 +7,7 @@ use Database\Factories\RecipeIngredientLineFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * @property int $id
@@ -22,6 +23,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property array<int, string>|null $parser_warnings
  * @property array<int, string>|null $uncertain_fields
  * @property-read Recipe $recipe
+ * @property-read RecipeIngredientLineMatch|null $catalogueMatch
  */
 class RecipeIngredientLine extends Model
 {
@@ -52,5 +54,11 @@ class RecipeIngredientLine extends Model
     public function recipe(): BelongsTo
     {
         return $this->belongsTo(Recipe::class);
+    }
+
+    /** @return HasOne<RecipeIngredientLineMatch, $this> */
+    public function catalogueMatch(): HasOne
+    {
+        return $this->hasOne(RecipeIngredientLineMatch::class);
     }
 }
