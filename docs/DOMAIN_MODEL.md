@@ -1470,3 +1470,38 @@ pasted text and does not add a fetched-document or upload store.
   treated only as transient import input?
 - Should OpenFoodFacts categories and keywords be normalized separately from
   user-authored organisation?
+
+## NUT-09 catalogue moderation records
+
+`CatalogueModerationDecision` is an append-only ULID record of approval,
+rejection, candidate distinction/dismissal/duplicate confirmation, applied
+merge, or correction. Its source and optional canonical/candidate references
+are restrictive foreign keys. A unique optional `corrects_decision_id` links a
+new corrective fact to one original decision. Actor attribution uses the
+FND-05 erasable identity mapping, with no copied administrator name/email.
+Private bounded notes and structured evidence are hidden from model arrays.
+
+`CatalogueReferenceMove` is append-only and unique by decision, allowlisted
+reference type and row ID. Recipe moves retain old/new catalogue identity and
+version plus the post-move change marker. Redirect moves retain old/new targets.
+Every match save generates a new marker, including selection of the same
+version, preventing correction from overwriting a later explicit choice.
+
+Catalogue lifecycle now includes `merged`, paired with a non-null direct
+`canonical_catalogue_item_id`; other states have no redirect. Database checks
+ensure that state/pointer pairing, and the transition service rejects self,
+non-approved, barcode, contradictory-evidence and stale-version merges. Source
+versions and current-version pointers never transfer ownership. Candidate state
+remains separate: pending review, confirmed distinct, confirmed duplicate, or
+dismissed. Existing sorted-pair uniqueness and self-pair checks remain in force.
+Monotonic moderation revisions detect stale review forms.
+
+Approved primary-name aliases are copied to the canonical identity unless
+explicitly excluded. Other source aliases require explicit selection. Copied
+aliases identify their merge decision; correction disables those copies without
+erasing their origin. Search ignores disabled aliases and merged source rows.
+
+The complete live/historical reference inventory and correction boundaries are
+in [Catalogue moderation](CATALOGUE_MODERATION.md). The owner clarified DEC-011
+on 2026-09-09: stored replacement suggestions remain historical recommendations;
+current display and explicit acceptance resolve their canonical target.

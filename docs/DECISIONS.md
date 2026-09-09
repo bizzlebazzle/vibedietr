@@ -1098,6 +1098,15 @@ Backlog relationships mean:
   corrected without storing private content in generic metadata. New reference
   types must declare live or historical semantics before use.
 
+  Owner clarification (2026-09-09): a rejected identity's
+  `suggested_replacement_catalogue_item_id` is historical moderation evidence,
+  not a live pointer to migrate. If rejected R suggests B and B is later merged
+  into C, retain R's stored suggestion of B. Resolve B's current canonical
+  identity for authorized display and explicit owner-confirmed replacement,
+  revalidating that the resolved target is approved and selectable. Never
+  rewrite R's stored suggestion or automatically replace a dependent recipe
+  match. Corrections preserve the original recommendation and decision history.
+
   Each merge retains an immutable operation record containing the source,
   canonical target, authorized actor, server time, bounded reason and optional
   note, state, and any linked correction. The original identities, versions,

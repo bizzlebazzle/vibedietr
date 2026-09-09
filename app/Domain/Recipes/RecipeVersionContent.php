@@ -2,6 +2,9 @@
 
 namespace App\Domain\Recipes;
 
+use App\Domain\Catalogue\CatalogueCanonicalResolver;
+use App\Domain\Catalogue\CatalogueItemStatus;
+use App\Models\CatalogueItemVersion;
 use App\Models\Recipe;
 use App\Models\RecipeIngredientLine;
 use App\Models\RecipeIngredientLineMatch;
@@ -73,7 +76,7 @@ final class RecipeVersionContent
     }
 
     /** @param array<string, mixed> $snapshot */
-    public function restore(Recipe $recipe, array $snapshot): void
+    public function restore(Recipe $recipe, array $snapshot, bool $canonicalizeMatches = false): void
     {
         $recipe->instructionSteps()->delete();
         $recipe->instructionSections()->delete();
@@ -100,6 +103,16 @@ final class RecipeVersionContent
 
             $matchState = $state['catalogue_match'] ?? null;
             if (is_array($matchState) && isset($matchState['catalogue_item_version_id'])) {
+                if ($canonicalizeMatches) {
+                    $version = CatalogueItemVersion::query()->find($matchState['catalogue_item_version_id']);
+                    $source = $version?->catalogueItem()->lockForUpdate()->first();
+                    if ($source?->status === CatalogueItemStatus::Merged) {
+                        $canonical = app(CatalogueCanonicalResolver::class)->resolve($source, lock: true);
+                        if ($canonical?->current_catalogue_item_version_id !== null) {
+                            $matchState['catalogue_item_version_id'] = $canonical->current_catalogue_item_version_id;
+                        }
+                    }
+                }
                 $match = new RecipeIngredientLineMatch;
                 $match->forceFill([
                     'catalogue_item_version_id' => (string) $matchState['catalogue_item_version_id'],

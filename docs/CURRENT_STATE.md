@@ -634,8 +634,9 @@ approved suggested replacement; the service revalidates ownership, the current
 tombstone match, the approved/current target version, and selectability before
 updating only the live match. It records owner-confirmed replacement provenance
 and preserves the creator's exact ingredient text. Published recipe versions
-and historical snapshots remain unchanged. Full approve, reject, candidate
-resolution, canonical merge, and moderator queue actions remain NUT-09 scope.
+and historical snapshots remain unchanged. NUT-09 now supplies the moderator
+queue, decisions, explicit canonical merge, and guarded corrections described
+in [Catalogue moderation](CATALOGUE_MODERATION.md).
 
 ## OpenFoodFacts and barcode support
 
@@ -1660,3 +1661,39 @@ unverified free-form tag, and public projections contain no verification claim.
 
 - In the shared catalogue, who may correct or remove a barcode-imported record
   when OpenFoodFacts data is wrong or obsolete?
+
+## Implemented catalogue moderation
+
+NUT-09 adds `/admin/catalogue` for manual-submission and duplicate-candidate
+queues with database state/type filters, stable ID pagination and private
+no-store responses. Every mutation uses the centralized `moderate-catalogue`
+ability, current administrator state, verified email, confirmed second factor,
+recent primary authentication, a consumed operation-bound factor proof, and the
+FND-13 production readiness boundary. Ordinary catalogue reads expose no notes,
+distinction explanations, decision evidence, or migration ledger.
+
+Approval and rejection retain the original identity/version. Rejection never
+substitutes recipe matches. Distinct, dismissed, duplicate confirmation, merge
+application and correction are separate actions. Duplicate confirmation requires
+an explicit canonical choice; applying it revalidates the reviewed versions.
+Only approved manual non-barcode identities qualify. Original versions and facts
+remain attached to their identities. Merged sources directly resolve to the
+approved canonical item, with incoming redirects flattened in the same transaction.
+
+Only editable recipe matches move to the canonical current version. Published
+snapshots, finalized working projections without an active revision, import
+mappings, provenance and suggested replacements remain historical. A new
+editable revision resolves merged snapshot matches without changing its source
+snapshot. Rejected R's suggestion of B stays B after B merges into C; authorized
+presentation and owner-confirmed replacement resolve C.
+
+Immutable moderation decisions and reference movements preserve correction
+links, previous/new identities and versions, and fresh match-change markers.
+Correction restores only still-current eligible movements. Later choices require
+explicit preservation; subsequent catalogue changes refuse automatic reversal.
+The transaction is bounded to 500 source matches and 500 incoming redirects;
+large maintenance operations and factual corrections remain outside this UI.
+Three real two-process MySQL tests cover unordered candidate collisions,
+competing canonical choices and a match committed after the merge transaction's
+consistent-read snapshot. See the moderation guide for operational limits and
+reference classification.

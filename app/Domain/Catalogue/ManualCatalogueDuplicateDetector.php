@@ -23,7 +23,7 @@ final class ManualCatalogueDuplicateDetector
                     fn (Builder $version) => $version->where('normalized_name', $normalizedName),
                 )->orWhereHas(
                     'aliases',
-                    fn (Builder $alias) => $alias->where('normalized_alias', $normalizedName),
+                    fn (Builder $alias) => $alias->whereNull('disabled_at')->where('normalized_alias', $normalizedName),
                 );
             })
             ->orderBy('id')

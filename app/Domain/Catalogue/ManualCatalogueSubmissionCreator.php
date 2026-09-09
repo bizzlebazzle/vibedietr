@@ -8,7 +8,6 @@ use App\Audit\AuditSubject;
 use App\Audit\Enums\AuditAction;
 use App\Audit\Enums\AuditSubjectType;
 use App\Domain\Nutrition\CatalogueNutritionNormalizer;
-use App\Models\CatalogueDuplicateCandidate;
 use App\Models\CatalogueItem;
 use App\Models\CatalogueItemVersion;
 use App\Models\User;
@@ -133,25 +132,11 @@ final readonly class ManualCatalogueSubmissionCreator
             if ($strong !== []) {
                 $selected = collect($strong)->firstWhere('itemId', $data->duplicateItemId);
                 assert($selected instanceof ManualCatalogueDuplicateMatch);
-                [$first, $second] = collect([(int) $item->getKey(), $selected->itemId])->sort()->values()->all();
-                $candidate = CatalogueDuplicateCandidate::query()
-                    ->where('first_catalogue_item_id', $first)
-                    ->where('second_catalogue_item_id', $second)
-                    ->first();
-                if ($candidate === null) {
-                    $candidate = CatalogueDuplicateCandidate::query()->forceCreate([
-                        'first_catalogue_item_id' => $first,
-                        'second_catalogue_item_id' => $second,
-                        'status' => CatalogueDuplicateCandidateStatus::PendingReview,
-                        'evidence' => $selected->evidence,
-                        'distinction_explanation' => CatalogueName::optional(
-                            $data->distinctionExplanation,
-                            self::DISTINCTION_MAX_LENGTH,
-                        ),
-                        'submitted_by_user_id' => $submitter->getKey(),
-                    ]);
-                    $candidateCreated = true;
-                }
+                app(CatalogueCandidateRecorder::class)->record(
+                    (int) $item->getKey(), $selected->itemId, $selected->evidence,
+                    $submitter, $data->distinctionExplanation,
+                );
+                $candidateCreated = true;
             }
 
             $this->audit->record(

@@ -35,6 +35,7 @@ class CatalogueItem extends Model
 
     protected static function booted(): void
     {
+        static::deleting(fn () => throw new LogicException('Catalogue identities and their history cannot be deleted.'));
         static::saving(function (CatalogueItem $item): void {
             if (! $item->isDirty('current_catalogue_item_version_id')
                 || $item->current_catalogue_item_version_id === null) {

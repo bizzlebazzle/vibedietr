@@ -4,6 +4,15 @@ namespace App\Audit\Enums;
 
 enum AuditAction: string
 {
+    case CatalogueCandidateCreated = 'catalogue.candidate_created';
+    case CataloguePendingApproved = 'catalogue.pending_approved';
+    case CataloguePendingRejected = 'catalogue.pending_rejected';
+    case CatalogueCandidateDistinct = 'catalogue.candidate_distinct';
+    case CatalogueCandidateDuplicate = 'catalogue.candidate_duplicate';
+    case CatalogueCandidateDismissed = 'catalogue.candidate_dismissed';
+    case CatalogueMergeApplied = 'catalogue.merge_applied';
+    case CatalogueReferenceMoved = 'catalogue.reference_moved';
+    case CatalogueDecisionCorrected = 'catalogue.decision_corrected';
     case AdministratorBootstrapCompleted = 'administrator.bootstrap_completed';
     case AdministratorBootstrapRefused = 'administrator.bootstrap_refused';
     case AdministratorLifecycleEvent = 'administrator.lifecycle_event';
@@ -31,6 +40,15 @@ enum AuditAction: string
             self::AdministratorLifecycleEvent => AuditPurpose::PrivilegedAccessAccountability,
             self::CatalogueProposalApproved,
             self::ManualCatalogueSubmissionCreated => AuditPurpose::CatalogueProvenance,
+            self::CatalogueCandidateCreated,
+            self::CataloguePendingApproved,
+            self::CataloguePendingRejected,
+            self::CatalogueCandidateDistinct,
+            self::CatalogueCandidateDuplicate,
+            self::CatalogueCandidateDismissed,
+            self::CatalogueMergeApplied,
+            self::CatalogueReferenceMoved,
+            self::CatalogueDecisionCorrected,
             self::ManagedRecipeVocabularyChanged,
             self::RecipeTagSuggestionReviewed => AuditPurpose::ModerationAccountability,
             self::RecipeFinalized,
@@ -55,6 +73,15 @@ enum AuditAction: string
             self::AdministratorLifecycleEvent => AuditRetentionClass::PrivilegedIdentityTwelveMonths,
             self::CatalogueProposalApproved,
             self::ManualCatalogueSubmissionCreated => AuditRetentionClass::ProvenanceActiveVersionPlusTwelveMonths,
+            self::CatalogueCandidateCreated,
+            self::CataloguePendingApproved,
+            self::CataloguePendingRejected,
+            self::CatalogueCandidateDistinct,
+            self::CatalogueCandidateDuplicate,
+            self::CatalogueCandidateDismissed,
+            self::CatalogueMergeApplied,
+            self::CatalogueReferenceMoved,
+            self::CatalogueDecisionCorrected,
             self::ManagedRecipeVocabularyChanged,
             self::RecipeTagSuggestionReviewed => AuditRetentionClass::ModerationDecisionTwelveMonths,
             self::RecipeFinalized,
@@ -91,6 +118,15 @@ enum AuditAction: string
             ],
             self::CatalogueProposalApproved => [AuditActorType::Administrator],
             self::ManualCatalogueSubmissionCreated => [AuditActorType::AuthenticatedUser],
+            self::CatalogueCandidateCreated => [AuditActorType::System],
+            self::CataloguePendingApproved,
+            self::CataloguePendingRejected,
+            self::CatalogueCandidateDistinct,
+            self::CatalogueCandidateDuplicate,
+            self::CatalogueCandidateDismissed,
+            self::CatalogueMergeApplied,
+            self::CatalogueReferenceMoved,
+            self::CatalogueDecisionCorrected,
             self::ManagedRecipeVocabularyChanged => [AuditActorType::Administrator],
             self::RecipeTagSuggestionReviewed,
             self::RecipeFinalized,
@@ -125,6 +161,15 @@ enum AuditAction: string
             self::AdministratorBootstrapRefused,
             self::AdministratorLifecycleEvent => [AuditSubjectType::UserAccount, AuditSubjectType::SystemOperation],
             self::CatalogueProposalApproved => [AuditSubjectType::CatalogueProposal],
+            self::CatalogueCandidateCreated,
+            self::CataloguePendingApproved,
+            self::CataloguePendingRejected,
+            self::CatalogueCandidateDistinct,
+            self::CatalogueCandidateDuplicate,
+            self::CatalogueCandidateDismissed,
+            self::CatalogueMergeApplied,
+            self::CatalogueReferenceMoved,
+            self::CatalogueDecisionCorrected,
             self::ManualCatalogueSubmissionCreated => [AuditSubjectType::CatalogueItem],
             self::ManagedRecipeVocabularyChanged => [AuditSubjectType::ManagedRecipeTerm],
             self::RecipeTagSuggestionReviewed => [AuditSubjectType::RecipeTagSuggestion],

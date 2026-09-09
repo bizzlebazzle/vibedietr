@@ -30,6 +30,6 @@ class CatalogueItemPolicy
 
     public function moderate(User $user, CatalogueItem $item): bool
     {
-        return $user->can('access-admin');
+        return $user->can('moderate-catalogue');
     }
 }

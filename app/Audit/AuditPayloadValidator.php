@@ -65,6 +65,15 @@ final class AuditPayloadValidator
         $this->assertBounds($payload);
 
         $validated = match ($action) {
+            AuditAction::CatalogueCandidateCreated,
+            AuditAction::CataloguePendingApproved,
+            AuditAction::CataloguePendingRejected,
+            AuditAction::CatalogueCandidateDistinct,
+            AuditAction::CatalogueCandidateDuplicate,
+            AuditAction::CatalogueCandidateDismissed,
+            AuditAction::CatalogueMergeApplied,
+            AuditAction::CatalogueReferenceMoved,
+            AuditAction::CatalogueDecisionCorrected, => $this->validateCatalogueModeration($payload),
             AuditAction::AdministratorBootstrapCompleted => $this->validateBootstrap(
                 $payload,
                 completed: true,
@@ -94,6 +103,23 @@ final class AuditPayloadValidator
         ksort($validated);
 
         return $validated;
+    }
+
+    /** @param array<string, mixed> $payload */
+    private function validateCatalogueModeration(array $payload): array
+    {
+        $this->assertShape($payload, ['decision_id', 'candidate_id', 'move_id', 'reason_code', 'outcome'], ['outcome']);
+        $this->assertEnum($payload, 'outcome', ['completed']);
+        foreach (['decision_id', 'candidate_id', 'move_id'] as $field) {
+            if (isset($payload[$field])) {
+                AuditReferenceValidator::validate($payload[$field], $field);
+            }
+        }
+        if (isset($payload['reason_code'])) {
+            $this->assertEnum($payload, 'reason_code', ['reviewed', 'duplicate', 'distinct', 'insufficient_evidence', 'incorrect_decision']);
+        }
+
+        return $payload;
     }
 
     /** @param array<string, mixed> $payload */
