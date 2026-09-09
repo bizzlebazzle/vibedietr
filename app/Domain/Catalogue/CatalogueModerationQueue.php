@@ -2,6 +2,7 @@
 
 namespace App\Domain\Catalogue;
 
+use App\Models\CatalogueCorrectionProposal;
 use App\Models\CatalogueDuplicateCandidate;
 use App\Models\CatalogueItem;
 use App\Models\User;
@@ -14,9 +15,10 @@ final class CatalogueModerationQueue
     public const STATES = [
         'manual_submission' => ['pending', 'approved', 'rejected', 'merged'],
         'duplicate_candidate' => ['pending_review', 'confirmed_distinct', 'confirmed_duplicate', 'dismissed'],
+        'correction_proposal' => ['pending', 'accepted', 'rejected'],
     ];
 
-    /** @return LengthAwarePaginator<int, CatalogueItem>|LengthAwarePaginator<int, CatalogueDuplicateCandidate> */
+    /** @return LengthAwarePaginator<int, CatalogueItem>|LengthAwarePaginator<int, CatalogueDuplicateCandidate>|LengthAwarePaginator<int, CatalogueCorrectionProposal> */
     public function paginate(User $actor, string $type, string $state = ''): LengthAwarePaginator
     {
         Gate::forUser($actor)->authorize('moderate-catalogue');
@@ -27,6 +29,12 @@ final class CatalogueModerationQueue
             return CatalogueItem::query()->where('origin', CatalogueItemOrigin::Manual)
                 ->with(['currentVersion', 'submitter:id,name'])
                 ->when($state !== '', fn ($q) => $q->where('status', $state))
+                ->orderBy('id')->paginate(25)->withQueryString();
+        }
+
+        if ($type === 'correction_proposal') {
+            return CatalogueCorrectionProposal::query()->with(['catalogueItem.currentVersion'])
+                ->when($state !== '', fn ($q) => $q->where('state', $state))
                 ->orderBy('id')->paginate(25)->withQueryString();
         }
 

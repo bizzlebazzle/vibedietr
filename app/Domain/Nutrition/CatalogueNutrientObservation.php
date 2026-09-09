@@ -19,5 +19,7 @@ final readonly class CatalogueNutrientObservation
         public ?string $sourceField = null,
         public ?CarbonImmutable $sourceObservedAt = null,
         public ?CarbonImmutable $importedAt = null,
+        public ?string $correctionProposalId = null,
+        public ?string $correctionDecisionId = null,
     ) {}
 }
