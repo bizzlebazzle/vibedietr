@@ -76,6 +76,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'import_source_bytes', 'extraction_text', 'filename', 'original_filename',
             'storage_path', 'local_path', 'file_path', 'provider_payload',
             'provider_request', 'provider_response', 'request_body',
+            'distinction_explanation',
         ]);
         $exceptions->render(function (Throwable $exception, Request $request) {
             if ($exception instanceof AuthenticationException

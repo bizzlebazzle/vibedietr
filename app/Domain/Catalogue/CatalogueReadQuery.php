@@ -17,7 +17,7 @@ final class CatalogueReadQuery
     /** @return LengthAwarePaginator<int, CatalogueItemReadModel> */
     public function paginate(?User $user, string $search, int $perPage = 12): LengthAwarePaginator
     {
-        $paginator = $this->search($this->visibleQuery($user), $search)
+        $paginator = $this->search($this->visibleQuery($user, discovery: true), $search)
             ->orderByDesc('catalogue_items.introduced_at')
             ->orderByDesc('catalogue_items.id')
             ->paginate($perPage, ['*'], 'page');
@@ -31,12 +31,12 @@ final class CatalogueReadQuery
 
     public function findVisibleOrFail(int $id, ?User $user): CatalogueItem
     {
-        return $this->visibleQuery($user)->findOrFail($id);
+        return $this->visibleQuery($user, discovery: false)->findOrFail($id);
     }
 
     public function findVisibleByBarcode(?User $user, string $barcode): ?CatalogueItem
     {
-        return $this->visibleQuery($user)
+        return $this->visibleQuery($user, discovery: true)
             ->where('catalogue_items.barcode', $barcode)
             ->first();
     }
@@ -99,10 +99,13 @@ final class CatalogueReadQuery
     }
 
     /** @return Builder<CatalogueItem> */
-    private function visibleQuery(?User $user): Builder
+    private function visibleQuery(?User $user, bool $discovery): Builder
     {
         $query = CatalogueItem::query()
-            ->with(['currentVersion.nutrientValues.sourceObservation'])
+            ->with([
+                'currentVersion.nutrientValues.sourceObservation',
+                'suggestedReplacement.currentVersion',
+            ])
             ->leftJoin(
                 'legacy_ingredient_catalogue_mappings',
                 'legacy_ingredient_catalogue_mappings.catalogue_item_id',
@@ -118,7 +121,9 @@ final class CatalogueReadQuery
             'catalogue_items.current_catalogue_item_version_id',
         );
 
-        return $this->visibility->apply($query, $user);
+        return $discovery
+            ? $this->visibility->applyDiscovery($query, $user)
+            : $this->visibility->apply($query, $user);
     }
 
     /** @return Builder<CatalogueItem> */
@@ -162,7 +167,8 @@ final class CatalogueReadQuery
                     "JSON_UNQUOTE(JSON_EXTRACT(legacy_ingredient_catalogue_mappings.legacy_snapshot, '$.name')) LIKE ?",
                     [$term],
                 )
-                ->orWhere('catalogue_items.barcode', 'like', $term);
+                ->orWhere('catalogue_items.barcode', 'like', $term)
+                ->orWhereHas('aliases', fn (Builder $alias) => $alias->where('alias', 'like', $term));
         });
     }
 }

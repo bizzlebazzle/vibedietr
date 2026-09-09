@@ -3,6 +3,7 @@
 use App\Http\Controllers\BookmarkController;
 use App\Http\Controllers\CatalogueController;
 use App\Http\Controllers\IngredientController;
+use App\Http\Controllers\ManualCatalogueSubmissionController;
 use App\Http\Controllers\PrivateRecipeTagController;
 use App\Http\Controllers\PublicProfileController;
 use App\Http\Controllers\PublicProfileSettingsController;
@@ -44,6 +45,11 @@ Route::get('catalogue/{catalogueItem}', [CatalogueController::class, 'show'])
     ->name('catalogue.show');
 
 Route::middleware(['auth'])->group(function () {
+    Route::get('catalogue/manual/create', [ManualCatalogueSubmissionController::class, 'create'])
+        ->name('catalogue.manual.create');
+    Route::post('catalogue/manual', [ManualCatalogueSubmissionController::class, 'store'])
+        ->middleware('throttle:catalogue-submission')
+        ->name('catalogue.manual.store');
     Route::patch('profile/public-attribution', [PublicProfileSettingsController::class, 'update'])
         ->name('profile.public-attribution.update');
     Route::post('recipe-collections/{collection}/recipes', [RecipeCollectionController::class, 'storeRecipe'])

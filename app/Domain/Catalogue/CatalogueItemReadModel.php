@@ -30,6 +30,8 @@ final readonly class CatalogueItemReadModel
         public array $nutriments,
         public array $nutritionFacts,
         public bool $pending,
+        public bool $rejected,
+        public ?array $suggestedReplacement,
     ) {}
 
     public static function fromCatalogueItem(CatalogueItem $item): self
@@ -73,6 +75,18 @@ final readonly class CatalogueItemReadModel
             $categories = $version->categories ?? $categories;
         }
 
+        $replacement = null;
+        if ($item->status === CatalogueItemStatus::Rejected
+            && $item->relationLoaded('suggestedReplacement')
+            && $item->suggestedReplacement?->status === CatalogueItemStatus::Approved
+            && $item->suggestedReplacement->currentVersion !== null) {
+            $replacement = [
+                'id' => (int) $item->suggestedReplacement->getKey(),
+                'name' => trim((string) $item->suggestedReplacement->currentVersion->name)
+                    ?: 'Approved catalogue item',
+            ];
+        }
+
         return new self(
             id: (int) $item->getKey(),
             name: trim((string) $name) ?: 'Unnamed catalogue item',
@@ -88,6 +102,8 @@ final readonly class CatalogueItemReadModel
             nutriments: is_array($snapshot['nutriments'] ?? null) ? $snapshot['nutriments'] : [],
             nutritionFacts: $nutritionFacts,
             pending: $item->status === CatalogueItemStatus::Pending,
+            rejected: $item->status === CatalogueItemStatus::Rejected,
+            suggestedReplacement: $replacement,
         );
     }
 

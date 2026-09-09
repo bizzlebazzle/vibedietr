@@ -19,6 +19,33 @@ final class CatalogueVisibility
             $visibility->where('catalogue_items.status', CatalogueItemStatus::Approved);
 
             if ($user !== null) {
+                $visibility->orWhere(function (Builder $privateManual) use ($user): void {
+                    $privateManual
+                        ->whereIn('catalogue_items.status', [
+                            CatalogueItemStatus::Pending,
+                            CatalogueItemStatus::Rejected,
+                        ])
+                        ->where('catalogue_items.origin', CatalogueItemOrigin::Manual)
+                        ->where('catalogue_items.submitted_by_user_id', $user->getKey());
+                });
+            }
+        });
+    }
+
+    /** @param Builder<CatalogueItem> $query */
+    public function applyDiscovery(Builder $query, ?User $user): Builder
+    {
+        if ($user?->can('access-admin') === true) {
+            return $query->whereIn('catalogue_items.status', [
+                CatalogueItemStatus::Approved,
+                CatalogueItemStatus::Pending,
+            ]);
+        }
+
+        return $query->where(function (Builder $visibility) use ($user): void {
+            $visibility->where('catalogue_items.status', CatalogueItemStatus::Approved);
+
+            if ($user !== null) {
                 $visibility->orWhere(function (Builder $pending) use ($user): void {
                     $pending
                         ->where('catalogue_items.status', CatalogueItemStatus::Pending)
@@ -40,7 +67,7 @@ final class CatalogueVisibility
         }
 
         return $user !== null
-            && $item->status === CatalogueItemStatus::Pending
+            && in_array($item->status, [CatalogueItemStatus::Pending, CatalogueItemStatus::Rejected], true)
             && $item->origin === CatalogueItemOrigin::Manual
             && $item->submitted_by_user_id === $user->getKey();
     }

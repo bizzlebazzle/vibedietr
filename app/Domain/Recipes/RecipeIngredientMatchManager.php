@@ -2,7 +2,9 @@
 
 namespace App\Domain\Recipes;
 
+use App\Domain\Catalogue\CatalogueItemStatus;
 use App\Domain\Catalogue\CatalogueReadQuery;
+use App\Models\CatalogueItem;
 use App\Models\Recipe;
 use App\Models\RecipeIngredientLineMatch;
 use App\Models\User;
@@ -49,6 +51,71 @@ final class RecipeIngredientMatchManager
             Gate::forUser($actor)->authorize('update', $recipe);
             $line = $recipe->ingredientLines()->lockForUpdate()->findOrFail($lineId);
             $line->catalogueMatch()->lockForUpdate()->delete();
+        }, 3);
+    }
+
+    public function confirmRejectedReplacement(
+        int $recipeId,
+        int $lineId,
+        User $actor,
+    ): RecipeIngredientLineMatch {
+        return DB::transaction(function () use ($recipeId, $lineId, $actor): RecipeIngredientLineMatch {
+            $recipe = Recipe::query()->lockForUpdate()->findOrFail($recipeId);
+            Gate::forUser($actor)->authorize('update', $recipe);
+            $line = $recipe->ingredientLines()->lockForUpdate()->findOrFail($lineId);
+            $match = $line->catalogueMatch()->lockForUpdate()->first();
+
+            if (! $match instanceof RecipeIngredientLineMatch) {
+                throw ValidationException::withMessages([
+                    'catalogue_match' => 'This ingredient no longer has a catalogue match.',
+                ]);
+            }
+
+            $sourceVersion = $match->catalogueItemVersion()->firstOrFail();
+            $source = CatalogueItem::query()->lockForUpdate()->findOrFail($sourceVersion->catalogue_item_id);
+
+            if ($source->status !== CatalogueItemStatus::Rejected
+                || $source->suggested_replacement_catalogue_item_id === null) {
+                throw ValidationException::withMessages([
+                    'catalogue_match' => 'That unavailable match has no current approved replacement to confirm.',
+                ]);
+            }
+
+            $target = CatalogueItem::query()
+                ->whereKey($source->suggested_replacement_catalogue_item_id)
+                ->lockForUpdate()
+                ->first();
+            $targetVersionId = $target?->current_catalogue_item_version_id;
+
+            if ($target === null
+                || $target->status !== CatalogueItemStatus::Approved
+                || $targetVersionId === null) {
+                throw ValidationException::withMessages([
+                    'catalogue_match' => 'The suggested replacement is no longer selectable.',
+                ]);
+            }
+
+            $targetVersion = $this->catalogue->findSelectableCurrentVersion(
+                $actor,
+                (int) $target->getKey(),
+                $targetVersionId,
+                lock: true,
+            );
+
+            if ($targetVersion === null) {
+                throw ValidationException::withMessages([
+                    'catalogue_match' => 'The suggested replacement is no longer selectable.',
+                ]);
+            }
+
+            $match->forceFill([
+                'catalogue_item_version_id' => $targetVersion->getKey(),
+                'selected_by_user_id' => $actor->getKey(),
+                'provenance' => RecipeIngredientMatchProvenance::OwnerConfirmedReplacement,
+                'review_state' => RecipeIngredientMatchReviewState::Confirmed,
+            ])->save();
+
+            return $match->fresh(['catalogueItemVersion.catalogueItem']);
         }, 3);
     }
 }
