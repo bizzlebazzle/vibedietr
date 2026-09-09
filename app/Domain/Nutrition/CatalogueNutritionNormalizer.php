@@ -188,6 +188,7 @@ final readonly class CatalogueNutritionNormalizer
             'source' => $input->source,
             'correction_proposal_id' => $input->correctionProposalId,
             'correction_decision_id' => $input->correctionDecisionId,
+            'provider_refresh_id' => $input->providerRefreshId,
             'source_field' => $input->sourceField,
             'source_scale' => $sourceScale,
             'precision_reduced' => $precisionReduced,

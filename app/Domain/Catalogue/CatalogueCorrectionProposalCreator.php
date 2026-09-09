@@ -60,6 +60,7 @@ final readonly class CatalogueCorrectionProposalCreator
             }
 
             $proposal = CatalogueCorrectionProposal::query()->forceCreate([
+                'proposal_type' => CatalogueChangeProposalType::UserCorrection,
                 'catalogue_item_id' => $item->id,
                 'base_catalogue_item_version_id' => $base->id,
                 'proposer_user_id' => $proposer->id,

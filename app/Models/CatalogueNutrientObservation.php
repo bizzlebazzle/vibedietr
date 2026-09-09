@@ -32,6 +32,7 @@ use LogicException;
  * @property bool $precision_reduced
  * @property CarbonImmutable|null $source_observed_at
  * @property CarbonImmutable|null $imported_at
+ * @property string|null $provider_refresh_id
  * @property int $normalization_policy_version
  */
 class CatalogueNutrientObservation extends Model
@@ -77,5 +78,11 @@ class CatalogueNutrientObservation extends Model
     public function catalogueItemVersion(): BelongsTo
     {
         return $this->belongsTo(CatalogueItemVersion::class);
+    }
+
+    /** @return BelongsTo<CatalogueProviderRefresh, $this> */
+    public function providerRefresh(): BelongsTo
+    {
+        return $this->belongsTo(CatalogueProviderRefresh::class, 'provider_refresh_id');
     }
 }

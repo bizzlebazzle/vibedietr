@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Domain\Catalogue\CatalogueChangeProposalType;
 use App\Domain\Catalogue\CatalogueCorrectionProposalState;
 use Database\Factories\CatalogueCorrectionProposalFactory;
 use Illuminate\Database\Eloquent\Collection;
@@ -15,9 +16,11 @@ use LogicException;
 
 /**
  * @property string $id
+ * @property CatalogueChangeProposalType $proposal_type
  * @property int $catalogue_item_id
  * @property string $base_catalogue_item_version_id
  * @property int|null $proposer_user_id
+ * @property string|null $provider_refresh_id
  * @property string $reason
  * @property CatalogueCorrectionProposalState $state
  * @property-read CatalogueItem $catalogueItem
@@ -47,6 +50,7 @@ class CatalogueCorrectionProposal extends Model
     protected function casts(): array
     {
         return [
+            'proposal_type' => CatalogueChangeProposalType::class,
             'state' => CatalogueCorrectionProposalState::class,
             'submitted_at' => 'immutable_datetime',
             'decided_at' => 'immutable_datetime',
@@ -69,6 +73,12 @@ class CatalogueCorrectionProposal extends Model
     /** @return BelongsTo<User, $this> */
     {
         return $this->belongsTo(User::class, 'proposer_user_id');
+    }
+
+    /** @return BelongsTo<CatalogueProviderRefresh, $this> */
+    public function providerRefresh(): BelongsTo
+    {
+        return $this->belongsTo(CatalogueProviderRefresh::class, 'provider_refresh_id');
     }
 
     public function changes(): HasMany

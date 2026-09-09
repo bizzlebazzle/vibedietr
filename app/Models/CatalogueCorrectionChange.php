@@ -13,6 +13,7 @@ use LogicException;
  * @property string $field_key
  * @property array<string, mixed>|null $before_value
  * @property array<string, mixed>|null $proposed_value
+ * @property array<string, mixed>|null $provenance
  */
 class CatalogueCorrectionChange extends Model
 {
@@ -30,7 +31,7 @@ class CatalogueCorrectionChange extends Model
 
     protected function casts(): array
     {
-        return ['before_value' => 'array', 'proposed_value' => 'array'];
+        return ['before_value' => 'array', 'proposed_value' => 'array', 'provenance' => 'array'];
     }
 
     public function proposal(): BelongsTo

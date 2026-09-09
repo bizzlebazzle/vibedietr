@@ -73,6 +73,7 @@ class CatalogueItemVersion extends Model
             'keywords' => 'array',
             'categories' => 'array',
             'corrected_fields' => 'array',
+            'refreshed_fields' => 'array',
             'package_count' => 'integer',
             'amount_per_item' => 'decimal:18',
             'amount_per_item_unit' => StandardUnit::class,
@@ -112,6 +113,12 @@ class CatalogueItemVersion extends Model
     public function recipeIngredientLineMatches(): HasMany
     {
         return $this->hasMany(RecipeIngredientLineMatch::class);
+    }
+
+    /** @return BelongsTo<CatalogueProviderRefresh, $this> */
+    public function providerRefresh(): BelongsTo
+    {
+        return $this->belongsTo(CatalogueProviderRefresh::class, 'provider_refresh_id');
     }
 
     public function packageStructure(): PackageStructure
