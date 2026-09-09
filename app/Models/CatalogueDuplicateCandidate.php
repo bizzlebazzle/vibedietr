@@ -12,6 +12,8 @@ class CatalogueDuplicateCandidate extends Model
 {
     protected $guarded = ['*'];
 
+    protected $hidden = ['distinction_explanation', 'submitted_by_user_id'];
+
     protected static function booted(): void
     {
         static::saving(function (CatalogueDuplicateCandidate $candidate): void {

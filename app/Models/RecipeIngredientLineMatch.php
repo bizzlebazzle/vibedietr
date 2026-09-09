@@ -8,6 +8,7 @@ use Database\Factories\RecipeIngredientLineMatchFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Str;
 
 class RecipeIngredientLineMatch extends Model
 {
@@ -15,6 +16,13 @@ class RecipeIngredientLineMatch extends Model
     use HasFactory;
 
     protected $guarded = ['*'];
+
+    protected static function booted(): void
+    {
+        static::saving(function (RecipeIngredientLineMatch $match): void {
+            $match->change_marker = strtolower((string) Str::ulid());
+        });
+    }
 
     protected function casts(): array
     {

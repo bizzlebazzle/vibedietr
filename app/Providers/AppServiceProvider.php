@@ -118,6 +118,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(ManagedRecipeTermSuggestion::class, ManagedRecipeTermSuggestionPolicy::class);
         Gate::policy(Recipe::class, RecipePolicy::class);
         Gate::policy(RecipeImport::class, RecipeImportPolicy::class);
+        Gate::define('moderate-catalogue', fn (User $user): bool => $user->can('access-admin'));
         Gate::define('access-admin', fn (User $user): bool => User::query()->whereKey($user->getKey())->where('is_administrator', true)->exists());
     }
 }
