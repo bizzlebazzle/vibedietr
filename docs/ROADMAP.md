@@ -849,6 +849,9 @@ changes, it is deliberately split across multiple items.
 
 ### NUT-10 — P2 — Add catalogue correction proposals
 
+- **Status:** Complete (2026-09-09).
+- **Implementation:** See [Catalogue correction proposals](CATALOGUE_CORRECTIONS.md).
+
 - **Outcome:** Let users propose changes without directly mutating shared
   catalogue data.
 - **Dependencies:** NUT-09.

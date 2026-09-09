@@ -192,3 +192,19 @@ transaction. The domain decision stores only the erasable actor-mapping ID.
 Correction creates a linked domain decision and new events; it never edits the
 original audit event or domain decision. The reference ledger, rather than audit
 payload reconstruction, supplies safe restoration evidence.
+
+## NUT-10 correction events
+
+NUT-10 adds `catalogue.correction_proposed` for an authenticated proposer and
+`catalogue.correction_accepted|rejected` for an authorized administrator.
+Their subject is the opaque correction-proposal ULID. Proposed events use
+catalogue-provenance retention; terminal decisions use moderation-accountability
+retention.
+
+Payloads contain only bounded catalogue item, base/current/new version,
+decision and outcome references applicable to the event. The proposal table is
+authoritative for reason, proposer and typed before/after evidence; the
+moderation decision is authoritative for the private note and conflict
+evidence. None of those contents is copied into generic audit metadata.
+Creation, acceptance and rejection events share the proposal as evidence
+reference and commit inside their corresponding domain transaction.

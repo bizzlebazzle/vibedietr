@@ -1505,3 +1505,27 @@ The complete live/historical reference inventory and correction boundaries are
 in [Catalogue moderation](CATALOGUE_MODERATION.md). The owner clarified DEC-011
 on 2026-09-09: stored replacement suggestions remain historical recommendations;
 current display and explicit acceptance resolve their canonical target.
+
+## NUT-10 catalogue correction proposal
+
+`CatalogueCorrectionProposal` is retained private moderation evidence with an
+ULID, target catalogue identity, exact base-version foreign key, nullable
+proposer foreign key, bounded reason, `pending|accepted|rejected` state, and
+submission/decision timestamps. Its base version must belong to the target.
+Only active approved identities are eligible.
+
+`CatalogueCorrectionChange` is append-only and unique by proposal plus
+allowlisted field key. It preserves bounded typed base and proposed payloads.
+Missing child means unchanged, null payload means intentional clear, and zero
+is an explicit decimal value. Text, package and nutrient codecs own parsing,
+semantic equality and application.
+
+One optional unique correction-proposal foreign key links the immutable
+`CatalogueModerationDecision`. An accepted `CatalogueItemVersion` retains
+proposal/decision references and corrected field identifiers. Corrected
+nutrient observations retain the same references; normalized direct facts use
+corrected provenance and calculated energy counterparts remain derived.
+Proposer deletion nulls only actor attribution. Public catalogue projections
+never serialize proposals, reasons, actor references, notes or decision
+evidence. Full invariants are in
+[Catalogue correction proposals](CATALOGUE_CORRECTIONS.md).

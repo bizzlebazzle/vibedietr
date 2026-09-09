@@ -1659,8 +1659,8 @@ unverified free-form tag, and public projections contain no verification claim.
 
 ## Questions requiring owner input
 
-- In the shared catalogue, who may correct or remove a barcode-imported record
-  when OpenFoodFacts data is wrong or obsolete?
+- In the shared catalogue, who may directly remove or perform identity-level
+  repair on a barcode-imported record when it is wrong or obsolete?
 
 ## Implemented catalogue moderation
 
@@ -1692,8 +1692,25 @@ links, previous/new identities and versions, and fresh match-change markers.
 Correction restores only still-current eligible movements. Later choices require
 explicit preservation; subsequent catalogue changes refuse automatic reversal.
 The transaction is bounded to 500 source matches and 500 incoming redirects;
-large maintenance operations and factual corrections remain outside this UI.
+large maintenance operations remain outside this UI; NUT-10 owns factual correction proposals.
 Three real two-process MySQL tests cover unordered candidate collisions,
 competing canonical choices and a match committed after the merge transaction's
 consistent-read snapshot. See the moderation guide for operational limits and
 reference classification.
+
+## Implemented catalogue correction proposals
+
+NUT-10 adds authenticated correction proposals for active approved manual and
+OpenFoodFacts-backed catalogue records. A proposal is a private immutable
+moderation artifact, not a catalogue edit: it pins the exact base version and
+stores typed allowlisted before/proposed values, bounded reason and nullable
+proposer. Barcode/source identity, lifecycle, redirects, audit fields and other
+internal metadata are protected.
+
+The NUT-09 queue now reviews corrections with base/current/proposed values and
+field-level conflicts. Staleness is the base/current version mismatch and every
+stale acceptance needs an explicit server-side review signal. Whole-proposal
+acceptance carries current facts forward, applies only proposed fields, writes
+corrected/derived provenance through NUT-04/NUT-05 and selects one new version
+atomically. Rejection leaves current and historical versions unchanged. See
+[Catalogue correction proposals](CATALOGUE_CORRECTIONS.md).
