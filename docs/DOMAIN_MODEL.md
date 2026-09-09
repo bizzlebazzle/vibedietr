@@ -930,9 +930,10 @@ duplicate, or mutates the snapshot/source row. NUT-02 remains migration
 provenance after DEC-011: it is not rewritten by a later merge, while a current
 read may eventually resolve its original target through a canonical redirect.
 
-DEC-011 defines the future manual-food identity boundary, but no duplicate or
-merge model is implemented yet. Detection evidence creates advisory candidates,
-never permission to merge. An approved merge retains the source identity as a
+DEC-011 defines the manual-food identity boundary. NUT-08 implements bounded
+duplicate candidates for strong manual-submission evidence; detection evidence
+never grants permission to merge. Administrator candidate decisions and merge
+execution remain deferred to NUT-09. An approved merge retains the source identity as a
 direct canonical redirect/tombstone; source versions and factual provenance
 remain attached to it. Current discovery resolves to the canonical item, while
 historical/version-specific references retain their original identity and
@@ -940,6 +941,48 @@ facts. Only declared live references may move, with reversible migration
 evidence. Rejected pending references remain tombstoned until their owner
 explicitly replaces or clears them. Merge redirects cannot be self-referential,
 chained, or cyclic.
+
+### Pending manual catalogue submission
+
+A pending manual food is a shared `CatalogueItem`, not a user-owned ingredient.
+It has explicit manual origin, a null barcode and provider identifier, pending
+lifecycle state, a nullable `submitted_by_user_id` provenance reference, and an
+initial current factual version. Creation of the identity, version, NUT-04
+package/serving fields, NUT-05 nutrition facts, current-version link, required
+duplicate candidate, and minimized audit record is atomic. Submitter deletion
+sets the provenance reference to null without changing pending visibility.
+
+The initial version stores normalized primary name, generic/branded
+classification and optional bounded core identity attributes. Package and
+serving values follow `PackageStructure`; supplied nutrition facts retain
+manual field provenance and source precision, while calculated energy
+counterparts retain derived provenance. Null and explicit zero are distinct.
+Manual submission rejects every barcode or provider/source provenance input and
+never infers manual origin merely from a null barcode.
+
+Strong duplicate evidence is an exact normalized primary name or an approved
+catalogue alias corroborated by compatible core identity attributes with no
+known contradiction. It produces an explicit reuse-or-continue choice against
+an approved public candidate. Reuse returns that existing identity without
+creating submission or ownership provenance. Continue-distinct requires
+affirmative choice and a trimmed, non-blank, plain-text explanation no longer
+than 500 characters. `CatalogueDuplicateCandidate` stores a canonical
+`first_catalogue_item_id < second_catalogue_item_id` pair, deterministic
+exact/alias evidence, pending-review status, optional submitter provenance, and
+the private explanation; the unique pair makes repeated evaluation idempotent.
+Fuzzy matches are bounded suggestions only and never candidate or merge proof.
+
+Pending discovery and direct read are submitter/administrator only, while
+recipe selection is submitter-only and requires the exact current version.
+Rejected never-approved submissions remain private non-selectable tombstones.
+The identity, version and existing match remain renderable, but ordinary
+discovery excludes them and no replacement occurs automatically. A tombstone
+may identify one suggested approved replacement. Only the owner of an editable
+recipe may confirm it; server-side validation requires the line still reference
+that tombstone and the replacement still be approved/current/selectable. The
+live match then pins the selected replacement version with
+`owner_confirmed_replacement` provenance, without rewriting ingredient text or
+any published or historical snapshot.
 
 This factual projection is temporary. NUT-04/NUT-05 may later replace package,
 serving, normalized-nutrition, and field-provenance values without changing

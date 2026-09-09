@@ -808,6 +808,7 @@ changes, it is deliberately split across multiple items.
 
 ### NUT-08 — P2 — Add pending manual catalogue submissions
 
+- **Status:** Complete (2026-09-08).
 - **Outcome:** Let a user submit a rare non-barcode food for private use while
   it awaits moderation.
 - **Dependencies:** NUT-03, NUT-04, NUT-05, DEC-011.

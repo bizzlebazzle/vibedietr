@@ -96,8 +96,20 @@
                                 @if ($currentMatch)
                                     <p class="text-sm text-gray-800 dark:text-gray-200">
                                         Matched to <strong>{{ $currentMatch['name'] }}</strong>
-                                        <span class="text-gray-600 dark:text-gray-400">(confirmed manual selection)</span>
+                                        @if($currentMatch['unavailable'])
+                                            <span class="font-medium text-red-700 dark:text-red-300">(unavailable; review required)</span>
+                                        @else
+                                            <span class="text-gray-600 dark:text-gray-400">(confirmed selection)</span>
+                                        @endif
                                     </p>
+                                    @if($currentMatch['unavailable'])
+                                        <p class="mt-1 text-sm text-red-700 dark:text-red-300">The original ingredient text is unchanged. No replacement has been applied automatically.</p>
+                                        @if($currentMatch['suggested_replacement'])
+                                            <button type="button" wire:click="confirmCatalogueReplacement({{ $index }})" class="mt-2 rounded border border-sky-400 px-3 py-1 text-sm">
+                                                Use suggested approved food: {{ $currentMatch['suggested_replacement']['name'] }}
+                                            </button>
+                                        @endif
+                                    @endif
                                 @else
                                     <p class="text-sm text-gray-600 dark:text-gray-400">No catalogue match selected.</p>
                                 @endif

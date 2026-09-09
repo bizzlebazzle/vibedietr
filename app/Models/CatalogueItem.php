@@ -24,6 +24,7 @@ use LogicException;
  * @property CarbonImmutable $introduced_at
  * @property CatalogueItemStatus $status
  * @property string|null $current_catalogue_item_version_id
+ * @property int|null $suggested_replacement_catalogue_item_id
  */
 class CatalogueItem extends Model
 {
@@ -83,6 +84,30 @@ class CatalogueItem extends Model
     public function currentVersion(): BelongsTo
     {
         return $this->belongsTo(CatalogueItemVersion::class, 'current_catalogue_item_version_id');
+    }
+
+    /** @return BelongsTo<CatalogueItem, $this> */
+    public function suggestedReplacement(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'suggested_replacement_catalogue_item_id');
+    }
+
+    /** @return HasMany<CatalogueItemAlias, $this> */
+    public function aliases(): HasMany
+    {
+        return $this->hasMany(CatalogueItemAlias::class);
+    }
+
+    /** @return HasMany<CatalogueDuplicateCandidate, $this> */
+    public function duplicateCandidatesAsFirst(): HasMany
+    {
+        return $this->hasMany(CatalogueDuplicateCandidate::class, 'first_catalogue_item_id');
+    }
+
+    /** @return HasMany<CatalogueDuplicateCandidate, $this> */
+    public function duplicateCandidatesAsSecond(): HasMany
+    {
+        return $this->hasMany(CatalogueDuplicateCandidate::class, 'second_catalogue_item_id');
     }
 
     public function setCurrentVersion(CatalogueItemVersion $version): void
