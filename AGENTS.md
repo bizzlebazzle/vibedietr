@@ -64,11 +64,20 @@ If it does, stop, explain exactly which decision blocks progress and why.
 ## Git rules
 
 - Work on a dedicated branch or worktree.
-- Keep each task suitable for one reviewable commit or pull request.
+- Make incremental Git commits as the work progresses. Do not wait until the entire task is complete before committing.
+- Split larger tasks into logical, independently reviewable units of work and commit each unit when it is complete.
+- Before starting the next logical unit of work, commit the completed unit unless doing so would leave the repository in a knowingly broken state.
+- Each commit should represent one coherent change and should be small enough to review independently.
+- Run the checks relevant to that unit before committing it where practical.
+- Stage and commit only the files belonging to that logical change. Do not include unrelated changes in the same commit.
+- For a task requiring multiple logical changes, create multiple commits on the working branch rather than one large final commit.
+- Do not squash the incremental commits at the end of the task.
+- Do not amend, reorder, or rewrite existing commits unless explicitly instructed.
 - Do not force-push.
 - Do not rewrite existing Git history.
 - Do not commit generated dependencies such as vendor or node_modules.
 - If you believe a file should be added to .gitignore, ask for clarification.
+- At the end of the task, leave all completed work committed. Report the commits created and briefly describe each one.
 
 ## Development commands
 
