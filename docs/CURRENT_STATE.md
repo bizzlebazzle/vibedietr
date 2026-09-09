@@ -435,9 +435,10 @@ silently rewriting migration evidence. Counts cover the bounded eligible
 population, pre-existing/new mappings, four mutually exclusive classifications,
 failures, unprocessed rows, changed sources, and final mapped total. Existing
 ingredient reads, writes, rows, relationships, ownership, and deletion behavior
-remain authoritative through NUT-02. DEC-011 is decided but not implemented:
-the command still performs no canonical selection, merge, de-duplication,
-relationship redirect, or candidate promotion.
+remain authoritative through NUT-02. The backfill command intentionally performs
+no canonical selection, merge, de-duplication, relationship redirect, or
+candidate promotion; NUT-08 duplicate candidates are created only by the
+explicit manual-submission workflow.
 
 ## Implemented shared catalogue read cut-over
 
@@ -585,6 +586,56 @@ serialized. REC-11 remixes remain unmatched because match-copy/reset semantics
 are not yet specified; NUT-07 does not invent them. Existing lines receive no
 backfill or automatic name-based match, and no nutrition calculation or
 food-dependent quantity conversion is introduced.
+
+## Implemented pending manual catalogue submissions
+
+NUT-08 adds an authenticated manual-food submission route that creates exactly
+one shared `CatalogueItem` and one initial current `CatalogueItemVersion` in a
+single transaction. The item has explicit `manual_submission` origin, no
+barcode or provider source identifier, `pending` lifecycle state, submitter and
+submission-time provenance, and NUT-01 catalogue association. Client-supplied
+barcode/source fields, lifecycle state, submitter, current-version pointer, and
+provenance fields are rejected rather than stripped or mass assigned. The
+legacy user-owned ingredient form remains a separate compatibility path and is
+not dual-written.
+
+Package and serving fields use the NUT-04 `PackageStructure` validation and
+storage contract, including paired values, null-versus-zero semantics,
+multipacks, and derived serving basis. Nutrition uses the NUT-05 normalizer and
+fact writer, accepts incomplete panels, preserves explicit zero and decimal
+precision, and records each supplied value as manual. An energy counterpart
+derived by the normalizer is recorded as derived rather than imported.
+
+Pending manual identities are discoverable and directly readable only by their
+submitter and administrators. Only the submitter may select the pending current
+version for an editable recipe; administrator visibility does not grant recipe
+selectability or user-content mutation. Other users and guests cannot discover
+the item through browse, search, aliases, autocomplete-style result counts, or
+direct IDs. Deleting the submitter nulls `submitted_by_user_id`, leaves the item
+pending and private, and preserves administrator inspection.
+
+DEC-011 duplicate handling is implemented at submission time. Exact normalized
+primary-name or approved-alias evidence becomes strong only when compatible
+core identity attributes corroborate it and none contradict it. The user must
+then explicitly reuse the existing approved item or continue separately with a
+non-blank, plain-text distinction explanation of at most 500 characters. Reuse
+creates no pending identity and grants no ownership. Continuing creates or
+reuses one canonical unordered duplicate-candidate pair with exact-name or
+approved-alias evidence; the explanation is private moderation metadata and is
+never placed in public serialization or generic audit metadata. Fuzzy prefix
+similarity is a bounded advisory suggestion only: it does not block, require an
+explanation, create a candidate, merge, reuse, or alter a recipe reference.
+
+A rejected never-approved manual identity is retained as a private,
+non-selectable tombstone with its factual version and dependent references.
+Normal catalogue discovery excludes it and no rejection action substitutes a
+different food. An editable recipe owner may explicitly confirm the tombstone's
+approved suggested replacement; the service revalidates ownership, the current
+tombstone match, the approved/current target version, and selectability before
+updating only the live match. It records owner-confirmed replacement provenance
+and preserves the creator's exact ingredient text. Published recipe versions
+and historical snapshots remain unchanged. Full approve, reject, candidate
+resolution, canonical merge, and moderator queue actions remain NUT-09 scope.
 
 ## OpenFoodFacts and barcode support
 
@@ -1588,7 +1639,10 @@ unverified free-form tag, and public projections contain no verification claim.
   only. Authorized moderators explicitly select canonical items, merged
   identities remain traceable redirects, live references move with reversible
   evidence, and historical identities, versions, snapshots, and calculations
-  remain unchanged. This policy is not yet implemented.
+  remain unchanged. NUT-08 implements submission-time reuse-or-explain,
+  duplicate candidates, private tombstones, and owner-confirmed replacement;
+  administrator decisions and canonical merge execution remain deferred to
+  NUT-09.
 - Barcode-imported catalogue records must not be editable or deletable by
   ordinary users. Deleting the submitting user must leave the record in place
   with a null submitting-user reference.

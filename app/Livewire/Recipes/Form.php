@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Recipes;
 
+use App\Domain\Catalogue\CatalogueItemStatus;
 use App\Domain\Catalogue\CatalogueReadQuery;
 use App\Domain\Measurements\MeasurementUnitRegistry;
 use App\Domain\Measurements\StandardUnit;
@@ -368,6 +369,27 @@ class Form extends Component
         session()->flash('status', 'Catalogue match cleared.');
     }
 
+    public function confirmCatalogueReplacement(
+        int $index,
+        RecipeIngredientMatchManager $matches,
+        RecipeDraftFingerprint $fingerprint,
+    ): void {
+        $user = auth()->user();
+        if (! $user instanceof User || $this->recipeId === null) {
+            abort(403);
+        }
+
+        $line = $this->persistedIngredientLine($index);
+        $match = $matches->confirmRejectedReplacement(
+            $this->recipeId,
+            (int) $line->getKey(),
+            $user,
+        );
+        $this->catalogueMatches[$line->getKey()] = $this->matchState($match);
+        $this->refreshFingerprint($fingerprint);
+        session()->flash('status', 'Approved replacement selected. The ingredient wording was not changed.');
+    }
+
     public function render()
     {
         return view('livewire.recipes.form', [
@@ -464,17 +486,32 @@ class Form extends Component
         return $recipe->ingredientLines()->findOrFail((int) $this->ingredients[$index]['id']);
     }
 
-    /** @return array{item_id: int, version_id: string, name: string, review_state: string} */
+    /** @return array{item_id:int, version_id:string, name:string, review_state:string, unavailable:bool, suggested_replacement:?array{id:int,name:string}} */
     private function matchState(RecipeIngredientLineMatch $match): array
     {
         $match->loadMissing('catalogueItemVersion.catalogueItem');
         $version = $match->catalogueItemVersion;
+        $item = $version->catalogueItem;
+        $item->loadMissing('suggestedReplacement.currentVersion');
+        $replacement = null;
+
+        if ($item->status === CatalogueItemStatus::Rejected
+            && $item->suggestedReplacement?->status === CatalogueItemStatus::Approved
+            && $item->suggestedReplacement->currentVersion !== null) {
+            $replacement = [
+                'id' => (int) $item->suggestedReplacement->getKey(),
+                'name' => trim((string) $item->suggestedReplacement->currentVersion->name)
+                    ?: 'Approved catalogue item',
+            ];
+        }
 
         return [
             'item_id' => $version->catalogue_item_id,
             'version_id' => (string) $version->getKey(),
             'name' => trim((string) $version->name) ?: 'Unnamed catalogue item',
             'review_state' => $match->getRawOriginal('review_state'),
+            'unavailable' => $item->status === CatalogueItemStatus::Rejected,
+            'suggested_replacement' => $replacement,
         ];
     }
 

@@ -8,6 +8,7 @@ enum AuditAction: string
     case AdministratorBootstrapRefused = 'administrator.bootstrap_refused';
     case AdministratorLifecycleEvent = 'administrator.lifecycle_event';
     case CatalogueProposalApproved = 'catalogue.proposal_approved';
+    case ManualCatalogueSubmissionCreated = 'catalogue.manual_submission_created';
     case ManagedRecipeVocabularyChanged = 'managed_recipe_vocabulary.changed';
     case RecipeTagSuggestionReviewed = 'recipe_tag_suggestion.reviewed';
     case RecipeFinalized = 'recipe.finalized';
@@ -28,7 +29,8 @@ enum AuditAction: string
             self::AdministratorBootstrapCompleted,
             self::AdministratorBootstrapRefused,
             self::AdministratorLifecycleEvent => AuditPurpose::PrivilegedAccessAccountability,
-            self::CatalogueProposalApproved => AuditPurpose::CatalogueProvenance,
+            self::CatalogueProposalApproved,
+            self::ManualCatalogueSubmissionCreated => AuditPurpose::CatalogueProvenance,
             self::ManagedRecipeVocabularyChanged,
             self::RecipeTagSuggestionReviewed => AuditPurpose::ModerationAccountability,
             self::RecipeFinalized,
@@ -51,7 +53,8 @@ enum AuditAction: string
             self::AdministratorBootstrapCompleted,
             self::AdministratorBootstrapRefused,
             self::AdministratorLifecycleEvent => AuditRetentionClass::PrivilegedIdentityTwelveMonths,
-            self::CatalogueProposalApproved => AuditRetentionClass::ProvenanceActiveVersionPlusTwelveMonths,
+            self::CatalogueProposalApproved,
+            self::ManualCatalogueSubmissionCreated => AuditRetentionClass::ProvenanceActiveVersionPlusTwelveMonths,
             self::ManagedRecipeVocabularyChanged,
             self::RecipeTagSuggestionReviewed => AuditRetentionClass::ModerationDecisionTwelveMonths,
             self::RecipeFinalized,
@@ -87,6 +90,7 @@ enum AuditAction: string
                 AuditActorType::System,
             ],
             self::CatalogueProposalApproved => [AuditActorType::Administrator],
+            self::ManualCatalogueSubmissionCreated => [AuditActorType::AuthenticatedUser],
             self::ManagedRecipeVocabularyChanged => [AuditActorType::Administrator],
             self::RecipeTagSuggestionReviewed,
             self::RecipeFinalized,
@@ -121,6 +125,7 @@ enum AuditAction: string
             self::AdministratorBootstrapRefused,
             self::AdministratorLifecycleEvent => [AuditSubjectType::UserAccount, AuditSubjectType::SystemOperation],
             self::CatalogueProposalApproved => [AuditSubjectType::CatalogueProposal],
+            self::ManualCatalogueSubmissionCreated => [AuditSubjectType::CatalogueItem],
             self::ManagedRecipeVocabularyChanged => [AuditSubjectType::ManagedRecipeTerm],
             self::RecipeTagSuggestionReviewed => [AuditSubjectType::RecipeTagSuggestion],
             self::RecipeFinalized,

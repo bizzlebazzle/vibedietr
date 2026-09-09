@@ -34,6 +34,13 @@ final class SecurityControlServiceProvider extends ServiceProvider
                 ->by('recipe-import:global'),
         ]);
 
+        RateLimiter::for('catalogue-submission', fn (Request $request): array => [
+            Limit::perHour((int) config('security.throttles.catalogue_submission_user.attempts'))
+                ->by('catalogue-submission:user:'.$identities->request($request)),
+            Limit::perHour((int) config('security.throttles.catalogue_submission_global.attempts'))
+                ->by('catalogue-submission:global'),
+        ]);
+
         RateLimiter::for('security-sensitive', fn (Request $request): Limit => Limit::perMinute(
             (int) config('security.throttles.security.attempts'),
         )->by('security:'.$identities->request($request)));

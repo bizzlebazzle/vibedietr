@@ -1,6 +1,20 @@
 <article class="space-y-6 text-gray-900 dark:text-slate-100">
     <a href="{{ route('catalogue.index') }}" class="text-sm font-medium text-sky-700 hover:underline dark:text-sky-300">Back to catalogue</a>
 
+    @if (session('fuzzySuggestions', []) !== [])
+        <aside class="rounded border border-sky-200 bg-sky-50 p-4 text-sm text-sky-950 dark:border-sky-900 dark:bg-sky-950/30 dark:text-sky-100" aria-labelledby="similar-foods-heading">
+            <h2 id="similar-foods-heading" class="font-semibold">Similar approved foods</h2>
+            <p class="mt-1">These are optional suggestions only. Your pending food was not merged, reused, or replaced.</p>
+            <ul class="mt-2 list-disc space-y-1 pl-5">
+                @foreach (session('fuzzySuggestions') as $suggestion)
+                    <li>
+                        <a class="font-medium underline" href="{{ route('catalogue.show', $suggestion['item_id']) }}">{{ $suggestion['name'] }}</a>
+                    </li>
+                @endforeach
+            </ul>
+        </aside>
+    @endif
+
     <div class="flex flex-col gap-5 sm:flex-row">
         @if($item->imageUrl)
             <img src="{{ $item->imageUrl }}" alt="" class="h-48 w-48 rounded-lg border border-gray-200 object-cover dark:border-slate-700" />
@@ -13,11 +27,25 @@
                     @if($item->pending)
                         <span class="rounded bg-amber-100 px-2 py-1 text-xs font-medium text-amber-800">Pending review</span>
                     @endif
+                    @if($item->rejected)
+                        <span class="rounded bg-red-100 px-2 py-1 text-xs font-medium text-red-800">Rejected — unavailable</span>
+                    @endif
                 </div>
                 @if($item->barcode)
                     <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Barcode: {{ $item->barcode }}</p>
                 @endif
             </div>
+
+            @if($item->pending)
+                <p class="rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">This food is private to its submitter and administrators while awaiting moderation.</p>
+            @elseif($item->rejected)
+                <div class="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-900">
+                    <p>This retained catalogue record is no longer selectable. Existing recipe wording remains unchanged and no replacement is applied automatically.</p>
+                    @if($item->suggestedReplacement)
+                        <p class="mt-2">Suggested approved replacement: <a class="font-medium underline" href="{{ route('catalogue.show', $item->suggestedReplacement['id']) }}">{{ $item->suggestedReplacement['name'] }}</a>. An editable recipe owner must confirm any replacement.</p>
+                    @endif
+                </div>
+            @endif
 
             <dl class="grid gap-3 sm:grid-cols-3">
                 <div class="rounded border border-gray-200 p-3 dark:border-slate-700">

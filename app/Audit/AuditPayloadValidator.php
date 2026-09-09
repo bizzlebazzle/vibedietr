@@ -75,6 +75,7 @@ final class AuditPayloadValidator
             ),
             AuditAction::AdministratorLifecycleEvent => $this->validateLifecycleEvent($payload),
             AuditAction::CatalogueProposalApproved => $this->validateCatalogueApproval($payload),
+            AuditAction::ManualCatalogueSubmissionCreated => $this->validateManualCatalogueSubmission($payload),
             AuditAction::ManagedRecipeVocabularyChanged => $this->validateManagedRecipeVocabulary($payload),
             AuditAction::RecipeTagSuggestionReviewed => $this->validateRecipeTagSuggestionReview($payload),
             AuditAction::RecipeFinalized => $this->validateRecipeFinalized($payload),
@@ -252,6 +253,21 @@ final class AuditPayloadValidator
         $this->assertShape($payload, ['decision_code', 'outcome'], ['decision_code', 'outcome']);
         $this->assertEnum($payload, 'decision_code', ['approved_as_submitted', 'approved_with_new_version']);
         $this->assertEnum($payload, 'outcome', ['approved']);
+
+        return $payload;
+    }
+
+    /** @param array<string, mixed> $payload */
+    private function validateManualCatalogueSubmission(array $payload): array
+    {
+        $this->assertShape(
+            $payload,
+            ['candidate_created', 'duplicate_path', 'outcome'],
+            ['candidate_created', 'duplicate_path', 'outcome'],
+        );
+        $this->assertBoolean($payload, 'candidate_created');
+        $this->assertEnum($payload, 'duplicate_path', ['none', 'continue_distinct']);
+        $this->assertEnum($payload, 'outcome', ['pending']);
 
         return $payload;
     }

@@ -26,6 +26,8 @@ return [
             'attempts' => (int) env('RECIPE_IMPORT_GLOBAL_PER_HOUR', 500),
             'decay_seconds' => 3600,
         ],
+        'catalogue_submission_user' => ['attempts' => 20, 'decay_seconds' => 3600],
+        'catalogue_submission_global' => ['attempts' => 500, 'decay_seconds' => 3600],
     ],
     'requests' => ['max_bytes' => (int) env('SECURITY_MAX_REQUEST_BYTES', 27_262_976)],
     'uploads' => [
@@ -47,5 +49,6 @@ return [
         'import_source', 'import_source_bytes', 'ocr_text', 'extraction_text',
         'filename', 'original_filename', 'storage_path', 'local_path', 'file_path',
         'provider_payload', 'provider_request', 'provider_response', 'request_body',
+        'distinction_explanation',
     ],
 ];

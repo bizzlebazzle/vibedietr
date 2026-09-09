@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Domain\Catalogue\CatalogueItemSource;
+use App\Domain\Catalogue\CatalogueName;
+use App\Domain\Catalogue\ManualFoodClassification;
 use App\Domain\Catalogue\PackageStructure;
 use App\Domain\Catalogue\ServingAmountBasis;
 use App\Domain\Measurements\StandardUnit;
@@ -21,6 +23,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property list<string>|null $keywords
  * @property list<string>|null $categories
  * @property string|null $image_url
+ * @property string|null $normalized_name
+ * @property ManualFoodClassification|null $manual_food_classification
+ * @property string|null $brand
+ * @property string|null $manufacturer
+ * @property string|null $food_form
+ * @property string|null $preparation
+ * @property string|null $treatment
+ * @property string|null $composition
  * @property int|null $package_count
  * @property string|null $item_type
  * @property string|null $amount_per_item
@@ -46,6 +56,12 @@ class CatalogueItemVersion extends Model
     protected static function booted(): void
     {
         static::saving(static function (CatalogueItemVersion $version): void {
+            if ($version->isDirty('name')) {
+                $version->normalized_name = $version->name === null
+                    ? null
+                    : CatalogueName::normalize($version->name);
+            }
+
             $version->packageStructure();
         });
     }
@@ -69,6 +85,7 @@ class CatalogueItemVersion extends Model
             'package_source' => CatalogueItemSource::class,
             'serving_source' => CatalogueItemSource::class,
             'image_source' => CatalogueItemSource::class,
+            'manual_food_classification' => ManualFoodClassification::class,
         ];
     }
 
