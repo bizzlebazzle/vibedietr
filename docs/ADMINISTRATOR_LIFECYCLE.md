@@ -101,3 +101,13 @@ unmonitored sendmail, and unsafe failover transports. The normal seeder creates
 no administrator. The test factory role state is accepted only in the testing
 environment; production model-level role mutation and bootstrap-marker mutation
 outside the lifecycle scope throw without persisting.
+
+## Catalogue moderation
+
+NUT-09 uses the existing administrator capability and FND-13 guard for every
+moderation service mutation. `/admin/catalogue` provides private review screens.
+Confirm the password, then use the page's authenticator form for the single-use
+`catalogue-moderation` operation. No new role assignment, notification provider,
+or parallel factor-verification mechanism is introduced. Production mutations
+must satisfy `ProductionSecurityReadiness`. See
+[Catalogue moderation](CATALOGUE_MODERATION.md) for decision and correction steps.

@@ -826,6 +826,9 @@ changes, it is deliberately split across multiple items.
 
 ### NUT-09 — P2 — Add catalogue moderation queue and decisions
 
+- **Status:** Complete (2026-09-09).
+- **Implementation:** See [Catalogue moderation](CATALOGUE_MODERATION.md) for
+  reference classification, security, concurrency and correction boundaries.
 - **Outcome:** Allow administrators to approve or reject manual submissions
   with an auditable decision.
 - **Dependencies:** NUT-08, FND-04, FND-05, FND-14, DEC-011.

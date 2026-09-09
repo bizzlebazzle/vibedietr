@@ -165,3 +165,30 @@ retention scheduler or legal holds, build protected-evidence storage, expose a
 production viewer or user activity projection, monitor reads/exports, or claim
 database-level immutability. DEC-012 still governs the unresolved backup
 lifecycle.
+
+## NUT-09 moderation events
+
+The additive NUT-09 migration extends the stored action enum with:
+
+- `catalogue.candidate_created` (trusted system actor);
+- `catalogue.pending_approved` and `catalogue.pending_rejected`;
+- `catalogue.candidate_distinct`, `catalogue.candidate_duplicate`, and
+  `catalogue.candidate_dismissed`;
+- `catalogue.merge_applied`;
+- `catalogue.reference_moved`; and
+- `catalogue.decision_corrected`.
+
+All except candidate creation require an administrator actor. Subjects are
+catalogue identities. These use moderation accountability and the existing
+moderation-decision retention class. Payloads allow only completed outcome,
+bounded decision/candidate/movement identifiers and bounded reason codes. The
+decision ULID correlates application and reference-move events. Duplicate
+confirmation is the distinct merge-approval decision; application is a separate
+event. Full notes, distinction explanations, factual food data, recipe content,
+and ledger resource contents never enter generic audit metadata.
+
+Audit persistence and authoritative domain evidence commit in the same database
+transaction. The domain decision stores only the erasable actor-mapping ID.
+Correction creates a linked domain decision and new events; it never edits the
+original audit event or domain decision. The reference ledger, rather than audit
+payload reconstruction, supplies safe restoration evidence.
