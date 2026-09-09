@@ -13,6 +13,9 @@ enum AuditAction: string
     case CatalogueMergeApplied = 'catalogue.merge_applied';
     case CatalogueReferenceMoved = 'catalogue.reference_moved';
     case CatalogueDecisionCorrected = 'catalogue.decision_corrected';
+    case CatalogueCorrectionProposed = 'catalogue.correction_proposed';
+    case CatalogueCorrectionAccepted = 'catalogue.correction_accepted';
+    case CatalogueCorrectionRejected = 'catalogue.correction_rejected';
     case AdministratorBootstrapCompleted = 'administrator.bootstrap_completed';
     case AdministratorBootstrapRefused = 'administrator.bootstrap_refused';
     case AdministratorLifecycleEvent = 'administrator.lifecycle_event';
@@ -39,7 +42,8 @@ enum AuditAction: string
             self::AdministratorBootstrapRefused,
             self::AdministratorLifecycleEvent => AuditPurpose::PrivilegedAccessAccountability,
             self::CatalogueProposalApproved,
-            self::ManualCatalogueSubmissionCreated => AuditPurpose::CatalogueProvenance,
+            self::ManualCatalogueSubmissionCreated,
+            self::CatalogueCorrectionProposed => AuditPurpose::CatalogueProvenance,
             self::CatalogueCandidateCreated,
             self::CataloguePendingApproved,
             self::CataloguePendingRejected,
@@ -49,6 +53,8 @@ enum AuditAction: string
             self::CatalogueMergeApplied,
             self::CatalogueReferenceMoved,
             self::CatalogueDecisionCorrected,
+            self::CatalogueCorrectionAccepted,
+            self::CatalogueCorrectionRejected,
             self::ManagedRecipeVocabularyChanged,
             self::RecipeTagSuggestionReviewed => AuditPurpose::ModerationAccountability,
             self::RecipeFinalized,
@@ -72,7 +78,8 @@ enum AuditAction: string
             self::AdministratorBootstrapRefused,
             self::AdministratorLifecycleEvent => AuditRetentionClass::PrivilegedIdentityTwelveMonths,
             self::CatalogueProposalApproved,
-            self::ManualCatalogueSubmissionCreated => AuditRetentionClass::ProvenanceActiveVersionPlusTwelveMonths,
+            self::ManualCatalogueSubmissionCreated,
+            self::CatalogueCorrectionProposed => AuditRetentionClass::ProvenanceActiveVersionPlusTwelveMonths,
             self::CatalogueCandidateCreated,
             self::CataloguePendingApproved,
             self::CataloguePendingRejected,
@@ -83,6 +90,8 @@ enum AuditAction: string
             self::CatalogueReferenceMoved,
             self::CatalogueDecisionCorrected,
             self::ManagedRecipeVocabularyChanged,
+            self::CatalogueCorrectionAccepted,
+            self::CatalogueCorrectionRejected,
             self::RecipeTagSuggestionReviewed => AuditRetentionClass::ModerationDecisionTwelveMonths,
             self::RecipeFinalized,
             self::RecipeVisibilityChanged,
@@ -117,7 +126,8 @@ enum AuditAction: string
                 AuditActorType::System,
             ],
             self::CatalogueProposalApproved => [AuditActorType::Administrator],
-            self::ManualCatalogueSubmissionCreated => [AuditActorType::AuthenticatedUser],
+            self::ManualCatalogueSubmissionCreated,
+            self::CatalogueCorrectionProposed => [AuditActorType::AuthenticatedUser],
             self::CatalogueCandidateCreated => [AuditActorType::System],
             self::CataloguePendingApproved,
             self::CataloguePendingRejected,
@@ -127,6 +137,8 @@ enum AuditAction: string
             self::CatalogueMergeApplied,
             self::CatalogueReferenceMoved,
             self::CatalogueDecisionCorrected,
+            self::CatalogueCorrectionAccepted,
+            self::CatalogueCorrectionRejected,
             self::ManagedRecipeVocabularyChanged => [AuditActorType::Administrator],
             self::RecipeTagSuggestionReviewed,
             self::RecipeFinalized,
@@ -160,7 +172,10 @@ enum AuditAction: string
             self::AccountAnonymizationCompleted => [AuditSubjectType::UserAccount],
             self::AdministratorBootstrapRefused,
             self::AdministratorLifecycleEvent => [AuditSubjectType::UserAccount, AuditSubjectType::SystemOperation],
-            self::CatalogueProposalApproved => [AuditSubjectType::CatalogueProposal],
+            self::CatalogueProposalApproved,
+            self::CatalogueCorrectionProposed,
+            self::CatalogueCorrectionAccepted,
+            self::CatalogueCorrectionRejected => [AuditSubjectType::CatalogueProposal],
             self::CatalogueCandidateCreated,
             self::CataloguePendingApproved,
             self::CataloguePendingRejected,

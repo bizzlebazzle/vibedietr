@@ -223,3 +223,19 @@ setup error during this task. HTTP view/form/privacy assertions and the frontend
 build are automated; interactive visual/keyboard inspection remains a verification
 gap. Deployment readiness and remote CI results must be recorded separately from
 local functional checks.
+
+## NUT-10 factual correction queue
+
+The same private admin area now has a `correction_proposal` work type with
+`pending|accepted|rejected` filters. Review shows typed base/current/proposed
+values and explicit field conflict labels. All stale accepts require the
+administrator to submit the stale-review confirmation; the service rechecks it
+after locking current state. Acceptance is whole-proposal and creates one new
+version from current facts. Rejection creates no version.
+
+The existing moderator ability, verified account, active administrator state,
+recent password, confirmed TOTP, operation-bound proof consumption, production
+readiness check, transaction retry and append-only decision conventions remain
+unchanged. Operational diagnosis must never copy the private reason, diff,
+nutrition panel, actor identity or moderator note into logs. See
+[Catalogue correction proposals](CATALOGUE_CORRECTIONS.md).

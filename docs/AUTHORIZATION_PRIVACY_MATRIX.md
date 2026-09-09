@@ -604,3 +604,22 @@ terminal path, within 24 hours by the hourly safety sweep, or after seven days
 when abandoned. Optional Google Document AI remains disabled by default,
 EU-only and receives only canonical metadata-free PNG bytes after an eligible
 local result. No malware scanner has been selected, so no scan is claimed.
+
+## NUT-10 catalogue-correction access clarification
+
+Guests may read approved catalogue facts but cannot propose changes.
+Authenticated users may create a new immutable proposal against an active
+approved item/version; this grants no ownership, direct edit/delete,
+provenance reassignment, lifecycle, barcode, source, merge, or moderation
+authority. Proposers cannot edit, withdraw, accept or reject submitted
+proposals.
+
+Only an active authorized administrator may view the private proposal queue,
+reason, proposer attribution, typed diff and decision evidence or accept/reject
+through the centralized NUT-09/FND-13 boundary. Account deletion nulls the
+proposer reference while evidence remains reviewable. Acceptance publishes only
+the resulting allowlisted catalogue facts through a new current version.
+Proposal IDs, reasons, proposer/moderator identity, notes and state are excluded
+from public catalogue serialization and generic audit payload content. The
+complete field and stale-review policy is documented in
+[Catalogue correction proposals](CATALOGUE_CORRECTIONS.md).

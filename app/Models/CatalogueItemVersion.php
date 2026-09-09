@@ -72,6 +72,7 @@ class CatalogueItemVersion extends Model
             'version_number' => 'integer',
             'keywords' => 'array',
             'categories' => 'array',
+            'corrected_fields' => 'array',
             'package_count' => 'integer',
             'amount_per_item' => 'decimal:18',
             'amount_per_item_unit' => StandardUnit::class,

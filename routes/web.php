@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\BookmarkController;
 use App\Http\Controllers\CatalogueController;
+use App\Http\Controllers\CatalogueCorrectionProposalController;
 use App\Http\Controllers\IngredientController;
 use App\Http\Controllers\ManualCatalogueSubmissionController;
 use App\Http\Controllers\PrivateRecipeTagController;
@@ -50,6 +51,12 @@ Route::middleware(['auth'])->group(function () {
     Route::post('catalogue/manual', [ManualCatalogueSubmissionController::class, 'store'])
         ->middleware('throttle:catalogue-submission')
         ->name('catalogue.manual.store');
+    Route::get('catalogue/{catalogueItem}/corrections/create', [CatalogueCorrectionProposalController::class, 'create'])
+        ->whereNumber('catalogueItem')
+        ->name('catalogue.corrections.create');
+    Route::post('catalogue/{catalogueItem}/corrections', [CatalogueCorrectionProposalController::class, 'store'])
+        ->whereNumber('catalogueItem')->middleware('throttle:catalogue-submission')
+        ->name('catalogue.corrections.store');
     Route::patch('profile/public-attribution', [PublicProfileSettingsController::class, 'update'])
         ->name('profile.public-attribution.update');
     Route::post('recipe-collections/{collection}/recipes', [RecipeCollectionController::class, 'storeRecipe'])

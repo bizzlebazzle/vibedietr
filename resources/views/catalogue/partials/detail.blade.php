@@ -1,5 +1,8 @@
 <article class="space-y-6 text-gray-900 dark:text-slate-100">
     <a href="{{ route('catalogue.index') }}" class="text-sm font-medium text-sky-700 hover:underline dark:text-sky-300">Back to catalogue</a>
+    @auth
+        @if(! $item->pending && ! $item->rejected)<a href="{{ route('catalogue.corrections.create', $item->id) }}" class="ml-4 text-sm font-medium text-sky-700 underline dark:text-sky-300">Suggest correction</a>@endif
+    @endauth
 
     @if (session('fuzzySuggestions', []) !== [])
         <aside class="rounded border border-sky-200 bg-sky-50 p-4 text-sm text-sky-950 dark:border-sky-900 dark:bg-sky-950/30 dark:text-sky-100" aria-labelledby="similar-foods-heading">

@@ -74,6 +74,9 @@ final class AuditPayloadValidator
             AuditAction::CatalogueMergeApplied,
             AuditAction::CatalogueReferenceMoved,
             AuditAction::CatalogueDecisionCorrected, => $this->validateCatalogueModeration($payload),
+            AuditAction::CatalogueCorrectionProposed,
+            AuditAction::CatalogueCorrectionAccepted,
+            AuditAction::CatalogueCorrectionRejected => $this->validateCatalogueCorrection($action, $payload),
             AuditAction::AdministratorBootstrapCompleted => $this->validateBootstrap(
                 $payload,
                 completed: true,
@@ -117,6 +120,30 @@ final class AuditPayloadValidator
         }
         if (isset($payload['reason_code'])) {
             $this->assertEnum($payload, 'reason_code', ['reviewed', 'duplicate', 'distinct', 'insufficient_evidence', 'incorrect_decision']);
+        }
+
+        return $payload;
+    }
+
+    /** @param array<string, mixed> $payload */
+    private function validateCatalogueCorrection(AuditAction $action, array $payload): array
+    {
+        $allowed = ['catalogue_item_id', 'base_version_id', 'current_version_id', 'new_version_id', 'decision_id', 'outcome'];
+        $required = ['catalogue_item_id', 'base_version_id', 'outcome'];
+        if ($action !== AuditAction::CatalogueCorrectionProposed) {
+            $required[] = 'current_version_id';
+            $required[] = 'decision_id';
+        }
+        if ($action === AuditAction::CatalogueCorrectionAccepted) {
+            $required[] = 'new_version_id';
+        }
+        $this->assertShape($payload, $allowed, $required);
+        $this->assertInteger($payload, 'catalogue_item_id', minimum: 1, maximum: PHP_INT_MAX);
+        $this->assertEnum($payload, 'outcome', [$action === AuditAction::CatalogueCorrectionProposed ? 'pending' : ($action === AuditAction::CatalogueCorrectionAccepted ? 'accepted' : 'rejected')]);
+        foreach (['base_version_id', 'current_version_id', 'new_version_id', 'decision_id'] as $field) {
+            if (isset($payload[$field])) {
+                AuditReferenceValidator::validate($payload[$field], $field);
+            }
         }
 
         return $payload;

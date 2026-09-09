@@ -26,6 +26,14 @@ final readonly class CatalogueNutritionNormalizer
 
     /**
      * @param  list<mixed>  $inputs
+     */
+    public function validate(array $inputs): void
+    {
+        $this->validateInputs($inputs);
+    }
+
+    /**
+     * @param  list<mixed>  $inputs
      * @return Collection<int, CatalogueNutrientValue>
      */
     public function store(CatalogueItemVersion $version, array $inputs): Collection
@@ -178,6 +186,8 @@ final readonly class CatalogueNutritionNormalizer
             'status' => $input->status,
             'provenance' => $input->provenance,
             'source' => $input->source,
+            'correction_proposal_id' => $input->correctionProposalId,
+            'correction_decision_id' => $input->correctionDecisionId,
             'source_field' => $input->sourceField,
             'source_scale' => $sourceScale,
             'precision_reduced' => $precisionReduced,
