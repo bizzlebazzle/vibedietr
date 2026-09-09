@@ -110,7 +110,7 @@ final class CatalogueModeration
                 $this->conflict('The canonical choice differs from the reviewed duplicate decision.');
             }
             Validator::make($review, ['confirm_merge' => ['required', 'accepted'], 'alias_ids' => ['sometimes', 'array', 'max:20'], 'alias_ids.*' => ['integer', 'distinct'], 'exclude_primary_alias' => ['sometimes', 'boolean']])->validate();
-            $confirmation = CatalogueModerationDecision::query()->where('candidate_id', $id)->where('action', 'duplicate')->latest('id')->firstOrFail();
+            $confirmation = CatalogueModerationDecision::query()->where('candidate_id', $id)->where('action', 'duplicate')->latest('id')->lockForUpdate()->firstOrFail();
             if ($confirmation->evidence !== $this->pairEvidence($first, $second)) {
                 $this->conflict('Catalogue versions changed after duplicate confirmation. Review the pair again.');
             }
@@ -151,7 +151,7 @@ final class CatalogueModeration
             }
             foreach (array_unique($aliasNames) as $name) {
                 $normalized = CatalogueName::normalize($name);
-                $existing = $canonical->aliases()->where('normalized_alias', $normalized)->first();
+                $existing = $canonical->aliases()->where('normalized_alias', $normalized)->lockForUpdate()->first();
                 if ($existing !== null) {
                     if ($existing->disabled_at !== null) {
                         $this->conflict('A selected alias has prior correction history. Exclude it and review separately.');
@@ -177,7 +177,7 @@ final class CatalogueModeration
         return $this->transaction($actor, $session, function () use ($id, $actor, $review) {
             Validator::make($review, ['confirm_correction' => ['required', 'accepted']])->validate();
             $original = CatalogueModerationDecision::query()->lockForUpdate()->findOrFail($id);
-            if (CatalogueModerationDecision::query()->where('corrects_decision_id', $id)->exists() || $original->action === 'correct') {
+            if (CatalogueModerationDecision::query()->where('corrects_decision_id', $id)->lockForUpdate()->exists() || $original->action === 'correct') {
                 $this->conflict('This decision has already been corrected. Review its later history.');
             }
             $items = CatalogueItem::query()->whereIn('id', array_filter([$original->catalogue_item_id, $original->canonical_catalogue_item_id]))->orderBy('id')->lockForUpdate()->get()->keyBy('id');
@@ -194,7 +194,7 @@ final class CatalogueModeration
                     || (int) $canonical->moderation_revision !== $original->evidence['canonical_revision_after']) {
                     $this->conflict('Subsequent catalogue changes require a separate reviewed correction; this merge cannot be restored automatically.');
                 }
-                $moves = CatalogueReferenceMove::query()->where('decision_id', $id)->orderBy('id')->get();
+                $moves = CatalogueReferenceMove::query()->where('decision_id', $id)->orderBy('id')->lockForUpdate()->get();
                 $restorable = [];
                 $skipped = 0;
                 foreach ($moves as $move) {
@@ -238,7 +238,7 @@ final class CatalogueModeration
                 $source->forceFill(['status' => CatalogueItemStatus::Approved, 'canonical_catalogue_item_id' => null, 'moderation_revision' => $source->moderation_revision + 1])->save();
                 $canonical->forceFill(['moderation_revision' => $canonical->moderation_revision + 1])->save();
             } elseif (in_array($original->action, ['distinct', 'dismiss', 'duplicate'], true)) {
-                $latest = CatalogueModerationDecision::query()->where('candidate_id', $candidate->id)->latest('id')->first();
+                $latest = CatalogueModerationDecision::query()->where('candidate_id', $candidate->id)->latest('id')->lockForUpdate()->first();
                 if ($latest->id !== $id) {
                     $this->conflict('Later candidate decisions require review first.');
                 }
@@ -333,9 +333,14 @@ final class CatalogueModeration
     private function approvedManualPair(CatalogueItem $first, CatalogueItem $second): void
     {
         foreach ([$first, $second] as $item) {
-            if ($item->status !== CatalogueItemStatus::Approved || $item->origin !== CatalogueItemOrigin::Manual || $item->barcode !== null || $item->currentVersion === null) {
+            if ($item->status !== CatalogueItemStatus::Approved || $item->origin !== CatalogueItemOrigin::Manual || $item->barcode !== null || $item->currentVersion === null || trim((string) $item->currentVersion->name) === '') {
                 $this->conflict('Only two approved non-barcode manual identities may be merged.');
             }
+        }
+        $firstBases = $first->currentVersion->nutrientValues()->toBase()->distinct()->pluck('basis')->all();
+        $secondBases = $second->currentVersion->nutrientValues()->toBase()->distinct()->pluck('basis')->all();
+        if ($firstBases !== [] && $secondBases !== [] && array_intersect($firstBases, $secondBases) === []) {
+            $this->conflict('Nutrition bases have no common reviewed basis. Resolve this evidence before merging.');
         }
         foreach (['manual_food_classification', 'brand', 'manufacturer', 'food_form', 'preparation', 'treatment', 'composition'] as $field) {
             $a = $first->currentVersion->getRawOriginal($field);
@@ -355,7 +360,7 @@ final class CatalogueModeration
     private function editableMatches(int $sourceId): Collection
     {
         $matches = RecipeIngredientLineMatch::query()->whereHas('catalogueItemVersion', fn ($q) => $q->where('catalogue_item_id', $sourceId))
-            ->orderBy('recipe_ingredient_line_id')->limit(self::MAX_REFERENCES + 1)->get();
+            ->orderBy('recipe_ingredient_line_id')->limit(self::MAX_REFERENCES + 1)->lockForUpdate()->get();
         if ($matches->count() > self::MAX_REFERENCES) {
             $this->conflict('This merge exceeds the synchronous reference limit and requires maintenance review.');
         }

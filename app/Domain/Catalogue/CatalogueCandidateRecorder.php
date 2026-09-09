@@ -25,7 +25,7 @@ final class CatalogueCandidateRecorder
         return DB::transaction(function () use ($first, $second, $evidence, $submitter, $explanation): CatalogueDuplicateCandidate {
             $items = CatalogueItem::query()->whereIn('id', [$first, $second])->orderBy('id')->lockForUpdate()->get();
             abort_unless($items->count() === 2, 404);
-            $candidate = CatalogueDuplicateCandidate::query()->where('first_catalogue_item_id', $first)->where('second_catalogue_item_id', $second)->first();
+            $candidate = CatalogueDuplicateCandidate::query()->where('first_catalogue_item_id', $first)->where('second_catalogue_item_id', $second)->lockForUpdate()->first();
             if ($candidate !== null) {
                 return $candidate->refresh();
             }
