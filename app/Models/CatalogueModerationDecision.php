@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use LogicException;
 
+/** @property array<string, mixed> $evidence */
 class CatalogueModerationDecision extends Model
 {
     use HasUlids;

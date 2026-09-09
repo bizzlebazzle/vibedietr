@@ -2,6 +2,7 @@
 
 namespace App\Domain\Recipes;
 
+use App\Domain\Catalogue\CatalogueCanonicalResolver;
 use App\Domain\Catalogue\CatalogueItemStatus;
 use App\Domain\Catalogue\CatalogueReadQuery;
 use App\Models\CatalogueItem;
@@ -85,6 +86,7 @@ final class RecipeIngredientMatchManager
                 ->whereKey($source->suggested_replacement_catalogue_item_id)
                 ->lockForUpdate()
                 ->first();
+            $target = $target === null ? null : app(CatalogueCanonicalResolver::class)->resolve($target, lock: true);
             $targetVersionId = $target?->current_catalogue_item_version_id;
 
             if ($target === null

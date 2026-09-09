@@ -8,6 +8,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use LogicException;
 
+/**
+ * @property CatalogueDuplicateCandidateStatus $status
+ * @property CatalogueDuplicateEvidence $evidence
+ */
 class CatalogueDuplicateCandidate extends Model
 {
     protected $guarded = ['*'];

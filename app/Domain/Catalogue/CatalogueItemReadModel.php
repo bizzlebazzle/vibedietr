@@ -76,13 +76,14 @@ final readonly class CatalogueItemReadModel
         }
 
         $replacement = null;
+        $suggestion = $item->relationLoaded('suggestedReplacement') ? $item->suggestedReplacement : null;
+        $suggestion = $suggestion === null ? null : app(CatalogueCanonicalResolver::class)->resolve($suggestion);
         if ($item->status === CatalogueItemStatus::Rejected
-            && $item->relationLoaded('suggestedReplacement')
-            && $item->suggestedReplacement?->status === CatalogueItemStatus::Approved
-            && $item->suggestedReplacement->currentVersion !== null) {
+            && $suggestion?->status === CatalogueItemStatus::Approved
+            && $suggestion->currentVersion !== null) {
             $replacement = [
-                'id' => (int) $item->suggestedReplacement->getKey(),
-                'name' => trim((string) $item->suggestedReplacement->currentVersion->name)
+                'id' => (int) $suggestion->getKey(),
+                'name' => trim((string) $suggestion->currentVersion->name)
                     ?: 'Approved catalogue item',
             ];
         }

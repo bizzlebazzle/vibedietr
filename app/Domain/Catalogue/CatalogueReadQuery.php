@@ -31,6 +31,13 @@ final class CatalogueReadQuery
 
     public function findVisibleOrFail(int $id, ?User $user): CatalogueItem
     {
+        $source = CatalogueItem::query()->whereKey($id)->where('status', CatalogueItemStatus::Merged)->first();
+        if ($source !== null) {
+            $canonical = app(CatalogueCanonicalResolver::class)->resolve($source);
+            abort_if($canonical === null, 404);
+            $id = (int) $canonical->getKey();
+        }
+
         return $this->visibleQuery($user, discovery: false)->findOrFail($id);
     }
 
@@ -168,7 +175,7 @@ final class CatalogueReadQuery
                     [$term],
                 )
                 ->orWhere('catalogue_items.barcode', 'like', $term)
-                ->orWhereHas('aliases', fn (Builder $alias) => $alias->where('alias', 'like', $term));
+                ->orWhereHas('aliases', fn (Builder $alias) => $alias->whereNull('disabled_at')->where('alias', 'like', $term));
         });
     }
 }

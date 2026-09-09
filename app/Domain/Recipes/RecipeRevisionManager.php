@@ -45,7 +45,7 @@ final class RecipeRevisionManager
             $revision->forceFill(['base_recipe_version_id' => $version->getKey()]);
             $revision->recipe()->associate($recipe);
             $revision->save();
-            $this->content->restore($recipe, $version->snapshot);
+            $this->content->restore($recipe, $version->snapshot, canonicalizeMatches: true);
 
             $this->audit->record(
                 AuditAction::RecipeRevisionCreated,

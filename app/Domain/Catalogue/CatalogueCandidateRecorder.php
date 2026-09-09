@@ -27,7 +27,7 @@ final class CatalogueCandidateRecorder
             abort_unless($items->count() === 2, 404);
             $candidate = CatalogueDuplicateCandidate::query()->where('first_catalogue_item_id', $first)->where('second_catalogue_item_id', $second)->first();
             if ($candidate !== null) {
-                return $candidate;
+                return $candidate->refresh();
             }
             $candidate = CatalogueDuplicateCandidate::query()->forceCreate([
                 'first_catalogue_item_id' => $first, 'second_catalogue_item_id' => $second,
@@ -39,7 +39,7 @@ final class CatalogueCandidateRecorder
                 AuditSubject::resource(AuditSubjectType::CatalogueItem, $first),
                 ['candidate_id' => (string) $candidate->getKey(), 'outcome' => 'completed']);
 
-            return $candidate;
+            return $candidate->refresh();
         }, 3);
     }
 }
