@@ -75,6 +75,9 @@ new class extends Component
                         </x-dropdown-link>
 
                         @can('access-admin')
+                            <x-dropdown-link :href="route('admin.catalogue.index')">
+                                Catalogue moderation
+                            </x-dropdown-link>
                             <x-dropdown-link :href="route('admin.managed-recipe-terms.index')">
                                 Recipe classifications
                             </x-dropdown-link>
@@ -141,6 +144,9 @@ new class extends Component
                 </x-responsive-nav-link>
 
                 @can('access-admin')
+                    <x-responsive-nav-link :href="route('admin.catalogue.index')">
+                        Catalogue moderation
+                    </x-responsive-nav-link>
                     <x-responsive-nav-link :href="route('admin.managed-recipe-terms.index')">
                         Recipe classifications
                     </x-responsive-nav-link>

@@ -101,5 +101,6 @@ Route::middleware(['auth'])->group(function () {
         ->name('recipes.visibility.update');
 });
 
+require __DIR__.'/catalogue-moderation.php';
 require __DIR__.'/recipe-tags.php';
 require __DIR__.'/auth.php';
