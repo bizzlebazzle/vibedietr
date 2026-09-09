@@ -3,9 +3,14 @@
 namespace Tests\Feature\Catalogue;
 
 use App\Domain\Catalogue\CatalogueCandidateRecorder;
+use App\Domain\Catalogue\CatalogueDuplicateCandidateStatus;
 use App\Domain\Catalogue\CatalogueDuplicateEvidence;
+use App\Domain\Catalogue\CatalogueItemStatus;
+use App\Domain\Recipes\RecipeLifecycle;
+use App\Models\CatalogueDuplicateCandidate;
 use App\Models\CatalogueItem;
 use App\Models\CatalogueModerationDecision;
+use App\Models\RecipeIngredientLineMatch;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -63,5 +68,43 @@ class CatalogueModerationFoundationTest extends TestCase
         ]);
         $this->expectException(\LogicException::class);
         $decision->forceFill(['action' => 'reject'])->save();
+    }
+
+    public function test_moderation_factories_provide_composable_lifecycle_and_reference_states(): void
+    {
+        $canonical = CatalogueItem::factory()->canonical()->create();
+        $merged = CatalogueItem::factory()->merged($canonical)->create();
+
+        $this->assertSame(CatalogueItemStatus::Merged, $merged->status);
+        $this->assertSame($canonical->id, $merged->canonical_catalogue_item_id);
+
+        $open = CatalogueDuplicateCandidate::factory()->open()->create();
+        $distinct = CatalogueDuplicateCandidate::factory()->distinct()->create();
+        $duplicate = CatalogueDuplicateCandidate::factory()->duplicate()->create();
+        $dismissed = CatalogueDuplicateCandidate::factory()->dismissed()->create();
+
+        $this->assertSame(CatalogueDuplicateCandidateStatus::PendingReview, $open->status);
+        $this->assertSame(CatalogueDuplicateCandidateStatus::ConfirmedDistinct, $distinct->status);
+        $this->assertSame($duplicate->first_catalogue_item_id, $duplicate->canonical_catalogue_item_id);
+        $this->assertSame(CatalogueDuplicateCandidateStatus::Dismissed, $dismissed->status);
+
+        $merge = CatalogueModerationDecision::factory()->mergeOperation()->create();
+        $correction = CatalogueModerationDecision::factory()->correcting($merge)->create();
+
+        $this->assertSame('merge', $merge->action);
+        $this->assertSame(
+            CatalogueItemStatus::Merged,
+            CatalogueItem::query()->findOrFail($merge->catalogue_item_id)->status,
+        );
+        $this->assertSame($merge->id, $correction->corrects_decision_id);
+
+        $live = RecipeIngredientLineMatch::factory()->live()->create();
+        $editable = RecipeIngredientLineMatch::factory()->editableRevision()->create();
+        $historical = RecipeIngredientLineMatch::factory()->historical()->create();
+
+        $this->assertSame(RecipeLifecycle::Draft, $live->ingredientLine->recipe->lifecycle);
+        $this->assertTrue($editable->ingredientLine->recipe->activeRevision()->exists());
+        $this->assertSame(RecipeLifecycle::Finalized, $historical->ingredientLine->recipe->lifecycle);
+        $this->assertFalse($historical->ingredientLine->recipe->activeRevision()->exists());
     }
 }

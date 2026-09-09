@@ -43,6 +43,19 @@ class CatalogueItemFactory extends Factory
         return $this->state(fn (): array => ['status' => CatalogueItemStatus::Approved]);
     }
 
+    public function canonical(): static
+    {
+        return $this->approved();
+    }
+
+    public function merged(?CatalogueItem $canonical = null): static
+    {
+        return $this->state(fn (): array => [
+            'status' => CatalogueItemStatus::Merged,
+            'canonical_catalogue_item_id' => $canonical?->getKey() ?? CatalogueItem::factory()->approved(),
+        ]);
+    }
+
     public function rejected(): static
     {
         return $this->state(fn (): array => ['status' => CatalogueItemStatus::Rejected]);

@@ -2,14 +2,17 @@
 
 namespace App\Models;
 
+use Database\Factories\CatalogueModerationDecisionFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use LogicException;
 
 /** @property array<string, mixed> $evidence */
 class CatalogueModerationDecision extends Model
 {
-    use HasUlids;
+    /** @use HasFactory<CatalogueModerationDecisionFactory> */
+    use HasFactory, HasUlids;
 
     public const UPDATED_AT = null;
 

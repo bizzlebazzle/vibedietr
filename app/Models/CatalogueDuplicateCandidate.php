@@ -4,6 +4,8 @@ namespace App\Models;
 
 use App\Domain\Catalogue\CatalogueDuplicateCandidateStatus;
 use App\Domain\Catalogue\CatalogueDuplicateEvidence;
+use Database\Factories\CatalogueDuplicateCandidateFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use LogicException;
@@ -14,6 +16,9 @@ use LogicException;
  */
 class CatalogueDuplicateCandidate extends Model
 {
+    /** @use HasFactory<CatalogueDuplicateCandidateFactory> */
+    use HasFactory;
+
     protected $guarded = ['*'];
 
     protected $hidden = ['distinction_explanation', 'submitted_by_user_id'];
