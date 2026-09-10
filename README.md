@@ -209,6 +209,48 @@ Run one backend test file by passing its path through the Composer script:
 ./vendor/bin/sail composer test -- tests/Feature/ExampleTest.php
 ```
 
+## Roadmap task context
+
+Generate a compact task view directly from the authoritative roadmap and
+decision register:
+
+```bash
+./vendor/bin/sail npm run context:task -- NUT-14
+```
+
+The resolver does not store a second manifest. It extracts the task,
+dependencies, decision relationships, implementation-document links, and other
+document references on each run. Validate the complete task/dependency graph
+with:
+
+```bash
+./vendor/bin/sail npm run context:validate
+```
+
+The validation is also part of `./vendor/bin/sail npm run docs:check`. It
+rejects malformed task entries, missing dependencies or decisions, dependency
+cycles, and missing linked implementation documents.
+
+### Reciprocal context index
+
+[`docs/CONTEXT_INDEX.md`](docs/CONTEXT_INDEX.md) provides compact,
+lookup-only maps from roadmap tasks to their reverse dependencies, decisions,
+and explicitly referenced domain-model sections; from decisions back to
+roadmap tasks; and from domain-model sections back to tasks and decisions.
+
+The index is generated only from `ROADMAP.md`, `DECISIONS.md`, and
+`DOMAIN_MODEL.md`. After changing one of those sources, regenerate it with:
+
+```bash
+./vendor/bin/sail npm run context:index:update
+```
+
+`docs:check` runs `context:index:check` and fails when the committed index
+is stale. Print a fresh copy without writing a file with
+`./vendor/bin/sail npm run context:index`. The index contains only explicit,
+machine-verifiable references; code-area and test suggestions remain runtime
+discovery.
+
 ## Troubleshooting
 
 - If Docker or Sail reports that it cannot connect, start Docker Desktop or the
@@ -233,7 +275,10 @@ Run one backend test file by passing its path through the Composer script:
 
 - [`docs/PRODUCTION_CONFIGURATION.md`](docs/PRODUCTION_CONFIGURATION.md) defines
   the fail-closed production environment and secret-handling contract.
-- [`docs/CURRENT_STATE.md`](docs/CURRENT_STATE.md) records implemented behavior.
+- [`docs/CURRENT_STATE.md`](docs/CURRENT_STATE.md) is the concise current
+  capability, architecture, gap, and test-routing index.
+- [`docs/IMPLEMENTATION_HISTORY.md`](docs/IMPLEMENTATION_HISTORY.md) preserves
+  lookup-only milestone detail.
 - [`docs/ROADMAP.md`](docs/ROADMAP.md) contains the sequenced backlog.
 - [`docs/DEFINITION_OF_DONE.md`](docs/DEFINITION_OF_DONE.md) defines required
   verification.
