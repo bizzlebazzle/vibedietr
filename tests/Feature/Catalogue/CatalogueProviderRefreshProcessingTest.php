@@ -10,6 +10,7 @@ use App\Domain\Catalogue\ProcessCatalogueProviderRefresh;
 use App\Integrations\OpenFoodFacts\OpenFoodFactsCatalogueMapper;
 use App\Integrations\OpenFoodFacts\OpenFoodFactsProductMapper;
 use App\Jobs\RefreshOpenFoodFactsCatalogueItem;
+use App\Models\CatalogueCorrectionChange;
 use App\Models\CatalogueCorrectionProposal;
 use App\Models\CatalogueItem;
 use App\Models\CatalogueItemVersion;
@@ -182,6 +183,7 @@ class CatalogueProviderRefreshProcessingTest extends TestCase
 
         app(ProcessCatalogueProviderRefresh::class)->process($refresh->id);
 
+        /** @var CatalogueCorrectionChange $change */
         $change = CatalogueCorrectionProposal::query()->firstOrFail()->changes()
             ->where('field_key', 'nutrition.protein.per_100g')->sole();
         $this->assertSame('7.0', $change->before_value['value']);

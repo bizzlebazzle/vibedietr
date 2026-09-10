@@ -41,7 +41,7 @@ final readonly class CatalogueCorrectionFields
         if (in_array($field, [self::KEYWORDS, self::CATEGORIES], true)) {
             $values = $version->{$field};
 
-            return $values === null || $values === [] ? null : ['values' => array_values($values)];
+            return $values === null || $values === [] ? null : ['values' => $values];
         }
 
         if ($field === self::IMAGE) {

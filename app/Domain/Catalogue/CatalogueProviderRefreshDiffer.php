@@ -32,7 +32,7 @@ final readonly class CatalogueProviderRefreshDiffer
             CatalogueCorrectionFields::CATEGORIES => $candidate->categories,
         ] as $field => $values) {
             if ($values !== []) {
-                $this->append($changes, $base, $field, ['values' => array_values($values)], $common);
+                $this->append($changes, $base, $field, ['values' => $values], $common);
             }
         }
 
