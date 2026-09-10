@@ -614,6 +614,7 @@ The system needs an auditable history for:
 - Catalogue imports and their source versions.
 - Proposed manual catalogue foods.
 - Proposed catalogue corrections.
+- OpenFoodFacts refresh runs, proposed field changes, and decisions.
 - Administrator decisions.
 - Recipe nutrition overrides.
 - Recipe versions and remix lineage.

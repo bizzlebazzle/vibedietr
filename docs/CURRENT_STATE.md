@@ -1714,3 +1714,26 @@ acceptance carries current facts forward, applies only proposed fields, writes
 corrected/derived provenance through NUT-04/NUT-05 and selects one new version
 atomically. Rejection leaves current and historical versions unchanged. See
 [Catalogue correction proposals](CATALOGUE_CORRECTIONS.md).
+
+## Implemented OpenFoodFacts refresh moderation
+
+NUT-11 adds an administrator-triggered, correlated queued refresh for active
+approved OpenFoodFacts-backed catalogue identities. Each run pins the current
+version and stable provider identity, and one active-key constraint coalesces
+concurrent requests. External HTTP remains in the application-owned integration
+client and runs outside database transactions.
+
+Mapped provider fields are compared with the pinned version. Omissions never
+clear current facts, explicit zero remains meaningful, and nutrient source
+precision is reviewable evidence. No-change, not-found, cancelled, and failed
+runs create no version and leave the current pointer unchanged. Material changes
+create one typed provider proposal containing field-level before/proposed values
+and bounded provenance rather than raw provider JSON.
+
+The private moderation queue supports provider run status and whole-proposal
+accept/reject decisions under the existing FND-13 administrator-factor boundary.
+Stale acceptance requires explicit review and carries unrelated current values
+forward. Acceptance creates one sourced immutable version with mixed provenance;
+rejection changes no facts. Job payloads contain only refresh/correlation ULIDs,
+and provider outcomes use bounded privacy-safe telemetry. See
+[OpenFoodFacts provider refreshes](CATALOGUE_PROVIDER_REFRESHES.md).

@@ -99,6 +99,12 @@ class CatalogueItem extends Model
         return $this->hasMany(CatalogueItemAlias::class);
     }
 
+    /** @return HasMany<CatalogueProviderRefresh, $this> */
+    public function providerRefreshes(): HasMany
+    {
+        return $this->hasMany(CatalogueProviderRefresh::class);
+    }
+
     /** @return HasMany<CatalogueDuplicateCandidate, $this> */
     public function duplicateCandidatesAsFirst(): HasMany
     {

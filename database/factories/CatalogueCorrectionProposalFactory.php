@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Domain\Catalogue\CatalogueChangeProposalType;
 use App\Domain\Catalogue\CatalogueCorrectionProposalState;
 use App\Models\CatalogueCorrectionChange;
 use App\Models\CatalogueCorrectionProposal;
@@ -18,6 +19,7 @@ class CatalogueCorrectionProposalFactory extends Factory
         $version = CatalogueItemVersion::factory()->current()->create();
 
         return [
+            'proposal_type' => CatalogueChangeProposalType::UserCorrection,
             'catalogue_item_id' => $version->catalogue_item_id,
             'base_catalogue_item_version_id' => $version->id,
             'proposer_user_id' => User::factory(),

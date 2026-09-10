@@ -45,6 +45,41 @@ serialized payload, so the privacy classification is an operational control.
   reference.
 - **Scheduling:** Event driven; not scheduled.
 
+## RefreshOpenFoodFactsCatalogueItem
+
+- **Class / owner:** `App\Jobs\RefreshOpenFoodFactsCatalogueItem`; NUT-11.
+- **Purpose / enablement:** Fetch one approved OpenFoodFacts-backed catalogue
+  identity and stage material mapped differences for administrator review.
+  Enabled only by the administrator catalogue action.
+- **Queue / worker / concurrency:** `default`; `default` worker group; one
+  configured process. Unique dispatch lasts 24 hours and a per-run overlap lock
+  lasts 75 seconds.
+- **Timeout / retry_after:** 60-second job timeout, 70-second worker timeout,
+  90-second database `retry_after`; the required 20-second margin is preserved.
+- **Attempts / backoff:** Three attempts; 10 seconds then 60 seconds. Unavailable
+  and rate-limited provider outcomes retry. Not-found, invalid mapped data, and
+  ineligible lifecycle changes terminate without retry.
+- **Idempotency:** The immutable refresh ULID, unique active item key, pinned
+  base version, unique provider proposal link, locked state transitions, and
+  atomic staging/acceptance transactions are the durable effect boundary.
+- **Duration / resources:** One bounded OpenFoodFacts HTTP request plus mapping
+  and bounded database comparison; normally under 15 seconds, maximum 60
+  seconds, low CPU/memory.
+- **Failure / alert:** Final failure writes one safe `queued_job_failed` event
+  and a bounded failure category on the run. Alert at medium severity on any
+  final failure and on elevated provider failure rate, latency, or default-queue
+  age. Attempts do not alert.
+- **Replay:** Retry one failed record only when the durable run remains queued or
+  processing and has no proposal or terminal result. Never replay a staged or
+  terminal run; request a new refresh after resolving the cause.
+- **Failed record / privacy:** Metadata-only refresh and correlation ULIDs.
+  Excludes barcode/source identity, provider JSON, product facts, URLs,
+  credentials, headers, session/factor data, and moderation text. Retain at most
+  168 hours under the shared failed-job policy.
+- **Scheduling:** Administrator-triggered and event driven; not scheduled.
+  Production readiness depends on deployed DEP-04 workers and DEP-05 provider,
+  queue-age, final-failure, and latency monitoring.
+
 ## ProcessReferenceTask
 
 - **Class / owner:** `App\Jobs\ProcessReferenceTask`; FND-09 reference

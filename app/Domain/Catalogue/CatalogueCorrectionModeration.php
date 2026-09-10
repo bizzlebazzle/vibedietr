@@ -14,6 +14,7 @@ use App\Models\CatalogueItem;
 use App\Models\CatalogueItemVersion;
 use App\Models\CatalogueModerationDecision;
 use App\Models\CatalogueNutrientObservation as ObservationModel;
+use App\Models\CatalogueProviderRefresh;
 use App\Models\User;
 use Illuminate\Contracts\Session\Session;
 use Illuminate\Support\Facades\Date;
@@ -42,7 +43,13 @@ final readonly class CatalogueCorrectionModeration
                 'before' => $change->before_value,
                 'current' => $currentValue,
                 'proposed' => $change->proposed_value,
-                'conflict' => ! $this->fields->equal($change->field_key, $change->before_value, $currentValue),
+                'provenance' => $change->provenance,
+                'conflict' => ! $this->fields->equal(
+                    $change->field_key,
+                    $change->before_value,
+                    $currentValue,
+                    includeSourcePrecision: $proposal->proposal_type === CatalogueChangeProposalType::ProviderRefresh,
+                ),
             ];
         }
 
@@ -63,6 +70,8 @@ final readonly class CatalogueCorrectionModeration
             if ($proposal->state !== CatalogueCorrectionProposalState::Pending) {
                 return CatalogueModerationDecision::query()->where('correction_proposal_id', $proposal->id)->firstOrFail();
             }
+            $providerRefresh = $this->lockProviderRefresh($proposal);
+            $isProviderRefresh = $providerRefresh !== null;
             $item = CatalogueItem::query()->lockForUpdate()->findOrFail($proposal->catalogue_item_id);
             $base = CatalogueItemVersion::query()->whereKey($proposal->base_catalogue_item_version_id)
                 ->where('catalogue_item_id', $item->id)->first();
@@ -80,7 +89,7 @@ final readonly class CatalogueCorrectionModeration
             $decisionId = strtolower((string) Str::ulid());
             $newVersionId = strtolower((string) Str::ulid());
             $event = $this->audit->record(
-                AuditAction::CatalogueCorrectionAccepted,
+                $isProviderRefresh ? AuditAction::CatalogueProviderRefreshAccepted : AuditAction::CatalogueCorrectionAccepted,
                 AuditActor::administrator($actor),
                 AuditSubject::resource(AuditSubjectType::CatalogueProposal, $proposal->id),
                 [
@@ -95,7 +104,7 @@ final readonly class CatalogueCorrectionModeration
             );
             $decision = CatalogueModerationDecision::query()->forceCreate([
                 'id' => $decisionId,
-                'action' => 'correction_accept',
+                'action' => $isProviderRefresh ? 'provider_refresh_accept' : 'correction_accept',
                 'catalogue_item_id' => $item->id,
                 'correction_proposal_id' => $proposal->id,
                 'actor_identity_id' => $event->actor_identity_id,
@@ -114,8 +123,27 @@ final readonly class CatalogueCorrectionModeration
             foreach ($proposal->changes as $change) {
                 if (in_array($change->field_key, CatalogueCorrectionFields::TEXT_FIELDS, true)) {
                     $attributes[$change->field_key] = $change->proposed_value['value'] ?? null;
+                    if ($isProviderRefresh && $change->field_key === 'name') {
+                        $attributes['name_source'] = CatalogueItemSource::OpenFoodFacts;
+                    }
+                } elseif (in_array($change->field_key, [CatalogueCorrectionFields::KEYWORDS, CatalogueCorrectionFields::CATEGORIES], true)) {
+                    $attributes[$change->field_key] = $change->proposed_value['values'];
+                    $attributes[$change->field_key.'_source'] = CatalogueItemSource::OpenFoodFacts;
+                } elseif ($change->field_key === CatalogueCorrectionFields::IMAGE) {
+                    $attributes['image_url'] = $change->proposed_value['value'];
+                    $attributes['image_source'] = CatalogueItemSource::OpenFoodFacts;
                 } elseif ($change->field_key === CatalogueCorrectionFields::PACKAGE) {
                     $attributes = [...$attributes, ...$change->proposed_value];
+                    if ($isProviderRefresh) {
+                        $supplied = $change->provenance['supplied_fields'] ?? [];
+                        if (array_intersect($supplied, ['package_count', 'item_type', 'amount_per_item', 'amount_per_item_unit']) !== []) {
+                            $attributes['package_source'] = CatalogueItemSource::OpenFoodFacts;
+                        }
+                        if (array_intersect($supplied, ['servings_per_item', 'serving_amount', 'serving_amount_unit']) !== []
+                            || ($change->proposed_value['serving_amount_basis'] ?? null) === ServingAmountBasis::AmountPerItemDividedByServingsPerItem->value) {
+                            $attributes['serving_source'] = CatalogueItemSource::OpenFoodFacts;
+                        }
+                    }
                 }
             }
             $newVersion = new CatalogueItemVersion;
@@ -124,9 +152,11 @@ final readonly class CatalogueCorrectionModeration
                 'id' => $newVersionId,
                 'catalogue_item_id' => $item->id,
                 'version_number' => ((int) CatalogueItemVersion::query()->where('catalogue_item_id', $item->id)->max('version_number')) + 1,
-                'correction_proposal_id' => $proposal->id,
-                'correction_decision_id' => $decision->id,
-                'corrected_fields' => $proposal->changes->pluck('field_key')->values()->all(),
+                'correction_proposal_id' => $isProviderRefresh ? null : $proposal->id,
+                'correction_decision_id' => $isProviderRefresh ? null : $decision->id,
+                'provider_refresh_id' => $providerRefresh?->id,
+                'corrected_fields' => $isProviderRefresh ? null : $proposal->changes->pluck('field_key')->values()->all(),
+                'refreshed_fields' => $isProviderRefresh ? $proposal->changes->pluck('field_key')->values()->all() : null,
             ]);
             $newVersion->save();
 
@@ -140,25 +170,41 @@ final readonly class CatalogueCorrectionModeration
             }
             foreach ($proposal->changes as $change) {
                 if (str_starts_with($change->field_key, 'nutrition.')) {
-                    $observation = $this->fields->observation($change->field_key, $change->proposed_value);
-                    if ($observation !== null) {
-                        $observations[] = new CatalogueNutrientObservation(
-                            $observation->nutrient,
-                            $observation->basis,
-                            $observation->value,
-                            $observation->unit,
-                            $observation->provenance,
-                            $observation->status,
-                            $observation->thresholdValue,
-                            correctionProposalId: $proposal->id,
-                            correctionDecisionId: $decision->id,
+                    if ($isProviderRefresh) {
+                        $observations[] = $this->fields->providerObservationFromPayload(
+                            $change->field_key,
+                            $change->proposed_value,
+                            $change->provenance ?? [],
+                            $providerRefresh->id,
                         );
+                    } else {
+                        $observation = $this->fields->observation($change->field_key, $change->proposed_value);
+                        if ($observation !== null) {
+                            $observations[] = new CatalogueNutrientObservation(
+                                $observation->nutrient,
+                                $observation->basis,
+                                $observation->value,
+                                $observation->unit,
+                                $observation->provenance,
+                                $observation->status,
+                                $observation->thresholdValue,
+                                correctionProposalId: $proposal->id,
+                                correctionDecisionId: $decision->id,
+                            );
+                        }
                     }
                 }
             }
             $this->nutrition->store($newVersion, $observations);
             $item->setCurrentVersion($newVersion);
             $proposal->forceFill(['state' => CatalogueCorrectionProposalState::Accepted, 'decided_at' => Date::now()->utc()])->save();
+            if ($providerRefresh !== null) {
+                $providerRefresh->forceFill([
+                    'state' => CatalogueProviderRefreshState::Accepted,
+                    'active_key' => null,
+                    'completed_at' => Date::now()->utc(),
+                ])->save();
+            }
 
             return $decision;
         }, 3);
@@ -173,6 +219,8 @@ final readonly class CatalogueCorrectionModeration
             if ($proposal->state !== CatalogueCorrectionProposalState::Pending) {
                 return CatalogueModerationDecision::query()->where('correction_proposal_id', $proposal->id)->firstOrFail();
             }
+            $providerRefresh = $this->lockProviderRefresh($proposal);
+            $isProviderRefresh = $providerRefresh !== null;
             if (! in_array($reasonCode, ['reviewed', 'insufficient_evidence'], true)) {
                 throw ValidationException::withMessages(['reason_code' => 'Choose a supported rejection reason.']);
             }
@@ -184,7 +232,7 @@ final readonly class CatalogueCorrectionModeration
 
             $decisionId = strtolower((string) Str::ulid());
             $event = $this->audit->record(
-                AuditAction::CatalogueCorrectionRejected,
+                $isProviderRefresh ? AuditAction::CatalogueProviderRefreshRejected : AuditAction::CatalogueCorrectionRejected,
                 AuditActor::administrator($actor),
                 AuditSubject::resource(AuditSubjectType::CatalogueProposal, $proposal->id),
                 [
@@ -198,7 +246,7 @@ final readonly class CatalogueCorrectionModeration
             );
             $decision = CatalogueModerationDecision::query()->forceCreate([
                 'id' => $decisionId,
-                'action' => 'correction_reject',
+                'action' => $isProviderRefresh ? 'provider_refresh_reject' : 'correction_reject',
                 'catalogue_item_id' => $item->id,
                 'correction_proposal_id' => $proposal->id,
                 'actor_identity_id' => $event->actor_identity_id,
@@ -207,6 +255,13 @@ final readonly class CatalogueCorrectionModeration
                 'evidence' => ['base_version_id' => $proposal->base_catalogue_item_version_id, 'current_version_id' => $currentId],
             ]);
             $proposal->forceFill(['state' => CatalogueCorrectionProposalState::Rejected, 'decided_at' => Date::now()->utc()])->save();
+            if ($providerRefresh !== null) {
+                $providerRefresh->forceFill([
+                    'state' => CatalogueProviderRefreshState::Rejected,
+                    'active_key' => null,
+                    'completed_at' => Date::now()->utc(),
+                ])->save();
+            }
 
             return $decision;
         }, 3);
@@ -231,6 +286,7 @@ final readonly class CatalogueCorrectionModeration
             $this->sourceLexical($source->threshold_value, $source->source_scale),
             $source->source, $source->source_field, $source->source_observed_at, $source->imported_at,
             $source->correction_proposal_id, $source->correction_decision_id,
+            $source->provider_refresh_id,
         );
     }
 
@@ -242,6 +298,28 @@ final readonly class CatalogueCorrectionModeration
         [$whole, $fraction] = array_pad(explode('.', $value, 2), 2, '');
 
         return $scale === 0 ? $whole : $whole.'.'.substr(str_pad($fraction, $scale, '0'), 0, $scale);
+    }
+
+    private function lockProviderRefresh(CatalogueCorrectionProposal $proposal): ?CatalogueProviderRefresh
+    {
+        if ($proposal->proposal_type === CatalogueChangeProposalType::UserCorrection) {
+            if ($proposal->provider_refresh_id !== null) {
+                $this->conflict('A user correction cannot reference provider refresh work.');
+            }
+
+            return null;
+        }
+
+        $refresh = CatalogueProviderRefresh::query()->lockForUpdate()->find($proposal->provider_refresh_id);
+        if ($refresh === null
+            || $refresh->state !== CatalogueProviderRefreshState::Staged
+            || $refresh->catalogue_item_id !== $proposal->catalogue_item_id
+            || $refresh->base_catalogue_item_version_id !== $proposal->base_catalogue_item_version_id
+        ) {
+            $this->conflict('The staged provider refresh is no longer eligible for this decision.');
+        }
+
+        return $refresh;
     }
 
     private function conflict(string $message): never
