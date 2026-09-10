@@ -67,6 +67,7 @@ async function createFixture(context, roadmapContent = roadmap, decisionsContent
         writeFile(roadmapPath, roadmapContent),
         writeFile(decisionsPath, decisionsContent),
         writeFile(path.join(docsDirectory, 'DOMAIN_MODEL.md'), '# Domain\n\nNUT-01 context.\n'),
+        writeFile(path.join(docsDirectory, 'IMPLEMENTATION_HISTORY.md'), '# History\n\nNUT-01 historical detail.\n'),
     ]);
     context.after(() => rm(directory, { recursive: true, force: true }));
 

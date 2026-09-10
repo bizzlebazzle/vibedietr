@@ -275,7 +275,10 @@ discovery.
 
 - [`docs/PRODUCTION_CONFIGURATION.md`](docs/PRODUCTION_CONFIGURATION.md) defines
   the fail-closed production environment and secret-handling contract.
-- [`docs/CURRENT_STATE.md`](docs/CURRENT_STATE.md) records implemented behavior.
+- [`docs/CURRENT_STATE.md`](docs/CURRENT_STATE.md) is the concise current
+  capability, architecture, gap, and test-routing index.
+- [`docs/IMPLEMENTATION_HISTORY.md`](docs/IMPLEMENTATION_HISTORY.md) preserves
+  lookup-only milestone detail.
 - [`docs/ROADMAP.md`](docs/ROADMAP.md) contains the sequenced backlog.
 - [`docs/DEFINITION_OF_DONE.md`](docs/DEFINITION_OF_DONE.md) defines required
   verification.

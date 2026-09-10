@@ -316,7 +316,8 @@ async function findDocumentReferences(taskId, docsDirectory) {
             (entry) =>
                 entry.isFile()
                 && entry.name.endsWith('.md')
-                && !entry.name.endsWith('.orig'),
+                && !entry.name.endsWith('.orig')
+                && entry.name !== 'IMPLEMENTATION_HISTORY.md',
         )
         .sort((left, right) => left.name.localeCompare(right.name));
     const references = [];

@@ -20,8 +20,8 @@ Load only the sections relevant to the current task. Document roles are:
   acceptance criteria.
 - [`docs/DECISIONS.md`](docs/DECISIONS.md): decided and unresolved product
   boundaries.
-- [`docs/CURRENT_STATE.md`](docs/CURRENT_STATE.md): currently implemented
-  behaviour.
+- [`docs/CURRENT_STATE.md`](docs/CURRENT_STATE.md): concise current capability,
+  architecture-boundary, gap, and test-routing index.
 - [`docs/DOMAIN_MODEL.md`](docs/DOMAIN_MODEL.md): current domain concepts,
   relationships, and invariants.
 - [`docs/AUTHORIZATION_PRIVACY_MATRIX.md`](docs/AUTHORIZATION_PRIVACY_MATRIX.md):
@@ -46,6 +46,10 @@ product-owner input. Never resolve a product decision by inference.
 Use the context index only for reverse-dependency, decision-impact, or
 domain-section lookup. Do not read the whole index by default, and do not edit
 it manually; regenerate it with the documented command.
+
+[`docs/IMPLEMENTATION_HISTORY.md`](docs/IMPLEMENTATION_HISTORY.md) is
+lookup-only historical evidence. Read a relevant section only when milestone
+detail or Git rationale is necessary; never load it by default as current truth.
 
 ## Universal working rules
 
