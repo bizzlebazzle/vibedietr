@@ -108,6 +108,20 @@ idempotency fingerprint, correlation ID, failure category, exception class,
 safe error code, attempt count, queue and UTC time. The runbook never uses
 `queue:failed` output as a payload-debugging shortcut.
 
+## OpenFoodFacts outage response
+
+Provider refreshes are non-destructive: current catalogue versions remain
+selected during retries and after failure. When provider errors or latency
+cross the DEP-05 threshold, confirm OpenFoodFacts health and default-worker
+health, then let bounded retries complete. Do not increase concurrency during
+rate limiting.
+
+Use the safe run failure category and correlation reference; never dump the
+provider response or failed-job payload. Replay exactly one record only if its
+durable run is still queued or processing and has no proposal or terminal
+result. A staged or terminal run is not replayable. After recovery, an
+administrator may request a new refresh, which pins the then-current version.
+
 ## Safe replay runbook
 
 Only an operator authorized for production operations may replay a failure.

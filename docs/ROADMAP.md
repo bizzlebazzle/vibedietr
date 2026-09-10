@@ -866,6 +866,9 @@ changes, it is deliberately split across multiple items.
 
 ### NUT-11 — P2 — Stage OpenFoodFacts refreshes for moderation
 
+- **Status:** Complete (2026-09-10).
+- **Implementation:** See [OpenFoodFacts provider refreshes](CATALOGUE_PROVIDER_REFRESHES.md).
+
 - **Outcome:** Fetch newer provider data without silently changing current
   catalogue values.
 - **Dependencies:** NUT-06, NUT-09, FND-09, DEP-04, DEP-05.
