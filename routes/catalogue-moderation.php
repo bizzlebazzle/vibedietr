@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\CatalogueCorrectionModerationController;
 use App\Http\Controllers\CatalogueModerationController;
+use App\Http\Controllers\CatalogueProviderRefreshController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified', 'can:moderate-catalogue'])->prefix('admin/catalogue')->name('admin.catalogue.')->group(function () {
@@ -10,6 +11,7 @@ Route::middleware(['auth', 'verified', 'can:moderate-catalogue'])->prefix('admin
     Route::get('candidates/{candidate}', [CatalogueModerationController::class, 'candidate'])->whereNumber('candidate')->name('candidate');
     Route::get('decisions/{decision}', [CatalogueModerationController::class, 'decision'])->whereUlid('decision')->name('decision');
     Route::get('corrections/{proposal}', [CatalogueCorrectionModerationController::class, 'show'])->whereUlid('proposal')->name('correction');
+    Route::get('provider-refreshes/{refresh}', [CatalogueProviderRefreshController::class, 'show'])->whereUlid('refresh')->name('provider-refresh');
     Route::post('submissions/{item}/approve', [CatalogueModerationController::class, 'approve'])->whereNumber('item')->name('approve');
     Route::post('submissions/{item}/reject', [CatalogueModerationController::class, 'reject'])->whereNumber('item')->name('reject');
     Route::post('candidates/{candidate}/distinct', [CatalogueModerationController::class, 'distinct'])->whereNumber('candidate')->name('distinct');
@@ -19,4 +21,7 @@ Route::middleware(['auth', 'verified', 'can:moderate-catalogue'])->prefix('admin
     Route::post('decisions/{decision}/correct', [CatalogueModerationController::class, 'correct'])->whereUlid('decision')->name('correct');
     Route::post('corrections/{proposal}/accept', [CatalogueCorrectionModerationController::class, 'accept'])->whereUlid('proposal')->name('corrections.accept');
     Route::post('corrections/{proposal}/reject', [CatalogueCorrectionModerationController::class, 'reject'])->whereUlid('proposal')->name('corrections.reject');
+    Route::post('items/{item}/provider-refreshes', [CatalogueProviderRefreshController::class, 'store'])->whereNumber('item')->name('provider-refreshes.store');
+    Route::post('provider-refreshes/{refresh}/accept', [CatalogueProviderRefreshController::class, 'accept'])->whereUlid('refresh')->name('provider-refreshes.accept');
+    Route::post('provider-refreshes/{refresh}/reject', [CatalogueProviderRefreshController::class, 'reject'])->whereUlid('refresh')->name('provider-refreshes.reject');
 });

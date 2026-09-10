@@ -16,6 +16,8 @@ enum AuditAction: string
     case CatalogueCorrectionProposed = 'catalogue.correction_proposed';
     case CatalogueCorrectionAccepted = 'catalogue.correction_accepted';
     case CatalogueCorrectionRejected = 'catalogue.correction_rejected';
+    case CatalogueProviderRefreshAccepted = 'catalogue.provider_refresh_accepted';
+    case CatalogueProviderRefreshRejected = 'catalogue.provider_refresh_rejected';
     case AdministratorBootstrapCompleted = 'administrator.bootstrap_completed';
     case AdministratorBootstrapRefused = 'administrator.bootstrap_refused';
     case AdministratorLifecycleEvent = 'administrator.lifecycle_event';
@@ -55,6 +57,8 @@ enum AuditAction: string
             self::CatalogueDecisionCorrected,
             self::CatalogueCorrectionAccepted,
             self::CatalogueCorrectionRejected,
+            self::CatalogueProviderRefreshAccepted,
+            self::CatalogueProviderRefreshRejected,
             self::ManagedRecipeVocabularyChanged,
             self::RecipeTagSuggestionReviewed => AuditPurpose::ModerationAccountability,
             self::RecipeFinalized,
@@ -92,6 +96,8 @@ enum AuditAction: string
             self::ManagedRecipeVocabularyChanged,
             self::CatalogueCorrectionAccepted,
             self::CatalogueCorrectionRejected,
+            self::CatalogueProviderRefreshAccepted,
+            self::CatalogueProviderRefreshRejected,
             self::RecipeTagSuggestionReviewed => AuditRetentionClass::ModerationDecisionTwelveMonths,
             self::RecipeFinalized,
             self::RecipeVisibilityChanged,
@@ -139,6 +145,8 @@ enum AuditAction: string
             self::CatalogueDecisionCorrected,
             self::CatalogueCorrectionAccepted,
             self::CatalogueCorrectionRejected,
+            self::CatalogueProviderRefreshAccepted,
+            self::CatalogueProviderRefreshRejected,
             self::ManagedRecipeVocabularyChanged => [AuditActorType::Administrator],
             self::RecipeTagSuggestionReviewed,
             self::RecipeFinalized,
@@ -175,7 +183,9 @@ enum AuditAction: string
             self::CatalogueProposalApproved,
             self::CatalogueCorrectionProposed,
             self::CatalogueCorrectionAccepted,
-            self::CatalogueCorrectionRejected => [AuditSubjectType::CatalogueProposal],
+            self::CatalogueCorrectionRejected,
+            self::CatalogueProviderRefreshAccepted,
+            self::CatalogueProviderRefreshRejected => [AuditSubjectType::CatalogueProposal],
             self::CatalogueCandidateCreated,
             self::CataloguePendingApproved,
             self::CataloguePendingRejected,

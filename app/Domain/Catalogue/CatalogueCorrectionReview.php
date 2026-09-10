@@ -6,7 +6,7 @@ use App\Models\CatalogueCorrectionProposal;
 
 final readonly class CatalogueCorrectionReview
 {
-    /** @param list<array{field:string,before:mixed,current:mixed,proposed:mixed,conflict:bool}> $changes */
+    /** @param list<array{field:string,before:mixed,current:mixed,proposed:mixed,provenance:mixed,conflict:bool}> $changes */
     public function __construct(
         public CatalogueCorrectionProposal $proposal,
         public ?string $currentVersionId,

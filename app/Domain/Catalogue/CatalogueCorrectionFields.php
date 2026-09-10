@@ -10,9 +10,9 @@ use App\Domain\Nutrition\NutrientProvenance;
 use App\Domain\Nutrition\NutrientUnit;
 use App\Domain\Nutrition\NutrientValueStatus;
 use App\Domain\Shared\Decimal;
-use Carbon\CarbonImmutable;
 use App\Models\CatalogueItemVersion;
 use App\Models\CatalogueNutrientObservation as ObservationModel;
+use Carbon\CarbonImmutable;
 use InvalidArgumentException;
 
 final readonly class CatalogueCorrectionFields
@@ -136,8 +136,8 @@ final readonly class CatalogueCorrectionFields
     }
 
     /**
-     * @param array<string, mixed> $payload
-     * @param array<string, mixed> $provenance
+     * @param  array<string, mixed>  $payload
+     * @param  array<string, mixed>  $provenance
      */
     public function providerObservationFromPayload(
         string $field,

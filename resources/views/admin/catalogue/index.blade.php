@@ -1,13 +1,14 @@
 <x-app-layout>
     <x-slot name="header"><h1 class="font-semibold text-xl text-gray-800 dark:text-gray-200">Catalogue moderation</h1></x-slot>
     <div class="max-w-6xl mx-auto p-6 space-y-6 text-gray-900 dark:text-gray-100">
-        <p>Review manual submissions, possible duplicates, and catalogue corrections. Moderation details are private to administrators.</p>
+        <p>Review manual submissions, possible duplicates, catalogue corrections, and provider refreshes. Moderation details are private to administrators.</p>
         <x-input-error :messages="$errors->all()" />
         <form method="GET" class="flex flex-wrap gap-4 items-end">
             <div><x-input-label for="type" value="Work type" /><select id="type" name="type" class="rounded dark:bg-gray-800">
                 <option value="manual_submission" @selected($type === 'manual_submission')>Manual submission</option>
                 <option value="duplicate_candidate" @selected($type === 'duplicate_candidate')>Duplicate candidate</option>
                 <option value="correction_proposal" @selected($type === 'correction_proposal')>Correction proposal</option>
+                <option value="provider_refresh" @selected($type === 'provider_refresh')>OpenFoodFacts refresh</option>
             </select></div>
             <div><x-input-label for="state" value="State" /><select id="state" name="state" class="rounded dark:bg-gray-800">
                 <option value="">All states</option>
@@ -27,6 +28,8 @@
                         <a class="underline font-semibold" href="{{ route('admin.catalogue.submission', $row) }}">#{{ $row->id }} · {{ $row->currentVersion?->name ?? 'Catalogue submission' }}</a>
                     @elseif ($type === 'correction_proposal')
                         <a class="underline font-semibold" href="{{ route('admin.catalogue.correction', $row) }}">#{{ $row->id }} � {{ $row->catalogueItem->currentVersion?->name ?? 'Catalogue correction' }}</a>
+                    @elseif ($type === 'provider_refresh')
+                        <a class="underline font-semibold" href="{{ route('admin.catalogue.provider-refresh', $row) }}">#{{ $row->id }} · {{ $row->catalogueItem->currentVersion?->name ?? 'OpenFoodFacts refresh' }}</a>
                     @else
                         <a class="underline font-semibold" href="{{ route('admin.catalogue.candidate', $row) }}">#{{ $row->id }} · {{ $row->firstItem->currentVersion?->name ?? 'First identity' }} / {{ $row->secondItem->currentVersion?->name ?? 'Second identity' }}</a>
                         @if ($row->firstItem->status->value === 'merged' || $row->secondItem->status->value === 'merged')<p>A merge has been applied. Inspect decision history.</p>@endif
