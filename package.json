@@ -4,9 +4,11 @@
     "type": "module",
     "scripts": {
         "build": "vite build",
+        "context:task": "node scripts/docs/task-context.mjs",
+        "context:validate": "node scripts/docs/task-context.mjs --validate",
         "dev": "vite",
         "env:check": "node scripts/validate-development-environment.mjs",
-        "docs:check": "npm run docs:lint && npm run docs:links && npm run docs:decisions",
+        "docs:check": "npm run docs:lint && npm run docs:links && npm run docs:decisions && npm run context:validate",
         "docs:decisions": "node scripts/docs/validate-decisions.mjs",
         "docs:links": "markdown-link-check --config .markdown-link-check.json ./*.md docs .github",
         "docs:lint": "markdownlint-cli2",

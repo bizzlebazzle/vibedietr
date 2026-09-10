@@ -31,11 +31,14 @@ Load only the sections relevant to the current task. Document roles are:
 - Existing code and tests: implementation evidence, not authority to silently
   override approved product requirements.
 
-For a roadmap item, read its exact entry first. Check its dependencies and only
-the decision records and document sections relevant to it. If an unresolved
-decision explicitly blocks the item, stop and explain which decision blocks it
-and why. Otherwise continue without requesting additional product-owner input.
-Never resolve a product decision by inference.
+For a roadmap item, first run
+`./vendor/bin/sail npm run context:task -- TASK-ID`. The generated
+view extracts its exact roadmap entry, dependencies, relevant decisions, and
+document references from the authoritative files; it is routing evidence, not a
+new source of truth. Read only the returned sections relevant to the task. If an
+unresolved decision explicitly blocks the item, stop and explain which decision
+blocks it and why. Otherwise continue without requesting additional
+product-owner input. Never resolve a product decision by inference.
 
 ## Universal working rules
 

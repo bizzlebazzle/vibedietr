@@ -209,6 +209,28 @@ Run one backend test file by passing its path through the Composer script:
 ./vendor/bin/sail composer test -- tests/Feature/ExampleTest.php
 ```
 
+## Roadmap task context
+
+Generate a compact task view directly from the authoritative roadmap and
+decision register:
+
+```bash
+./vendor/bin/sail npm run context:task -- NUT-14
+```
+
+The resolver does not store a second manifest. It extracts the task,
+dependencies, decision relationships, implementation-document links, and other
+document references on each run. Validate the complete task/dependency graph
+with:
+
+```bash
+./vendor/bin/sail npm run context:validate
+```
+
+The validation is also part of `./vendor/bin/sail npm run docs:check`. It
+rejects malformed task entries, missing dependencies or decisions, dependency
+cycles, and missing linked implementation documents.
+
 ## Troubleshooting
 
 - If Docker or Sail reports that it cannot connect, start Docker Desktop or the
