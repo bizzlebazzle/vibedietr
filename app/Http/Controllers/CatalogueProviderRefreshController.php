@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Domain\Catalogue\CatalogueChangeProposalType;
 use App\Domain\Catalogue\CatalogueCorrectionModeration;
+use App\Domain\Catalogue\CatalogueModerationAuthorization;
 use App\Domain\Catalogue\CatalogueProviderRefreshRequester;
 use App\Domain\Catalogue\CatalogueProviderRefreshState;
 use App\Models\CatalogueProviderRefresh;
@@ -14,10 +15,16 @@ use Illuminate\View\View;
 
 final class CatalogueProviderRefreshController extends Controller
 {
-    public function store(int $item, CatalogueProviderRefreshRequester $requester): RedirectResponse
-    {
+    public function store(
+        Request $request,
+        int $item,
+        CatalogueProviderRefreshRequester $requester,
+        CatalogueModerationAuthorization $authorization,
+    ): RedirectResponse {
         Gate::authorize('moderate-catalogue');
         $refresh = $requester->request($item);
+
+        $authorization->authorize($request->user(), $request->session());
 
         return redirect()->route('admin.catalogue.provider-refresh', $refresh)
             ->with('status', 'OpenFoodFacts refresh queued. The current catalogue version remains unchanged while it runs.');

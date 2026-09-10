@@ -49,6 +49,9 @@ class CatalogueProviderRefreshModerationTest extends TestCase
 
         $this->actingAs($ordinary)->get(route('admin.catalogue.provider-refresh', $refresh))->assertForbidden();
         $this->actingAs($this->administrator)
+            ->post(route('admin.catalogue.provider-refreshes.store', $item))
+            ->assertForbidden();
+        $this->actingAs($this->administrator)
             ->get(route('admin.catalogue.index', ['type' => 'provider_refresh', 'state' => 'staged']))
             ->assertOk()->assertSee($refresh->id);
         $this->actingAs($this->administrator)->get(route('admin.catalogue.provider-refresh', $refresh))
