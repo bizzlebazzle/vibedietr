@@ -231,6 +231,26 @@ The validation is also part of `./vendor/bin/sail npm run docs:check`. It
 rejects malformed task entries, missing dependencies or decisions, dependency
 cycles, and missing linked implementation documents.
 
+### Reciprocal context index
+
+[`docs/CONTEXT_INDEX.md`](docs/CONTEXT_INDEX.md) provides compact,
+lookup-only maps from roadmap tasks to their reverse dependencies, decisions,
+and explicitly referenced domain-model sections; from decisions back to
+roadmap tasks; and from domain-model sections back to tasks and decisions.
+
+The index is generated only from `ROADMAP.md`, `DECISIONS.md`, and
+`DOMAIN_MODEL.md`. After changing one of those sources, regenerate it with:
+
+```bash
+./vendor/bin/sail npm run context:index:update
+```
+
+`docs:check` runs `context:index:check` and fails when the committed index
+is stale. Print a fresh copy without writing a file with
+`./vendor/bin/sail npm run context:index`. The index contains only explicit,
+machine-verifiable references; code-area and test suggestions remain runtime
+discovery.
+
 ## Troubleshooting
 
 - If Docker or Sail reports that it cannot connect, start Docker Desktop or the

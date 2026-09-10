@@ -172,31 +172,34 @@ export function parseDecisions(content, filename = 'docs/DECISIONS.md') {
     return decisions;
 }
 
-function relationshipFor(decision, taskId) {
+export function relationshipFor(decision, taskId) {
     const relationships = (
         decision.fields.get('Backlog relationships')?.value ?? ''
     ).replaceAll('`', '');
-    const sentences = relationships.split(/(?<=[.!?])\s+/u);
+    const markerPattern = /\bremov(?:e|es|ed)\b[^.!?]{0,120}\bblocker\b|\bunblock(?:s|ed)?\b|\bblock(?:s|ed)?\b|\bconstrain(?:s|ed)?\b|\brelat(?:e|es|ed)\b/giu;
+    const markers = [...relationships.matchAll(markerPattern)].map((match) => {
+        const value = match[0].toLowerCase();
+        let relationship = 'Related';
 
-    for (const sentence of sentences) {
-        if (!(sentence.match(referencePattern) ?? []).includes(taskId)) {
-            continue;
+        if (value.startsWith('remov') || value.startsWith('unblock')) {
+            relationship = 'Unblocked';
+        } else if (value.startsWith('block')) {
+            relationship = 'Blocked';
+        } else if (value.startsWith('constrain')) {
+            relationship = 'Constrained';
         }
 
-        if (/\bunblock(?:s|ed)?\b/iu.test(sentence)) {
-            return 'Unblocked';
-        }
+        return { index: match.index, relationship };
+    });
+    const taskOccurrences = [...relationships.matchAll(new RegExp(`\\b${taskId}\\b`, 'gu'))];
 
-        if (/\bblock(?:s|ed)?\b/iu.test(sentence)) {
-            return 'Blocked';
-        }
+    for (const occurrence of taskOccurrences) {
+        const precedingMarker = markers
+            .filter(({ index }) => index < occurrence.index)
+            .at(-1);
 
-        if (/\bconstrain(?:s|ed)?\b/iu.test(sentence)) {
-            return 'Constrained';
-        }
-
-        if (/\brelat(?:e|es|ed)\b/iu.test(sentence)) {
-            return 'Related';
+        if (precedingMarker) {
+            return precedingMarker.relationship;
         }
     }
 

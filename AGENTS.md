@@ -28,6 +28,9 @@ Load only the sections relevant to the current task. Document roles are:
   authorization, ownership, sharing, privacy, and deletion rules.
 - [`docs/DEFINITION_OF_DONE.md`](docs/DEFINITION_OF_DONE.md): final completion
   and verification requirements.
+- [`docs/CONTEXT_INDEX.md`](docs/CONTEXT_INDEX.md): generated, lookup-only
+  reverse maps between roadmap tasks, decisions, and domain-model sections; it
+  is routing evidence, not a source of product truth.
 - Existing code and tests: implementation evidence, not authority to silently
   override approved product requirements.
 
@@ -39,6 +42,10 @@ new source of truth. Read only the returned sections relevant to the task. If an
 unresolved decision explicitly blocks the item, stop and explain which decision
 blocks it and why. Otherwise continue without requesting additional
 product-owner input. Never resolve a product decision by inference.
+
+Use the context index only for reverse-dependency, decision-impact, or
+domain-section lookup. Do not read the whole index by default, and do not edit
+it manually; regenerate it with the documented command.
 
 ## Universal working rules
 
