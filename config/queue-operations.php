@@ -80,12 +80,12 @@ return [
             'worker' => 'default',
             'timeout' => 60,
             'failed_payload' => 'metadata-only',
-            RefreshOpenFoodFactsCatalogueItem::class => [
-                'queue' => QueueName::DEFAULT,
-                'worker' => 'default',
-                'timeout' => 60,
-                'failed_payload' => 'metadata-only',
-            ],
+        ],
+        RefreshOpenFoodFactsCatalogueItem::class => [
+            'queue' => QueueName::DEFAULT,
+            'worker' => 'default',
+            'timeout' => 60,
+            'failed_payload' => 'metadata-only',
         ],
     ],
 ];
