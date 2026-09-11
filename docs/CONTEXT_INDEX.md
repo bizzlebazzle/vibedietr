@@ -16,8 +16,8 @@ Only explicit, machine-verifiable references are included.
 | `FND-02` - Define the additive domain migration plan | 1. Foundation and safety | Not recorded | `FND-01` | `REC-01`, `NUT-01`, `DEP-06` | `DEC-011` (Related), `DEC-012` (Constrained), `DEC-014` (Constrained) | - |
 | `FND-03` - Define the authorization and privacy matrix | 1. Foundation and safety | Not recorded | `FND-01` | `FND-04`, `FND-05`, `REC-01`, `REC-06`, `REC-14`, `NUT-01`, `NUT-03`, `PLAN-01`, `PLAN-08` | `DEC-009` (Related), `DEC-014` (Unblocked) | - |
 | `FND-04` - Add administrator role authorization | 1. Foundation and safety | Complete (2026-07-31) | `FND-03` | `FND-05`, `FND-13`, `FND-14`, `REC-13`, `NUT-09` | `DEC-009` (Unblocked) | - |
-| `FND-05` - Introduce a minimal audit-event store | 1. Foundation and safety | Not recorded | `FND-03`, `FND-04` | `FND-09`, `FND-14`, `STB-08`, `REC-05`, `REC-07`, `REC-11`, `NUT-01`, `NUT-09`, `NUT-17`, `PLAN-06`, `DEP-08`, `DEP-09` | `DEC-009` (Constrained), `DEC-010` (Related), `DEC-013` (Unblocked) | NUT-09 catalogue moderation records (line 1486) |
-| `FND-06` - Establish shared nutrient and measurement definitions | 1. Foundation and safety | Complete (2026-07-31) | - | `STB-04`, `STB-06`, `REC-02`, `REC-08`, `NUT-04`, `NUT-05`, `NUT-14`, `PLAN-10` | `DEC-003` (Unblocked), `DEC-004` (Unblocked), `DEC-017` (Unblocked) | Recipe ingredient line (line 440), Shared catalogue item and version (line 651), Catalogue package and serving structure (line 709), Catalogue nutrition observation and normalized fact (line 762), Measurement unit (line 1004), Current rules and constraints (line 1151), Nutrition schema and units (line 1309) |
+| `FND-05` - Introduce a minimal audit-event store | 1. Foundation and safety | Not recorded | `FND-03`, `FND-04` | `FND-09`, `FND-14`, `STB-08`, `REC-05`, `REC-07`, `REC-11`, `NUT-01`, `NUT-09`, `NUT-17`, `PLAN-06`, `DEP-08`, `DEP-09` | `DEC-009` (Constrained), `DEC-010` (Related), `DEC-013` (Unblocked) | NUT-09 catalogue moderation records (line 1499) |
+| `FND-06` - Establish shared nutrient and measurement definitions | 1. Foundation and safety | Complete (2026-07-31) | - | `STB-04`, `STB-06`, `REC-02`, `REC-08`, `NUT-04`, `NUT-05`, `NUT-14`, `PLAN-10` | `DEC-003` (Unblocked), `DEC-004` (Unblocked), `DEC-017` (Unblocked) | Recipe ingredient line (line 440), Shared catalogue item and version (line 664), Catalogue package and serving structure (line 722), Catalogue nutrition observation and normalized fact (line 775), Measurement unit (line 1017), Current rules and constraints (line 1164), Nutrition schema and units (line 1322) |
 | `FND-07` - Add static analysis | 1. Foundation and safety | Complete (2026-08-07) | - | `FND-08`, `DEP-01` | - | - |
 | `FND-08` - Add continuous-integration quality gates | 1. Foundation and safety | Complete (2026-08-07) | `FND-07` | `FND-09`, `FND-10`, `FND-13`, `STB-01` | - | - |
 | `FND-09` - Establish queued-job conventions | 1. Foundation and safety | Complete (2026-08-07) | `FND-05`, `FND-08` | `STB-07`, `REC-15`, `REC-16`, `REC-17`, `NUT-11`, `NUT-18`, `PLAN-07`, `DEP-04`, `DEP-07`, `DEP-08` | `DEC-005` (Related), `DEC-006` (Constrained), `DEC-007` (Related), `DEC-008` (Constrained), `DEC-012` (Constrained) | - |
@@ -29,17 +29,17 @@ Only explicit, machine-verifiable references are included.
 | `STB-01` - Add ingredient characterization and authorization coverage | 2. Existing-feature stabilisation | Complete (2026-08-13) | `FND-08` | `STB-03`, `STB-04` | - | - |
 | `STB-02` - Add ingredient test factories | 2. Existing-feature stabilisation | Complete (2026-08-13) | - | - | - | - |
 | `STB-03` - Enforce authorization at every ingredient mutation | 2. Existing-feature stabilisation | Complete (2026-08-13) | `STB-01` | - | - | - |
-| `STB-04` - Converge ingredient write validation | 2. Existing-feature stabilisation | Complete (2026-08-13) | `STB-01`, `FND-06` | `STB-05` | `DEC-003` (Constrained), `DEC-017` (Constrained) | Nutrition dataset (line 1052), Nutrition schema and units (line 1309) |
-| `STB-05` - Preserve explicit zero nutrition values | 2. Existing-feature stabilisation | Complete (2026-08-13) | `STB-04` | `STB-06` | - | Nutrition schema and units (line 1309) |
-| `STB-06` - Stabilize current energy and protein handling | 2. Existing-feature stabilisation | Complete (2026-08-13) | `FND-06`, `STB-05` | - | `DEC-003` (Unblocked), `DEC-004` (Unblocked) | Nutrition dataset (line 1052) |
-| `STB-07` - Isolate and harden OpenFoodFacts access | 2. Existing-feature stabilisation | Complete (2026-08-13) | `FND-09` | `STB-08`, `NUT-06` | - | Current rules and constraints (line 1151) |
-| `STB-08` - Enforce machine-imported barcode provenance | 2. Existing-feature stabilisation | Complete (2026-08-13) | `STB-07`, `FND-05` | `STB-09`, `NUT-02` | - | Barcode and OpenFoodFacts product data (line 1091) |
+| `STB-04` - Converge ingredient write validation | 2. Existing-feature stabilisation | Complete (2026-08-13) | `STB-01`, `FND-06` | `STB-05` | `DEC-003` (Constrained), `DEC-017` (Constrained) | Nutrition dataset (line 1065), Nutrition schema and units (line 1322) |
+| `STB-05` - Preserve explicit zero nutrition values | 2. Existing-feature stabilisation | Complete (2026-08-13) | `STB-04` | `STB-06` | - | Nutrition schema and units (line 1322) |
+| `STB-06` - Stabilize current energy and protein handling | 2. Existing-feature stabilisation | Complete (2026-08-13) | `FND-06`, `STB-05` | - | `DEC-003` (Unblocked), `DEC-004` (Unblocked) | Nutrition dataset (line 1065) |
+| `STB-07` - Isolate and harden OpenFoodFacts access | 2. Existing-feature stabilisation | Complete (2026-08-13) | `FND-09` | `STB-08`, `NUT-06` | - | Current rules and constraints (line 1164) |
+| `STB-08` - Enforce machine-imported barcode provenance | 2. Existing-feature stabilisation | Complete (2026-08-13) | `STB-07`, `FND-05` | `STB-09`, `NUT-02` | - | Barcode and OpenFoodFacts product data (line 1104) |
 | `STB-09` - Remove the runtime barcode-scanner CDN dependency | 2. Existing-feature stabilisation | Complete (2026-08-14) | `STB-08` | `NUT-06`, `DEP-03` | - | - |
 | `REC-01` - Add recipe draft identity and ownership | 3. Core recipe functionality | Complete (2026-08-14) | `FND-02`, `FND-03` | `REC-02`, `REC-03`, `REC-04`, `UX-01` | - | - |
 | `REC-02` - Add ordered recipe ingredient lines | 3. Core recipe functionality | Complete (2026-08-15) | `REC-01`, `FND-06` | `REC-04`, `REC-08`, `NUT-07`, `NUT-12` | `DEC-017` (Constrained) | - |
 | `REC-03` - Add ordered instruction steps and sections | 3. Core recipe functionality | Complete (2026-08-15) | `REC-01` | `REC-04` | - | - |
-| `REC-04` - Build the draft recipe editor | 3. Core recipe functionality | Complete (2026-08-15) | `REC-01`, `REC-02`, `REC-03` | `REC-05`, `REC-15`, `UX-03` | - | Recipe draft (line 186), Recipe imports (line 1389) |
-| `REC-05` - Finalize and publish a recipe draft | 3. Core recipe functionality | Complete (2026-08-15) | `REC-04`, `FND-05` | `REC-06`, `REC-07`, `NUT-15`, `PLAN-01` | - | Finalized recipe version (line 272), Recipe imports (line 1389) |
+| `REC-04` - Build the draft recipe editor | 3. Core recipe functionality | Complete (2026-08-15) | `REC-01`, `REC-02`, `REC-03` | `REC-05`, `REC-15`, `UX-03` | - | Recipe draft (line 186), Recipe imports (line 1402) |
+| `REC-05` - Finalize and publish a recipe draft | 3. Core recipe functionality | Complete (2026-08-15) | `REC-04`, `FND-05` | `REC-06`, `REC-07`, `NUT-15`, `PLAN-01` | - | Finalized recipe version (line 272), Recipe imports (line 1402) |
 | `REC-06` - Enforce recipe visibility and public read routes | 3. Core recipe functionality | Complete (2026-08-23) | `REC-05`, `FND-03` | `REC-09`, `REC-10`, `REC-13`, `REC-14` | - | Bookmark (line 317) |
 | `REC-07` - Add draft revisions for finalized recipes | 3. Core recipe functionality | Complete (2026-08-23) | `REC-05`, `FND-05` | `REC-11`, `PLAN-03`, `PLAN-07` | - | Recipe draft (line 186), Finalized recipe version (line 272), Recipe ingredient catalogue match (line 501) |
 | `REC-08` - Resize recipe quantities for display | 3. Core recipe functionality | Complete (2026-08-23) | `REC-02`, `FND-06` | `UX-03` | `DEC-017` (Constrained) | Recipe draft revision (line 295), Recipe ingredient line (line 440) |
@@ -49,22 +49,22 @@ Only explicit, machine-verifiable references are included.
 | `REC-12` - Add private recipe collections and tags | 3. Core recipe functionality | Complete (2026-08-23) | `REC-10` | - | - | Recipe collection and private recipe tag (line 348) |
 | `REC-13` - Add public and managed recipe tags | 3. Core recipe functionality | Complete (2026-08-23). Nutrition-claim taxonomies and verification remain deferred because recipe nutrition completeness is not yet represented; REC-13 exposes no verified claim state | `REC-06`, `FND-04`, `FND-14` | - | `DEC-009` (Constrained) | Recipe collection and private recipe tag (line 348) |
 | `REC-14` - Add public attribution profiles | 3. Core recipe functionality | Complete (2026-08-23) | `REC-06`, `REC-11`, `FND-03` | `DEP-07` | `DEC-018` (Constrained) | Public attribution (line 51), Recipe collection and private recipe tag (line 348), Recipe remix lineage (line 392) |
-| `REC-15` - Import pasted recipe text into a draft | 3. Core recipe functionality | Complete (2026-08-27) | `REC-04`, `FND-09`, `DEP-04`, `DEP-05` | `REC-16`, `REC-17`, `NUT-17`, `UX-06` | `DEC-005` (Constrained), `DEC-007` (Constrained) | Recipe imports (line 1389) |
-| `REC-16` - Import a webpage recipe into a draft | 3. Core recipe functionality | Complete (2026-08-27) | `REC-15`, `FND-09`, `DEP-04`, `DEP-05` | - | `DEC-005` (Unblocked), `DEC-007` (Unblocked) | Recipe imports (line 1389) |
+| `REC-15` - Import pasted recipe text into a draft | 3. Core recipe functionality | Complete (2026-08-27) | `REC-04`, `FND-09`, `DEP-04`, `DEP-05` | `REC-16`, `REC-17`, `NUT-17`, `UX-06` | `DEC-005` (Constrained), `DEC-007` (Constrained) | Recipe imports (line 1402) |
+| `REC-16` - Import a webpage recipe into a draft | 3. Core recipe functionality | Complete (2026-08-27) | `REC-15`, `FND-09`, `DEP-04`, `DEP-05` | - | `DEC-005` (Unblocked), `DEC-007` (Unblocked) | Recipe imports (line 1402) |
 | `REC-17` - Import document and photo recipes transiently | 3. Core recipe functionality | Complete (2026-08-28) | `REC-15`, `FND-09`, `DEP-02`, `DEP-03`, `DEP-04`, `DEP-05` | - | `DEC-005` (Constrained), `DEC-006` (Unblocked), `DEC-007` (Unblocked) | - |
-| `NUT-01` - Add shared catalogue identity and provenance schema | 4. Nutrition and food matching | Complete (2026-08-29) | `FND-02`, `FND-03`, `FND-05` | `NUT-02`, `NUT-04`, `NUT-05` | - | Shared catalogue item and version (line 651) |
-| `NUT-02` - Backfill existing ingredients into catalogue candidates | 4. Nutrition and food matching | Complete (2026-08-31) | `NUT-01`, `STB-08` | `NUT-03` | `DEC-011` (Constrained) | Shared catalogue item and version (line 651), Shared barcode import and reuse (line 839), Legacy ingredient catalogue mapping (line 890) |
-| `NUT-03` - Cut reads over to the shared catalogue | 4. Nutrition and food matching | Complete (2026-08-31) | `NUT-02`, `FND-03` | `NUT-06`, `NUT-07`, `NUT-08`, `UX-01` | `DEC-011` (Related) | Recipe ingredient catalogue match (line 501), Shared catalogue item and version (line 651), Shared barcode import and reuse (line 839), Legacy ingredient catalogue mapping (line 890), Pending manual catalogue submission (line 957) |
-| `NUT-04` - Model package and serving structure | 4. Nutrition and food matching | Complete (2026-09-01) | `NUT-01`, `FND-06` | `NUT-06`, `NUT-08` | `DEC-017` (Constrained) | Catalogue nutrition observation and normalized fact (line 762), Shared barcode import and reuse (line 839), Pending manual catalogue submission (line 957) |
-| `NUT-05` - Normalize catalogue nutrition and provenance | 4. Nutrition and food matching | Complete (2026-09-01) | `NUT-01`, `FND-06` | `NUT-06`, `NUT-08`, `NUT-15`, `PLAN-04` | `DEC-003` (Unblocked), `DEC-004` (Related) | Shared catalogue item and version (line 651), Catalogue nutrition observation and normalized fact (line 762), Pending manual catalogue submission (line 957) |
-| `NUT-06` - Import barcodes into the shared catalogue | 4. Nutrition and food matching | Complete (2026-09-01) | `STB-07`, `STB-09`, `NUT-03`, `NUT-04`, `NUT-05` | `NUT-11` | - | Catalogue package and serving structure (line 709), Shared barcode import and reuse (line 839) |
+| `NUT-01` - Add shared catalogue identity and provenance schema | 4. Nutrition and food matching | Complete (2026-08-29) | `FND-02`, `FND-03`, `FND-05` | `NUT-02`, `NUT-04`, `NUT-05` | - | Shared catalogue item and version (line 664) |
+| `NUT-02` - Backfill existing ingredients into catalogue candidates | 4. Nutrition and food matching | Complete (2026-08-31) | `NUT-01`, `STB-08` | `NUT-03` | `DEC-011` (Constrained) | Shared catalogue item and version (line 664), Shared barcode import and reuse (line 852), Legacy ingredient catalogue mapping (line 903) |
+| `NUT-03` - Cut reads over to the shared catalogue | 4. Nutrition and food matching | Complete (2026-08-31) | `NUT-02`, `FND-03` | `NUT-06`, `NUT-07`, `NUT-08`, `UX-01` | `DEC-011` (Related) | Recipe ingredient catalogue match (line 501), Shared catalogue item and version (line 664), Shared barcode import and reuse (line 852), Legacy ingredient catalogue mapping (line 903), Pending manual catalogue submission (line 970) |
+| `NUT-04` - Model package and serving structure | 4. Nutrition and food matching | Complete (2026-09-01) | `NUT-01`, `FND-06` | `NUT-06`, `NUT-08` | `DEC-017` (Constrained) | Catalogue nutrition observation and normalized fact (line 775), Shared barcode import and reuse (line 852), Pending manual catalogue submission (line 970) |
+| `NUT-05` - Normalize catalogue nutrition and provenance | 4. Nutrition and food matching | Complete (2026-09-01) | `NUT-01`, `FND-06` | `NUT-06`, `NUT-08`, `NUT-15`, `PLAN-04` | `DEC-003` (Unblocked), `DEC-004` (Related) | Shared catalogue item and version (line 664), Catalogue nutrition observation and normalized fact (line 775), Pending manual catalogue submission (line 970) |
+| `NUT-06` - Import barcodes into the shared catalogue | 4. Nutrition and food matching | Complete (2026-09-01) | `STB-07`, `STB-09`, `NUT-03`, `NUT-04`, `NUT-05` | `NUT-11` | - | Catalogue package and serving structure (line 722), Shared barcode import and reuse (line 852) |
 | `NUT-07` - Add catalogue search and manual match selection | 4. Nutrition and food matching | Complete (2026-09-08) | `REC-02`, `NUT-03` | `NUT-12`, `NUT-14` | `DEC-001` (Related) | - |
-| `NUT-08` - Add pending manual catalogue submissions | 4. Nutrition and food matching | Complete (2026-09-08) | `NUT-03`, `NUT-04`, `NUT-05`, `DEC-011` | `NUT-09` | `DEC-011` (Unblocked) | Legacy ingredient catalogue mapping (line 890) |
-| `NUT-09` - Add catalogue moderation queue and decisions | 4. Nutrition and food matching | Complete (2026-09-09) | `NUT-08`, `FND-04`, `FND-05`, `FND-14`, `DEC-011` | `NUT-10`, `NUT-11` | `DEC-009` (Constrained), `DEC-010` (Constrained), `DEC-011` (Constrained), `DEC-013` (Constrained) | Legacy ingredient catalogue mapping (line 890), NUT-09 catalogue moderation records (line 1486) |
-| `NUT-10` - Add catalogue correction proposals | 4. Nutrition and food matching | Complete (2026-09-09) | `NUT-09` | `NUT-18` | `DEC-009` (Constrained), `DEC-010` (Constrained), `DEC-013` (Constrained) | NUT-10 catalogue correction proposal (line 1521) |
+| `NUT-08` - Add pending manual catalogue submissions | 4. Nutrition and food matching | Complete (2026-09-08) | `NUT-03`, `NUT-04`, `NUT-05`, `DEC-011` | `NUT-09` | `DEC-011` (Unblocked) | Legacy ingredient catalogue mapping (line 903) |
+| `NUT-09` - Add catalogue moderation queue and decisions | 4. Nutrition and food matching | Complete (2026-09-09) | `NUT-08`, `FND-04`, `FND-05`, `FND-14`, `DEC-011` | `NUT-10`, `NUT-11` | `DEC-009` (Constrained), `DEC-010` (Constrained), `DEC-011` (Constrained), `DEC-013` (Constrained) | Legacy ingredient catalogue mapping (line 903), NUT-09 catalogue moderation records (line 1499) |
+| `NUT-10` - Add catalogue correction proposals | 4. Nutrition and food matching | Complete (2026-09-09) | `NUT-09` | `NUT-18` | `DEC-009` (Constrained), `DEC-010` (Constrained), `DEC-013` (Constrained) | NUT-10 catalogue correction proposal (line 1534) |
 | `NUT-11` - Stage OpenFoodFacts refreshes for moderation | 4. Nutrition and food matching | Complete (2026-09-10) | `NUT-06`, `NUT-09`, `FND-09`, `DEP-04`, `DEP-05` | `NUT-18` | `DEC-009` (Constrained), `DEC-010` (Constrained), `DEC-013` (Constrained) | - |
 | `NUT-12` - Persist automatic match evidence | 4. Nutrition and food matching | Complete (2026-09-11) | `REC-02`, `NUT-07`, `DEC-001` | `NUT-13`, `NUT-15` | `DEC-001` (Unblocked) | Recipe ingredient catalogue match (line 501) |
-| `NUT-13` - Implement deterministic catalogue candidate ranking | 4. Nutrition and food matching | Not recorded | `NUT-12`, `DEC-001` | `NUT-16` | `DEC-001` (Unblocked) | - |
+| `NUT-13` - Implement deterministic catalogue candidate ranking | 4. Nutrition and food matching | Complete (2026-09-11) | `NUT-12`, `DEC-001` | `NUT-16` | `DEC-001` (Unblocked) | Recipe ingredient catalogue match (line 501) |
 | `NUT-14` - Add reliable quantity conversion for calculations | 4. Nutrition and food matching | Not recorded | `FND-06`, `NUT-07` | `NUT-15` | `DEC-017` (Constrained) | - |
 | `NUT-15` - Calculate recipe nutrition estimates | 4. Nutrition and food matching | Not recorded | `REC-05`, `NUT-05`, `NUT-12`, `NUT-14` | `NUT-16`, `NUT-17`, `PLAN-03` | `DEC-001` (Constrained), `DEC-003` (Constrained) | - |
 | `NUT-16` - Show estimate completeness and excluded lines | 4. Nutrition and food matching | Not recorded | `NUT-13`, `NUT-15` | `UX-04`, `UX-06` | `DEC-001` (Constrained), `DEC-002` (Constrained), `DEC-004` (Constrained) | - |
@@ -106,15 +106,15 @@ Only explicit, machine-verifiable references are included.
 | --- | --- | --- | --- |
 | `DEC-001` - Food-matching confidence thresholds | Decided | `NUT-07` (Related), `NUT-12` (Unblocked), `NUT-13` (Unblocked), `NUT-15` (Constrained), `NUT-16` (Constrained), `UX-04` (Constrained) | Recipe ingredient catalogue match (line 501) |
 | `DEC-002` - Food-match review-warning treatment | Owner input required | `NUT-16` (Constrained), `UX-02` (Related), `UX-04` (Blocked) | - |
-| `DEC-003` - Nutrient storage precision | Decided | `FND-06` (Unblocked), `STB-04` (Constrained), `STB-06` (Unblocked), `NUT-05` (Unblocked), `NUT-15` (Constrained), `NUT-17` (Constrained) | Catalogue nutrition observation and normalized fact (line 762), Nutrient definition (line 1033), Current rules and constraints (line 1151), Nutrition schema and units (line 1309) |
-| `DEC-004` - Nutrient display precision | Decided | `FND-06` (Unblocked), `STB-06` (Unblocked), `NUT-05` (Related), `NUT-16` (Constrained), `PLAN-12` (Constrained), `UX-04` (Constrained) | Catalogue nutrition observation and normalized fact (line 762), Nutrient definition (line 1033), Nutrition dataset (line 1052), Current rules and constraints (line 1151) |
-| `DEC-005` - Recipe-import providers and formats | Decided | `FND-09` (Related), `REC-15` (Constrained), `REC-16` (Unblocked), `REC-17` (Constrained), `UX-06` (Related), `DEP-02` (Unblocked), `DEP-03` (Constrained) | Recipe imports (line 1389) |
-| `DEC-006` - OCR providers and formats | Decided | `FND-09` (Constrained), `REC-17` (Unblocked), `UX-06` (Constrained), `DEP-02` (Unblocked), `DEP-03` (Constrained), `DEP-04` (Related), `DEP-05` (Related) | Recipe imports (line 1389) |
-| `DEC-007` - Import and OCR extraction-quality thresholds | Decided | `FND-09` (Related), `REC-15` (Constrained), `REC-16` (Unblocked), `REC-17` (Unblocked), `UX-06` (Constrained), `DEP-04` (Related), `DEP-05` (Related) | Recipe imports (line 1389) |
+| `DEC-003` - Nutrient storage precision | Decided | `FND-06` (Unblocked), `STB-04` (Constrained), `STB-06` (Unblocked), `NUT-05` (Unblocked), `NUT-15` (Constrained), `NUT-17` (Constrained) | Catalogue nutrition observation and normalized fact (line 775), Nutrient definition (line 1046), Current rules and constraints (line 1164), Nutrition schema and units (line 1322) |
+| `DEC-004` - Nutrient display precision | Decided | `FND-06` (Unblocked), `STB-06` (Unblocked), `NUT-05` (Related), `NUT-16` (Constrained), `PLAN-12` (Constrained), `UX-04` (Constrained) | Catalogue nutrition observation and normalized fact (line 775), Nutrient definition (line 1046), Nutrition dataset (line 1065), Current rules and constraints (line 1164) |
+| `DEC-005` - Recipe-import providers and formats | Decided | `FND-09` (Related), `REC-15` (Constrained), `REC-16` (Unblocked), `REC-17` (Constrained), `UX-06` (Related), `DEP-02` (Unblocked), `DEP-03` (Constrained) | Recipe imports (line 1402) |
+| `DEC-006` - OCR providers and formats | Decided | `FND-09` (Constrained), `REC-17` (Unblocked), `UX-06` (Constrained), `DEP-02` (Unblocked), `DEP-03` (Constrained), `DEP-04` (Related), `DEP-05` (Related) | Recipe imports (line 1402) |
+| `DEC-007` - Import and OCR extraction-quality thresholds | Decided | `FND-09` (Related), `REC-15` (Constrained), `REC-16` (Unblocked), `REC-17` (Unblocked), `UX-06` (Constrained), `DEP-04` (Related), `DEP-05` (Related) | Recipe imports (line 1402) |
 | `DEC-008` - Account data-export format | Owner input required | `FND-09` (Constrained), `DEP-04` (Constrained), `DEP-07` (Blocked), `DEP-09` (Related) | - |
 | `DEC-009` - Initial administrator assignment | Decided | `FND-03` (Related), `FND-04` (Unblocked), `FND-05` (Constrained), `FND-11` (Related), `FND-12` (Related), `FND-13` (Constrained), `FND-14` (Constrained), `REC-13` (Constrained), `NUT-09` (Constrained), `NUT-10` (Constrained), `NUT-11` (Constrained), `DEP-02` (Constrained), `DEP-08` (Constrained) | - |
 | `DEC-010` - Moderation escalation and service levels | Owner input required | `FND-05` (Related), `NUT-09` (Constrained), `NUT-10` (Constrained), `NUT-11` (Constrained), `DEP-09` (Blocked) | - |
-| `DEC-011` - Manual-food de-duplication and merge rules | Decided | `FND-02` (Related), `NUT-02` (Constrained), `NUT-03` (Related), `NUT-08` (Unblocked), `NUT-09` (Constrained) | Legacy ingredient catalogue mapping (line 890), NUT-09 catalogue moderation records (line 1486) |
+| `DEC-011` - Manual-food de-duplication and merge rules | Decided | `FND-02` (Related), `NUT-02` (Constrained), `NUT-03` (Related), `NUT-08` (Unblocked), `NUT-09` (Constrained) | Legacy ingredient catalogue mapping (line 903), NUT-09 catalogue moderation records (line 1499) |
 | `DEC-012` - Backup erasure timing | Research required | `FND-02` (Constrained), `FND-09` (Constrained), `DEP-04` (Constrained), `DEP-06` (Blocked), `DEP-07` (Related), `DEP-08` (Blocked), `DEP-09` (Blocked) | - |
 | `DEC-013` - Security and legal audit retention | Decided | `FND-05` (Unblocked), `NUT-09` (Constrained), `NUT-10` (Constrained), `NUT-11` (Constrained), `DEP-06` (Constrained), `DEP-08` (Unblocked), `DEP-09` (Unblocked) | - |
 | `DEC-014` - Public meal plans after owner deletion | Decided | `FND-02` (Constrained), `FND-03` (Unblocked), `PLAN-08` (Constrained), `PLAN-09` (Constrained), `DEP-08` (Unblocked), `DEP-09` (Related) | - |
@@ -144,34 +144,34 @@ Only explicit, machine-verifiable references are included.
 | Concept: Recipe collection and private recipe tag | 348-391 | `REC-12`, `REC-13`, `REC-10`, `REC-14` | - |
 | Concept: Recipe remix lineage | 392-439 | `REC-14` | `DEC-018` |
 | Concept: Recipe ingredient line | 440-500 | `FND-06`, `REC-08` | - |
-| Concept: Recipe ingredient catalogue match | 501-557 | `NUT-12`, `REC-07`, `NUT-03` | `DEC-001` |
-| Concept: Recipe instruction section | 558-578 | - | - |
-| Concept: Recipe instruction step | 579-608 | - | - |
-| Concept: Ingredient | 609-650 | - | - |
-| Concept: Shared catalogue item and version | 651-708 | `NUT-01`, `FND-06`, `NUT-05`, `NUT-02`, `NUT-03` | - |
-| Concept: Catalogue package and serving structure | 709-761 | `FND-06`, `NUT-06` | - |
-| Concept: Catalogue nutrition observation and normalized fact | 762-838 | `NUT-05`, `FND-06`, `NUT-04` | `DEC-003`, `DEC-004` |
-| Concept: Shared barcode import and reuse | 839-889 | `NUT-06`, `NUT-03`, `NUT-02`, `NUT-04` | - |
-| Concept: Legacy ingredient catalogue mapping | 890-956 | `NUT-02`, `NUT-03`, `NUT-08`, `NUT-09` | `DEC-011` |
-| Concept: Pending manual catalogue submission | 957-1003 | `NUT-04`, `NUT-05`, `NUT-03` | - |
-| Concept: Measurement unit | 1004-1032 | `FND-06` | - |
-| Concept: Nutrient definition | 1033-1051 | - | `DEC-003`, `DEC-004` |
-| Concept: Nutrition dataset | 1052-1090 | `STB-04`, `STB-06` | `DEC-004` |
-| Concept: Barcode and OpenFoodFacts product data | 1091-1110 | `STB-08` | - |
-| Current relationships | 1111-1150 | - | - |
-| Current rules and constraints | 1151-1255 | `FND-06`, `STB-07` | `DEC-003`, `DEC-004` |
-| Unclear or inconsistent concepts | 1256-1257 | - | - |
-| Concept: Meaning of ingredient | 1258-1264 | - | - |
-| Concept: Meaning of quantity | 1265-1277 | - | - |
-| Concept: Serving terminology | 1278-1289 | - | - |
-| Concept: Food identity and barcode uniqueness | 1290-1296 | - | - |
-| Concept: Nutrition provenance and accuracy | 1297-1308 | - | - |
-| Concept: Nutrition schema and units | 1309-1326 | `STB-04`, `FND-06`, `STB-05` | `DEC-003` |
-| Concept: Keywords and categories | 1327-1334 | - | - |
-| Concept: Original user input | 1335-1347 | - | - |
-| Concept: Public recipe metadata | 1348-1376 | - | - |
-| Concepts not yet represented | 1377-1388 | - | - |
-| Concept: Recipe imports | 1389-1467 | `REC-15`, `REC-16`, `REC-04`, `REC-05` | `DEC-006`, `DEC-005`, `DEC-007` |
-| Questions requiring owner input | 1468-1485 | - | - |
-| NUT-09 catalogue moderation records | 1486-1520 | `NUT-09`, `FND-05` | `DEC-011` |
-| NUT-10 catalogue correction proposal | 1521-1544 | `NUT-10` | - |
+| Concept: Recipe ingredient catalogue match | 501-570 | `NUT-12`, `NUT-13`, `REC-07`, `NUT-03` | `DEC-001` |
+| Concept: Recipe instruction section | 571-591 | - | - |
+| Concept: Recipe instruction step | 592-621 | - | - |
+| Concept: Ingredient | 622-663 | - | - |
+| Concept: Shared catalogue item and version | 664-721 | `NUT-01`, `FND-06`, `NUT-05`, `NUT-02`, `NUT-03` | - |
+| Concept: Catalogue package and serving structure | 722-774 | `FND-06`, `NUT-06` | - |
+| Concept: Catalogue nutrition observation and normalized fact | 775-851 | `NUT-05`, `FND-06`, `NUT-04` | `DEC-003`, `DEC-004` |
+| Concept: Shared barcode import and reuse | 852-902 | `NUT-06`, `NUT-03`, `NUT-02`, `NUT-04` | - |
+| Concept: Legacy ingredient catalogue mapping | 903-969 | `NUT-02`, `NUT-03`, `NUT-08`, `NUT-09` | `DEC-011` |
+| Concept: Pending manual catalogue submission | 970-1016 | `NUT-04`, `NUT-05`, `NUT-03` | - |
+| Concept: Measurement unit | 1017-1045 | `FND-06` | - |
+| Concept: Nutrient definition | 1046-1064 | - | `DEC-003`, `DEC-004` |
+| Concept: Nutrition dataset | 1065-1103 | `STB-04`, `STB-06` | `DEC-004` |
+| Concept: Barcode and OpenFoodFacts product data | 1104-1123 | `STB-08` | - |
+| Current relationships | 1124-1163 | - | - |
+| Current rules and constraints | 1164-1268 | `FND-06`, `STB-07` | `DEC-003`, `DEC-004` |
+| Unclear or inconsistent concepts | 1269-1270 | - | - |
+| Concept: Meaning of ingredient | 1271-1277 | - | - |
+| Concept: Meaning of quantity | 1278-1290 | - | - |
+| Concept: Serving terminology | 1291-1302 | - | - |
+| Concept: Food identity and barcode uniqueness | 1303-1309 | - | - |
+| Concept: Nutrition provenance and accuracy | 1310-1321 | - | - |
+| Concept: Nutrition schema and units | 1322-1339 | `STB-04`, `FND-06`, `STB-05` | `DEC-003` |
+| Concept: Keywords and categories | 1340-1347 | - | - |
+| Concept: Original user input | 1348-1360 | - | - |
+| Concept: Public recipe metadata | 1361-1389 | - | - |
+| Concepts not yet represented | 1390-1401 | - | - |
+| Concept: Recipe imports | 1402-1480 | `REC-15`, `REC-16`, `REC-04`, `REC-05` | `DEC-006`, `DEC-005`, `DEC-007` |
+| Questions requiring owner input | 1481-1498 | - | - |
+| NUT-09 catalogue moderation records | 1499-1533 | `NUT-09`, `FND-05` | `DEC-011` |
+| NUT-10 catalogue correction proposal | 1534-1557 | `NUT-10` | - |

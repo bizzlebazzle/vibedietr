@@ -18,7 +18,39 @@ final class RecipeIngredientMatchManager
     public function __construct(
         private readonly CatalogueReadQuery $catalogue,
         private readonly RecipeIngredientMatchThresholdPolicy $thresholds,
+        private readonly RecipeIngredientCandidateRanker $ranker,
     ) {}
+
+    /** @param iterable<RecipeIngredientMatchCandidateScore> $candidates */
+    public function selectHighestRankedAutomatically(
+        int $recipeId,
+        int $lineId,
+        iterable $candidates,
+        User $actor,
+    ): ?RecipeIngredientLineMatch {
+        $candidates = is_array($candidates) ? array_values($candidates) : iterator_to_array($candidates, false);
+
+        return DB::transaction(function () use ($recipeId, $lineId, $candidates, $actor): ?RecipeIngredientLineMatch {
+            $recipe = Recipe::query()->lockForUpdate()->findOrFail($recipeId);
+            Gate::forUser($actor)->authorize('update', $recipe);
+            $recipe->ingredientLines()->lockForUpdate()->findOrFail($lineId);
+            $ranking = $this->ranker->rank($actor, $candidates, lock: true);
+            $candidate = $ranking->selectedCandidate;
+
+            if ($candidate === null) {
+                return null;
+            }
+
+            return $this->selectAutomatically(
+                $recipeId,
+                $lineId,
+                $candidate->catalogueItemId,
+                $candidate->catalogueVersionId,
+                $candidate->candidateScore,
+                $actor,
+            );
+        }, 3);
+    }
 
     public function select(int $recipeId, int $lineId, int $catalogueItemId, string $catalogueVersionId, User $actor): RecipeIngredientLineMatch
     {

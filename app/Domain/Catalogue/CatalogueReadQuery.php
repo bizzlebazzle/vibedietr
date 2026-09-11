@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 
 final class CatalogueReadQuery
 {
@@ -81,6 +82,29 @@ final class CatalogueReadQuery
         $item = $query->first();
 
         return $item?->currentVersion;
+    }
+
+    /**
+     * @param  list<int>  $itemIds
+     * @return Collection<int, CatalogueItem>
+     */
+    public function eligibleAutomaticItems(User $user, array $itemIds, bool $lock = false): Collection
+    {
+        if ($itemIds === []) {
+            return new Collection;
+        }
+
+        $query = $this->selectableQuery($user)
+            ->where('catalogue_items.status', CatalogueItemStatus::Approved)
+            ->whereNotNull('catalogue_items.current_catalogue_item_version_id')
+            ->whereIn('catalogue_items.id', $itemIds)
+            ->orderBy('catalogue_items.id');
+
+        if ($lock) {
+            $query->lockForUpdate();
+        }
+
+        return $query->get();
     }
 
     public function project(CatalogueItem $item): CatalogueItemReadModel
