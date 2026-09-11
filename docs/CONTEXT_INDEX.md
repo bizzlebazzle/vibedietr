@@ -63,8 +63,8 @@ Only explicit, machine-verifiable references are included.
 | `NUT-09` - Add catalogue moderation queue and decisions | 4. Nutrition and food matching | Complete (2026-09-09) | `NUT-08`, `FND-04`, `FND-05`, `FND-14`, `DEC-011` | `NUT-10`, `NUT-11` | `DEC-009` (Constrained), `DEC-010` (Constrained), `DEC-011` (Constrained), `DEC-013` (Constrained) | Legacy ingredient catalogue mapping (line 878), NUT-09 catalogue moderation records (line 1474) |
 | `NUT-10` - Add catalogue correction proposals | 4. Nutrition and food matching | Complete (2026-09-09) | `NUT-09` | `NUT-18` | `DEC-009` (Constrained), `DEC-010` (Constrained), `DEC-013` (Constrained) | NUT-10 catalogue correction proposal (line 1509) |
 | `NUT-11` - Stage OpenFoodFacts refreshes for moderation | 4. Nutrition and food matching | Complete (2026-09-10) | `NUT-06`, `NUT-09`, `FND-09`, `DEP-04`, `DEP-05` | `NUT-18` | `DEC-009` (Constrained), `DEC-010` (Constrained), `DEC-013` (Constrained) | - |
-| `NUT-12` - Persist automatic match evidence | 4. Nutrition and food matching | Not recorded | `REC-02`, `NUT-07`, `DEC-001` | `NUT-13`, `NUT-15` | `DEC-001` (Blocked) | - |
-| `NUT-13` - Implement deterministic catalogue candidate ranking | 4. Nutrition and food matching | Not recorded | `NUT-12`, `DEC-001` | `NUT-16` | `DEC-001` (Blocked) | - |
+| `NUT-12` - Persist automatic match evidence | 4. Nutrition and food matching | Not recorded | `REC-02`, `NUT-07`, `DEC-001` | `NUT-13`, `NUT-15` | `DEC-001` (Unblocked) | - |
+| `NUT-13` - Implement deterministic catalogue candidate ranking | 4. Nutrition and food matching | Not recorded | `NUT-12`, `DEC-001` | `NUT-16` | `DEC-001` (Unblocked) | - |
 | `NUT-14` - Add reliable quantity conversion for calculations | 4. Nutrition and food matching | Not recorded | `FND-06`, `NUT-07` | `NUT-15` | `DEC-017` (Constrained) | - |
 | `NUT-15` - Calculate recipe nutrition estimates | 4. Nutrition and food matching | Not recorded | `REC-05`, `NUT-05`, `NUT-12`, `NUT-14` | `NUT-16`, `NUT-17`, `PLAN-03` | `DEC-001` (Constrained), `DEC-003` (Constrained) | - |
 | `NUT-16` - Show estimate completeness and excluded lines | 4. Nutrition and food matching | Not recorded | `NUT-13`, `NUT-15` | `UX-04`, `UX-06` | `DEC-001` (Constrained), `DEC-002` (Constrained), `DEC-004` (Constrained) | - |
@@ -104,7 +104,7 @@ Only explicit, machine-verifiable references are included.
 
 | Decision | Status | Roadmap relationships | Domain-model sections |
 | --- | --- | --- | --- |
-| `DEC-001` - Food-matching confidence thresholds | Research required | `NUT-07` (Related), `NUT-12` (Blocked), `NUT-13` (Blocked), `NUT-15` (Constrained), `NUT-16` (Constrained), `UX-04` (Constrained) | - |
+| `DEC-001` - Food-matching confidence thresholds | Decided | `NUT-07` (Related), `NUT-12` (Unblocked), `NUT-13` (Unblocked), `NUT-15` (Constrained), `NUT-16` (Constrained), `UX-04` (Constrained) | - |
 | `DEC-002` - Food-match review-warning treatment | Owner input required | `NUT-16` (Constrained), `UX-02` (Related), `UX-04` (Blocked) | - |
 | `DEC-003` - Nutrient storage precision | Decided | `FND-06` (Unblocked), `STB-04` (Constrained), `STB-06` (Unblocked), `NUT-05` (Unblocked), `NUT-15` (Constrained), `NUT-17` (Constrained) | Catalogue nutrition observation and normalized fact (line 750), Nutrient definition (line 1021), Current rules and constraints (line 1139), Nutrition schema and units (line 1297) |
 | `DEC-004` - Nutrient display precision | Decided | `FND-06` (Unblocked), `STB-06` (Unblocked), `NUT-05` (Related), `NUT-16` (Constrained), `PLAN-12` (Constrained), `UX-04` (Constrained) | Catalogue nutrition observation and normalized fact (line 750), Nutrient definition (line 1021), Nutrition dataset (line 1040), Current rules and constraints (line 1139) |

@@ -31,7 +31,7 @@ Backlog relationships mean:
 
 | ID | Title | Status | Owner |
 | --- | --- | --- | --- |
-| DEC-001 | Food-matching confidence thresholds | Research required | Technical investigation |
+| DEC-001 | Food-matching confidence thresholds | Decided | Technical investigation |
 | DEC-002 | Food-match review-warning treatment | Owner input required | Product owner |
 | DEC-003 | Nutrient storage precision | Decided | Product owner |
 | DEC-004 | Nutrient display precision | Decided | Product owner |
@@ -58,7 +58,7 @@ Backlog relationships mean:
 - **Why it matters:** The thresholds determine whether a recipe line is matched
   automatically, selected but flagged for review, or left unmatched, which in
   turn affects estimate completeness and user trust.
-- **Status:** Research required.
+- **Status:** Decided.
 - **Owner:** Technical investigation.
 - **Alternatives:** Fixed global thresholds; thresholds calibrated by matcher
   or catalogue version; thresholds that also vary by evidence or food class.
@@ -68,13 +68,75 @@ Backlog relationships mean:
   selected but reviewable, and sub-threshold candidates remain unmatched. The
   creator can replace an automatic match, and match evidence and provenance are
   retained.
-- **Backlog relationships:** `Blocked`: NUT-12, NUT-13. `Constrained`: NUT-15,
-  NUT-16, UX-04. `Related`: NUT-07.
+- **Backlog relationships:** Resolution unblocks NUT-12 and NUT-13 and removes
+  DEC-001 as their open-decision dependency. The recorded behavior constrains
+  NUT-15, NUT-16, and UX-04. `Related`: NUT-07.
 - **Resolution condition:** Evaluate the intended ranking approach against
   representative recipe lines and catalogue candidates, document boundary
   outcomes and error trade-offs, then record approved threshold values and a
   versioning rule.
-- **Final decision and rationale:** Unresolved.
+- **Final decision and rationale:** A match score is a calibrated probability
+  from `0.0000` to `1.0000`, where larger values mean stronger evidence that the
+  recipe line and catalogue candidate represent the same food. Comparisons use
+  the unrounded stored score. The fixed global minimum selectable score is
+  `0.9500`, inclusive, and the fixed global high-confidence score is `0.9900`,
+  inclusive.
+
+  The unique highest-scoring eligible candidate is selected as `reviewable`
+  from `0.9500` up to but excluding `0.9900`. At `0.9900` or above it is
+  selected as `high` and may be accepted without interrupting the creator. A
+  score below `0.9500` remains unmatched. A qualifying top-score tie between
+  distinct catalogue items also remains unmatched: deterministic presentation
+  order may expose the tied candidates for review, but must not manufacture a
+  winner. The initial policy has no further confidence bands. `Unmatched` is an
+  outcome represented by no selection, not a confidence band.
+
+  These boundaries apply to approved, accessible candidates after the matcher
+  has applied its versioned eligibility and hard-conflict rules. They do not
+  weaken the requirements to retain score, candidate evidence, confidence,
+  review state, threshold-policy version, matcher provenance, and the selected
+  catalogue version. A reviewable selection remains selected and supplies the
+  default estimate until its creator confirms, replaces, or clears it. A high
+  score is an attention signal, not verification, and the creator may replace
+  any automatic selection.
+
+  The policy deliberately prioritizes precision over coverage because an
+  incorrect selection can silently supply the wrong nutrition estimate to
+  every viewer, whereas an unmatched line creates an identifiable completeness
+  gap with a correction path. Each matcher-policy version must demonstrate at
+  least 95 percent observed precision at the selectable boundary and at least
+  99 percent observed precision at the high-confidence boundary on labelled,
+  representative recipe-line and candidate data. A nominally calibrated score
+  is insufficient on its own. Evaluation must inspect false-positive and
+  false-negative examples around both boundaries and relevant slices such as
+  generic and branded foods, exact names, aliases, spelling variants,
+  preparation qualifiers, and hard attribute conflicts. Known systematic
+  failures may block release even when aggregate precision passes. This follows
+  the labelled threshold-selection approach described by the [Splink
+  evaluation guidance](https://moj-analytical-services.github.io/splink/topic_guides/evaluation/edge_overview.html).
+
+  Repository evidence supports these error boundaries but not separate
+  thresholds by evidence or food class. Exact normalized names and compatible
+  approved aliases are strong duplicate evidence, while the same name with a
+  conflicting brand is not. `Mushroom flakes` versus `Mushroom powder` is only
+  a fuzzy suggestion, and existing matching examples such as `dark brown
+  sugar` against `Brown sugar` and `Dark muscovado sugar` demonstrate why a
+  plausible result is not automatically a unique winner. Current catalogue
+  search performs substring filtering followed by recency and identifier
+  ordering; it is candidate-discovery evidence, not a calibrated matcher.
+
+  The initial threshold-policy version is `1`. The score calibration,
+  thresholds, normalization, evidence weighting, hard-exclusion rules, and tie
+  handling form one versioned policy. Changing any of them requires a new
+  threshold-policy version and renewed boundary calibration; prior match
+  evidence keeps the version under which it was produced. Ordinary catalogue
+  additions and catalogue-item version changes do not by themselves increment
+  the threshold-policy version, because the selected catalogue version is
+  recorded separately. Material catalogue drift must trigger benchmark
+  reevaluation and a new policy version when calibration or matching semantics
+  need to change. The launch policy therefore uses one global threshold pair
+  calibrated per matcher-policy version, not thresholds varying by catalogue
+  version, evidence type, or food class.
 
 ## DEC-002 — Food-match review-warning treatment
 
