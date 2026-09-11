@@ -58,6 +58,9 @@ final class RecipeVersionContent
                 'catalogue_match' => $line->catalogueMatch === null ? null : [
                     'catalogue_item_id' => $line->catalogueMatch->catalogueItemVersion->catalogue_item_id,
                     'catalogue_item_version_id' => $line->catalogueMatch->catalogue_item_version_id,
+                    'candidate_score' => $line->catalogueMatch->candidate_score,
+                    'confidence_band' => $line->catalogueMatch->getRawOriginal('confidence_band'),
+                    'threshold_version' => $line->catalogueMatch->threshold_version,
                     'provenance' => $line->catalogueMatch->getRawOriginal('provenance'),
                     'review_state' => $line->catalogueMatch->getRawOriginal('review_state'),
                 ],
@@ -114,10 +117,16 @@ final class RecipeVersionContent
                     }
                 }
                 $match = new RecipeIngredientLineMatch;
+                $provenance = RecipeIngredientMatchProvenance::from((string) $matchState['provenance']);
                 $match->forceFill([
                     'catalogue_item_version_id' => (string) $matchState['catalogue_item_version_id'],
-                    'selected_by_user_id' => $recipe->user_id,
-                    'provenance' => RecipeIngredientMatchProvenance::from((string) $matchState['provenance']),
+                    'candidate_score' => $matchState['candidate_score'] ?? null,
+                    'confidence_band' => $matchState['confidence_band'] ?? null,
+                    'threshold_version' => $matchState['threshold_version'] ?? null,
+                    'selected_by_user_id' => $provenance === RecipeIngredientMatchProvenance::AutomaticallySelected
+                        ? null
+                        : $recipe->user_id,
+                    'provenance' => $provenance,
                     'review_state' => RecipeIngredientMatchReviewState::from((string) $matchState['review_state']),
                 ]);
                 $match->ingredientLine()->associate($line);

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Domain\Recipes\RecipeIngredientMatchConfidenceBand;
 use App\Domain\Recipes\RecipeIngredientMatchProvenance;
 use App\Domain\Recipes\RecipeIngredientMatchReviewState;
 use Database\Factories\RecipeIngredientLineMatchFactory;
@@ -27,6 +28,9 @@ class RecipeIngredientLineMatch extends Model
     protected function casts(): array
     {
         return [
+            'candidate_score' => 'decimal:18',
+            'confidence_band' => RecipeIngredientMatchConfidenceBand::class,
+            'threshold_version' => 'integer',
             'provenance' => RecipeIngredientMatchProvenance::class,
             'review_state' => RecipeIngredientMatchReviewState::class,
         ];

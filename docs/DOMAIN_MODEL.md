@@ -511,23 +511,34 @@ unrepresentable. It also stores a nullable `selected_by_user_id`, bounded
 match provenance and review state, and timestamps. User deletion nulls the
 actor reference rather than deleting recipe content.
 
-For NUT-07, `RecipeIngredientMatchProvenance` has
-`manually_selected_by_creator`. Explicit selection is represented as
-`RecipeIngredientMatchReviewState::Confirmed`; `NeedsReview` is reserved for
-later automatic or lifecycle review work. These values describe how the
-recipe line was linked and are distinct from catalogue-field provenance.
-There is no match score, confidence band, threshold version, candidate
-evidence, or automatic selection in NUT-07.
+NUT-12 adds nullable `candidate_score`, `confidence_band`, and
+`threshold_version` fields. Automatic selections use
+`automatically_selected`, have no selecting user, and retain all three
+evidence fields. DEC-001 threshold-policy version `1` selects scores from
+`0.9500` through below `0.9900` as `reviewable` with `needs_review`, and
+scores from `0.9900` through `1.0000` as `high` with `confirmed`. Scores
+below `0.9500` create no match. Database constraints keep automatic evidence
+complete and within its band while requiring manual and owner-confirmed
+replacement matches to have confirmed review state and no automatic evidence.
+The score is stored as an exact scale-18 decimal and threshold comparisons use
+that stored value.
+
+Manual selection uses `manually_selected_by_creator`; confirmation of a
+moderation replacement uses `owner_confirmed_replacement`. Both retain the
+creator actor when available, remain distinguishable from automatic matches,
+and atomically replace and clear any prior automatic evidence. These match
+provenance values are distinct from catalogue-field provenance.
 
 Only the recipe owner may attach, replace, or clear a match while the recipe is
 an editable draft or has an active REC-07 revision. The transaction locks and
 reauthorizes the recipe and line, then independently reloads the requested
-catalogue identity/version through the selectable NUT-03 query. Approved items
-and the actor's own pending manual item are selectable when they have a current
-version. Search and selection exclude all other pending records, rejected
-records, and versionless identities. Selection requires the submitted version
-to remain the exact current version; a stale result fails rather than switching
-versions. Once stored, the version reference remains pinned.
+catalogue identity/version through the selectable NUT-03 query. Manual
+selection permits approved items and the actor's own pending manual item when
+they have a current version; automatic selection permits approved items only.
+Search and selection exclude all other pending records, rejected records, and
+versionless identities. Selection requires the submitted version to remain the
+exact current version; a stale result fails rather than switching versions.
+Once stored, the version reference remains pinned.
 
 Match mutation never writes the line's `original_text`, quantity,
 `standard_unit`, `custom_unit`, `generic_wording`, notes, position, or
@@ -535,9 +546,10 @@ recipe relationship. Replace updates the one match entity and clear removes it.
 Ordinary line edits and ordering retain it. The draft fingerprint includes the
 complete match so concurrent changes reject stale aggregate saves.
 
-Recipe-version snapshots retain catalogue item/version identity, provenance,
-and review state. Restoring a revision recreates the current match for the same
-recipe owner. Public recipe projection deliberately omits this internal match
+Recipe-version snapshots retain catalogue item/version identity, score,
+confidence band, threshold version, provenance, and review state. Restoring a
+revision recreates the current match with its automatic/manual actor semantics.
+Public recipe projection deliberately omits this internal match
 object and its actor. Remixes continue to copy only the pre-existing allowlist
 of ingredient wording and structure and therefore do not copy matches.
 Existing recipe lines stay unmatched unless their creator explicitly selects a

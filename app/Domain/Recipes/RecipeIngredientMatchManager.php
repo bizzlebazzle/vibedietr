@@ -15,7 +15,10 @@ use Illuminate\Validation\ValidationException;
 
 final class RecipeIngredientMatchManager
 {
-    public function __construct(private readonly CatalogueReadQuery $catalogue) {}
+    public function __construct(
+        private readonly CatalogueReadQuery $catalogue,
+        private readonly RecipeIngredientMatchThresholdPolicy $thresholds,
+    ) {}
 
     public function select(int $recipeId, int $lineId, int $catalogueItemId, string $catalogueVersionId, User $actor): RecipeIngredientLineMatch
     {
@@ -34,9 +37,61 @@ final class RecipeIngredientMatchManager
             $match = $line->catalogueMatch()->lockForUpdate()->first() ?? new RecipeIngredientLineMatch;
             $match->forceFill([
                 'catalogue_item_version_id' => $version->getKey(),
+                'candidate_score' => null,
+                'confidence_band' => null,
+                'threshold_version' => null,
                 'selected_by_user_id' => $actor->getKey(),
                 'provenance' => RecipeIngredientMatchProvenance::ManuallySelectedByCreator,
                 'review_state' => RecipeIngredientMatchReviewState::Confirmed,
+            ]);
+            $match->ingredientLine()->associate($line);
+            $match->save();
+
+            return $match->fresh(['catalogueItemVersion.catalogueItem']);
+        }, 3);
+    }
+
+    public function selectAutomatically(
+        int $recipeId,
+        int $lineId,
+        int $catalogueItemId,
+        string $catalogueVersionId,
+        string|int $candidateScore,
+        User $actor,
+    ): ?RecipeIngredientLineMatch {
+        return DB::transaction(function () use ($recipeId, $lineId, $catalogueItemId, $catalogueVersionId, $candidateScore, $actor): ?RecipeIngredientLineMatch {
+            $recipe = Recipe::query()->lockForUpdate()->findOrFail($recipeId);
+            Gate::forUser($actor)->authorize('update', $recipe);
+            $line = $recipe->ingredientLines()->lockForUpdate()->findOrFail($lineId);
+            $evidence = $this->thresholds->evaluate($candidateScore);
+
+            if ($evidence === null) {
+                return null;
+            }
+
+            $version = $this->catalogue->findSelectableCurrentVersion(
+                $actor,
+                $catalogueItemId,
+                $catalogueVersionId,
+                lock: true,
+            );
+
+            if ($version === null
+                || $version->catalogueItem()->where('status', CatalogueItemStatus::Approved)->doesntExist()) {
+                throw ValidationException::withMessages([
+                    'catalogue_match' => 'That catalogue result is not eligible for automatic matching.',
+                ]);
+            }
+
+            $match = $line->catalogueMatch()->lockForUpdate()->first() ?? new RecipeIngredientLineMatch;
+            $match->forceFill([
+                'catalogue_item_version_id' => $version->getKey(),
+                'candidate_score' => $evidence->candidateScore,
+                'confidence_band' => $evidence->confidenceBand,
+                'threshold_version' => $evidence->thresholdVersion,
+                'selected_by_user_id' => null,
+                'provenance' => RecipeIngredientMatchProvenance::AutomaticallySelected,
+                'review_state' => $evidence->reviewState,
             ]);
             $match->ingredientLine()->associate($line);
             $match->save();
@@ -112,6 +167,9 @@ final class RecipeIngredientMatchManager
 
             $match->forceFill([
                 'catalogue_item_version_id' => $targetVersion->getKey(),
+                'candidate_score' => null,
+                'confidence_band' => null,
+                'threshold_version' => null,
                 'selected_by_user_id' => $actor->getKey(),
                 'provenance' => RecipeIngredientMatchProvenance::OwnerConfirmedReplacement,
                 'review_state' => RecipeIngredientMatchReviewState::Confirmed,

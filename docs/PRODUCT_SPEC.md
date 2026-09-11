@@ -249,9 +249,11 @@ collapsed into one ambiguous `quantity` or `recommended servings` value.
 - A candidate below the minimum threshold is not selected, leaving the line
   unmatched.
 - The recipe creator can easily replace any automatic match.
-- The exact thresholds and final warning treatment are implementation and
-  design decisions. An orange outline or tooltip is one possible treatment,
-  not a specification requirement.
+- DEC-001 sets the minimum selectable score at `0.9500` and high-confidence
+  score at `0.9900`, both inclusive, under threshold-policy version `1`.
+  The final warning treatment remains a design decision under DEC-002. An
+  orange outline or tooltip is one possible treatment, not a specification
+  requirement.
 
 The creator's selected match supplies the default estimate for all viewers.
 When adding the recipe to their own plan or diary, another user may substitute
