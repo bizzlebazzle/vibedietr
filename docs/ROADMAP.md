@@ -915,6 +915,8 @@ changes, it is deliberately split across multiple items.
 
 ### NUT-14 — P1 — Add reliable quantity conversion for calculations
 
+- **Status:** Complete (2026-09-11).
+
 - **Outcome:** Convert same-dimension units and explicitly approved food-
   dependent conversions while refusing unsupported guesses.
 - **Dependencies:** FND-06, NUT-07.
