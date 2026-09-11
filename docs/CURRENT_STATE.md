@@ -85,13 +85,18 @@ These are current implementation facts, not permission to invent the missing
 behavior. Use the task resolver and decision register before starting related
 work.
 
-- Recipe nutrition calculation remains unimplemented (NUT-15 through NUT-18).
-  NUT-14 provides calculation-safe same-dimension conversion and sourced
-  per-item/per-serving conversion only for approved, exact catalogue versions.
-  Results retain the version, source, reliability, and formula/source basis;
-  custom units, unsupported counts, missing or unapproved food data, missing
-  provenance, and invalid dimensions return explicit exclusions. No density,
-  serving, count-to-mass, or cross-dimension relationship is inferred.
+- NUT-15 stores policy-versioned whole-recipe and per-serving nutrition
+  estimates in each immutable recipe-version snapshot. Each supported nutrient
+  aggregates independently from structured quantities and the exact catalogue
+  versions pinned by recipe-line matches. Calculation traces retain source
+  quantities, normalized nutrient facts and policies, reliable food-conversion
+  evidence, contributions, and explicit exclusions. Decimal calculation keeps
+  guard precision until the persisted snapshot boundary; presentation uses the
+  shared display formatter without changing stored values. Custom units,
+  unsupported counts, missing or unapproved food conversion data, missing
+  provenance, invalid dimensions, and ambiguous duplicate nutrient bases are
+  never guessed. Completeness presentation, source precedence/overrides, and
+  claims remain assigned to NUT-16 through NUT-18.
 - Meal plans, consumption snapshots, targets, plan sharing, and plan
   comparisons are not represented (PLAN-01 through PLAN-12).
 - Product identity, primary navigation, broader responsive/accessibility work,

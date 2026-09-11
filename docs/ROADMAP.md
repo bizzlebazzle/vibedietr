@@ -932,6 +932,8 @@ changes, it is deliberately split across multiple items.
 
 ### NUT-15 — P1 — Calculate recipe nutrition estimates
 
+- **Status:** Complete (2026-09-11).
+
 - **Outcome:** Calculate versioned whole-recipe and per-serving nutrient
   estimates from structured lines, catalogue versions, quantities, and
   reliable conversions.

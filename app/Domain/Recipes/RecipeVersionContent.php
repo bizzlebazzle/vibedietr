@@ -4,6 +4,7 @@ namespace App\Domain\Recipes;
 
 use App\Domain\Catalogue\CatalogueCanonicalResolver;
 use App\Domain\Catalogue\CatalogueItemStatus;
+use App\Domain\Nutrition\RecipeNutritionEstimator;
 use App\Models\CatalogueItemVersion;
 use App\Models\Recipe;
 use App\Models\RecipeIngredientLine;
@@ -14,6 +15,8 @@ use Illuminate\Validation\ValidationException;
 
 final class RecipeVersionContent
 {
+    public function __construct(private readonly RecipeNutritionEstimator $nutritionEstimator) {}
+
     public function validateForPublication(Recipe $recipe): void
     {
         $errors = [];
@@ -75,6 +78,7 @@ final class RecipeVersionContent
                 'text' => $step->text,
                 'section_key' => $step->section_id === null ? null : 'section-'.$step->section_id,
             ])->values()->all(),
+            'nutrition_estimate' => $this->nutritionEstimator->estimate($recipe),
         ];
     }
 

@@ -11,6 +11,21 @@ the present architecture and capability index, then read only the relevant
 section here when deeper delivery history is useful. Product intent and
 decisions remain authoritative in `PRODUCT_SPEC.md` and `DECISIONS.md`.
 
+## Implemented recipe nutrition estimates
+
+NUT-15 calculates nutrition once at recipe finalization or revision publication
+and stores it with the immutable recipe-version snapshot. Whole-recipe and
+per-serving values are explicitly approximate estimates. Each supported
+nutrient aggregates independently, so one unavailable nutrient does not hide
+other calculable values.
+
+Every contribution retains its source recipe quantity, pinned catalogue
+version, normalized nutrient fact and policy, conversion result, and any
+reliable sourced food-conversion evidence. Unsupported or ambiguous inputs
+remain explicit exclusions and are never guessed. Decimal arithmetic retains
+guard precision through serving division, with display rounding left to the
+shared formatter.
+
 ## Application shape
 
 - Laravel 12 is the application framework. The Composer manifest requires PHP
