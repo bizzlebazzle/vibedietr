@@ -523,6 +523,19 @@ replacement matches to have confirmed review state and no automatic evidence.
 The score is stored as an exact scale-18 decimal and threshold comparisons use
 that stored value.
 
+NUT-13 accepts candidate scores produced by the versioned matcher policy; it
+does not recalculate or round those calibrated scores during ranking. Before
+ranking, candidates are restricted to accessible approved identities whose
+supplied version is still current. Eligible candidates are ordered by exact
+score descending, then catalogue identity and version identifiers ascending
+for stable presentation. Only a unique qualifying top score is selected. A
+qualifying tie between distinct identities, an empty eligible set, or a top
+score below `0.9500` produces no selection. The ranking result retains the
+ordered score evidence and an explicit no-selection reason, while a selection
+is persisted through the NUT-12 match boundary with its confidence, review
+state, threshold-policy version, automatic provenance, and pinned catalogue
+version.
+
 Manual selection uses `manually_selected_by_creator`; confirmation of a
 moderation replacement uses `owner_confirmed_replacement`. Both retain the
 creator actor when available, remain distinguishable from automatic matches,

@@ -899,6 +899,8 @@ changes, it is deliberately split across multiple items.
 
 ### NUT-13 — P1 — Implement deterministic catalogue candidate ranking
 
+- **Status:** Complete (2026-09-11).
+
 - **Outcome:** Rank approved catalogue matches for structured recipe lines and
   apply the recorded selection thresholds.
 - **Dependencies:** NUT-12, DEC-001.
