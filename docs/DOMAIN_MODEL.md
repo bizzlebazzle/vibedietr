@@ -1043,6 +1043,18 @@ resizing. Common values include `pinch`, `handful`, `bunch`, `sprig`, and
 and returns domain errors for cross-dimension, custom, and unrelated count
 conversion. It contains no food-density conversion.
 
+`CalculationQuantityConverter` is the nutrition-calculation boundary. It
+returns a converted exact decimal or a stable exclusion reason rather than
+coercing unsupported input to zero. It may use an exact catalogue version's
+per-item or per-serving amount as a food-dependent count conversion only when
+the parent catalogue item is approved and the relevant package or serving
+source is present. Successful food conversions retain the catalogue version,
+source, reliable status, and the direct or derived serving basis. Custom units,
+unrelated count labels, absent or unapproved food data, missing provenance, and
+invalid dimension combinations are excluded. Package item type remains
+descriptive and is never inferred to be a measurement conversion; mass/volume
+conversion remains unsupported without a future explicit sourced record.
+
 ### Nutrient definition
 
 `Nutrient` supplies stable identifiers for energy kcal/kJ, fat, saturated fat,

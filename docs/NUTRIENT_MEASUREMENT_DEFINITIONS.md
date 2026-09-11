@@ -50,10 +50,18 @@ to storage scale between operations, and retains DEC-003's division guard
 scale. Count identity is permitted; other count conversion and every custom or
 cross-dimension request returns a domain error.
 
-Mass-to-volume and volume-to-mass conversion are intentionally prohibited.
-Those conversions depend on the particular food's density, packing, shape, or
-edible portion and belong only in a future ingredient-specific service with
-reliable sourced data.
+`CalculationQuantityConverter` wraps this boundary for nutrition work and
+returns explicit exclusion reasons for unsupported input. It can use a matched
+catalogue version's sourced per-item or per-serving amount only when that
+version belongs to an approved catalogue item. The conversion result retains
+the exact catalogue version, source, reliable status, and the amount or serving
+derivation basis. Missing source provenance makes the conversion ineligible.
+
+No package description or unit's existence implies a conversion. Custom units,
+unrelated count units, and mass-to-volume or volume-to-mass requests remain
+unsupported without an explicit sourced food conversion. The application does
+not infer density, packing, shape, edible portion, serving equivalence, or
+count-to-mass relationships.
 
 ## Current migration status
 
