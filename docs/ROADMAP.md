@@ -883,6 +883,8 @@ changes, it is deliberately split across multiple items.
 
 ### NUT-12 — P1 — Persist automatic match evidence
 
+- **Status:** Complete (2026-09-11).
+
 - **Outcome:** Store candidate score, confidence band, threshold version,
   review state, chosen catalogue version, and manual/automatic provenance for
   each recipe line match.

@@ -85,8 +85,9 @@ These are current implementation facts, not permission to invent the missing
 behavior. Use the task resolver and decision register before starting related
 work.
 
-- Automatic match evidence/ranking and recipe nutrition calculation remain
-  unimplemented (NUT-12 through NUT-18). DEC-001 blocks NUT-12 and NUT-13.
+- Deterministic automatic match ranking and recipe nutrition calculation remain
+  unimplemented (NUT-13 through NUT-18). NUT-12 persists versioned automatic
+  match evidence using the resolved DEC-001 thresholds.
 - Meal plans, consumption snapshots, targets, plan sharing, and plan
   comparisons are not represented (PLAN-01 through PLAN-12).
 - Product identity, primary navigation, broader responsive/accessibility work,

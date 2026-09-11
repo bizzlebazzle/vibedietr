@@ -49,6 +49,9 @@ final class RecipeDraftFingerprint
                 'catalogue_match' => $line->catalogueMatch === null ? null : [
                     'id' => $line->catalogueMatch->getKey(),
                     'catalogue_item_version_id' => $line->catalogueMatch->catalogue_item_version_id,
+                    'candidate_score' => $line->catalogueMatch->candidate_score,
+                    'confidence_band' => $line->catalogueMatch->getRawOriginal('confidence_band'),
+                    'threshold_version' => $line->catalogueMatch->threshold_version,
                     'selected_by_user_id' => $line->catalogueMatch->selected_by_user_id,
                     'provenance' => $line->catalogueMatch->getRawOriginal('provenance'),
                     'review_state' => $line->catalogueMatch->getRawOriginal('review_state'),
