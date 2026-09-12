@@ -26,6 +26,18 @@ remain explicit exclusions and are never guessed. Decimal arithmetic retains
 guard precision through serving division, with display rounding left to the
 shared formatter.
 
+NUT-16 presents that immutable estimate on finalized recipe pages with explicit
+whole-recipe and per-serving estimate headings. All supported nutrient rows
+remain visible: stored zero values format numerically, missing values read
+`Not available`, and valid partial values remain present when other lines or
+nutrients are incomplete.
+
+Complete, partial, and unavailable states are derived from the stored NUT-15
+values, exclusions, and match-review state. Limitation details group existing
+exclusion reasons by original recipe line. Owners receive line-targeted links
+to the existing revision catalogue-match editor, while non-owners see the same
+estimate limitations without creator controls.
+
 ## Application shape
 
 - Laravel 12 is the application framework. The Composer manifest requires PHP

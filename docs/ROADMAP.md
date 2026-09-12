@@ -949,6 +949,8 @@ changes, it is deliberately split across multiple items.
 
 ### NUT-16 — P1 — Show estimate completeness and excluded lines
 
+- **Status:** Complete (2026-09-11).
+
 - **Outcome:** Present useful partial estimates with clear limitations and a
   path to review unmatched, low-confidence, or unconvertible lines.
 - **Dependencies:** NUT-13, NUT-15.

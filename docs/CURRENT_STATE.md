@@ -95,8 +95,18 @@ work.
   shared display formatter without changing stored values. Custom units,
   unsupported counts, missing or unapproved food conversion data, missing
   provenance, invalid dimensions, and ambiguous duplicate nutrient bases are
-  never guessed. Completeness presentation, source precedence/overrides, and
-  claims remain assigned to NUT-16 through NUT-18.
+  never guessed.
+- NUT-16 presents finalized whole-recipe and per-serving values as estimates
+  with complete, partial, or unavailable status. Every supported nutrient stays
+  visible; unavailable values say so rather than appearing as zero, while
+  genuine calculated zero values retain numeric display. Partial estimates keep
+  supported values and identify each affected original ingredient line,
+  including unmatched lines, conversion exclusions, nutrient gaps, and
+  review-needed automatic matches. Owners can open the corresponding line in
+  the existing recipe revision and catalogue-match editor; readers see the
+  limitation without edit controls. Source precedence, overrides,
+  recalculation, and nutrition claims remain assigned to NUT-17 and NUT-18.
+  DEC-002 remains unresolved for broader review-warning UX under UX-04.
 - Meal plans, consumption snapshots, targets, plan sharing, and plan
   comparisons are not represented (PLAN-01 through PLAN-12).
 - Product identity, primary navigation, broader responsive/accessibility work,

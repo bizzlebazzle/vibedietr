@@ -72,7 +72,7 @@
                 <button type="button" wire:click="addIngredient" class="rounded border px-3 py-2 text-sm dark:border-slate-600">Add ingredient line</button>
             </div>
             @forelse ($ingredients as $index => $line)
-                <fieldset wire:key="{{ $line['key'] }}" class="space-y-4 rounded border border-gray-200 p-4 dark:border-slate-700">
+                <fieldset id="ingredient-line-{{ $index + 1 }}" wire:key="{{ $line['key'] }}" class="scroll-mt-4 space-y-4 rounded border border-gray-200 p-4 dark:border-slate-700">
                     <legend class="px-1 font-medium text-gray-900 dark:text-slate-100">Ingredient {{ $index + 1 }}</legend>
                     <div>
                         <x-input-label for="ingredient-{{ $line['key'] }}-text" value="Original ingredient line" />

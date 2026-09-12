@@ -67,7 +67,7 @@ Only explicit, machine-verifiable references are included.
 | `NUT-13` - Implement deterministic catalogue candidate ranking | 4. Nutrition and food matching | Complete (2026-09-11) | `NUT-12`, `DEC-001` | `NUT-16` | `DEC-001` (Unblocked) | Recipe ingredient catalogue match (line 501) |
 | `NUT-14` - Add reliable quantity conversion for calculations | 4. Nutrition and food matching | Complete (2026-09-11) | `FND-06`, `NUT-07` | `NUT-15` | `DEC-017` (Constrained) | - |
 | `NUT-15` - Calculate recipe nutrition estimates | 4. Nutrition and food matching | Complete (2026-09-11) | `REC-05`, `NUT-05`, `NUT-12`, `NUT-14` | `NUT-16`, `NUT-17`, `PLAN-03` | `DEC-001` (Constrained), `DEC-003` (Constrained) | - |
-| `NUT-16` - Show estimate completeness and excluded lines | 4. Nutrition and food matching | Not recorded | `NUT-13`, `NUT-15` | `UX-04`, `UX-06` | `DEC-001` (Constrained), `DEC-002` (Constrained), `DEC-004` (Constrained) | - |
+| `NUT-16` - Show estimate completeness and excluded lines | 4. Nutrition and food matching | Complete (2026-09-11) | `NUT-13`, `NUT-15` | `UX-04`, `UX-06` | `DEC-001` (Constrained), `DEC-002` (Constrained), `DEC-004` (Constrained) | - |
 | `NUT-17` - Add recipe nutrition source precedence and overrides | 4. Nutrition and food matching | Not recorded | `NUT-15`, `FND-05`, `REC-15` | `NUT-18`, `PLAN-06` | `DEC-003` (Constrained) | - |
 | `NUT-18` - Recalculate affected recipes after catalogue approval | 4. Nutrition and food matching | Not recorded | `NUT-10` or `NUT-11`, `NUT-17`, `FND-09`, `DEP-04`, `DEP-05` | - | - | - |
 | `PLAN-01` - Add owned meal-plan identity and plan types | 5. Meal and diet planning | Not recorded | `FND-03`, `REC-05` | `PLAN-02`, `PLAN-10`, `UX-01` | - | - |
