@@ -38,18 +38,67 @@
                         </h4>
                         <div class="mt-3 space-y-3">
                             @foreach ($day->slots as $planSlot)
-                                <div class="flex items-center gap-3">
-                                    <span class="w-8 text-sm text-gray-500 dark:text-slate-400">{{ $planSlot->position + 1 }}.</span>
-                                    @if ($planSlot->standard_key?->hasFixedName())
-                                        <span class="text-gray-800 dark:text-slate-200">{{ $planSlot->name }}</span>
-                                    @else
-                                        <form method="POST" action="{{ route('meal-plans.days.slots.update', [$mealPlan, $day, $planSlot]) }}" class="flex flex-1 gap-2">
+                                <div class="rounded-md border border-gray-100 p-3 dark:border-slate-800">
+                                    <div class="flex items-center gap-3">
+                                        <span class="w-8 text-sm text-gray-500 dark:text-slate-400">{{ $planSlot->position + 1 }}.</span>
+                                        @if ($planSlot->standard_key?->hasFixedName())
+                                            <span class="text-gray-800 dark:text-slate-200">{{ $planSlot->name }}</span>
+                                        @else
+                                            <form method="POST" action="{{ route('meal-plans.days.slots.update', [$mealPlan, $day, $planSlot]) }}" class="flex flex-1 gap-2">
+                                                @csrf
+                                                @method('PATCH')
+                                                <x-text-input name="name" :value="$planSlot->name" required maxlength="255" class="flex-1" />
+                                                <x-primary-button>Rename</x-primary-button>
+                                            </form>
+                                        @endif
+                                    </div>
+
+                                    <div class="ml-11 mt-3 space-y-3">
+                                        @foreach ($planSlot->recipeEntries as $entry)
+                                            <div class="rounded bg-gray-50 p-3 text-sm text-gray-800 dark:bg-slate-800 dark:text-slate-200">
+                                                <p class="font-medium">{{ $entry->recipe_snapshot['title'] ?? 'Recipe snapshot' }}</p>
+                                                <p>{{ $entry->planned_servings }} planned servings · version {{ $entry->recipe_version_number }}</p>
+                                                <div class="mt-2 flex flex-wrap gap-2">
+                                                    <form method="POST" action="{{ route('meal-plans.recipe-entries.update', [$mealPlan, $entry]) }}" class="flex items-end gap-2">
+                                                        @csrf
+                                                        @method('PATCH')
+                                                        <label>
+                                                            <span class="block text-xs">Move to</span>
+                                                            <select name="target_slot_id" class="mt-1 rounded-md border-gray-300 bg-white text-gray-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100">
+                                                                @foreach ($mealPlan->days as $targetDay)
+                                                                    @foreach ($targetDay->slots as $targetSlot)
+                                                                        <option value="{{ $targetSlot->id }}" @selected($targetSlot->is($planSlot))>
+                                                                            {{ $targetDay->date?->toDateString() ?? 'Day '.($targetDay->day_index + 1) }} — {{ $targetSlot->name }}
+                                                                        </option>
+                                                                    @endforeach
+                                                                @endforeach
+                                                            </select>
+                                                        </label>
+                                                        <x-primary-button>Move</x-primary-button>
+                                                    </form>
+                                                    <form method="POST" action="{{ route('meal-plans.recipe-entries.destroy', [$mealPlan, $entry]) }}">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <x-danger-button>Remove</x-danger-button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        @endforeach
+
+                                        <form method="POST" action="{{ route('meal-plans.recipe-entries.store', $mealPlan) }}" class="flex flex-wrap items-end gap-2">
                                             @csrf
-                                            @method('PATCH')
-                                            <x-text-input name="name" :value="$planSlot->name" required maxlength="255" class="flex-1" />
-                                            <x-primary-button>Rename</x-primary-button>
+                                            <input type="hidden" name="slot_id" value="{{ $planSlot->id }}">
+                                            <label class="text-sm text-gray-700 dark:text-slate-300">
+                                                Recipe ID
+                                                <x-text-input name="recipe_id" type="number" min="1" required class="mt-1 block w-32" />
+                                            </label>
+                                            <label class="text-sm text-gray-700 dark:text-slate-300">
+                                                Planned servings
+                                                <x-text-input name="planned_servings" type="number" min="0.01" max="99999999.99" step="0.01" required class="mt-1 block w-36" />
+                                            </label>
+                                            <x-primary-button>Add recipe</x-primary-button>
                                         </form>
-                                    @endif
+                                    </div>
                                 </div>
                             @endforeach
                         </div>

@@ -1167,6 +1167,7 @@ User 1 ---- owns ---- 0..* Ingredient
                                   +-- reusable: non-negative day index
                                   +-- dated: calendar date within plan range
                                   +-- contains ordered MealPlanSlot records
+                                        +-- contains 0..* MealPlanRecipeEntry
 ```
 
 An audit actor identity optionally references one user with `ON DELETE SET NULL`.
@@ -1200,6 +1201,11 @@ Database-enforced rules:
   are unique within the day; custom slots have no standard identity. Drinks and
   Snacks names are database-fixed. Deleting a plan cascades to its days and
   slots.
+- Every recipe plan entry belongs to one slot and stores a positive
+  two-decimal planned serving amount. Source recipe and recipe-version
+  identities are indexed historical references without cascading foreign keys;
+  the entry-owned recipe and nutrition snapshot JSON remains when a source is
+  later unavailable. Deleting a slot cascades to its entries.
 - Every recipe ingredient line belongs to an existing recipe, and deleting the
   recipe deletes its lines.
 - Original recipe ingredient text and a non-negative recipe-local position are
@@ -1250,6 +1256,27 @@ custom slot names are owner-renameable; Drinks and Snacks retain their fixed
 names. Owners may append custom slots and reorder the complete slot list with
 contiguous non-negative positions. The same rules apply to reusable and dated
 plans.
+
+PLAN-03 recipe entries may be added to any slot in an owner-controlled plan.
+The selected recipe must be finalized and either public or owned by that plan
+owner; a draft or another owner's private recipe is unavailable through this
+boundary. Creation locks the slot, recipe, and current immutable version,
+copies the complete recipe-version snapshot, and records the source recipe ID,
+version ULID, version number, and positive planned serving amount atomically.
+It also copies the currently effective NUT-17 source, per-serving values and
+provenance together with the current full ingredient-estimate trace. This
+retains the NUT-15 policy version, pinned catalogue-version dependencies,
+contributions, and exclusions used at planning time.
+
+Entry-owned recipe/version and nutrition fields are immutable after creation.
+Only slot placement and planned servings are mutable fields; the current
+PLAN-03 workflow moves an entry only between slots in the same plan and removes
+it as an owner action. Publishing another recipe version, changing an override,
+or completing a later ingredient recalculation never changes existing entry
+snapshots. Source identifiers deliberately do not grant live recipe access.
+Snapshot creation emits the minimized existing plan.snapshot_recorded
+product-history event without copying plan, recipe, or nutrition content into
+the audit store.
 
 Application authorization also requires every membership target to have the
 same authenticated owner as its collection or private tag.

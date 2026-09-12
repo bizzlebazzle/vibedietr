@@ -7,6 +7,7 @@ use App\Http\Controllers\IngredientController;
 use App\Http\Controllers\ManualCatalogueSubmissionController;
 use App\Http\Controllers\MealPlanController;
 use App\Http\Controllers\MealPlanDayController;
+use App\Http\Controllers\MealPlanRecipeEntryController;
 use App\Http\Controllers\MealPlanSlotController;
 use App\Http\Controllers\PrivateRecipeTagController;
 use App\Http\Controllers\PublicProfileController;
@@ -61,6 +62,12 @@ Route::middleware(['auth'])->group(function () {
         ->whereNumber(['mealPlan', 'day', 'slot'])->name('meal-plans.days.slots.update');
     Route::put('meal-plans/{mealPlan}/days/{day}/slots/order', [MealPlanSlotController::class, 'reorder'])
         ->whereNumber(['mealPlan', 'day'])->name('meal-plans.days.slots.reorder');
+    Route::post('meal-plans/{mealPlan}/recipe-entries', [MealPlanRecipeEntryController::class, 'store'])
+        ->whereNumber('mealPlan')->name('meal-plans.recipe-entries.store');
+    Route::patch('meal-plans/{mealPlan}/recipe-entries/{entry}', [MealPlanRecipeEntryController::class, 'update'])
+        ->whereNumber(['mealPlan', 'entry'])->name('meal-plans.recipe-entries.update');
+    Route::delete('meal-plans/{mealPlan}/recipe-entries/{entry}', [MealPlanRecipeEntryController::class, 'destroy'])
+        ->whereNumber(['mealPlan', 'entry'])->name('meal-plans.recipe-entries.destroy');
 
     Route::get('catalogue/manual/create', [ManualCatalogueSubmissionController::class, 'create'])
         ->name('catalogue.manual.create');

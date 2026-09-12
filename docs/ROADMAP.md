@@ -1033,6 +1033,8 @@ changes, it is deliberately split across multiple items.
 
 ### PLAN-03 — P1 — Add recipe entries with version snapshots
 
+- **Status:** Complete (2026-09-12).
+
 - **Outcome:** Place a finalized recipe in a slot with planned servings while
   pinning the recipe version and relevant nutrition inputs.
 - **Dependencies:** PLAN-02, REC-07, NUT-15.
