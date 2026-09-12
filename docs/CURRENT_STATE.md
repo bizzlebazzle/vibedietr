@@ -129,8 +129,17 @@ work.
   pinned matches are never updated; future plan/diary snapshots remain outside
   this recalculation boundary. DEC-002 remains unresolved for broader review-
   warning UX under UX-04.
-- Plan entries, consumption snapshots, targets, plan sharing, and plan
-  comparisons are not represented (PLAN-03 through PLAN-12).
+- PLAN-03 adds owner-managed recipe entries to every plan slot. Add records a
+  positive planned serving amount, source recipe and immutable version
+  identities, the complete immutable recipe-version snapshot, and a copied
+  effective nutrition source/value/provenance snapshot plus the current full
+  ingredient-estimate trace. Drafts and inaccessible private recipes are
+  rejected. Entries can move only within their plan and can be removed; moving
+  never changes their pinned data. Later recipe publication, nutrition
+  override, recalculation, unpublishing, or source deletion cannot rewrite the
+  entry-owned snapshots.
+- Catalogue/one-off plan entries, consumption snapshots, targets, plan sharing,
+  and plan comparisons are not represented (PLAN-04 through PLAN-12).
 - Product identity, primary navigation, broader responsive/accessibility work,
   and general onboarding remain planned (UX-01 through UX-07). DEC-002 blocks
   UX-04.

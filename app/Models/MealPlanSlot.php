@@ -7,6 +7,7 @@ use Database\Factories\MealPlanSlotFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @property PlanSlotKey|null $standard_key
@@ -29,5 +30,11 @@ class MealPlanSlot extends Model
     public function day(): BelongsTo
     {
         return $this->belongsTo(MealPlanDay::class, 'meal_plan_day_id');
+    }
+
+    /** @return HasMany<MealPlanRecipeEntry, $this> */
+    public function recipeEntries(): HasMany
+    {
+        return $this->hasMany(MealPlanRecipeEntry::class)->orderBy('id');
     }
 }
