@@ -1161,6 +1161,8 @@ User 1 ---- owns ---- 0..* Ingredient
   |
   +------ owns ---- 0..* PrivateRecipeTag
                             +-- applies to owned Recipe or Bookmark memberships
+  |
+  +------ owns ---- 0..* MealPlan (reusable undated or dated range; private)
 ```
 
 An audit actor identity optionally references one user with `ON DELETE SET NULL`.
@@ -1170,8 +1172,8 @@ mutating the append-only event. Non-user subjects use a bounded identifier and
 no hard domain foreign key. System actors have no identity mapping.
 
 There is intentionally no represented relationship between the user-owned
-`Ingredient` food/product record and a recipe ingredient line. Meals, meal
-plans, diet plans, nutrition targets, and food-log entries are not represented.
+`Ingredient` food/product record and a recipe ingredient line. Plan days and
+entries, meals, diet targets, and food-log entries are not represented.
 
 ## Current rules and constraints
 
@@ -1181,6 +1183,12 @@ Database-enforced rules:
 - Every ingredient belongs to an existing user.
 - User administrator status is non-null and defaults to false.
 - Deleting a user deletes their ingredients.
+- Every meal plan belongs to exactly one existing user, and deleting that user
+  deletes their private plans.
+- Meal-plan type is required and restricted to `reusable` or `dated` under one
+  planning model; visibility is required and defaults to `private`.
+- Reusable plans have no start or end date. Dated plans require both dates, and
+  the end date cannot precede the start date.
 - Every recipe ingredient line belongs to an existing recipe, and deleting the
   recipe deletes its lines.
 - Original recipe ingredient text and a non-negative recipe-local position are
@@ -1448,7 +1456,6 @@ representation:
 - Match between a recipe line and a food/ingredient record.
 - Recipe yield, portion, or serving.
 - Meal.
-- Meal plan or schedule.
 - Diet plan, nutrition target, or dietary constraint.
 
 ### Recipe imports

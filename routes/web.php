@@ -5,6 +5,7 @@ use App\Http\Controllers\CatalogueController;
 use App\Http\Controllers\CatalogueCorrectionProposalController;
 use App\Http\Controllers\IngredientController;
 use App\Http\Controllers\ManualCatalogueSubmissionController;
+use App\Http\Controllers\MealPlanController;
 use App\Http\Controllers\PrivateRecipeTagController;
 use App\Http\Controllers\PublicProfileController;
 use App\Http\Controllers\PublicProfileSettingsController;
@@ -47,6 +48,10 @@ Route::get('catalogue/{catalogueItem}', [CatalogueController::class, 'show'])
     ->name('catalogue.show');
 
 Route::middleware(['auth'])->group(function () {
+    Route::resource('meal-plans', MealPlanController::class)->only([
+        'index', 'create', 'store', 'show', 'edit', 'update',
+    ]);
+
     Route::get('catalogue/manual/create', [ManualCatalogueSubmissionController::class, 'create'])
         ->name('catalogue.manual.create');
     Route::post('catalogue/manual', [ManualCatalogueSubmissionController::class, 'store'])

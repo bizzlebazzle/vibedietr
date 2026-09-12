@@ -1003,6 +1003,8 @@ changes, it is deliberately split across multiple items.
 
 ### PLAN-01 — P1 — Add owned meal-plan identity and plan types
 
+- **Status:** Complete (2026-09-12).
+
 - **Outcome:** Let a user create a private reusable undated schedule or dated
   plan under one planning model.
 - **Dependencies:** FND-03, REC-05.
