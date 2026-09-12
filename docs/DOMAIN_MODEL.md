@@ -1163,6 +1163,10 @@ User 1 ---- owns ---- 0..* Ingredient
                             +-- applies to owned Recipe or Bookmark memberships
   |
   +------ owns ---- 0..* MealPlan (reusable undated or dated range; private)
+                            +-- contains 0..* MealPlanDay
+                                  +-- reusable: non-negative day index
+                                  +-- dated: calendar date within plan range
+                                  +-- contains ordered MealPlanSlot records
 ```
 
 An audit actor identity optionally references one user with `ON DELETE SET NULL`.
@@ -1172,8 +1176,8 @@ mutating the append-only event. Non-user subjects use a bounded identifier and
 no hard domain foreign key. System actors have no identity mapping.
 
 There is intentionally no represented relationship between the user-owned
-`Ingredient` food/product record and a recipe ingredient line. Plan days and
-entries, meals, diet targets, and food-log entries are not represented.
+`Ingredient` food/product record and a recipe ingredient line. Plan entries,
+meals, diet targets, and food-log entries are not represented.
 
 ## Current rules and constraints
 
@@ -1189,6 +1193,13 @@ Database-enforced rules:
   planning model; visibility is required and defaults to `private`.
 - Reusable plans have no start or end date. Dated plans require both dates, and
   the end date cannot precede the start date.
+- Every plan day belongs to one meal plan and has exactly one identity: either
+  a non-negative index or a calendar date. Each identity is unique within its
+  plan.
+- Every plan slot belongs to one plan day. Standard slot identity and position
+  are unique within the day; custom slots have no standard identity. Drinks and
+  Snacks names are database-fixed. Deleting a plan cascades to its days and
+  slots.
 - Every recipe ingredient line belongs to an existing recipe, and deleting the
   recipe deletes its lines.
 - Original recipe ingredient text and a non-negative recipe-local position are
@@ -1230,6 +1241,15 @@ Database-enforced rules:
 - Deleting an organization cascades only its membership rows. Deleting a direct
   recipe or bookmark target cascades only the corresponding membership rows.
   No organization foreign key can cascade deletion into a recipe or bookmark.
+
+Application-enforced plan rules require reusable days to use indexes and dated
+days to use dates within their plan range. Incompatible plan type or range
+changes are rejected while days exist. Every new day receives Breakfast,
+Lunch, Dinner, Drinks, and Snacks in that order. Breakfast, Lunch, Dinner, and
+custom slot names are owner-renameable; Drinks and Snacks retain their fixed
+names. Owners may append custom slots and reorder the complete slot list with
+contiguous non-negative positions. The same rules apply to reusable and dated
+plans.
 
 Application authorization also requires every membership target to have the
 same authenticated owner as its collection or private tag.

@@ -1018,6 +1018,8 @@ changes, it is deliberately split across multiple items.
 
 ### PLAN-02 — P1 — Add plan days and default slots
 
+- **Status:** Complete (2026-09-12).
+
 - **Outcome:** Create plan days with Breakfast, Lunch, Dinner, Drinks, and
   Snacks slots and allow supported customization.
 - **Dependencies:** PLAN-01.
