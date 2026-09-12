@@ -90,6 +90,12 @@ class User extends Authenticatable
         return $this->hasMany(Recipe::class);
     }
 
+    /** @return HasMany<MealPlan, $this> */
+    public function mealPlans(): HasMany
+    {
+        return $this->hasMany(MealPlan::class);
+    }
+
     /** @return HasMany<CatalogueItem, $this> */
     public function submittedCatalogueItems(): HasMany
     {
