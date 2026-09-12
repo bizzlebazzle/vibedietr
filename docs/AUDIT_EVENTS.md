@@ -208,3 +208,22 @@ moderation decision is authoritative for the private note and conflict
 evidence. None of those contents is copied into generic audit metadata.
 Creation, acceptance and rejection events share the proposal as evidence
 reference and commit inside their corresponding domain transaction.
+
+## NUT-17 recipe nutrition override events
+
+Adding, changing, or removing a recipe-version nutrition override appends both
+an authoritative `RecipeNutritionOverrideEvent` and a minimized FND-05 audit
+event in the same database transaction. The domain event retains the prior and
+resulting whole source and values, server timestamp, actor relationship,
+optional note, and audit-event identifier required for owner-visible history.
+
+The generic audit event records only the stable action, completed outcome,
+recipe and recipe-version identifiers, and transition between source
+identifiers. It does not copy nutrient values, recipe content, provenance
+details, or the optional note. Its subject identifier is the opaque override
+event ULID, providing a safe link back to the protected domain record without
+making the audit payload a second history store.
+
+Removal appends a new event instead of editing or deleting earlier records.
+Selection and history queries are constrained to one recipe version, and a new
+recipe revision does not inherit an earlier version's override history.

@@ -965,6 +965,8 @@ changes, it is deliberately split across multiple items.
 
 ### NUT-17 — P2 — Add recipe nutrition source precedence and overrides
 
+- **Status:** Complete (2026-09-12).
+
 - **Outcome:** Choose creator override, imported-source nutrition, or
   ingredient estimate in the specified order while retaining comparison and
   change history.

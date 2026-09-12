@@ -162,11 +162,21 @@
     @if ($nutritionEstimate !== null)
         <section aria-labelledby="recipe-nutrition-heading" class="space-y-4 rounded border border-gray-200 p-4 dark:border-slate-700">
             <div>
-                <h2 id="recipe-nutrition-heading" class="font-semibold">Nutrition estimates</h2>
-                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Calculated from the ingredient lines and catalogue data saved with this recipe version. Values are estimates, not verified nutrition facts.</p>
+                <h2 id="recipe-nutrition-heading" class="font-semibold">{{ $nutritionEstimate['is_estimate'] ? 'Nutrition estimates' : 'Nutrition' }}</h2>
+                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400"><strong>Primary source:</strong> {{ $nutritionEstimate['source_label'] }}.</p>
+                @if ($nutritionEstimate['is_estimate'])
+                    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Calculated from the ingredient lines and catalogue data saved with this recipe version. Values are estimates, not verified nutrition facts.</p>
+                @else
+                    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Source-provided values are per serving; whole-recipe totals use this version's declared serving count.</p>
+                    @if ($nutritionEstimate['source'] === 'imported_source' && is_array($nutritionEstimate['provenance']))
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Import {{ $nutritionEstimate['provenance']['recipe_import_id'] ?? 'unknown' }} · extractor {{ $nutritionEstimate['provenance']['extractor_version'] ?? 'unknown' }} · parser {{ $nutritionEstimate['provenance']['parser_version'] ?? 'unknown' }}</p>
+                    @endif
+                @endif
             </div>
 
-            @if ($nutritionEstimate['status'] === 'complete')
+            @if (! $nutritionEstimate['is_estimate'])
+                <p class="rounded border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-100">These are source-provided nutrition values, not an ingredient calculation.</p>
+            @elseif ($nutritionEstimate['status'] === 'complete')
                 <p class="rounded border border-green-200 bg-green-50 p-3 text-sm text-green-800 dark:border-green-900 dark:bg-green-950/40 dark:text-green-100">
                     Complete estimate: every ingredient line contributed and none requires review.
                 </p>
@@ -201,7 +211,7 @@
             @endif
 
             <div class="grid gap-5 md:grid-cols-2">
-                @foreach (['whole_recipe' => 'Estimated nutrition — whole recipe', 'per_serving' => 'Estimated nutrition — per serving'] as $scope => $heading)
+                @foreach (['whole_recipe' => ($nutritionEstimate['is_estimate'] ? 'Estimated nutrition — whole recipe' : 'Nutrition — whole recipe'), 'per_serving' => ($nutritionEstimate['is_estimate'] ? 'Estimated nutrition — per serving' : 'Nutrition — per serving')] as $scope => $heading)
                     <section aria-labelledby="nutrition-{{ str_replace('_', '-', $scope) }}-heading">
                         <h3 id="nutrition-{{ str_replace('_', '-', $scope) }}-heading" class="font-semibold">{{ $heading }}</h3>
                         <dl class="mt-2 divide-y divide-gray-200 text-sm dark:divide-slate-700">
@@ -215,9 +225,66 @@
                     </section>
                 @endforeach
             </div>
+            @foreach ($nutritionEstimate['comparisons'] as $comparison)
+                <details class="rounded border border-gray-200 p-3 dark:border-slate-700">
+                    <summary class="cursor-pointer font-semibold">Compare with {{ strtolower($comparison['source_label']) }}</summary>
+                    @if ($comparison['source'] === 'ingredient_estimate')
+                        <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">This lower-precedence ingredient estimate is retained for comparison and remains an estimate.</p>
+                    @endif
+                    <dl class="mt-2 divide-y divide-gray-200 text-sm dark:divide-slate-700">
+                        @foreach ($comparison['per_serving'] as $nutrient)
+                            <div class="flex items-center justify-between gap-4 py-2">
+                                <dt>{{ $nutrient['label'] }}</dt>
+                                <dd class="font-medium {{ $nutrient['available'] ? '' : 'text-gray-500 dark:text-gray-400' }}">{{ $nutrient['value'] }}</dd>
+                            </div>
+                        @endforeach
+                    </dl>
+                </details>
+            @endforeach
+
+            @can('overrideNutrition', $recipe)
+                <details class="rounded border border-gray-200 p-3 dark:border-slate-700" @if ($errors->has('nutrients') || $errors->has('source_version_id')) open @endif>
+                    <summary class="cursor-pointer font-semibold">{{ $nutritionEstimate['source'] === 'creator_override' ? 'Change creator override' : 'Add creator override' }}</summary>
+                    <form method="POST" action="{{ route('recipes.nutrition-override.update', $recipe) }}" class="mt-3 space-y-3">
+                        @csrf
+                        @method('PUT')
+                        <input type="hidden" name="source_version_id" value="{{ $publicRecipe->versionId }}">
+                        <div class="grid gap-3 sm:grid-cols-2">
+                            @foreach (['energy_kcal' => 'Energy (kcal)', 'energy_kj' => 'Energy (kJ)', 'fat' => 'Fat (g)', 'saturated_fat' => 'Saturated fat (g)', 'carbohydrates' => 'Carbohydrate (g)', 'sugars' => 'Sugars (g)', 'fibre' => 'Fibre (g)', 'protein' => 'Protein (g)', 'salt' => 'Salt (g)', 'sodium' => 'Sodium (mg)'] as $key => $label)
+                                <label class="block text-sm"><span class="font-medium">{{ $label }}</span>
+                                    <input name="nutrients[{{ $key }}]" inputmode="decimal" value="{{ old('nutrients.'.$key, $nutritionEstimate['override_values'][$key] ?? '') }}" class="mt-1 block w-full rounded border-gray-300 dark:border-slate-600 dark:bg-slate-800">
+                                </label>
+                            @endforeach
+                        </div>
+                        <label class="block text-sm"><span class="font-medium">Correction note (optional)</span>
+                            <textarea name="note" maxlength="500" class="mt-1 block w-full rounded border-gray-300 dark:border-slate-600 dark:bg-slate-800">{{ old('note') }}</textarea>
+                        </label>
+                        @error('nutrients') <p role="alert" class="text-sm text-red-700 dark:text-red-300">{{ $message }}</p> @enderror
+                        @error('source_version_id') <p role="alert" class="text-sm text-red-700 dark:text-red-300">{{ $message }}</p> @enderror
+                        <button type="submit" class="rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white">Save override</button>
+                    </form>
+                    @if ($nutritionEstimate['source'] === 'creator_override')
+                        <form method="POST" action="{{ route('recipes.nutrition-override.destroy', $recipe) }}" class="mt-3">
+                            @csrf
+                            @method('DELETE')
+                            <input type="hidden" name="source_version_id" value="{{ $publicRecipe->versionId }}">
+                            <button type="submit" class="rounded border border-red-300 px-4 py-2 text-sm font-semibold text-red-700 dark:border-red-800 dark:text-red-300">Remove override</button>
+                        </form>
+                    @endif
+                </details>
+                @if ($nutritionEstimate['history'] !== [])
+                    <details class="rounded border border-gray-200 p-3 text-sm dark:border-slate-700">
+                        <summary class="cursor-pointer font-semibold">Override history</summary>
+                        <ol class="mt-2 space-y-2">
+                            @foreach ($nutritionEstimate['history'] as $history)
+                                <li>{{ ucfirst($history['event']) }} by {{ $history['actor'] }} at {{ $history['occurred_at']->toIso8601String() }}: {{ $history['prior_source'] }} → {{ $history['resulting_source'] }}@if ($history['note'] !== null). Note: {{ $history['note'] }}@endif</li>
+                            @endforeach
+                        </ol>
+                    </details>
+                @endif
+            @endcan
         </section>
     @endif
-
     <section aria-labelledby="recipe-instructions-heading">
         <h2 id="recipe-instructions-heading" class="font-semibold">Instructions</h2>
         @if ($publicRecipe !== null)

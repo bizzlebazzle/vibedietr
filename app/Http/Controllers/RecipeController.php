@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Domain\Nutrition\RecipeNutritionEstimatePresenter;
+use App\Domain\Nutrition\RecipeNutritionPresenter;
 use App\Domain\Recipes\ManagedRecipeTermSuggestionStatus;
 use App\Domain\Recipes\PublicRecipe;
 use App\Domain\Recipes\RecipeQuantityDisplay;
@@ -35,7 +35,7 @@ class RecipeController extends Controller
         int $recipe,
         RecipeQuantityPresenter $quantityPresenter,
         RecipeRemixAttributionPresenter $attributionPresenter,
-        RecipeNutritionEstimatePresenter $nutritionPresenter,
+        RecipeNutritionPresenter $nutritionPresenter,
     ): View {
         $viewer = $request->user();
         $recipe = Recipe::query()
@@ -93,7 +93,7 @@ class RecipeController extends Controller
                 'pendingTagSuggestions' => $pendingTagSuggestions,
                 'remixAttribution' => $remixAttribution,
                 'remixOperationId' => $remixOperationId,
-                'nutritionEstimate' => $nutritionPresenter->present($recipe->currentVersion->snapshot),
+                'nutritionEstimate' => $nutritionPresenter->present($recipe->currentVersion, $isOwner),
             ]);
         }
 

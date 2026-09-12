@@ -12,5 +12,6 @@ final readonly class ExtractedWebpageRecipe
         public string $method,
         public string $extractorIdentifier,
         public string $extractorVersion,
+        public ?array $nutrition = null,
     ) {}
 }

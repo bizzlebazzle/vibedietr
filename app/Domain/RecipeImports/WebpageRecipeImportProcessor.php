@@ -72,6 +72,18 @@ final class WebpageRecipeImportProcessor
                 'extractor_version' => $extracted->extractorVersion,
                 'extracted_at' => now()->utc(),
                 'warnings' => $extracted->recipe->warnings,
+                'nutrition_source' => $extracted->nutrition === null ? null : [
+                    ...$extracted->nutrition,
+                    'provenance' => [
+                        'recipe_import_id' => $locked->id,
+                        'channel' => RecipeImportType::WebpageUrl->value,
+                        'extractor' => $extracted->extractorIdentifier,
+                        'extractor_version' => $extracted->extractorVersion,
+                        'extracted_at' => now()->utc()->toIso8601String(),
+                        'parser' => $extracted->recipe->parserIdentifier,
+                        'parser_version' => $extracted->recipe->parserVersion,
+                    ],
+                ],
                 'provenance' => [
                     'channel' => RecipeImportType::WebpageUrl->value,
                     'submitted_url' => $locked->submitted_url,

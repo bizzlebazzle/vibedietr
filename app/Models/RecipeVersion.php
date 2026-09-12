@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use LogicException;
 
 /**
@@ -47,5 +48,11 @@ class RecipeVersion extends Model
     public function recipe(): BelongsTo
     {
         return $this->belongsTo(Recipe::class);
+    }
+
+    /** @return HasMany<RecipeNutritionOverrideEvent, $this> */
+    public function nutritionOverrideEvents(): HasMany
+    {
+        return $this->hasMany(RecipeNutritionOverrideEvent::class);
     }
 }
