@@ -5,9 +5,12 @@ namespace App\Domain\Nutrition;
 use App\Domain\Measurements\CustomUnit;
 use App\Domain\Measurements\StandardUnit;
 use App\Domain\Shared\Decimal;
+use App\Models\CatalogueItemVersion;
 use App\Models\CatalogueNutrientValue;
 use App\Models\Recipe;
 use App\Models\RecipeIngredientLine;
+use App\Models\RecipeIngredientLineMatch;
+use App\Models\RecipeVersion;
 use Brick\Math\BigDecimal;
 
 final readonly class RecipeNutritionEstimator
@@ -57,6 +60,54 @@ final readonly class RecipeNutritionEstimator
             'per_serving' => $perServing,
             'inputs' => $inputs,
         ];
+    }
+
+    /**
+     * Recalculate an immutable recipe version with an explicit dependency map.
+     *
+     * @param  array<int, string>  $catalogueVersionIdsByPosition
+     * @return array<string, mixed>
+     */
+    public function estimateVersion(RecipeVersion $version, array $catalogueVersionIdsByPosition): array
+    {
+        $snapshot = $version->snapshot;
+        $catalogueVersions = CatalogueItemVersion::query()
+            ->with('nutrientValues')
+            ->whereKey(array_values(array_unique($catalogueVersionIdsByPosition)))
+            ->get()
+            ->keyBy('id');
+        $recipe = new Recipe;
+        $recipe->forceFill(['servings' => $snapshot['servings'] ?? null]);
+        $lines = collect($snapshot['ingredients'] ?? [])
+            ->filter(fn (mixed $ingredient): bool => is_array($ingredient))
+            ->map(function (array $ingredient) use ($catalogueVersionIdsByPosition, $catalogueVersions): RecipeIngredientLine {
+                $position = (int) ($ingredient['position'] ?? 0);
+                $line = new RecipeIngredientLine;
+                $line->forceFill([
+                    'position' => $position,
+                    'quantity' => $ingredient['quantity'] ?? null,
+                    'standard_unit' => $ingredient['standard_unit'] ?? null,
+                    'custom_unit' => $ingredient['custom_unit'] ?? null,
+                ]);
+                $catalogueVersion = $catalogueVersions->get($catalogueVersionIdsByPosition[$position] ?? null);
+
+                if ($catalogueVersion === null) {
+                    $line->setRelation('catalogueMatch', null);
+
+                    return $line;
+                }
+
+                $match = new RecipeIngredientLineMatch;
+                $match->forceFill(['catalogue_item_version_id' => $catalogueVersion->getKey()]);
+                $match->setRelation('catalogueItemVersion', $catalogueVersion);
+                $line->setRelation('catalogueMatch', $match);
+
+                return $line;
+            })
+            ->values();
+        $recipe->setRelation('ingredientLines', $lines);
+
+        return $this->estimate($recipe);
     }
 
     /**

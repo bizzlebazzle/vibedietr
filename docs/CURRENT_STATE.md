@@ -116,8 +116,18 @@ work.
   history retains prior and resulting values and sources, server timestamp,
   actor, optional note, and its corresponding FND-05 audit reference. Selection
   and history are version-scoped and are not copied into revisions.
-  Recalculation and nutrition claims remain assigned to NUT-18. DEC-002 remains
-  unresolved for broader review-warning UX under UX-04.
+- NUT-18 creates one durable, database-unique recalculation operation for each
+  recipe version whose current ingredient-estimate inputs depend on a replaced
+  version of an approved catalogue item. NUT-10 correction and NUT-11 provider-
+  refresh acceptance share this post-commit dispatch path. The default-queue
+  job serializes work per recipe version, rechecks that the triggering
+  catalogue version is still current and approved, and atomically appends the
+  completed estimate plus a minimized system audit reference. Presentation
+  uses the newest completed estimate, but NUT-17 imported and creator-override
+  sources retain precedence. Original recipe-version snapshots and their
+  pinned matches are never updated; future plan/diary snapshots remain outside
+  this recalculation boundary. DEC-002 remains unresolved for broader review-
+  warning UX under UX-04.
 - Meal plans, consumption snapshots, targets, plan sharing, and plan
   comparisons are not represented (PLAN-01 through PLAN-12).
 - Product identity, primary navigation, broader responsive/accessibility work,

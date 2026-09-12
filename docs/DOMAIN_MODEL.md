@@ -1422,6 +1422,24 @@ The submitted version identifier is checked under lock so a revision becoming
 current cannot receive a stale override. Override state and history are not
 copied when a new version is created.
 
+`RecipeNutritionRecalculation` is the durable NUT-18 operation and calculation
+history for one recipe version plus one newly approved catalogue version. Its
+database-unique pair is the business idempotency boundary. The current
+calculation dependencies come from the newest completed recalculation, falling
+back to the immutable NUT-15 snapshot; only positions depending on an older
+version of the same catalogue item are substituted. A completed record retains
+the full policy-versioned estimate and input trace, correlation identifier,
+completion time, and minimized FND-05 audit reference.
+
+Queued processing is serialized per recipe version and rechecks under lock
+that the triggering catalogue version is still the item's current approved
+version. Obsolete or already-applied work is retained as skipped. Completion
+and its audit event commit atomically, so retry or replay produces no second
+calculation or audit effect. The newest completed estimate is a live projection
+only: it never updates `RecipeVersion.snapshot`, its pinned ingredient matches,
+or any plan/diary snapshot. Imported-source nutrition and creator overrides
+remain separate and keep NUT-17 precedence over the recalculated comparison.
+
 ## Concepts not yet represented
 
 The following concepts named in the project purpose have no current domain

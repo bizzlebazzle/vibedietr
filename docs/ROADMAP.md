@@ -983,6 +983,8 @@ changes, it is deliberately split across multiple items.
 
 ### NUT-18 — P2 — Recalculate affected recipes after catalogue approval
 
+- **Status:** Complete (2026-09-12).
+
 - **Outcome:** Update ingredient-calculated recipe estimates after an approved
   catalogue version while leaving imported and manually overridden primary
   values stable.

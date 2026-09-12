@@ -20,7 +20,7 @@ final readonly class RecipeNutritionPresenter
         $effective = $this->selector->effective($version);
         $source = $effective['source'];
         $primary = $source === RecipeNutritionSource::IngredientEstimate
-            ? $this->estimatePresenter->present($version->snapshot)
+            ? $this->presentEstimate($version)
             : $this->presentValues($version, $effective['values']);
         $comparisons = [];
         $imported = $this->selector->imported($version);
@@ -32,7 +32,7 @@ final readonly class RecipeNutritionPresenter
         if ($source !== RecipeNutritionSource::IngredientEstimate) {
             $comparisons[] = ['source' => RecipeNutritionSource::IngredientEstimate->value,
                 'source_label' => RecipeNutritionSource::IngredientEstimate->label(),
-                ...$this->estimatePresenter->present($version->snapshot)];
+                ...$this->presentEstimate($version)];
         }
         $override = $this->selector->currentOverride($version);
 
@@ -57,6 +57,15 @@ final readonly class RecipeNutritionPresenter
                         'note' => $event->note,
                     ];
                 })->all() : []];
+    }
+
+    /** @return array<string, mixed> */
+    private function presentEstimate(RecipeVersion $version): array
+    {
+        return $this->estimatePresenter->present([
+            ...$version->snapshot,
+            'nutrition_estimate' => $this->selector->estimate($version),
+        ]);
     }
 
     /** @param array<string, mixed> $values @return array<string, mixed> */

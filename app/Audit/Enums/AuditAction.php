@@ -32,6 +32,7 @@ enum AuditAction: string
     case RecipeRevisionPublished = 'recipe.revision_published';
     case RecipeRemixed = 'recipe.remixed';
     case RecipeNutritionOverrideApplied = 'recipe.nutrition_override_applied';
+    case RecipeNutritionRecalculated = 'recipe.nutrition_recalculated';
     case PlanSnapshotRecorded = 'plan.snapshot_recorded';
     case AccountAnonymizationCompleted = 'account.anonymization_completed';
     case SecuritySecondFactorEvent = 'security.second_factor_event';
@@ -68,6 +69,7 @@ enum AuditAction: string
             self::RecipeRevisionPublished,
             self::RecipeRemixed,
             self::RecipeNutritionOverrideApplied,
+            self::RecipeNutritionRecalculated,
             self::PlanSnapshotRecorded => AuditPurpose::ProductHistory,
             self::AccountAnonymizationCompleted => AuditPurpose::AccountErasureEvidence,
             self::SecuritySecondFactorEvent,
@@ -106,6 +108,7 @@ enum AuditAction: string
             self::RecipeRevisionPublished,
             self::RecipeRemixed,
             self::RecipeNutritionOverrideApplied,
+            self::RecipeNutritionRecalculated,
             self::PlanSnapshotRecorded => AuditRetentionClass::PrivateContentUntilFinalPurge,
             self::AccountAnonymizationCompleted => AuditRetentionClass::PurgeReceiptTwelveMonths,
             self::SecuritySecondFactorEvent,
@@ -159,6 +162,7 @@ enum AuditAction: string
                 AuditActorType::AuthenticatedUser,
                 AuditActorType::Administrator,
             ],
+            self::RecipeNutritionRecalculated,
             self::PlanSnapshotRecorded,
             self::AccountAnonymizationCompleted => [AuditActorType::System],
             self::SecuritySecondFactorEvent,
@@ -208,6 +212,7 @@ enum AuditAction: string
                 AuditSubjectType::Recipe,
                 AuditSubjectType::NutritionOverride,
             ],
+            self::RecipeNutritionRecalculated => [AuditSubjectType::NutritionCalculation],
             self::PlanSnapshotRecorded => [AuditSubjectType::PlanSnapshot],
             self::SecuritySecondFactorEvent,
             self::SecurityNotificationEvent => [AuditSubjectType::UserAccount],
