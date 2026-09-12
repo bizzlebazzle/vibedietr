@@ -6,6 +6,8 @@ use App\Http\Controllers\CatalogueCorrectionProposalController;
 use App\Http\Controllers\IngredientController;
 use App\Http\Controllers\ManualCatalogueSubmissionController;
 use App\Http\Controllers\MealPlanController;
+use App\Http\Controllers\MealPlanDayController;
+use App\Http\Controllers\MealPlanSlotController;
 use App\Http\Controllers\PrivateRecipeTagController;
 use App\Http\Controllers\PublicProfileController;
 use App\Http\Controllers\PublicProfileSettingsController;
@@ -51,6 +53,14 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('meal-plans', MealPlanController::class)->only([
         'index', 'create', 'store', 'show', 'edit', 'update',
     ]);
+    Route::post('meal-plans/{mealPlan}/days', [MealPlanDayController::class, 'store'])
+        ->whereNumber('mealPlan')->name('meal-plans.days.store');
+    Route::post('meal-plans/{mealPlan}/days/{day}/slots', [MealPlanSlotController::class, 'store'])
+        ->whereNumber(['mealPlan', 'day'])->name('meal-plans.days.slots.store');
+    Route::patch('meal-plans/{mealPlan}/days/{day}/slots/{slot}', [MealPlanSlotController::class, 'update'])
+        ->whereNumber(['mealPlan', 'day', 'slot'])->name('meal-plans.days.slots.update');
+    Route::put('meal-plans/{mealPlan}/days/{day}/slots/order', [MealPlanSlotController::class, 'reorder'])
+        ->whereNumber(['mealPlan', 'day'])->name('meal-plans.days.slots.reorder');
 
     Route::get('catalogue/manual/create', [ManualCatalogueSubmissionController::class, 'create'])
         ->name('catalogue.manual.create');

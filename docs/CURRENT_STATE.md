@@ -59,7 +59,7 @@ not after every internal refactor.
 | Matching and submissions | Recipe-line manual catalogue matches and private pending manual-food submissions with deterministic reuse/duplicate evidence | `RecipeIngredientMatchManager`, `ManualCatalogueSubmissionCreator` | NUT-07 and NUT-08; catalogue sections of [domain model](DOMAIN_MODEL.md) |
 | Catalogue moderation | Administrator queues, explicit duplicate decisions and bounded merges, immutable correction proposals, and moderated OpenFoodFacts refresh proposals | moderation controllers and `app/Domain/Catalogue` services | NUT-09 through NUT-11; [moderation](CATALOGUE_MODERATION.md), [corrections](CATALOGUE_CORRECTIONS.md), [provider refreshes](CATALOGUE_PROVIDER_REFRESHES.md) |
 | Measurements and nutrition | Shared exact-decimal nutrient/unit definitions, same-dimension conversions, legacy ingredient normalization, and versioned catalogue nutrition | `app/Domain/Measurements`, `app/Domain/Nutrition` | FND-06, STB-05/STB-06, NUT-04/NUT-05; [measurement definitions](NUTRIENT_MEASUREMENT_DEFINITIONS.md) |
-| Meal planning | Owner-only private meal-plan identity with reusable undated and dated-range types under one model | `MealPlanController`, `MealPlan`, meal-plan routes | PLAN-01; ownership and visibility in [authorization and privacy matrix](AUTHORIZATION_PRIVACY_MATRIX.md) |
+| Meal planning | Owner-only private meal plans with reusable indexed or dated days, shared default-slot rules, renameable meal/custom slots, fixed Drinks/Snacks names, and owner-controlled slot order | meal-plan controllers, `MealPlanDayWriter`, meal-plan models and routes | PLAN-01 and PLAN-02; ownership and visibility in [authorization and privacy matrix](AUTHORIZATION_PRIVACY_MATRIX.md) |
 | Queues and scheduling | Idempotency, overlap protection, safe payload conventions, failure reporting/removal, worker configuration, schedule locking, and runbooks | `app/Queue`, `app/Jobs`, `routes/console.php` | [Job conventions](QUEUED_JOB_CONVENTIONS.md), [inventory](JOB_INVENTORY.md), [operations](QUEUE_OPERATIONS.md) |
 | Security and operations | Shared headers, throttles, upload/transient-input controls, redaction, production configuration validation, health endpoints, telemetry, and monitoring | `app/Security`, `app/Configuration`, `app/Observability` | [Security controls](SECURITY_CONTROLS.md), [production configuration](PRODUCTION_CONFIGURATION.md), [observability](OBSERVABILITY.md), [runbooks](OPERATIONS_RUNBOOKS.md) |
 | Development context | Validated task resolver plus generated reciprocal roadmap/decision/domain indexes | `scripts/docs/task-context.mjs`, `scripts/docs/context-index.mjs` | [README task workflow](../README.md#roadmap-task-context) |
@@ -129,8 +129,8 @@ work.
   pinned matches are never updated; future plan/diary snapshots remain outside
   this recalculation boundary. DEC-002 remains unresolved for broader review-
   warning UX under UX-04.
-- Plan days/entries, consumption snapshots, targets, plan sharing, and plan
-  comparisons are not represented (PLAN-02 through PLAN-12).
+- Plan entries, consumption snapshots, targets, plan sharing, and plan
+  comparisons are not represented (PLAN-03 through PLAN-12).
 - Product identity, primary navigation, broader responsive/accessibility work,
   and general onboarding remain planned (UX-01 through UX-07). DEC-002 blocks
   UX-04.
