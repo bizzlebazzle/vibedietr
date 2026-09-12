@@ -80,6 +80,49 @@ serialized payload, so the privacy classification is an operational control.
   Production readiness depends on deployed DEP-04 workers and DEP-05 provider,
   queue-age, final-failure, and latency monitoring.
 
+## RecalculateRecipeNutrition
+
+- **Class / owner:** `App\Jobs\RecalculateRecipeNutrition`; NUT-18.
+- **Purpose / enablement:** Recalculate one recipe version's live ingredient
+  estimate after a NUT-10 correction or NUT-11 provider refresh creates a new
+  current approved catalogue version. The shared post-commit acceptance path
+  creates operations only for current calculation traces that depend on an older
+  version of that catalogue item; operation creation and dispatch occur only
+  after the accepted version commits as current.
+- **Queue / worker / concurrency:** `default`; `default` worker group; one
+  configured process. Dispatch is unique per recalculation ULID for 24 hours,
+  and a 75-second per-recipe-version overlap lock serializes distinct catalogue
+  approvals affecting the same recipe version.
+- **Timeout / retry_after:** 60-second job timeout, 70-second worker timeout,
+  90-second database `retry_after`; the required 20-second margin is preserved.
+- **Attempts / backoff:** Three attempts; 10 seconds then 60 seconds. Database
+  and unexpected processing failures are sanitized and retryable. Missing
+  operation records complete as obsolete; a triggering catalogue version that
+  is no longer current and approved is durably skipped.
+- **Idempotency:** The database-unique recipe-version plus approved-catalogue-
+  version pair is the logical operation key. Row locking, terminal-state reuse,
+  per-recipe serialization, an atomic estimate/audit transaction, and a final
+  current-version recheck make duplicate dispatch, retry after rollback, and
+  post-commit replay harmless.
+- **Duration / resources:** Local database reads and deterministic nutrition
+  calculation only; no provider request. Normally under one second and at most
+  60 seconds. Post-acceptance dependency selection scans immutable recipe-
+  version calculation traces in chunks of 200.
+- **Failure / alert:** Final failure marks the durable operation with a bounded
+  safe code and emits one `queued_job_failed` event. Alert at medium severity;
+  ordinary attempts and durable skips do not alert or create audit events.
+- **Replay:** Retry exactly one failed record after resolving the database or
+  application fault. The same operation may move from `failed` to `completed`;
+  it cannot create a second estimate or audit event. Do not replay completed or
+  skipped records. An obsolete catalogue-version operation remains skipped.
+- **Failed record / privacy:** Metadata-only recalculation, recipe-version, and
+  correlation ULIDs. It contains no recipe text, nutrient values, account data,
+  source payload, moderation evidence, or snapshot content. Retain at most 168
+  hours under the shared failed-job policy.
+- **Scheduling:** Catalogue-approval-triggered and event driven; not scheduled.
+  Existing default-worker depth, age, failure, replay, and health monitoring
+  apply.
+
 ## ProcessReferenceTask
 
 - **Class / owner:** `App\Jobs\ProcessReferenceTask`; FND-09 reference

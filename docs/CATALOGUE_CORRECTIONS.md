@@ -65,6 +65,12 @@ Unrelated current changes carry forward. The base and every historical
 nutrition/package fact remain unchanged, so pinned recipe matches and published
 recipe snapshots remain on their old versions.
 
+After the new version commits as current, NUT-18 records and dispatches one
+recalculation operation only for recipe versions whose current
+ingredient-estimate trace depends on an older version of that catalogue item.
+The recalculated live estimate may use the newly approved facts; the immutable
+recipe snapshot and its pinned match remain unchanged.
+
 Corrected versions retain proposal/decision references and an allowlisted
 corrected-field list. Corrected nutrient observations/facts use `corrected`
 provenance; energy counterparts remain `derived` under the kcal-authoritative

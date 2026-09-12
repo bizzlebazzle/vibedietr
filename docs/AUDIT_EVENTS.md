@@ -227,3 +227,18 @@ making the audit payload a second history store.
 Removal appends a new event instead of editing or deleting earlier records.
 Selection and history queries are constrained to one recipe version, and a new
 recipe revision does not inherit an earlier version's override history.
+
+## NUT-18 recipe nutrition recalculation events
+
+A successfully completed recalculation appends one
+`recipe.nutrition_recalculated` system event in the same transaction as the
+durable completed `RecipeNutritionRecalculation`. Its subject and evidence
+reference are the opaque recalculation ULID. The payload contains only the
+recipe-version ID, approved catalogue-version ID, and `recalculated` outcome;
+the calculation record, not generic audit metadata, retains nutrient values and
+the dependency trace.
+
+Queue attempts and skipped or failed operations do not create audit events.
+Their durable operation state and privacy-safe queue telemetry remain the
+technical trace. Database uniqueness and the completed-state check ensure retry
+or replay cannot append a second calculation or audit event.

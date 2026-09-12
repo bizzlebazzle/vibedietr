@@ -9,18 +9,21 @@ use App\Domain\Catalogue\CatalogueItemSource;
 use App\Domain\Catalogue\CatalogueModerationAuthorization;
 use App\Domain\Catalogue\CatalogueProviderRefreshState;
 use App\Domain\Nutrition\NutrientProvenance;
+use App\Jobs\RecalculateRecipeNutrition;
 use App\Models\AuditEvent;
 use App\Models\CatalogueCorrectionChange;
 use App\Models\CatalogueCorrectionProposal;
 use App\Models\CatalogueItem;
 use App\Models\CatalogueItemVersion;
 use App\Models\CatalogueProviderRefresh;
+use App\Models\RecipeVersion;
 use App\Models\User;
 use App\Security\SecondFactor\RecentAuthentication;
 use App\Security\SecondFactor\SecondFactorEnrollmentService;
 use App\Security\SecondFactor\TotpEngine;
 use Illuminate\Contracts\Session\Session;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
@@ -65,6 +68,28 @@ class CatalogueProviderRefreshModerationTest extends TestCase
             'manufacturer' => 'Later manufacturer',
         ]);
         $item->setCurrentVersion($intervening);
+        $dependentVersion = RecipeVersion::factory()->create([
+            'snapshot' => [
+                'title' => 'Dependent recipe version',
+                'servings' => '1.00',
+                'visibility' => 'public',
+                'ingredients' => [],
+                'sections' => [],
+                'steps' => [],
+                'nutrition_estimate' => [
+                    'type' => 'estimate',
+                    'is_estimate' => true,
+                    'calculation_policy_version' => 1,
+                    'whole_recipe' => [],
+                    'per_serving' => [],
+                    'inputs' => [[
+                        'ingredient_position' => 0,
+                        'catalogue_item_version_id' => $intervening->id,
+                    ]],
+                ],
+            ],
+        ]);
+        Queue::fake();
         $service = app(CatalogueCorrectionModeration::class);
         $this->assertTrue($service->review($proposal)->stale);
         try {
@@ -91,6 +116,10 @@ class CatalogueProviderRefreshModerationTest extends TestCase
         $this->assertNull($refresh->fresh()->active_key);
         $this->assertSame(CatalogueCorrectionProposalState::Accepted, $proposal->fresh()->state);
         $this->assertDatabaseHas('audit_events', ['action' => 'catalogue.provider_refresh_accepted']);
+        Queue::assertPushed(
+            RecalculateRecipeNutrition::class,
+            fn (RecalculateRecipeNutrition $job): bool => $job->recipeVersionId === $dependentVersion->id,
+        );
 
         $service->accept($proposal->id, $this->administrator, $this->proof(), true);
         $this->assertDatabaseCount('catalogue_item_versions', 3);

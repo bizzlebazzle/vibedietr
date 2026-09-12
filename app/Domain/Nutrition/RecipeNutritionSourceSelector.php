@@ -7,6 +7,8 @@ use App\Models\RecipeVersion;
 
 final class RecipeNutritionSourceSelector
 {
+    public function __construct(private readonly RecipeNutritionRecalculationDependencies $recalculations) {}
+
     /** @return array{source: RecipeNutritionSource, values: array<string, mixed>, provenance: array<string, mixed>|null} */
     public function effective(RecipeVersion $version): array
     {
@@ -55,9 +57,15 @@ final class RecipeNutritionSourceSelector
     /** @return array<string, mixed> */
     public function estimateValues(RecipeVersion $version): array
     {
-        $estimate = $version->snapshot['nutrition_estimate'] ?? null;
+        $estimate = $this->estimate($version);
 
-        return is_array($estimate) && is_array($estimate['per_serving'] ?? null)
+        return is_array($estimate['per_serving'] ?? null)
             ? $estimate['per_serving'] : [];
+    }
+
+    /** @return array<string, mixed> */
+    public function estimate(RecipeVersion $version): array
+    {
+        return $this->recalculations->currentEstimate($version);
     }
 }

@@ -61,6 +61,11 @@ manual, corrected, or derived provenance. Rejection changes no catalogue fact
 and releases the active key. Repeated decisions return the original decision
 and cannot create another version or audit event.
 
+The shared acceptance path invokes NUT-18 dependency selection after commit.
+Only recipe versions whose current ingredient-estimate trace uses an older
+version of the refreshed item receive a durable recalculation job;
+duplicate decisions cannot create duplicate operations.
+
 ## Concurrency, retry, and privacy
 
 The job is unique for 24 hours, has a 75-second overlap lock, a 60-second

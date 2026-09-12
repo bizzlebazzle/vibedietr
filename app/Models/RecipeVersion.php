@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Domain\Nutrition\RecipeNutritionRecalculationState;
 use App\Domain\Recipes\RecipeVisibility;
 use Carbon\CarbonImmutable;
 use Database\Factories\RecipeVersionFactory;
@@ -10,6 +11,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use LogicException;
 
 /**
@@ -54,5 +56,21 @@ class RecipeVersion extends Model
     public function nutritionOverrideEvents(): HasMany
     {
         return $this->hasMany(RecipeNutritionOverrideEvent::class);
+    }
+
+    /** @return HasMany<RecipeNutritionRecalculation, $this> */
+    public function nutritionRecalculations(): HasMany
+    {
+        return $this->hasMany(RecipeNutritionRecalculation::class);
+    }
+
+    /** @return HasOne<RecipeNutritionRecalculation, $this> */
+    public function currentNutritionRecalculation(): HasOne
+    {
+        return $this->hasOne(RecipeNutritionRecalculation::class)
+            ->ofMany(
+                ['completed_at' => 'max', 'id' => 'max'],
+                fn ($query) => $query->where('state', RecipeNutritionRecalculationState::Completed->value),
+            );
     }
 }

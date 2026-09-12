@@ -11,6 +11,7 @@ enum AuditSubjectType: string
     case ManagedRecipeTerm = 'managed_recipe_term';
     case RecipeTagSuggestion = 'recipe_tag_suggestion';
     case NutritionOverride = 'nutrition_override';
+    case NutritionCalculation = 'nutrition_calculation';
     case PlanSnapshot = 'plan_snapshot';
     case SystemOperation = 'system_operation';
 }

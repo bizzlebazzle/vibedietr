@@ -99,6 +99,7 @@ final class AuditPayloadValidator
             AuditAction::RecipeRevisionPublished => $this->validateRecipeRevision($action, $payload),
             AuditAction::RecipeRemixed => $this->validateRecipeRemixed($payload),
             AuditAction::RecipeNutritionOverrideApplied => $this->validateNutritionOverride($payload),
+            AuditAction::RecipeNutritionRecalculated => $this->validateNutritionRecalculation($payload),
             AuditAction::PlanSnapshotRecorded => $this->validatePlanSnapshot($payload),
             AuditAction::AccountAnonymizationCompleted => $this->validateAnonymization($payload),
             AuditAction::SecuritySecondFactorEvent,
@@ -362,6 +363,21 @@ final class AuditPayloadValidator
         $this->assertShape($payload, ['changed_nutrients', 'outcome'], ['changed_nutrients', 'outcome']);
         $this->assertEnum($payload, 'outcome', ['applied']);
         $this->assertStringList($payload, 'changed_nutrients', NutrientRegistry::stableIdentifiers());
+
+        return $payload;
+    }
+
+    /** @param array<string, mixed> $payload */
+    private function validateNutritionRecalculation(array $payload): array
+    {
+        $this->assertShape(
+            $payload,
+            ['approved_catalogue_version_id', 'outcome', 'recipe_version_id'],
+            ['approved_catalogue_version_id', 'outcome', 'recipe_version_id'],
+        );
+        $this->assertEnum($payload, 'outcome', ['recalculated']);
+        AuditReferenceValidator::validate($payload['approved_catalogue_version_id'], 'approved catalogue version identifier');
+        AuditReferenceValidator::validate($payload['recipe_version_id'], 'recipe version identifier');
 
         return $payload;
     }

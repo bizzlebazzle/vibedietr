@@ -9,6 +9,7 @@ use App\Audit\Enums\AuditAction;
 use App\Audit\Enums\AuditSubjectType;
 use App\Domain\Nutrition\CatalogueNutrientObservation;
 use App\Domain\Nutrition\CatalogueNutritionNormalizer;
+use App\Domain\Nutrition\RecipeNutritionRecalculationDispatcher;
 use App\Models\CatalogueCorrectionProposal;
 use App\Models\CatalogueItem;
 use App\Models\CatalogueItemVersion;
@@ -29,6 +30,7 @@ final readonly class CatalogueCorrectionModeration
         private CatalogueCorrectionFields $fields,
         private CatalogueNutritionNormalizer $nutrition,
         private AuditEventRecorder $audit,
+        private RecipeNutritionRecalculationDispatcher $nutritionRecalculations,
     ) {}
 
     public function review(CatalogueCorrectionProposal $proposal): CatalogueCorrectionReview
@@ -65,7 +67,7 @@ final readonly class CatalogueCorrectionModeration
     {
         $this->authorization->authorize($actor, $session);
 
-        return DB::transaction(function () use ($proposalId, $actor, $staleReviewed): CatalogueModerationDecision {
+        $decision = DB::transaction(function () use ($proposalId, $actor, $staleReviewed): CatalogueModerationDecision {
             $proposal = CatalogueCorrectionProposal::query()->lockForUpdate()->findOrFail($proposalId);
             if ($proposal->state !== CatalogueCorrectionProposalState::Pending) {
                 return CatalogueModerationDecision::query()->where('correction_proposal_id', $proposal->id)->firstOrFail();
@@ -208,6 +210,15 @@ final readonly class CatalogueCorrectionModeration
 
             return $decision;
         }, 3);
+
+        $approvedVersionId = $decision->evidence['new_version_id'] ?? null;
+        if (in_array($decision->action, ['correction_accept', 'provider_refresh_accept'], true)
+            && is_string($approvedVersionId)) {
+            $approvedVersion = CatalogueItemVersion::query()->findOrFail($approvedVersionId);
+            $this->nutritionRecalculations->dispatchForApprovedVersion($approvedVersion, $decision->id);
+        }
+
+        return $decision;
     }
 
     public function reject(string $proposalId, User $actor, Session $session, string $reasonCode = 'insufficient_evidence', ?string $note = null): CatalogueModerationDecision
