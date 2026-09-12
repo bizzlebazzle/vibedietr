@@ -17,6 +17,10 @@ class WebpageRecipeExtractorTest extends TestCase
         $this->assertSame(['1  1/2 cups   flour', '½ tsp salt'], collect($result->recipe->ingredients)->pluck('originalText')->all());
         $this->assertSame(['Mix gently — do not overwork.', 'Bake at 180°C.'], collect($result->recipe->steps)->pluck('text')->all());
         $this->assertSame(['Prepare'], collect($result->recipe->sections)->pluck('name')->all());
+        $this->assertSame('240.000000000000000000', $result->nutrition['per_serving']['energy_kcal']['value']);
+        $this->assertSame('240.000000000000000000', $result->nutrition['per_serving']['energy_kj']['value']);
+        $this->assertSame('0.125000000000000000', $result->nutrition['per_serving']['sodium']['value']);
+        $this->assertSame('sodiumContent', $result->nutrition['observations']['sodium']['source_field']);
     }
 
     public function test_graph_recipe_and_string_instruction_are_supported(): void

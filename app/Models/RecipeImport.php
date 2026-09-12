@@ -13,6 +13,7 @@ use Illuminate\Support\Str;
 
 /**
  * @property array<string, mixed>|null $provenance
+ * @property array<string, mixed>|null $nutrition_source
  * @property list<string>|null $warnings
  * @property RecipeImportType $type
  * @property RecipeImportStatus $status
@@ -44,6 +45,7 @@ class RecipeImport extends Model
             'requires_review' => 'boolean',
             'warnings' => 'array',
             'provenance' => 'array',
+            'nutrition_source' => 'array',
             'manual_retry_count' => 'integer',
             'extracted_at' => 'immutable_datetime',
             'started_at' => 'immutable_datetime',

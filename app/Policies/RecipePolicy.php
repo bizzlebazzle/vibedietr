@@ -56,4 +56,9 @@ class RecipePolicy
         return $user->getKey() === $recipe->user_id
             && $recipe->isFinalized();
     }
+
+    public function overrideNutrition(User $user, Recipe $recipe): bool
+    {
+        return $user->getKey() === $recipe->user_id && $recipe->isFinalized();
+    }
 }

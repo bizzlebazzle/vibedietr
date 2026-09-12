@@ -2,8 +2,13 @@
 
 namespace App\Domain\RecipeImports\Extraction;
 
+use App\Domain\Nutrition\Nutrient;
+use App\Domain\Nutrition\NutrientUnit;
+use App\Domain\Nutrition\NutrientUnitConverter;
+use App\Domain\Nutrition\RecipeNutritionValueNormalizer;
 use App\Domain\RecipeImports\Parsing\ParsedRecipe;
 use App\Domain\RecipeImports\Parsing\RecipeTextParser;
+use App\Domain\Shared\Decimal;
 use App\Integrations\RecipeWebpages\WebpageFetchException;
 use DOMDocument;
 use DOMElement;
@@ -15,7 +20,11 @@ final class WebpageRecipeExtractor
 {
     public const IDENTIFIER = 'vibedietr.schema_jsonld_visible_text';
 
-    public function __construct(private readonly RecipeTextParser $parser) {}
+    public function __construct(
+        private readonly RecipeTextParser $parser,
+        private readonly RecipeNutritionValueNormalizer $nutritionNormalizer,
+        private readonly NutrientUnitConverter $unitConverter = new NutrientUnitConverter,
+    ) {}
 
     public function extract(string $html): ExtractedWebpageRecipe
     {
@@ -44,7 +53,7 @@ final class WebpageRecipeExtractor
                 if ($malformed) {
                     $warnings[] = 'structured_data_malformed';
                 }
-                $structured = $this->result($parsed, $source, 'schema_jsonld', $warnings);
+                $structured = $this->result($parsed, $source, 'schema_jsonld', $warnings, $candidate['nutrition'] ?? null);
                 if ($parsed->ingredients !== [] && $parsed->steps !== []) {
                     return $structured;
                 }
@@ -309,7 +318,7 @@ final class WebpageRecipeExtractor
     }
 
     /** @param list<string> $warnings */
-    private function result(ParsedRecipe $parsed, string $source, string $method, array $warnings): ExtractedWebpageRecipe
+    private function result(ParsedRecipe $parsed, string $source, string $method, array $warnings, mixed $nutrition = null): ExtractedWebpageRecipe
     {
         $warnings = array_values(array_unique($warnings));
         $strong = $parsed->ingredients === [] || $parsed->steps === []
@@ -323,6 +332,69 @@ final class WebpageRecipeExtractor
         return new ExtractedWebpageRecipe(
             $recipe, $source, $method, self::IDENTIFIER,
             (string) (config('production.imports.extractor_version') ?: 'rec16-v1'),
+            $this->nutrition($nutrition),
         );
+    }
+
+    /** @return array<string, mixed>|null */
+    private function nutrition(mixed $nutrition): ?array
+    {
+        if (! is_array($nutrition)) {
+            return null;
+        }
+        $fields = [
+            'calories' => [Nutrient::EnergyKcal, NutrientUnit::Kilocalorie],
+            'fatContent' => [Nutrient::Fat, NutrientUnit::Gram],
+            'saturatedFatContent' => [Nutrient::SaturatedFat, NutrientUnit::Gram],
+            'carbohydrateContent' => [Nutrient::Carbohydrates, NutrientUnit::Gram],
+            'sugarContent' => [Nutrient::Sugars, NutrientUnit::Gram],
+            'fiberContent' => [Nutrient::Fibre, NutrientUnit::Gram],
+            'proteinContent' => [Nutrient::Protein, NutrientUnit::Gram],
+            'sodiumContent' => [Nutrient::Sodium, NutrientUnit::Milligram],
+        ];
+        $values = [];
+        $observations = [];
+        foreach ($fields as $field => [$nutrient, $targetUnit]) {
+            $parsed = $this->nutritionAmount($nutrition[$field] ?? null);
+            if ($parsed === null) {
+                continue;
+            }
+            [$value, $sourceUnit] = $parsed;
+            try {
+                $converted = Decimal::forStorage($this->unitConverter->convert($value, $sourceUnit, $targetUnit));
+            } catch (\Throwable) {
+                continue;
+            }
+            $values[$nutrient->value] = $converted;
+            $observations[$nutrient->value] = ['source_field' => $field, 'source_value' => $value, 'source_unit' => $sourceUnit->value];
+        }
+        if ($values === []) {
+            return null;
+        }
+
+        return [
+            'type' => 'imported_source',
+            'is_estimate' => false,
+            'per_serving' => $this->nutritionNormalizer->normalize($values, 'imported_recipe_source'),
+            'observations' => $observations,
+        ];
+    }
+
+    /** @return array{string, NutrientUnit}|null */
+    private function nutritionAmount(mixed $value): ?array
+    {
+        if ((! is_string($value) && ! is_int($value))
+            || ! preg_match('/^\s*(\d+(?:\.\d+)?)\s*(kcal|calories?|kj|g|mg)\s*$/i', (string) $value, $match)) {
+            return null;
+        }
+        $unit = match (strtolower($match[2])) {
+            'kcal', 'calorie', 'calories' => NutrientUnit::Kilocalorie,
+            'kj' => NutrientUnit::Kilojoule,
+            'g' => NutrientUnit::Gram,
+            'mg' => NutrientUnit::Milligram,
+            default => throw new \LogicException('Unexpected validated nutrition unit.'),
+        };
+
+        return [$match[1], $unit];
     }
 }

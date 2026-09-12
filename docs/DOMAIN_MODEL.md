@@ -1399,6 +1399,29 @@ and accepted term ID/category/name only; they omit suggestions, private tags,
 actors, internal states, and audits. There is no represented recipe-nutrition
 completeness or claim-verification concept, so no tag is presented as verified.
 
+### Recipe nutrition sources and overrides
+
+Each immutable recipe-version snapshot may contain the NUT-15 ingredient
+estimate and an imported per-serving nutrition snapshot with its import,
+extractor, and parser provenance. Source selection is version-scoped and uses
+the fixed whole-source precedence creator override, imported source, then
+ingredient estimate; it does not fill individual missing nutrients from a
+lower-precedence source. Lower-precedence records are retained for comparison,
+with the ingredient estimate collapsed when it is not primary.
+
+`RecipeNutritionOverrideEvent` is the append-only, version-owned record of an
+override being added, changed, or removed. It stores the prior and resulting
+whole source and per-serving values, the server timestamp, nullable actor
+relationship, optional note, and the corresponding immutable FND-05 audit-event
+identifier. The latest event determines whether that version currently has an
+override; removal records a null result and reselects the next available source
+without deleting imported or estimated data.
+
+Only the recipe owner may mutate nutrition for the current finalized version.
+The submitted version identifier is checked under lock so a revision becoming
+current cannot receive a stale override. Override state and history are not
+copied when a new version is created.
+
 ## Concepts not yet represented
 
 The following concepts named in the project purpose have no current domain
@@ -1406,7 +1429,6 @@ representation:
 
 - Match between a recipe line and a food/ingredient record.
 - Recipe yield, portion, or serving.
-- Calculated or estimated recipe nutrition.
 - Meal.
 - Meal plan or schedule.
 - Diet plan, nutrition target, or dietary constraint.

@@ -104,9 +104,20 @@ work.
   including unmatched lines, conversion exclusions, nutrient gaps, and
   review-needed automatic matches. Owners can open the corresponding line in
   the existing recipe revision and catalogue-match editor; readers see the
-  limitation without edit controls. Source precedence, overrides,
-  recalculation, and nutrition claims remain assigned to NUT-17 and NUT-18.
-  DEC-002 remains unresolved for broader review-warning UX under UX-04.
+  limitation without edit controls.
+- NUT-17 selects a recipe version's primary nutrition source in the fixed order
+  creator override, imported-source nutrition, then ingredient estimate.
+  Structured webpage nutrition is normalized to the shared per-serving
+  nutrient representation and snapshotted with import, extractor, and parser
+  provenance into the immutable recipe version. Lower-precedence data remains
+  intact; ingredient estimates appear as a collapsed comparison when they are
+  not primary. Owners may add, change, or remove an override only against the
+  current finalized version, with stale-version rejection. Append-only override
+  history retains prior and resulting values and sources, server timestamp,
+  actor, optional note, and its corresponding FND-05 audit reference. Selection
+  and history are version-scoped and are not copied into revisions.
+  Recalculation and nutrition claims remain assigned to NUT-18. DEC-002 remains
+  unresolved for broader review-warning UX under UX-04.
 - Meal plans, consumption snapshots, targets, plan sharing, and plan
   comparisons are not represented (PLAN-01 through PLAN-12).
 - Product identity, primary navigation, broader responsive/accessibility work,

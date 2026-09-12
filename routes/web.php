@@ -12,6 +12,7 @@ use App\Http\Controllers\RecipeCollectionController;
 use App\Http\Controllers\RecipeController;
 use App\Http\Controllers\RecipeDiscoveryController;
 use App\Http\Controllers\RecipeImportController;
+use App\Http\Controllers\RecipeNutritionOverrideController;
 use App\Http\Controllers\RecipeRemixController;
 use Illuminate\Support\Facades\Route;
 
@@ -100,6 +101,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('recipe-imports/{recipeImport}', [RecipeImportController::class, 'show'])->whereUlid('recipeImport')->name('recipe-imports.show');
     Route::post('recipe-imports/{recipeImport}/retry', [RecipeImportController::class, 'retry'])
         ->middleware('throttle:recipe-import')->whereUlid('recipeImport')->name('recipe-imports.retry');
+    Route::put('recipes/{recipe}/nutrition-override', [RecipeNutritionOverrideController::class, 'update'])
+        ->whereNumber('recipe')
+        ->name('recipes.nutrition-override.update');
+    Route::delete('recipes/{recipe}/nutrition-override', [RecipeNutritionOverrideController::class, 'destroy'])
+        ->whereNumber('recipe')
+        ->name('recipes.nutrition-override.destroy');
     Route::resource('recipes', RecipeController::class)->only(['create', 'edit']);
     Route::delete('recipes/{recipe}/revision', [RecipeController::class, 'abandonRevision'])
         ->name('recipes.revision.destroy');

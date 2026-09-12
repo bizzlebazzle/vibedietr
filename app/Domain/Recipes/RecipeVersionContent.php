@@ -44,7 +44,7 @@ final class RecipeVersionContent
     /** @return array<string, mixed> */
     public function snapshot(Recipe $recipe): array
     {
-        $recipe->loadMissing('ingredientLines.catalogueMatch.catalogueItemVersion');
+        $recipe->loadMissing(['ingredientLines.catalogueMatch.catalogueItemVersion', 'sourceImport']);
 
         return [
             'title' => $recipe->title,
@@ -79,6 +79,9 @@ final class RecipeVersionContent
                 'section_key' => $step->section_id === null ? null : 'section-'.$step->section_id,
             ])->values()->all(),
             'nutrition_estimate' => $this->nutritionEstimator->estimate($recipe),
+            'imported_nutrition' => is_array($recipe->sourceImport?->nutrition_source)
+                ? $recipe->sourceImport->nutrition_source
+                : null,
         ];
     }
 
