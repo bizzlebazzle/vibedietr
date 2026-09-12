@@ -159,6 +159,65 @@
         @endif
     </section>
 
+    @if ($nutritionEstimate !== null)
+        <section aria-labelledby="recipe-nutrition-heading" class="space-y-4 rounded border border-gray-200 p-4 dark:border-slate-700">
+            <div>
+                <h2 id="recipe-nutrition-heading" class="font-semibold">Nutrition estimates</h2>
+                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Calculated from the ingredient lines and catalogue data saved with this recipe version. Values are estimates, not verified nutrition facts.</p>
+            </div>
+
+            @if ($nutritionEstimate['status'] === 'complete')
+                <p class="rounded border border-green-200 bg-green-50 p-3 text-sm text-green-800 dark:border-green-900 dark:bg-green-950/40 dark:text-green-100">
+                    Complete estimate: every ingredient line contributed and none requires review.
+                </p>
+            @else
+                <aside role="status" aria-labelledby="nutrition-limitations-heading" class="rounded border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100">
+                    <h3 id="nutrition-limitations-heading" class="font-semibold">Estimate limitations</h3>
+                    <p class="mt-1">
+                        @if ($nutritionEstimate['status'] === 'unavailable')
+                            No nutrition values are currently available for this recipe estimate.
+                        @else
+                            This is a partial estimate. Available values remain useful, but the lines below are excluded from some or all calculations or require review.
+                        @endif
+                    </p>
+                    @if ($nutritionEstimate['issues'] !== [])
+                        <ol class="mt-3 list-decimal space-y-3 pl-5">
+                            @foreach ($nutritionEstimate['issues'] as $issue)
+                                <li>
+                                    <p class="font-medium">{{ $issue['original_text'] !== '' ? $issue['original_text'] : 'Ingredient '.($issue['position'] + 1) }}</p>
+                                    <ul class="mt-1 list-disc space-y-1 pl-5">
+                                        @foreach ($issue['reasons'] as $reason)
+                                            <li>{{ $reason }}</li>
+                                        @endforeach
+                                    </ul>
+                                    @can('startRevision', $recipe)
+                                        <a href="{{ route('recipes.edit', $recipe) }}#ingredient-line-{{ $issue['position'] + 1 }}" class="mt-2 inline-flex font-semibold text-blue-700 underline dark:text-blue-300">Review or correct ingredient {{ $issue['position'] + 1 }}</a>
+                                    @endcan
+                                </li>
+                            @endforeach
+                        </ol>
+                    @endif
+                </aside>
+            @endif
+
+            <div class="grid gap-5 md:grid-cols-2">
+                @foreach (['whole_recipe' => 'Estimated nutrition — whole recipe', 'per_serving' => 'Estimated nutrition — per serving'] as $scope => $heading)
+                    <section aria-labelledby="nutrition-{{ str_replace('_', '-', $scope) }}-heading">
+                        <h3 id="nutrition-{{ str_replace('_', '-', $scope) }}-heading" class="font-semibold">{{ $heading }}</h3>
+                        <dl class="mt-2 divide-y divide-gray-200 text-sm dark:divide-slate-700">
+                            @foreach ($nutritionEstimate[$scope] as $nutrient)
+                                <div class="flex items-center justify-between gap-4 py-2">
+                                    <dt>{{ $nutrient['label'] }}</dt>
+                                    <dd class="font-medium {{ $nutrient['available'] ? '' : 'text-gray-500 dark:text-gray-400' }}">{{ $nutrient['value'] }}</dd>
+                                </div>
+                            @endforeach
+                        </dl>
+                    </section>
+                @endforeach
+            </div>
+        </section>
+    @endif
+
     <section aria-labelledby="recipe-instructions-heading">
         <h2 id="recipe-instructions-heading" class="font-semibold">Instructions</h2>
         @if ($publicRecipe !== null)
