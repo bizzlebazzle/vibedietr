@@ -37,4 +37,10 @@ class MealPlanSlot extends Model
     {
         return $this->hasMany(MealPlanRecipeEntry::class)->orderBy('id');
     }
+
+    /** @return HasMany<MealPlanItemEntry, $this> */
+    public function itemEntries(): HasMany
+    {
+        return $this->hasMany(MealPlanItemEntry::class)->orderBy('id');
+    }
 }

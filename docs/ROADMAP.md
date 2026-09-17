@@ -1049,6 +1049,8 @@ changes, it is deliberately split across multiple items.
 
 ### PLAN-04 — P1 — Add catalogue and one-off plan entries
 
+- **Status:** Complete (2026-09-17).
+
 - **Outcome:** Record an approved catalogue product or a private one-off item
   without forcing it into a recipe or shared catalogue.
 - **Dependencies:** PLAN-02, NUT-05.

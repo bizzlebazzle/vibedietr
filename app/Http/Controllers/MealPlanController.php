@@ -42,7 +42,7 @@ class MealPlanController extends Controller
     {
         $mealPlan = $this->mealPlan($request, $mealPlan);
         $this->authorize('view', $mealPlan);
-        $mealPlan->load('days.slots.recipeEntries');
+        $mealPlan->load(['days.slots.recipeEntries', 'days.slots.itemEntries']);
 
         return view('meal-plans.show', compact('mealPlan'));
     }
