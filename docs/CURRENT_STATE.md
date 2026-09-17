@@ -138,8 +138,19 @@ work.
   never changes their pinned data. Later recipe publication, nutrition
   override, recalculation, unpublishing, or source deletion cannot rewrite the
   entry-owned snapshots.
-- Catalogue/one-off plan entries, consumption snapshots, targets, plan sharing,
-  and plan comparisons are not represented (PLAN-04 through PLAN-12).
+- PLAN-04 adds explicit catalogue and one-off entry kinds to every plan slot.
+  Catalogue entries accept only an approved record's server-selected current
+  version and pin its identity, version number, factual/package snapshot,
+  normalized nutrition facts, planned amount, and unit. One-off entries keep
+  their wording, exact entered nutrition, and normalized ten-nutrient,
+  explicitly based values only on the owner-scoped entry; kcal remains
+  authoritative for energy. Creating one never creates or submits catalogue
+  data.
+  Both payload shapes are mutually exclusive in request and database
+  validation, immutable after creation except for moving within the same plan,
+  and removable only by the plan owner.
+- Consumption snapshots, targets, plan sharing, and plan comparisons are not
+  represented (PLAN-05 through PLAN-12).
 - Product identity, primary navigation, broader responsive/accessibility work,
   and general onboarding remain planned (UX-01 through UX-07). DEC-002 blocks
   UX-04.

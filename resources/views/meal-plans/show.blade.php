@@ -54,6 +54,45 @@
                                     </div>
 
                                     <div class="ml-11 mt-3 space-y-3">
+                                        @foreach ($planSlot->itemEntries as $entry)
+                                            <div class="rounded bg-gray-50 p-3 text-sm text-gray-800 dark:bg-slate-800 dark:text-slate-200">
+                                                <p class="font-medium">
+                                                    {{ $entry->kind === \App\Domain\MealPlans\MealPlanItemEntryKind::Catalogue
+                                                        ? ($entry->catalogue_snapshot['name'] ?? 'Catalogue item snapshot')
+                                                        : $entry->one_off_wording }}
+                                                </p>
+                                                <p>
+                                                    {{ rtrim(rtrim($entry->planned_amount, '0'), '.') }}
+                                                    {{ \App\Domain\Measurements\MeasurementUnitRegistry::definition($entry->planned_unit)->symbol }} planned
+                                                    · {{ $entry->kind === \App\Domain\MealPlans\MealPlanItemEntryKind::Catalogue ? 'catalogue version '.$entry->catalogue_item_version_number : 'private one-off item' }}
+                                                </p>
+                                                <div class="mt-2 flex flex-wrap gap-2">
+                                                    <form method="POST" action="{{ route('meal-plans.item-entries.update', [$mealPlan, $entry]) }}" class="flex items-end gap-2">
+                                                        @csrf
+                                                        @method('PATCH')
+                                                        <label>
+                                                            <span class="block text-xs">Move to</span>
+                                                            <select name="target_slot_id" class="mt-1 rounded-md border-gray-300 bg-white text-gray-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100">
+                                                                @foreach ($mealPlan->days as $targetDay)
+                                                                    @foreach ($targetDay->slots as $targetSlot)
+                                                                        <option value="{{ $targetSlot->id }}" @selected($targetSlot->is($planSlot))>
+                                                                            {{ $targetDay->date?->toDateString() ?? 'Day '.($targetDay->day_index + 1) }} — {{ $targetSlot->name }}
+                                                                        </option>
+                                                                    @endforeach
+                                                                @endforeach
+                                                            </select>
+                                                        </label>
+                                                        <x-primary-button>Move</x-primary-button>
+                                                    </form>
+                                                    <form method="POST" action="{{ route('meal-plans.item-entries.destroy', [$mealPlan, $entry]) }}">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <x-danger-button>Remove</x-danger-button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        @endforeach
+
                                         @foreach ($planSlot->recipeEntries as $entry)
                                             <div class="rounded bg-gray-50 p-3 text-sm text-gray-800 dark:bg-slate-800 dark:text-slate-200">
                                                 <p class="font-medium">{{ $entry->recipe_snapshot['title'] ?? 'Recipe snapshot' }}</p>
@@ -98,6 +137,80 @@
                                             </label>
                                             <x-primary-button>Add recipe</x-primary-button>
                                         </form>
+
+                                        <form method="POST" action="{{ route('meal-plans.item-entries.store', $mealPlan) }}" class="flex flex-wrap items-end gap-2">
+                                            @csrf
+                                            <input type="hidden" name="slot_id" value="{{ $planSlot->id }}">
+                                            <input type="hidden" name="kind" value="catalogue">
+                                            <label class="text-sm text-gray-700 dark:text-slate-300">
+                                                Approved catalogue item ID
+                                                <x-text-input name="catalogue_item_id" type="number" min="1" required class="mt-1 block w-36" />
+                                            </label>
+                                            <label class="text-sm text-gray-700 dark:text-slate-300">
+                                                Planned amount
+                                                <x-text-input name="planned_amount" type="number" min="0.000000000000000001" step="any" required class="mt-1 block w-36" />
+                                            </label>
+                                            <label class="text-sm text-gray-700 dark:text-slate-300">
+                                                Unit
+                                                <select name="planned_unit" required class="mt-1 block rounded-md border-gray-300 bg-white text-gray-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100">
+                                                    @foreach (\App\Domain\Measurements\MeasurementUnitRegistry::formGroups() as $group => $units)
+                                                        <optgroup label="{{ $group }}">
+                                                            @foreach ($units as $symbol => $label)
+                                                                <option value="{{ \App\Domain\Measurements\MeasurementUnitRegistry::findStandard($symbol)?->value }}">{{ $label }}</option>
+                                                            @endforeach
+                                                        </optgroup>
+                                                    @endforeach
+                                                </select>
+                                            </label>
+                                            <x-primary-button>Add catalogue item</x-primary-button>
+                                        </form>
+
+                                        <details class="rounded border border-gray-200 p-3 dark:border-slate-700">
+                                            <summary class="cursor-pointer text-sm font-medium text-gray-800 dark:text-slate-200">Add a private one-off item</summary>
+                                            <form method="POST" action="{{ route('meal-plans.item-entries.store', $mealPlan) }}" class="mt-3 grid gap-3 sm:grid-cols-2">
+                                                @csrf
+                                                <input type="hidden" name="slot_id" value="{{ $planSlot->id }}">
+                                                <input type="hidden" name="kind" value="one_off">
+                                                <label class="text-sm text-gray-700 dark:text-slate-300 sm:col-span-2">
+                                                    Item wording
+                                                    <x-text-input name="one_off_wording" required maxlength="255" class="mt-1 block w-full" />
+                                                </label>
+                                                <label class="text-sm text-gray-700 dark:text-slate-300">
+                                                    Planned amount
+                                                    <x-text-input name="planned_amount" type="number" min="0.000000000000000001" step="any" required class="mt-1 block w-full" />
+                                                </label>
+                                                <label class="text-sm text-gray-700 dark:text-slate-300">
+                                                    Unit
+                                                    <select name="planned_unit" required class="mt-1 block w-full rounded-md border-gray-300 bg-white text-gray-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100">
+                                                        @foreach (\App\Domain\Measurements\MeasurementUnitRegistry::formGroups() as $group => $units)
+                                                            <optgroup label="{{ $group }}">
+                                                                @foreach ($units as $symbol => $label)
+                                                                    <option value="{{ \App\Domain\Measurements\MeasurementUnitRegistry::findStandard($symbol)?->value }}">{{ $label }}</option>
+                                                                @endforeach
+                                                            </optgroup>
+                                                        @endforeach
+                                                    </select>
+                                                </label>
+                                                <label class="text-sm text-gray-700 dark:text-slate-300 sm:col-span-2">
+                                                    Nutrition basis (required when nutrition is entered)
+                                                    <select name="one_off_nutrition_basis" class="mt-1 block w-full rounded-md border-gray-300 bg-white text-gray-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100">
+                                                        <option value="">No nutrition entered</option>
+                                                        <option value="per_100g">Per 100 g</option>
+                                                        <option value="per_100ml">Per 100 ml</option>
+                                                        <option value="per_serving">Per serving</option>
+                                                        <option value="per_item">Per item</option>
+                                                    </select>
+                                                </label>
+                                                @foreach (\App\Domain\Nutrition\NutrientRegistry::all() as $definition)
+                                                    <label class="text-sm text-gray-700 dark:text-slate-300">
+                                                        {{ $definition->label }} ({{ $definition->preferredDisplayUnit->symbol() }})
+                                                        <x-text-input name="one_off_nutrition[{{ $definition->id->value }}]" type="number" min="0" step="any" class="mt-1 block w-full" />
+                                                    </label>
+                                                @endforeach
+                                                <p class="text-xs text-gray-600 dark:text-slate-300 sm:col-span-2">This wording and nutrition stay private on this plan entry. Adding it does not submit anything to the shared catalogue.</p>
+                                                <div class="sm:col-span-2"><x-primary-button>Add one-off item</x-primary-button></div>
+                                            </form>
+                                        </details>
                                     </div>
                                 </div>
                             @endforeach

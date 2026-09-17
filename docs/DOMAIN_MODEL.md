@@ -1168,6 +1168,10 @@ User 1 ---- owns ---- 0..* Ingredient
                                   +-- dated: calendar date within plan range
                                   +-- contains ordered MealPlanSlot records
                                         +-- contains 0..* MealPlanRecipeEntry
+                                        +-- contains 0..* MealPlanItemEntry
+                                              +-- exactly one kind:
+                                                  approved CatalogueItemVersion snapshot
+                                                  or private one-off wording/nutrition
 ```
 
 An audit actor identity optionally references one user with `ON DELETE SET NULL`.
@@ -1177,8 +1181,8 @@ mutating the append-only event. Non-user subjects use a bounded identifier and
 no hard domain foreign key. System actors have no identity mapping.
 
 There is intentionally no represented relationship between the user-owned
-`Ingredient` food/product record and a recipe ingredient line. Plan entries,
-meals, diet targets, and food-log entries are not represented.
+`Ingredient` food/product record and a recipe ingredient line. Meal
+consumption, diet targets, and food-log entries are not represented.
 
 ## Current rules and constraints
 
@@ -1206,6 +1210,20 @@ Database-enforced rules:
   identities are indexed historical references without cascading foreign keys;
   the entry-owned recipe and nutrition snapshot JSON remains when a source is
   later unavailable. Deleting a slot cascades to its entries.
+- Every catalogue/one-off plan entry belongs to one slot and stores a positive
+  decimal planned amount plus one standard measurement unit. Its explicit kind
+  is `catalogue` or `one_off`, with a database check requiring exactly the
+  corresponding payload and prohibiting a mixed entry.
+- A catalogue plan entry records the approved source identity, the current
+  catalogue version selected by the server, its version number, factual and
+  package snapshot, and normalized nutrition snapshot. Those source identities
+  are indexed historical references without cascading foreign keys; later
+  catalogue versions do not rewrite the entry-owned snapshots.
+- A one-off plan entry stores its wording, exact entered nutrition, and
+  explicitly based normalized nutrition JSON only on that private nested
+  entry. kcal remains authoritative when both energy units are entered. It has
+  no catalogue identity or catalogue snapshot and creates no catalogue record,
+  version, nutrient value, submission, or moderation decision.
 - Every recipe ingredient line belongs to an existing recipe, and deleting the
   recipe deletes its lines.
 - Original recipe ingredient text and a non-negative recipe-local position are
