@@ -242,3 +242,15 @@ Queue attempts and skipped or failed operations do not create audit events.
 Their durable operation state and privacy-safe queue telemetry remain the
 technical trace. Database uniqueness and the completed-state check ensure retry
 or replay cannot append a second calculation or audit event.
+
+## PLAN-05 diary consumption transitions
+
+Each successful consume, correct, reverse, or re-consume operation appends one
+`diary.consumption_transitioned` product-history event in the same transaction
+as its immutable domain transition and current-state projection. Its subject is
+the opaque transition ULID and its authenticated-user actor uses the erasable
+identity mapping. The payload contains only `transition_kind` and the completed
+outcome. Quantity, unit, local or UTC time, timezone, diary date, plan/item
+identity, source snapshot, and private wording are prohibited from generic
+audit metadata. The owner-authorized transition chain is the authoritative
+history and is deleted at final account purge.

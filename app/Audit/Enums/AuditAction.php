@@ -34,6 +34,7 @@ enum AuditAction: string
     case RecipeNutritionOverrideApplied = 'recipe.nutrition_override_applied';
     case RecipeNutritionRecalculated = 'recipe.nutrition_recalculated';
     case PlanSnapshotRecorded = 'plan.snapshot_recorded';
+    case DiaryConsumptionTransitioned = 'diary.consumption_transitioned';
     case AccountAnonymizationCompleted = 'account.anonymization_completed';
     case SecuritySecondFactorEvent = 'security.second_factor_event';
     case SecurityNotificationEvent = 'security.notification_event';
@@ -70,7 +71,8 @@ enum AuditAction: string
             self::RecipeRemixed,
             self::RecipeNutritionOverrideApplied,
             self::RecipeNutritionRecalculated,
-            self::PlanSnapshotRecorded => AuditPurpose::ProductHistory,
+            self::PlanSnapshotRecorded,
+            self::DiaryConsumptionTransitioned => AuditPurpose::ProductHistory,
             self::AccountAnonymizationCompleted => AuditPurpose::AccountErasureEvidence,
             self::SecuritySecondFactorEvent,
             self::SecurityNotificationEvent => AuditPurpose::AccountSecurity,
@@ -109,7 +111,8 @@ enum AuditAction: string
             self::RecipeRemixed,
             self::RecipeNutritionOverrideApplied,
             self::RecipeNutritionRecalculated,
-            self::PlanSnapshotRecorded => AuditRetentionClass::PrivateContentUntilFinalPurge,
+            self::PlanSnapshotRecorded,
+            self::DiaryConsumptionTransitioned => AuditRetentionClass::PrivateContentUntilFinalPurge,
             self::AccountAnonymizationCompleted => AuditRetentionClass::PurgeReceiptTwelveMonths,
             self::SecuritySecondFactorEvent,
             self::SecurityNotificationEvent => AuditRetentionClass::SecurityEventSixMonths,
@@ -157,7 +160,8 @@ enum AuditAction: string
             self::RecipeRevisionCreated,
             self::RecipeRevisionAbandoned,
             self::RecipeRevisionPublished,
-            self::RecipeRemixed => [AuditActorType::AuthenticatedUser],
+            self::RecipeRemixed,
+            self::DiaryConsumptionTransitioned => [AuditActorType::AuthenticatedUser],
             self::RecipeNutritionOverrideApplied => [
                 AuditActorType::AuthenticatedUser,
                 AuditActorType::Administrator,
@@ -214,6 +218,7 @@ enum AuditAction: string
             ],
             self::RecipeNutritionRecalculated => [AuditSubjectType::NutritionCalculation],
             self::PlanSnapshotRecorded => [AuditSubjectType::PlanSnapshot],
+            self::DiaryConsumptionTransitioned => [AuditSubjectType::DiaryConsumptionTransition],
             self::SecuritySecondFactorEvent,
             self::SecurityNotificationEvent => [AuditSubjectType::UserAccount],
         };

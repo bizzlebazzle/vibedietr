@@ -144,8 +144,11 @@ work.
   privately on the entry, with kcal authoritative. Request and database checks
   reject mixed kinds; pinned data is immutable, moves stay within the plan,
   and creation never submits to the catalogue.
-- Consumption snapshots, targets, plan sharing, and plan comparisons are not
-  represented (PLAN-05 through PLAN-12).
+- PLAN-05 records owner-only consumption for dated plan and standalone ad-hoc
+  entries. Planned amounts remain unchanged; DEC-019 actual amount/time and
+  consume/correct/reverse/re-consume history are retained. Reusable entries are
+  rejected, and consumption history blocks move/removal.
+- PLAN-06 snapshots and later target, sharing, and comparison work remain planned.
 - Product identity, primary navigation, broader responsive/accessibility work,
   and general onboarding remain planned (UX-01 through UX-07). DEC-002 blocks
   UX-04.

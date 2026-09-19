@@ -3,8 +3,10 @@
 use App\Http\Controllers\BookmarkController;
 use App\Http\Controllers\CatalogueController;
 use App\Http\Controllers\CatalogueCorrectionProposalController;
+use App\Http\Controllers\DiaryEntryController;
 use App\Http\Controllers\IngredientController;
 use App\Http\Controllers\ManualCatalogueSubmissionController;
+use App\Http\Controllers\MealPlanConsumptionController;
 use App\Http\Controllers\MealPlanController;
 use App\Http\Controllers\MealPlanDayController;
 use App\Http\Controllers\MealPlanItemEntryController;
@@ -63,6 +65,16 @@ Route::middleware(['auth'])->group(function () {
         ->whereNumber(['mealPlan', 'day', 'slot'])->name('meal-plans.days.slots.update');
     Route::put('meal-plans/{mealPlan}/days/{day}/slots/order', [MealPlanSlotController::class, 'reorder'])
         ->whereNumber(['mealPlan', 'day'])->name('meal-plans.days.slots.reorder');
+    Route::post('meal-plans/{mealPlan}/{entryType}-entries/{entry}/consumption', [MealPlanConsumptionController::class, 'store'])
+        ->whereNumber(['mealPlan', 'entry'])->whereIn('entryType', ['recipe', 'item'])->name('meal-plans.consumption.store');
+    Route::patch('meal-plans/{mealPlan}/{entryType}-entries/{entry}/consumption', [MealPlanConsumptionController::class, 'update'])
+        ->whereNumber(['mealPlan', 'entry'])->whereIn('entryType', ['recipe', 'item'])->name('meal-plans.consumption.update');
+    Route::delete('meal-plans/{mealPlan}/{entryType}-entries/{entry}/consumption', [MealPlanConsumptionController::class, 'destroy'])
+        ->whereNumber(['mealPlan', 'entry'])->whereIn('entryType', ['recipe', 'item'])->name('meal-plans.consumption.destroy');
+    Route::post('diary-entries', [DiaryEntryController::class, 'store'])->name('diary-entries.store');
+    Route::post('diary-entries/{diaryEntry}/consumption', [DiaryEntryController::class, 'consume'])->whereNumber('diaryEntry')->name('diary-entries.consumption.store');
+    Route::patch('diary-entries/{diaryEntry}/consumption', [DiaryEntryController::class, 'update'])->whereNumber('diaryEntry')->name('diary-entries.consumption.update');
+    Route::delete('diary-entries/{diaryEntry}/consumption', [DiaryEntryController::class, 'destroy'])->whereNumber('diaryEntry')->name('diary-entries.consumption.destroy');
     Route::post('meal-plans/{mealPlan}/recipe-entries', [MealPlanRecipeEntryController::class, 'store'])
         ->whereNumber('mealPlan')->name('meal-plans.recipe-entries.store');
     Route::patch('meal-plans/{mealPlan}/recipe-entries/{entry}', [MealPlanRecipeEntryController::class, 'update'])

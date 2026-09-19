@@ -1162,6 +1162,11 @@ User 1 ---- owns ---- 0..* Ingredient
   +------ owns ---- 0..* PrivateRecipeTag
                             +-- applies to owned Recipe or Bookmark memberships
   |
+  +------ owns ---- 0..* DiaryEntry (recipe, catalogue, or private one-off)
+                            +-- owns one DiaryConsumptionState
+                                  +-- contains immutable DiaryConsumptionTransition history
+                                  +-- points to the current active transition, if consumed
+  |
   +------ owns ---- 0..* MealPlan (reusable undated or dated range; private)
                             +-- contains 0..* MealPlanDay
                                   +-- reusable: non-negative day index
@@ -1172,6 +1177,9 @@ User 1 ---- owns ---- 0..* Ingredient
                                               +-- exactly one kind:
                                                   approved CatalogueItemVersion snapshot
                                                   or private one-off wording/nutrition
+                                        +-- each dated entry may own one
+                                            DiaryConsumptionState and immutable
+                                            DiaryConsumptionTransition history
 ```
 
 An audit actor identity optionally references one user with `ON DELETE SET NULL`.
@@ -1182,7 +1190,8 @@ no hard domain foreign key. System actors have no identity mapping.
 
 There is intentionally no represented relationship between the user-owned
 `Ingredient` food/product record and a recipe ingredient line. Meal
-consumption, diet targets, and food-log entries are not represented.
+consumption and ad-hoc food-log entries are represented by the private diary
+resources above. Diet targets are not represented.
 
 ## Current rules and constraints
 
@@ -1224,6 +1233,18 @@ Database-enforced rules:
   entry. kcal remains authoritative when both energy units are entered. It has
   no catalogue identity or catalogue snapshot and creates no catalogue record,
   version, nutrient value, submission, or moderation decision.
+- Every ad-hoc diary entry belongs to one user and has exactly one source kind:
+  a pinned finalized recipe version, a pinned approved catalogue version, or a
+  private one-off snapshot. Deleting the user deletes these private entries.
+- Every consumption state identifies exactly one dated recipe plan entry,
+  dated item plan entry, or ad-hoc diary entry. Each target has at most one
+  state, a monotonic next sequence, and at most one current active transition.
+- Every consumption transition belongs to one state and has a sequence unique
+  within that state. Consume, correct, and re-consume rows require a positive
+  actual amount, unit, complete resolved local/UTC time fields, and effective
+  diary date. Reverse rows retain the targeted transition and prohibit copied
+  amount, time, diary-date, and snapshot fields. Transition rows cannot be
+  updated or deleted through the model.
 - Every recipe ingredient line belongs to an existing recipe, and deleting the
   recipe deletes its lines.
 - Original recipe ingredient text and a non-negative recipe-local position are
@@ -1295,6 +1316,18 @@ snapshots. Source identifiers deliberately do not grant live recipe access.
 Snapshot creation emits the minimized existing plan.snapshot_recorded
 product-history event without copying plan, recipe, or nutrition content into
 the audit store.
+
+PLAN-05 consumption writes are owner-only and accept dated plan entries or
+standalone ad-hoc diary entries; reusable undated entries are rejected. A first
+planned-entry consumption may default actual quantity from the planned value,
+but later actual values remain independent and never update that planned value.
+Local times are resolved with the account IANA timezone or an explicit
+per-consumption override. DST gaps, unresolved repeated times, future instants,
+and dates outside DEC-019's dated/ad-hoc boundaries are rejected. Consume,
+correct, reverse, and re-consume append immutable transitions while maintaining
+the current projection. Once a planned entry has consumption history it cannot
+be moved or removed. Each successful transition records the minimized
+`diary.consumption_transitioned` event in the same transaction.
 
 Application authorization also requires every membership target to have the
 same authenticated owner as its collection or private tag.

@@ -6,6 +6,7 @@ use Database\Factories\MealPlanRecipeEntryFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use LogicException;
 
 /**
@@ -49,5 +50,10 @@ class MealPlanRecipeEntry extends Model
     public function slot(): BelongsTo
     {
         return $this->belongsTo(MealPlanSlot::class, 'meal_plan_slot_id');
+    }
+
+    public function consumptionState(): HasOne
+    {
+        return $this->hasOne(DiaryConsumptionState::class, 'meal_plan_recipe_entry_id');
     }
 }
