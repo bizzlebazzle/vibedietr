@@ -26,6 +26,7 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'timezone',
         'password',
     ];
 
@@ -136,6 +137,12 @@ class User extends Authenticatable
     public function managedRecipeTermSuggestions(): HasMany
     {
         return $this->hasMany(ManagedRecipeTermSuggestion::class, 'suggested_by_user_id');
+    }
+
+    /** @return HasMany<DiaryEntry, $this> */
+    public function diaryEntries(): HasMany
+    {
+        return $this->hasMany(DiaryEntry::class);
     }
 
     public function secondFactorEnrollment(): HasOne

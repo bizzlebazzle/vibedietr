@@ -13,5 +13,6 @@ enum AuditSubjectType: string
     case NutritionOverride = 'nutrition_override';
     case NutritionCalculation = 'nutrition_calculation';
     case PlanSnapshot = 'plan_snapshot';
+    case DiaryConsumptionTransition = 'diary_consumption_transition';
     case SystemOperation = 'system_operation';
 }

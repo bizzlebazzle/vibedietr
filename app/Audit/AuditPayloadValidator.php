@@ -101,6 +101,7 @@ final class AuditPayloadValidator
             AuditAction::RecipeNutritionOverrideApplied => $this->validateNutritionOverride($payload),
             AuditAction::RecipeNutritionRecalculated => $this->validateNutritionRecalculation($payload),
             AuditAction::PlanSnapshotRecorded => $this->validatePlanSnapshot($payload),
+            AuditAction::DiaryConsumptionTransitioned => $this->validateDiaryConsumptionTransition($payload),
             AuditAction::AccountAnonymizationCompleted => $this->validateAnonymization($payload),
             AuditAction::SecuritySecondFactorEvent,
             AuditAction::SecurityNotificationEvent => $this->validateSecurityEvent($payload),
@@ -388,6 +389,16 @@ final class AuditPayloadValidator
         $this->assertShape($payload, ['outcome', 'snapshot_kind'], ['outcome', 'snapshot_kind']);
         $this->assertEnum($payload, 'outcome', ['recorded']);
         $this->assertEnum($payload, 'snapshot_kind', ['planned', 'consumed']);
+
+        return $payload;
+    }
+
+    /** @param array<string, mixed> $payload */
+    private function validateDiaryConsumptionTransition(array $payload): array
+    {
+        $this->assertShape($payload, ['transition_kind', 'outcome'], ['transition_kind', 'outcome']);
+        $this->assertEnum($payload, 'transition_kind', ['consume', 'correct', 'reverse', 'reconsume']);
+        $this->assertEnum($payload, 'outcome', ['completed']);
 
         return $payload;
     }

@@ -141,6 +141,9 @@ final class MealPlanItemEntryWriter
             $entry = MealPlanItemEntry::query()->lockForUpdate()->findOrFail($entry->getKey());
             $entry->load('slot.day.mealPlan');
             Gate::forUser($actor)->authorize('update', $entry->slot->day->mealPlan);
+            if ($entry->consumptionState()->exists()) {
+                throw ValidationException::withMessages(['entry' => 'An entry with consumption history cannot be moved or removed.']);
+            }
 
             $targetSlot = $this->authorizedSlot($targetSlot, $actor);
             if (! $targetSlot->day->mealPlan->is($entry->slot->day->mealPlan)) {
@@ -162,6 +165,9 @@ final class MealPlanItemEntryWriter
             $entry = MealPlanItemEntry::query()->lockForUpdate()->findOrFail($entry->getKey());
             $entry->load('slot.day.mealPlan');
             Gate::forUser($actor)->authorize('update', $entry->slot->day->mealPlan);
+            if ($entry->consumptionState()->exists()) {
+                throw ValidationException::withMessages(['entry' => 'An entry with consumption history cannot be moved or removed.']);
+            }
             $entry->delete();
         }, 3);
     }
