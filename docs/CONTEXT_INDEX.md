@@ -74,19 +74,19 @@ Only explicit, machine-verifiable references are included.
 | `PLAN-02` - Add plan days and default slots | 5. Meal and diet planning | Complete (2026-09-12) | `PLAN-01` | `PLAN-03`, `PLAN-04` | - | - |
 | `PLAN-03` - Add recipe entries with version snapshots | 5. Meal and diet planning | Complete (2026-09-12) | `PLAN-02`, `REC-07`, `NUT-15` | `PLAN-05`, `PLAN-07`, `PLAN-08`, `UX-06` | - | Current rules and constraints (line 1187) |
 | `PLAN-04` - Add catalogue and one-off plan entries | 5. Meal and diet planning | Complete (2026-09-17) | `PLAN-02`, `NUT-05` | `PLAN-05` | - | - |
-| `PLAN-05` - Record planned versus consumed state | 5. Meal and diet planning | Not recorded | `PLAN-03`, `PLAN-04` | `PLAN-06`, `UX-05` | - | - |
-| `PLAN-06` - Snapshot nutrition at consumption time | 5. Meal and diet planning | Not recorded | `PLAN-05`, `NUT-17`, `FND-05` | `PLAN-12` | - | - |
+| `PLAN-05` - Record planned versus consumed state | 5. Meal and diet planning | Not recorded | `PLAN-03`, `PLAN-04` | `PLAN-06`, `UX-05` | `DEC-019` (Blocked) | - |
+| `PLAN-06` - Snapshot nutrition at consumption time | 5. Meal and diet planning | Not recorded | `PLAN-05`, `NUT-17`, `FND-05` | `PLAN-12` | `DEC-019` (Constrained) | - |
 | `PLAN-07` - Notify and review newer recipe versions | 5. Meal and diet planning | Not recorded | `PLAN-03`, `REC-07`, `FND-09`, `DEP-04`, `DEP-05` | - | - | - |
 | `PLAN-08` - Add selected-user sharing, public sharing, and plan bookmarks | 5. Meal and diet planning | Not recorded | `PLAN-03`, `FND-03` | `PLAN-09` | `DEC-014` (Constrained) | - |
 | `PLAN-09` - Copy an accessible meal plan | 5. Meal and diet planning | Not recorded | `PLAN-08` | - | `DEC-014` (Constrained) | - |
 | `PLAN-10` - Add nutrition target profiles | 5. Meal and diet planning | Not recorded | `FND-06`, `PLAN-01` | `PLAN-11` | - | - |
 | `PLAN-11` - Assign dated target phases | 5. Meal and diet planning | Not recorded | `PLAN-10` | `PLAN-12` | - | - |
-| `PLAN-12` - Compare planned and consumed totals with targets | 5. Meal and diet planning | Not recorded | `PLAN-06`, `PLAN-11` | `UX-05`, `DEP-07` | `DEC-004` (Constrained) | - |
+| `PLAN-12` - Compare planned and consumed totals with targets | 5. Meal and diet planning | Not recorded | `PLAN-06`, `PLAN-11` | `UX-05`, `DEP-07` | `DEC-004` (Constrained), `DEC-019` (Constrained) | - |
 | `UX-01` - Establish VibeDietr identity and primary navigation | 6. User experience and accessibility | Not recorded | `REC-01`, `NUT-03`, `PLAN-01` | `UX-06`, `UX-07` | - | - |
 | `UX-02` - Add accessible application feedback patterns | 6. User experience and accessibility | Not recorded | - | `UX-03`, `UX-04`, `UX-05`, `UX-07` | `DEC-002` (Related) | - |
 | `UX-03` - Make recipe authoring and resizing mobile-friendly | 6. User experience and accessibility | Not recorded | `REC-04`, `REC-08`, `UX-02` | `UX-07` | - | - |
 | `UX-04` - Make matching and estimate limitations understandable | 6. User experience and accessibility | Not recorded | `NUT-16`, `UX-02`, `DEC-002` | `UX-07` | `DEC-001` (Constrained), `DEC-002` (Blocked), `DEC-004` (Constrained) | - |
-| `UX-05` - Build an accessible responsive planning interface | 6. User experience and accessibility | Not recorded | `PLAN-05`, `PLAN-12`, `UX-02` | `UX-07` | - | - |
+| `UX-05` - Build an accessible responsive planning interface | 6. User experience and accessibility | Not recorded | `PLAN-05`, `PLAN-12`, `UX-02` | `UX-07` | `DEC-019` (Constrained) | - |
 | `UX-06` - Add onboarding, empty states, and recovery guidance | 6. User experience and accessibility | Not recorded | `UX-01`, `REC-15`, `NUT-16`, `PLAN-03` | `UX-07` | `DEC-005` (Related), `DEC-006` (Constrained), `DEC-007` (Constrained) | - |
 | `UX-07` - Run a WCAG 2.2 AA remediation pass | 6. User experience and accessibility | Not recorded | `UX-01` through `UX-06` and the corresponding feature pages | `DEP-10` | - | - |
 | `DEP-01` - Document and align the supported development environment | 7. Deployment readiness | Complete (2026-08-25) | `FND-07` | `DEP-02` | - | - |
@@ -122,6 +122,7 @@ Only explicit, machine-verifiable references are included.
 | `DEC-016` - Administrator security-notification delivery | Decided | `FND-12` (Related), `FND-13` (Unblocked), `FND-14` (Unblocked), `DEP-02` (Constrained), `DEP-04` (Constrained), `DEP-08` (Constrained) | - |
 | `DEC-017` - Culinary measurement jurisdictions | Decided | `FND-06` (Unblocked), `STB-04` (Constrained), `REC-02` (Constrained), `REC-08` (Constrained), `NUT-04` (Constrained), `NUT-14` (Constrained) | - |
 | `DEC-018` - Recipe remix attribution before public profiles | Decided | `REC-11` (Unblocked), `REC-14` (Constrained), `DEP-08` (Constrained) | Recipe remix lineage (line 392) |
+| `DEC-019` - Diary consumption time and correction history | Owner input required | `PLAN-05` (Blocked), `PLAN-06` (Constrained), `PLAN-12` (Constrained), `UX-05` (Constrained) | - |
 
 ## Domain-model section index
 
