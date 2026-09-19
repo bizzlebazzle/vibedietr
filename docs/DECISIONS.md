@@ -49,7 +49,7 @@ Backlog relationships mean:
 | DEC-016 | Administrator security-notification delivery | Decided | Product owner |
 | DEC-017 | Culinary measurement jurisdictions | Decided | Product owner |
 | DEC-018 | Recipe remix attribution before public profiles | Decided | Product owner |
-| DEC-019 | Diary consumption time and correction history | Owner input required | Product owner |
+| DEC-019 | Diary consumption time and correction history | Decided | Product owner |
 
 ## DEC-001 — Food-matching confidence thresholds
 
@@ -2015,7 +2015,7 @@ Backlog relationships mean:
   time behavior, and the immutable transition history. These choices also
   determine which consumption record PLAN-06 snapshots and which state
   PLAN-12 includes in consumed totals.
-- **Status:** Owner input required.
+- **Status:** Decided.
 - **Owner:** Product owner.
 - **Alternatives:** Treat consumption time as an exact user-entered instant or
   as a local diary date and wall-clock time resolved through an approved
@@ -2037,15 +2037,110 @@ Backlog relationships mean:
   detailed diary history as private domain data deleted at final purge, while
   generic audit events retain only minimized purpose-specific metadata rather
   than quantities, times, or diary content.
-- **Backlog relationships:** `Blocked`: PLAN-05. `Constrained`: PLAN-06,
-  PLAN-12, UX-05. `Related`: DEC-003, DEC-013, DEC-014.
+- **Backlog relationships:** Resolution unblocks PLAN-05 and removes DEC-019 as
+  its open-decision dependency. The recorded behavior constrains PLAN-06,
+  PLAN-12, and UX-05. `Related`: DEC-003, DEC-013, DEC-014.
 - **Resolution condition:** The product owner approves the meaning, timezone,
   default, date-boundary and future-time rules for consumption time; defines
   the effective diary date for any supported ad-hoc entry; and approves the
   consume, correct, reverse, and re-consume transition model, including the
   authoritative immutable fields retained for each transition and the
   minimized generic audit event for each successful action.
-- **Final decision and rationale:** Unresolved.
+- **Final decision and rationale:** Consumption time is a user-facing local
+  calendar date and wall-clock time resolved through an approved IANA
+  timezone. Each account has an IANA timezone, and an individual consumption
+  may explicitly override it. The selected timezone is never inferred
+  silently from the browser. Every consume-like transition immutably retains
+  the entered local value, IANA timezone, resolved UTC offset, resolved UTC
+  instant, and effective diary date, so later account-timezone or timezone-rule
+  changes cannot reinterpret history.
+
+  A nonexistent local time during a forward daylight-saving transition is
+  rejected with a clear validation error. When a local time occurs twice
+  during a backward transition, the user must select the intended occurrence;
+  the application does not silently choose the earlier or later offset. A
+  resolved consumption instant may not be later than the server-authoritative
+  current time.
+
+  Consuming an entry for the current local diary date defaults consumption
+  time to the current time. Recording consumption for another date requires
+  explicit time input; the application does not invent a fixed time from a
+  plan date or slot name. A dated plan entry may truthfully be consumed on its
+  planned calendar date or the immediately following local calendar date. In
+  both cases its effective diary date remains the original planned date and
+  PLAN-12 consumed totals assign it to that date. A later calendar date is
+  rejected.
+
+  An ad-hoc diary entry is a standalone owner-only diary resource rather than
+  a silently created or modified meal-plan day. It may contain a saved recipe,
+  an approved catalogue item, or a private one-off item. Its effective diary
+  date defaults to the local calendar date of its resolved consumption time;
+  the user may instead select only the immediately preceding date to represent
+  the same waking day. An ad-hoc entry recorded as consumed now defaults its
+  time to now; otherwise its time is explicit. Because it has no planned
+  quantity, creation requires an explicit actual quantity or servings and,
+  where applicable, unit. No actual quantity is inferred from a recipe serving
+  count or catalogue serving suggestion.
+
+  Planned and actual quantities remain separate. First consumption of a dated
+  planned entry defaults actual quantity to its planned quantity, after which
+  actual quantity is independently editable; consuming or correcting never
+  changes the planned value. Quantities, nutrient values, calculations, and
+  snapshots follow DEC-003 exact-decimal, provenance, basis, estimate-status,
+  and normalization-policy rules.
+
+  Consumption history is an append-only transition chain with a current
+  projection. The allowed state changes are unconsumed to consumed by
+  `consume`, consumed to a replacement consumed state by `correct`, consumed
+  to unconsumed by `reverse`, and reversed/unconsumed to a new consumed episode
+  by `reconsume`. Only the current active consumption may be corrected or
+  reversed. Historical transitions are read-only, cannot be branched or
+  replayed into a different result, and re-consumption creates a new episode
+  rather than reviving a reversed transition.
+
+  Every `consume`, `correct`, and `reconsume` transition retains a complete
+  effective state rather than a delta: immutable transition identity, entry
+  identity and kind, monotonic sequence, action, predecessor identity,
+  owner/actor reference, server-authoritative recording time, actual quantity
+  and unit or servings, local consumption value, IANA timezone, resolved
+  offset and UTC instant, effective diary date, and the applicable immutable
+  consumption-snapshot identity. A `reverse` transition retains its own
+  identity, sequence, action, owner/actor, server recording time, predecessor,
+  and targeted active-transition identity; it does not duplicate the target's
+  quantity, time, or nutrition content. A mutable current pointer or equivalent
+  projection may identify the effective transition, but it is not the
+  authoritative history.
+
+  PLAN-06 creates the first consumption snapshot atomically with consumption.
+  A quantity correction creates a replacement snapshot from the same pinned
+  source/version and never from current recipe or catalogue data. A time- or
+  effective-diary-date-only correction reuses the existing immutable nutrition
+  snapshot. Re-consumption uses the entry's pinned source/version and creates
+  a fresh snapshot; it never silently adopts a newer recipe or catalogue
+  version. No correction or reversal reason is collected.
+
+  Each successful transition appends one minimized generic audit event named
+  `diary.consumption_transitioned`. Its authenticated-user actor uses the
+  erasable audit identity mapping; its subject is the opaque transition
+  identity; its purpose is product history; and its retention class is private
+  content until final purge. Its allowlisted payload contains only
+  `transition_kind` (`consume`, `correct`, `reverse`, or `reconsume`) and
+  `outcome` (`completed`), plus the recorder's server-authoritative UTC time
+  and an optional safe correlation reference. Quantity, unit, consumption
+  time, diary date, timezone, plan or item identity, wording, nutrition,
+  snapshot content, and reasons are prohibited. Creation or replacement of a
+  consumption snapshot also uses the existing system-authored
+  `plan.snapshot_recorded` event with `snapshot_kind` `consumed`.
+
+  Detailed transitions, current projections, ad-hoc entries, and snapshots
+  remain owner-only private domain data. They are excluded from selected-user
+  and public plan projections, cannot be retained with an anonymized public
+  plan under DEC-014, and are deleted at final account purge under DEC-013.
+  Generic audit events are not a reconstruction source for deleted diary
+  history. This model preserves truthful instants across timezone and
+  daylight-saving boundaries, keeps waking-day totals predictable, avoids
+  silently invented times or quantities, and provides one authoritative
+  immutable history for PLAN-05, PLAN-06, and PLAN-12.
 
 ## Manual validation checklist
 
