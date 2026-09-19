@@ -1064,6 +1064,8 @@ changes, it is deliberately split across multiple items.
 
 ### PLAN-05 — P1 — Record planned versus consumed state
 
+- **Status:** Complete (2026-09-19).
+
 - **Outcome:** Let users mark dated entries consumed with an actual quantity
   and time, defaulting actual amount to planned amount for low-friction entry.
 - **Dependencies:** PLAN-03, PLAN-04.
