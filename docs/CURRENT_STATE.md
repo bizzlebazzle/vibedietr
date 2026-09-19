@@ -144,18 +144,11 @@ work.
   privately on the entry, with kcal authoritative. Request and database checks
   reject mixed kinds; pinned data is immutable, moves stay within the plan,
   and creation never submits to the catalogue.
-- PLAN-05 adds owner-only consumption state to dated recipe and item entries
-  and standalone ad-hoc recipe, catalogue, and one-off diary entries. First
-  consumption of a planned entry defaults actual quantity from its unchanged
-  planned quantity. Consume, correct, reverse, and re-consume append immutable
-  transitions and update a current projection. Consume-like transitions retain
-  actual quantity/unit, local time, timezone, UTC offset and instant, effective
-  diary date, actor, recording time, and the nullable future PLAN-06 snapshot
-  reference. Reusable undated entries are rejected. Entries with consumption
-  history cannot be moved or removed, and minimized audit events exclude diary
-  content.
-- Consumption nutrition snapshots, targets, plan sharing, and plan comparisons
-  are not represented (PLAN-06 through PLAN-12).
+- PLAN-05 records owner-only consumption for dated plan and standalone ad-hoc
+  entries. Planned amounts remain unchanged; DEC-019 actual amount/time and
+  consume/correct/reverse/re-consume history are retained. Reusable entries are
+  rejected, and consumption history blocks move/removal.
+- PLAN-06 snapshots and later target, sharing, and comparison work remain planned.
 - Product identity, primary navigation, broader responsive/accessibility work,
   and general onboarding remain planned (UX-01 through UX-07). DEC-002 blocks
   UX-04.
