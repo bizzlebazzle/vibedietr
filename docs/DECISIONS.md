@@ -49,6 +49,7 @@ Backlog relationships mean:
 | DEC-016 | Administrator security-notification delivery | Decided | Product owner |
 | DEC-017 | Culinary measurement jurisdictions | Decided | Product owner |
 | DEC-018 | Recipe remix attribution before public profiles | Decided | Product owner |
+| DEC-019 | Diary consumption time and correction history | Owner input required | Product owner |
 
 ## DEC-001 — Food-matching confidence thresholds
 
@@ -2002,6 +2003,49 @@ Backlog relationships mean:
   personal label is copied or displayed. Creator deletion or anonymization
   nulls the internal creator reference while retaining only non-identifying
   recipe/version lineage.
+
+## DEC-019 — Diary consumption time and correction history
+
+- **Question requiring resolution:** What does an entry's consumption time
+  represent, and what authoritative history must consuming, correcting,
+  reversing, and later re-consuming an eligible dated or ad-hoc diary entry
+  retain?
+- **Why it matters:** PLAN-05 cannot safely validate or store actual intake
+  until the product defines the diary date and timezone semantics, the default
+  time behavior, and the immutable transition history. These choices also
+  determine which consumption record PLAN-06 snapshots and which state
+  PLAN-12 includes in consumed totals.
+- **Status:** Owner input required.
+- **Owner:** Product owner.
+- **Alternatives:** Treat consumption time as an exact user-entered instant or
+  as a local diary date and wall-clock time resolved through an approved
+  timezone; default it to the current time, the planned date at a defined time,
+  or require explicit input; restrict it to the entry's dated day or allow a
+  bounded different date. Represent corrections and reversals as immutable
+  transition records with a current projection, as versioned replacement
+  records, or through another explicitly defined append-only domain history.
+- **Existing constraints from `PRODUCT_SPEC.md`:** Only dated entries and
+  repository-defined ad-hoc diary entries are eligible for consumption. First
+  consumption defaults actual quantity to planned quantity while allowing an
+  independently editable actual quantity and consumption time. Planned values
+  remain distinct and unchanged. Historical intake is not recalculated from
+  current recipe or catalogue data.
+
+  `AUTHORIZATION_PRIVACY_MATRIX.md` requires owner-only consumption data and
+  immutable replacement history for corrections. Consumption, reversal,
+  correction, and snapshot replacement are auditable. DEC-013 classifies
+  detailed diary history as private domain data deleted at final purge, while
+  generic audit events retain only minimized purpose-specific metadata rather
+  than quantities, times, or diary content.
+- **Backlog relationships:** `Blocked`: PLAN-05. `Constrained`: PLAN-06,
+  PLAN-12, UX-05. `Related`: DEC-003, DEC-013, DEC-014.
+- **Resolution condition:** The product owner approves the meaning, timezone,
+  default, date-boundary and future-time rules for consumption time; defines
+  the effective diary date for any supported ad-hoc entry; and approves the
+  consume, correct, reverse, and re-consume transition model, including the
+  authoritative immutable fields retained for each transition and the
+  minimized generic audit event for each successful action.
+- **Final decision and rationale:** Unresolved.
 
 ## Manual validation checklist
 
