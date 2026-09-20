@@ -22,7 +22,11 @@ use Illuminate\Validation\ValidationException;
 
 final class DiaryConsumptionManager
 {
-    public function __construct(private readonly ConsumptionTimeResolver $times, private readonly AuditEventRecorder $audit) {}
+    public function __construct(
+        private readonly ConsumptionTimeResolver $times,
+        private readonly ConsumptionNutritionSnapshotter $snapshots,
+        private readonly AuditEventRecorder $audit,
+    ) {}
 
     public function consumeRecipe(MealPlanRecipeEntry $entry, ?string $amount, ?string $local, ?string $timezone, ?int $offset, User $actor): DiaryConsumptionTransition
     {
@@ -49,7 +53,13 @@ final class DiaryConsumptionManager
             $resolved = $this->resolvedForCorrection($current, $local, $timezone, $offset);
             $effectiveDate = $this->effectiveDate($locked, $resolved, $diaryDate);
 
-            return $this->append($state, ConsumptionAction::Correct, $actor, $amount ?? $current->actual_amount, $current->actual_unit, $resolved, $effectiveDate, $current->consumption_snapshot_id, $current);
+            $correctedAmount = $amount ?? $current->actual_amount;
+            $snapshotId = $current->consumption_snapshot_id;
+            if (! BigDecimal::of($correctedAmount)->isEqualTo(BigDecimal::of($current->actual_amount))) {
+                $snapshotId = $this->snapshots->create($locked, $state, $correctedAmount, $current->actual_unit)->getKey();
+            }
+
+            return $this->append($state, ConsumptionAction::Correct, $actor, $correctedAmount, $current->actual_unit, $resolved, $effectiveDate, $snapshotId, $current);
         }, 3);
     }
 
@@ -96,7 +106,9 @@ final class DiaryConsumptionManager
             $effectiveDate = $this->effectiveDate($locked, $resolved, $diaryDate);
             $predecessor = $state->next_sequence > 1 ? $state->transitions()->reorder()->orderByDesc('sequence')->first() : null;
 
-            return $this->append($state, $action, $actor, $amount, $unit, $resolved, $effectiveDate, null, $predecessor);
+            $snapshot = $this->snapshots->create($locked, $state, $amount, $unit);
+
+            return $this->append($state, $action, $actor, $amount, $unit, $resolved, $effectiveDate, $snapshot->getKey(), $predecessor);
         }, 3);
     }
 

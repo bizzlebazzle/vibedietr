@@ -45,4 +45,9 @@ class DiaryConsumptionState extends Model
     {
         return $this->belongsTo(DiaryConsumptionTransition::class, 'current_transition_id');
     }
+
+    public function nutritionSnapshots(): HasMany
+    {
+        return $this->hasMany(ConsumptionNutritionSnapshot::class, 'diary_consumption_state_id');
+    }
 }

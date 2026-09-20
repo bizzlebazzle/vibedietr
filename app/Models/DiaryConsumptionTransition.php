@@ -56,4 +56,9 @@ class DiaryConsumptionTransition extends Model
     {
         return $this->belongsTo(User::class, 'actor_user_id');
     }
+
+    public function nutritionSnapshot(): BelongsTo
+    {
+        return $this->belongsTo(ConsumptionNutritionSnapshot::class, 'consumption_snapshot_id');
+    }
 }

@@ -148,7 +148,14 @@ work.
   entries. Planned amounts remain unchanged; DEC-019 actual amount/time and
   consume/correct/reverse/re-consume history are retained. Reusable entries are
   rejected, and consumption history blocks move/removal.
-- PLAN-06 snapshots and later target, sharing, and comparison work remain planned.
+- PLAN-06 creates immutable nutrition snapshots atomically with consumption.
+  Snapshots copy the entry-pinned nutrition source, estimate status, actual
+  amount/unit, entry/item identity, and recipe or catalogue version. Quantity
+  corrections append replacement snapshots, time/date-only corrections reuse
+  the prior snapshot, reversals retain the superseded history, and
+  re-consumption creates a fresh snapshot from the same pinned source/version.
+  Later recipe, override, estimate, or catalogue changes cannot rewrite
+  consumed history. Target, sharing, and comparison work remains planned.
 - Product identity, primary navigation, broader responsive/accessibility work,
   and general onboarding remain planned (UX-01 through UX-07). DEC-002 blocks
   UX-04.
