@@ -72,6 +72,7 @@ detail or Git rationale is necessary; never load it by default as current truth.
   substitutions, or incomplete matches is an estimate and must be presented as
   such. Imported provider values retain their source provenance.
 - Do not rewrite unrelated code or documentation.
+- CURRENT_STATE.md must be kept below 220 lines, this is an intentional limit.
 
 ## Context routing
 
