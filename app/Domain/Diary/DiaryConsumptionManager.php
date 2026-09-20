@@ -7,6 +7,7 @@ use App\Audit\AuditEventRecorder;
 use App\Audit\AuditSubject;
 use App\Audit\Enums\AuditAction;
 use App\Audit\Enums\AuditSubjectType;
+use App\Domain\MealPlans\MealPlanRecipeVersionReviewNotifier;
 use App\Models\DiaryConsumptionState;
 use App\Models\DiaryConsumptionTransition;
 use App\Models\DiaryEntry;
@@ -26,6 +27,7 @@ final class DiaryConsumptionManager
         private readonly ConsumptionTimeResolver $times,
         private readonly ConsumptionNutritionSnapshotter $snapshots,
         private readonly AuditEventRecorder $audit,
+        private readonly MealPlanRecipeVersionReviewNotifier $recipeVersionReviews,
     ) {}
 
     public function consumeRecipe(MealPlanRecipeEntry $entry, ?string $amount, ?string $local, ?string $timezone, ?int $offset, User $actor): DiaryConsumptionTransition
@@ -107,6 +109,9 @@ final class DiaryConsumptionManager
             $predecessor = $state->next_sequence > 1 ? $state->transitions()->reorder()->orderByDesc('sequence')->first() : null;
 
             $snapshot = $this->snapshots->create($locked, $state, $amount, $unit);
+            if ($locked instanceof MealPlanRecipeEntry) {
+                $this->recipeVersionReviews->resolvePendingForConsumedEntry($locked->getKey());
+            }
 
             return $this->append($state, $action, $actor, $amount, $unit, $resolved, $effectiveDate, $snapshot->getKey(), $predecessor);
         }, 3);

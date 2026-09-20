@@ -97,6 +97,21 @@
                                             <div class="rounded bg-gray-50 p-3 text-sm text-gray-800 dark:bg-slate-800 dark:text-slate-200">
                                                 <p class="font-medium">{{ $entry->recipe_snapshot['title'] ?? 'Recipe snapshot' }}</p>
                                                 <p>{{ $entry->planned_servings }} planned servings · version {{ $entry->recipe_version_number }}</p>
+                                                @foreach ($entry->versionReviews as $review)
+                                                    <div class="mt-3 rounded border border-amber-300 bg-amber-50 p-3 text-amber-950 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100">
+                                                        <p>A newer recipe version (version {{ $review->recipeVersion->version_number }}) is available. Your pinned snapshot has not changed.</p>
+                                                        <div class="mt-2 flex flex-wrap gap-2">
+                                                            <form method="POST" action="{{ route('meal-plans.recipe-version-reviews.update', [$mealPlan, $review]) }}">
+                                                                @csrf
+                                                                <x-primary-button>Update to version {{ $review->recipeVersion->version_number }}</x-primary-button>
+                                                            </form>
+                                                            <form method="POST" action="{{ route('meal-plans.recipe-version-reviews.retain', [$mealPlan, $review]) }}">
+                                                                @csrf
+                                                                <x-secondary-button>Retain version {{ $entry->recipe_version_number }}</x-secondary-button>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                @endforeach
                                                 <div class="mt-2 flex flex-wrap gap-2">
                                                     <form method="POST" action="{{ route('meal-plans.recipe-entries.update', [$mealPlan, $entry]) }}" class="flex items-end gap-2">
                                                         @csrf

@@ -1173,6 +1173,8 @@ User 1 ---- owns ---- 0..* Ingredient
                                   +-- dated: calendar date within plan range
                                   +-- contains ordered MealPlanSlot records
                                         +-- contains 0..* MealPlanRecipeEntry
+                                              +-- contains 0..* version reviews
+                                                  (one per entry/new version)
                                         +-- contains 0..* MealPlanItemEntry
                                               +-- exactly one kind:
                                                   approved CatalogueItemVersion snapshot
@@ -1219,6 +1221,12 @@ Database-enforced rules:
   identities are indexed historical references without cascading foreign keys;
   the entry-owned recipe and nutrition snapshot JSON remains when a source is
   later unavailable. Deleting a slot cascades to its entries.
+- Each planned recipe-version review belongs to one planned recipe entry and
+  one immutable recipe version. The entry/version pair is unique. Pending
+  reviews are owner-only notifications; update and retain resolve them
+  permanently, while consumption resolves them as inapplicable. A retained
+  relationship is never recreated, but a later published version is a distinct
+  review relationship.
 - Every catalogue/one-off plan entry belongs to one slot and stores a positive
   decimal planned amount plus one standard measurement unit. Its explicit kind
   is `catalogue` or `one_off`, with a database check requiring exactly the

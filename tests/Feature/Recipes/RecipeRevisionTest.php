@@ -9,6 +9,7 @@ use App\Domain\Recipes\RecipeRevisionManager;
 use App\Domain\Recipes\RecipeRevisionPublisher;
 use App\Domain\Recipes\RecipeVisibility;
 use App\Domain\Recipes\StaleRecipeRevision;
+use App\Jobs\CreateMealPlanRecipeVersionReviews;
 use App\Livewire\Recipes\Form;
 use App\Models\AuditEvent;
 use App\Models\Recipe;
@@ -18,6 +19,7 @@ use App\Models\RecipeVersion;
 use App\Models\User;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Queue;
 use Livewire\Livewire;
 use LogicException;
 use RuntimeException;
@@ -96,6 +98,7 @@ class RecipeRevisionTest extends TestCase
 
     public function test_valid_revision_publishes_next_immutable_version_and_preserves_history_visibility_and_audit_privacy(): void
     {
+        Queue::fake();
         $owner = User::factory()->create();
         $recipe = $this->finalizedRecipe($owner, RecipeVisibility::Private);
         $versionOne = $recipe->currentVersion()->sole();
@@ -138,6 +141,12 @@ class RecipeRevisionTest extends TestCase
         $this->assertStringNotContainsString('Replacement title', $encoded);
         $this->assertStringNotContainsString('Replacement exact line', $encoded);
         $this->assertStringNotContainsString('Replacement exact instruction', $encoded);
+        Queue::assertPushed(
+            CreateMealPlanRecipeVersionReviews::class,
+            fn (CreateMealPlanRecipeVersionReviews $job): bool => $job->recipeVersionId === $versionTwo->id
+                && $job->queue === 'default'
+                && $job->afterCommit === true,
+        );
     }
 
     public function test_failed_publication_leaves_old_version_current_and_draft_available_without_success_audit(): void

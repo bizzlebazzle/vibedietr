@@ -11,6 +11,7 @@ use App\Http\Controllers\MealPlanController;
 use App\Http\Controllers\MealPlanDayController;
 use App\Http\Controllers\MealPlanItemEntryController;
 use App\Http\Controllers\MealPlanRecipeEntryController;
+use App\Http\Controllers\MealPlanRecipeVersionReviewController;
 use App\Http\Controllers\MealPlanSlotController;
 use App\Http\Controllers\PrivateRecipeTagController;
 use App\Http\Controllers\PublicProfileController;
@@ -81,6 +82,10 @@ Route::middleware(['auth'])->group(function () {
         ->whereNumber(['mealPlan', 'entry'])->name('meal-plans.recipe-entries.update');
     Route::delete('meal-plans/{mealPlan}/recipe-entries/{entry}', [MealPlanRecipeEntryController::class, 'destroy'])
         ->whereNumber(['mealPlan', 'entry'])->name('meal-plans.recipe-entries.destroy');
+    Route::post('meal-plans/{mealPlan}/recipe-version-reviews/{review}/update', [MealPlanRecipeVersionReviewController::class, 'update'])
+        ->whereNumber('mealPlan')->whereUlid('review')->name('meal-plans.recipe-version-reviews.update');
+    Route::post('meal-plans/{mealPlan}/recipe-version-reviews/{review}/retain', [MealPlanRecipeVersionReviewController::class, 'retain'])
+        ->whereNumber('mealPlan')->whereUlid('review')->name('meal-plans.recipe-version-reviews.retain');
     Route::post('meal-plans/{mealPlan}/item-entries', [MealPlanItemEntryController::class, 'store'])
         ->whereNumber('mealPlan')->name('meal-plans.item-entries.store');
     Route::patch('meal-plans/{mealPlan}/item-entries/{entry}', [MealPlanItemEntryController::class, 'update'])

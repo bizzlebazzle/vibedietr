@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Configuration\ProductionConfigurationValidator;
 use App\Domain\Catalogue\CatalogueImportCreator;
 use App\Domain\Catalogue\TransactionalCatalogueImportCreator;
+use App\Domain\MealPlans\DispatchMealPlanRecipeVersionReviews;
 use App\Domain\RecipeImports\NullRecipeImportMaterializationHook;
 use App\Domain\RecipeImports\Ocr\DisabledManagedOcrExtractor;
 use App\Domain\RecipeImports\Ocr\GoogleDocumentAiOcrExtractor;
@@ -15,7 +16,6 @@ use App\Domain\RecipeImports\Parsing\DeterministicRecipeTextParser;
 use App\Domain\RecipeImports\Parsing\RecipeTextParser;
 use App\Domain\RecipeImports\RecipeImportMaterializationHook;
 use App\Domain\Recipes\NullRecipeDraftSaveHook;
-use App\Domain\Recipes\NullRecipeFinalizationHook;
 use App\Domain\Recipes\NullRecipeRemixCreationHook;
 use App\Domain\Recipes\RecipeDraftSaveHook;
 use App\Domain\Recipes\RecipeFinalizationHook;
@@ -66,7 +66,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->bind(RecipeDraftSaveHook::class, NullRecipeDraftSaveHook::class);
         $this->app->bind(CatalogueImportCreator::class, TransactionalCatalogueImportCreator::class);
-        $this->app->bind(RecipeFinalizationHook::class, NullRecipeFinalizationHook::class);
+        $this->app->bind(RecipeFinalizationHook::class, DispatchMealPlanRecipeVersionReviews::class);
         $this->app->bind(RecipeRemixCreationHook::class, NullRecipeRemixCreationHook::class);
         $this->app->bind(RecipeImportMaterializationHook::class, NullRecipeImportMaterializationHook::class);
         $this->app->bind(RecipeTextParser::class, DeterministicRecipeTextParser::class);

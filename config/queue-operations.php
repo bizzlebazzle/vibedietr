@@ -1,5 +1,6 @@
 <?php
 
+use App\Jobs\CreateMealPlanRecipeVersionReviews;
 use App\Jobs\DeliverSecurityNotification;
 use App\Jobs\ProcessPastedRecipeImport;
 use App\Jobs\ProcessReferenceTask;
@@ -52,6 +53,12 @@ return [
         ],
     ],
     'jobs' => [
+        CreateMealPlanRecipeVersionReviews::class => [
+            'queue' => QueueName::DEFAULT,
+            'worker' => 'default',
+            'timeout' => 60,
+            'failed_payload' => 'metadata-only',
+        ],
         DeliverSecurityNotification::class => [
             'queue' => QueueName::SECURITY_NOTIFICATIONS,
             'worker' => 'security-notifications',
