@@ -1329,6 +1329,26 @@ the current projection. Once a planned entry has consumption history it cannot
 be moved or removed. Each successful transition records the minimized
 `diary.consumption_transitioned` event in the same transaction.
 
+PLAN-06 creates one immutable nutrition snapshot in the same transaction as
+each consume and re-consume transition. The snapshot copies only the locked
+entry's pinned nutrition source and values, provenance, estimate status, actual
+amount and unit, entry kind and identity, and recipe or catalogue identity,
+version ULID, and version number where applicable. Its minimized
+`plan.snapshot_recorded` audit event is part of that transaction. A failed
+snapshot, audit, or transition rolls the whole operation back; existing
+consume-like history without a snapshot is not reconstructed from current
+source data.
+
+Quantity corrections append a replacement snapshot from the same pinned
+entry-owned source/version. Time- or effective-date-only corrections reuse the
+existing snapshot, reversals reference the superseded transition without a
+snapshot, and re-consumption appends a fresh snapshot from the entry's pinned
+data. The transition predecessor/target chain and retained snapshot rows are
+the authoritative replacement history. Snapshot models reject updates and
+direct deletion. Later recipe publication, creator overrides, imported-source
+changes, ingredient recalculation, catalogue versions, or precedence changes
+cannot rewrite consumed history.
+
 Application authorization also requires every membership target to have the
 same authenticated owner as its collection or private tag.
 

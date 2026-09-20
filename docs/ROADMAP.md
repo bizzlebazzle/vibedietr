@@ -1080,6 +1080,7 @@ changes, it is deliberately split across multiple items.
 
 ### PLAN-06 — P1 — Snapshot nutrition at consumption time
 
+- **Status:** Complete (2026-09-20).
 - **Outcome:** Preserve the exact nutrition and item/recipe versions used for
   historical intake.
 - **Dependencies:** PLAN-05, NUT-17, FND-05.

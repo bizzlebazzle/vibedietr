@@ -148,7 +148,7 @@ work.
   entries. Planned amounts remain unchanged; DEC-019 actual amount/time and
   consume/correct/reverse/re-consume history are retained. Reusable entries are
   rejected, and consumption history blocks move/removal.
-- PLAN-06 snapshots and later target, sharing, and comparison work remain planned.
+- PLAN-06 consumption nutrition snapshots are implemented; later target, sharing, and comparison work remains planned.
 - Product identity, primary navigation, broader responsive/accessibility work,
   and general onboarding remain planned (UX-01 through UX-07). DEC-002 blocks
   UX-04.
