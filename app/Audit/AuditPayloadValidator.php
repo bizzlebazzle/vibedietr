@@ -101,6 +101,7 @@ final class AuditPayloadValidator
             AuditAction::RecipeNutritionOverrideApplied => $this->validateNutritionOverride($payload),
             AuditAction::RecipeNutritionRecalculated => $this->validateNutritionRecalculation($payload),
             AuditAction::PlanSnapshotRecorded => $this->validatePlanSnapshot($payload),
+            AuditAction::PlanRecipeVersionReviewed => $this->validatePlanRecipeVersionReview($payload),
             AuditAction::DiaryConsumptionTransitioned => $this->validateDiaryConsumptionTransition($payload),
             AuditAction::AccountAnonymizationCompleted => $this->validateAnonymization($payload),
             AuditAction::SecuritySecondFactorEvent,
@@ -389,6 +390,16 @@ final class AuditPayloadValidator
         $this->assertShape($payload, ['outcome', 'snapshot_kind'], ['outcome', 'snapshot_kind']);
         $this->assertEnum($payload, 'outcome', ['recorded']);
         $this->assertEnum($payload, 'snapshot_kind', ['planned', 'consumed']);
+
+        return $payload;
+    }
+
+    private function validatePlanRecipeVersionReview(array $payload): array
+    {
+        $this->assertShape($payload, ['decision', 'current_version_id', 'offered_version_id'], ['decision', 'current_version_id', 'offered_version_id']);
+        $this->assertEnum($payload, 'decision', ['updated', 'retained']);
+        AuditReferenceValidator::validate($payload['current_version_id'], 'current recipe version identifier');
+        AuditReferenceValidator::validate($payload['offered_version_id'], 'offered recipe version identifier');
 
         return $payload;
     }

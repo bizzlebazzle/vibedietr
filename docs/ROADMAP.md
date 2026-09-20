@@ -1095,6 +1095,7 @@ changes, it is deliberately split across multiple items.
 
 ### PLAN-07 — P2 — Notify and review newer recipe versions
 
+- **Status:** Complete (2026-09-20).
 - **Outcome:** Tell a plan owner when a pinned planned recipe has a newer
   version and let them update or retain the snapshot explicitly.
 - **Dependencies:** PLAN-03, REC-07, FND-09, DEP-04, DEP-05.

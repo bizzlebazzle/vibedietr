@@ -123,6 +123,37 @@ serialized payload, so the privacy classification is an operational control.
   Existing default-worker depth, age, failure, replay, and health monitoring
   apply.
 
+## CreateMealPlanRecipeVersionReviews
+
+- **Class / owner:** `App\Jobs\CreateMealPlanRecipeVersionReviews`; PLAN-07.
+- **Purpose / enablement:** After a recipe revision commits, create owner review
+  notifications for eligible unconsumed planned entries pinned to an older
+  version. Initial version publication does not dispatch this work.
+- **Queue / worker / concurrency:** `default`; `default` worker group. Unique
+  dispatch lasts 24 hours and a 75-second per-version overlap lock prevents
+  concurrent fan-out for the same published version.
+- **Timeout / retry_after:** 60-second job timeout, 70-second worker timeout,
+  90-second database `retry_after`; the required 20-second margin is preserved.
+- **Attempts / backoff:** Three total attempts; 10 seconds then 60 seconds.
+  Unexpected database failures are sanitized and retryable.
+- **Idempotency:** SHA-256 of the operation type plus immutable recipe-version
+  ULID coordinates dispatch. The database-unique planned-entry plus offered-
+  version pair is the durable effect boundary, so duplicate delivery and retry
+  after partial fan-out cannot duplicate notifications or retained decisions.
+- **Duration / resources:** Local database reads and bounded inserts only;
+  entries are scanned in chunks of 200. Normally under one second and at most
+  60 seconds.
+- **Failure / alert:** Final failure emits one privacy-safe
+  `queued_job_failed` event. Existing default-queue age, depth, final-failure,
+  and worker-health monitoring applies.
+- **Replay:** Replaying the same published-version operation is safe. Existing
+  entry/version review rows are reused; newly eligible rows may be completed.
+- **Failed record / privacy:** Metadata-only recipe-version and correlation
+  ULIDs. No recipe text, plan content, snapshot, account data, or notification
+  body is serialized. Retain at most 168 hours under the shared failed-job
+  policy.
+- **Scheduling:** Recipe-publication-triggered and event driven; not scheduled.
+
 ## ProcessReferenceTask
 
 - **Class / owner:** `App\Jobs\ProcessReferenceTask`; FND-09 reference
