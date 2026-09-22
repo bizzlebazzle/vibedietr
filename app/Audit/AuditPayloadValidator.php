@@ -102,6 +102,8 @@ final class AuditPayloadValidator
             AuditAction::RecipeNutritionRecalculated => $this->validateNutritionRecalculation($payload),
             AuditAction::PlanSnapshotRecorded => $this->validatePlanSnapshot($payload),
             AuditAction::PlanRecipeVersionReviewed => $this->validatePlanRecipeVersionReview($payload),
+            AuditAction::PlanSharingChanged => $this->validatePlanSharingChanged($payload),
+            AuditAction::PlanBookmarkChanged => $this->validatePlanBookmarkChanged($payload),
             AuditAction::DiaryConsumptionTransitioned => $this->validateDiaryConsumptionTransition($payload),
             AuditAction::AccountAnonymizationCompleted => $this->validateAnonymization($payload),
             AuditAction::SecuritySecondFactorEvent,
@@ -111,6 +113,39 @@ final class AuditPayloadValidator
         ksort($validated);
 
         return $validated;
+    }
+
+    /** @param array<string, mixed> $payload */
+    private function validatePlanSharingChanged(array $payload): array
+    {
+        $this->assertShape(
+            $payload,
+            ['operation', 'outcome', 'private_snapshot_access', 'safety_result'],
+            ['operation', 'outcome'],
+        );
+        $this->assertEnum($payload, 'operation', ['selected_granted', 'selected_revoked', 'public_published', 'public_unpublished']);
+        $this->assertEnum($payload, 'outcome', ['completed']);
+        if (isset($payload['private_snapshot_access'])) {
+            $this->assertBoolean($payload, 'private_snapshot_access');
+        }
+        if (isset($payload['safety_result'])) {
+            $this->assertEnum($payload, 'safety_result', ['safe']);
+        }
+
+        return $payload;
+    }
+
+    /** @param array<string, mixed> $payload */
+    private function validatePlanBookmarkChanged(array $payload): array
+    {
+        $this->assertShape($payload, ['operation', 'outcome', 'retained_plan_removed'], ['operation', 'outcome']);
+        $this->assertEnum($payload, 'operation', ['added', 'removed']);
+        $this->assertEnum($payload, 'outcome', ['completed']);
+        if (isset($payload['retained_plan_removed'])) {
+            $this->assertBoolean($payload, 'retained_plan_removed');
+        }
+
+        return $payload;
     }
 
     /** @param array<string, mixed> $payload */

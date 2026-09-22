@@ -5,8 +5,56 @@
         @if ($mealPlan->type === \App\Domain\MealPlans\MealPlanType::Dated)
             <p class="mt-2 text-gray-700 dark:text-slate-200">{{ $mealPlan->starts_on->toFormattedDateString() }} – {{ $mealPlan->ends_on->toFormattedDateString() }}</p>
         @endif
-        <p class="mt-2 text-sm text-gray-600 dark:text-slate-300">Private</p>
+        <p class="mt-2 text-sm text-gray-600 dark:text-slate-300">{{ $mealPlan->visibility === \App\Domain\MealPlans\MealPlanVisibility::Public ? 'Public read-only sharing is active' : 'Private' }}</p>
         <a href="{{ route('meal-plans.edit', $mealPlan) }}" class="mt-6 inline-block text-indigo-700 underline dark:text-indigo-300">Edit meal plan</a>
+
+        <section class="mt-8 border-t border-gray-200 pt-6 dark:border-slate-700">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-slate-100">Sharing</h3>
+            <p class="mt-2 text-sm text-gray-600 dark:text-slate-300">Viewers are read-only. A share never grants edit or reshare rights.</p>
+            <x-input-error :messages="$errors->all()" class="mt-2" />
+
+            @if ($mealPlan->visibility === \App\Domain\MealPlans\MealPlanVisibility::Public)
+                <form method="POST" action="{{ route('meal-plans.public.destroy', $mealPlan) }}" class="mt-4">
+                    @csrf
+                    @method('DELETE')
+                    <x-secondary-button>Make private</x-secondary-button>
+                </form>
+            @else
+                <form method="POST" action="{{ route('meal-plans.public.store', $mealPlan) }}" class="mt-4">
+                    @csrf
+                    <x-primary-button>Share publicly</x-primary-button>
+                </form>
+                <p class="mt-2 text-xs text-gray-600 dark:text-slate-400">Public sharing is rejected unless the complete presented plan and every exposed pinned snapshot are proven public-safe.</p>
+
+                <form method="POST" action="{{ route('meal-plans.shares.store', $mealPlan) }}" class="mt-6 space-y-3 rounded border border-gray-200 p-4 dark:border-slate-700">
+                    @csrf
+                    <div>
+                        <x-input-label for="recipient_email" value="Selected registered user's email" />
+                        <x-text-input id="recipient_email" name="recipient_email" type="email" required maxlength="255" class="mt-1 block w-full" :value="old('recipient_email')" />
+                    </div>
+                    <label class="flex items-start gap-2 text-sm text-gray-700 dark:text-slate-300">
+                        <input type="checkbox" name="acknowledge_private_recipe_snapshots" value="1" @checked(old('acknowledge_private_recipe_snapshots')) class="mt-1 rounded border-gray-300">
+                        <span>I acknowledge that this read-only share may expose the private pinned recipe snapshots needed to understand this plan, without granting access to the live private recipes.</span>
+                    </label>
+                    <x-primary-button>Grant read-only access</x-primary-button>
+                </form>
+            @endif
+
+            <div class="mt-5 space-y-2">
+                @forelse ($mealPlan->shares as $share)
+                    <div class="flex items-center justify-between gap-3 rounded border border-gray-200 p-3 text-sm dark:border-slate-700">
+                        <span class="text-gray-700 dark:text-slate-300">Selected-user share {{ $loop->iteration }} · {{ $share->private_recipe_snapshots_acknowledged_at ? 'private snapshot access acknowledged' : 'public snapshots only' }}</span>
+                        <form method="POST" action="{{ route('meal-plans.shares.destroy', [$mealPlan, $share]) }}">
+                            @csrf
+                            @method('DELETE')
+                            <x-danger-button>Revoke</x-danger-button>
+                        </form>
+                    </div>
+                @empty
+                    <p class="text-sm text-gray-600 dark:text-slate-300">No selected-user shares.</p>
+                @endforelse
+            </div>
+        </section>
 
         <section class="mt-8 border-t border-gray-200 pt-6 dark:border-slate-700">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-slate-100">Plan days</h3>

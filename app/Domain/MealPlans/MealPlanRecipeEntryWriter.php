@@ -8,6 +8,8 @@ use App\Audit\AuditSubject;
 use App\Audit\Enums\AuditAction;
 use App\Audit\Enums\AuditSubjectType;
 use App\Domain\Nutrition\RecipeNutritionSourceSelector;
+use App\Domain\Recipes\RecipeVisibility;
+use App\Models\MealPlan;
 use App\Models\MealPlanRecipeEntry;
 use App\Models\MealPlanSlot;
 use App\Models\Recipe;
@@ -29,7 +31,8 @@ final class MealPlanRecipeEntryWriter
         return DB::transaction(function () use ($slot, $recipeId, $plannedServings, $actor): MealPlanRecipeEntry {
             $slot = MealPlanSlot::query()->lockForUpdate()->findOrFail($slot->getKey());
             $slot->load('day.mealPlan');
-            Gate::forUser($actor)->authorize('update', $slot->day->mealPlan);
+            $mealPlan = MealPlan::query()->lockForUpdate()->findOrFail($slot->day->meal_plan_id);
+            Gate::forUser($actor)->authorize('update', $mealPlan);
 
             $recipe = Recipe::query()
                 ->visibleTo($actor)
@@ -50,6 +53,13 @@ final class MealPlanRecipeEntryWriter
             if (! $version instanceof RecipeVersion) {
                 throw ValidationException::withMessages([
                     'recipe_id' => 'The current finalized recipe version is unavailable.',
+                ]);
+            }
+
+            if ($mealPlan->visibility === MealPlanVisibility::Public
+                && $version->visibility !== RecipeVisibility::Public) {
+                throw ValidationException::withMessages([
+                    'recipe_id' => 'A private recipe snapshot cannot be added while the plan is public.',
                 ]);
             }
 

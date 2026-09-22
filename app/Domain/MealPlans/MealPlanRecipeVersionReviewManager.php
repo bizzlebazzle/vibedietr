@@ -8,7 +8,9 @@ use App\Audit\AuditSubject;
 use App\Audit\Enums\AuditAction;
 use App\Audit\Enums\AuditSubjectType;
 use App\Domain\Nutrition\RecipeNutritionSourceSelector;
+use App\Domain\Recipes\RecipeVisibility;
 use App\Models\AuditEvent;
+use App\Models\MealPlan;
 use App\Models\MealPlanRecipeEntry;
 use App\Models\MealPlanRecipeVersionReview;
 use App\Models\RecipeVersion;
@@ -31,6 +33,13 @@ final class MealPlanRecipeVersionReviewManager
             $recipe = $version->recipe()->lockForUpdate()->firstOrFail();
             if (! $recipe->isPubliclyViewable() && (int) $recipe->user_id !== (int) $actor->getKey()) {
                 abort(403);
+            }
+            $mealPlan = MealPlan::query()->lockForUpdate()->findOrFail($entry->slot->day->meal_plan_id);
+            if ($mealPlan->visibility === MealPlanVisibility::Public
+                && $version->visibility !== RecipeVisibility::Public) {
+                throw ValidationException::withMessages([
+                    'review' => 'A public plan cannot update to a private recipe snapshot.',
+                ]);
             }
 
             $effective = $this->nutrition->effective($version);

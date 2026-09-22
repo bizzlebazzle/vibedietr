@@ -97,6 +97,18 @@ class User extends Authenticatable
         return $this->hasMany(MealPlan::class);
     }
 
+    /** @return HasMany<MealPlanShare, $this> */
+    public function receivedMealPlanShares(): HasMany
+    {
+        return $this->hasMany(MealPlanShare::class, 'recipient_user_id');
+    }
+
+    /** @return HasMany<MealPlanBookmark, $this> */
+    public function mealPlanBookmarks(): HasMany
+    {
+        return $this->hasMany(MealPlanBookmark::class);
+    }
+
     /** @return HasMany<CatalogueItem, $this> */
     public function submittedCatalogueItems(): HasMany
     {

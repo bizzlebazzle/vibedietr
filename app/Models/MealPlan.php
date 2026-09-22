@@ -17,6 +17,8 @@ use Illuminate\Validation\ValidationException;
  * @property Carbon|null $ends_on
  * @property MealPlanType $type
  * @property MealPlanVisibility $visibility
+ * @property Carbon|null $published_at
+ * @property Carbon|null $retained_unlisted_at
  */
 class MealPlan extends Model
 {
@@ -55,12 +57,41 @@ class MealPlan extends Model
             'visibility' => MealPlanVisibility::class,
             'starts_on' => 'immutable_date',
             'ends_on' => 'immutable_date',
+            'published_at' => 'immutable_datetime',
+            'retained_unlisted_at' => 'immutable_datetime',
         ];
     }
 
     public function owner(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    /** @return HasMany<MealPlanShare, $this> */
+    public function shares(): HasMany
+    {
+        return $this->hasMany(MealPlanShare::class);
+    }
+
+    /** @return HasMany<MealPlanBookmark, $this> */
+    public function bookmarks(): HasMany
+    {
+        return $this->hasMany(MealPlanBookmark::class);
+    }
+
+    public function isPubliclyAccessible(): bool
+    {
+        return in_array($this->visibility, [
+            MealPlanVisibility::Public,
+            MealPlanVisibility::RetainedUnlisted,
+        ], true);
+    }
+
+    public function isBookmarkableBy(User $user): bool
+    {
+        return $this->visibility === MealPlanVisibility::Public
+            && $this->user_id !== null
+            && (int) $this->user_id !== (int) $user->getKey();
     }
 
     /** @return HasMany<MealPlanDay, $this> */
