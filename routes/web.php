@@ -65,17 +65,17 @@ Route::middleware(['auth'])->group(function () {
         'index', 'create', 'store', 'edit', 'update',
     ]);
     Route::post('meal-plans/{mealPlan}/shares', [MealPlanShareController::class, 'store'])
-        ->whereNumber('mealPlan')->name('meal-plans.shares.store');
+        ->middleware('throttle:sharing')->whereNumber('mealPlan')->name('meal-plans.shares.store');
     Route::delete('meal-plans/{mealPlan}/shares/{share}', [MealPlanShareController::class, 'destroy'])
-        ->whereNumber('mealPlan')->whereUlid('share')->name('meal-plans.shares.destroy');
+        ->middleware('throttle:sharing')->whereNumber('mealPlan')->whereUlid('share')->name('meal-plans.shares.destroy');
     Route::post('meal-plans/{mealPlan}/public', [MealPlanVisibilityController::class, 'store'])
-        ->whereNumber('mealPlan')->name('meal-plans.public.store');
+        ->middleware('throttle:sharing')->whereNumber('mealPlan')->name('meal-plans.public.store');
     Route::delete('meal-plans/{mealPlan}/public', [MealPlanVisibilityController::class, 'destroy'])
-        ->whereNumber('mealPlan')->name('meal-plans.public.destroy');
+        ->middleware('throttle:sharing')->whereNumber('mealPlan')->name('meal-plans.public.destroy');
     Route::post('meal-plans/{mealPlan}/bookmark', [MealPlanBookmarkController::class, 'store'])
-        ->whereNumber('mealPlan')->name('meal-plans.bookmarks.store');
+        ->middleware('throttle:sharing')->whereNumber('mealPlan')->name('meal-plans.bookmarks.store');
     Route::delete('meal-plan-bookmarks/{bookmark}', [MealPlanBookmarkController::class, 'destroy'])
-        ->whereNumber('bookmark')->name('meal-plans.bookmarks.destroy');
+        ->middleware('throttle:sharing')->whereNumber('bookmark')->name('meal-plans.bookmarks.destroy');
     Route::post('meal-plans/{mealPlan}/days', [MealPlanDayController::class, 'store'])
         ->whereNumber('mealPlan')->name('meal-plans.days.store');
     Route::post('meal-plans/{mealPlan}/days/{day}/slots', [MealPlanSlotController::class, 'store'])
