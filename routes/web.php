@@ -9,6 +9,7 @@ use App\Http\Controllers\ManualCatalogueSubmissionController;
 use App\Http\Controllers\MealPlanBookmarkController;
 use App\Http\Controllers\MealPlanConsumptionController;
 use App\Http\Controllers\MealPlanController;
+use App\Http\Controllers\MealPlanCopyController;
 use App\Http\Controllers\MealPlanDayController;
 use App\Http\Controllers\MealPlanItemEntryController;
 use App\Http\Controllers\MealPlanRecipeEntryController;
@@ -64,6 +65,8 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('meal-plans', MealPlanController::class)->only([
         'index', 'create', 'store', 'edit', 'update',
     ]);
+    Route::post('meal-plans/{mealPlan}/copy', MealPlanCopyController::class)
+        ->middleware('throttle:sharing')->whereNumber('mealPlan')->name('meal-plans.copy');
     Route::post('meal-plans/{mealPlan}/shares', [MealPlanShareController::class, 'store'])
         ->middleware('throttle:sharing')->whereNumber('mealPlan')->name('meal-plans.shares.store');
     Route::delete('meal-plans/{mealPlan}/shares/{share}', [MealPlanShareController::class, 'destroy'])

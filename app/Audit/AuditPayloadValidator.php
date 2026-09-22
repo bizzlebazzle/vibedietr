@@ -104,6 +104,7 @@ final class AuditPayloadValidator
             AuditAction::PlanRecipeVersionReviewed => $this->validatePlanRecipeVersionReview($payload),
             AuditAction::PlanSharingChanged => $this->validatePlanSharingChanged($payload),
             AuditAction::PlanBookmarkChanged => $this->validatePlanBookmarkChanged($payload),
+            AuditAction::PlanCopied => $this->validatePlanCopied($payload),
             AuditAction::DiaryConsumptionTransitioned => $this->validateDiaryConsumptionTransition($payload),
             AuditAction::AccountAnonymizationCompleted => $this->validateAnonymization($payload),
             AuditAction::SecuritySecondFactorEvent,
@@ -144,6 +145,16 @@ final class AuditPayloadValidator
         if (isset($payload['retained_plan_removed'])) {
             $this->assertBoolean($payload, 'retained_plan_removed');
         }
+
+        return $payload;
+    }
+
+    /** @param array<string, mixed> $payload */
+    private function validatePlanCopied(array $payload): array
+    {
+        $this->assertShape($payload, ['outcome', 'source_visibility'], ['outcome', 'source_visibility']);
+        $this->assertEnum($payload, 'outcome', ['completed']);
+        $this->assertEnum($payload, 'source_visibility', ['private', 'public', 'retained_unlisted']);
 
         return $payload;
     }

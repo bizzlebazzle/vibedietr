@@ -1217,6 +1217,11 @@ Database-enforced rules:
   copies the plan nor grants edit rights, is creatable only for another user's
   active-owner public plan, and remains removable after a plan becomes
   retained-unlisted. Removing the final bookmark deletes that retained plan.
+- Copying an accessible plan atomically creates a new private plan owned by the
+  copying user. It materializes independent days, slots, and pinned recipe,
+  catalogue, or one-off entry data, while excluding shares, bookmarks,
+  consumption state, and recipe-version review notifications. The copy has no
+  source-plan relationship and survives later source revocation or deletion.
 - Public and selected-user reads use a minimized projection that excludes
   diary/consumption state, version-review notifications, target/account data,
   share records, bookmark owners, and snapshot fields not deliberately

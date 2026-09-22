@@ -139,6 +139,7 @@ class SecurityControlsTest extends TestCase
             'meal-plans.public.destroy',
             'meal-plans.bookmarks.store',
             'meal-plans.bookmarks.destroy',
+            'meal-plans.copy',
         ] as $routeName) {
             $this->assertContains('throttle:sharing', Route::getRoutes()->getByName($routeName)->gatherMiddleware());
         }

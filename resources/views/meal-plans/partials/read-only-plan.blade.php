@@ -13,6 +13,11 @@
     <p class="mt-2 text-sm text-gray-600 dark:text-slate-300">Read-only {{ $mealPlan->isPubliclyAccessible() ? 'public plan' : 'plan shared with you' }}</p>
 
     @auth
+        <form method="POST" action="{{ route('meal-plans.copy', $mealPlan) }}" class="mt-4">
+            @csrf
+            <x-primary-button>Copy to my meal plans</x-primary-button>
+        </form>
+
         @if ($bookmark)
             <form method="POST" action="{{ route('meal-plans.bookmarks.destroy', $bookmark) }}" class="mt-4">
                 @csrf

@@ -54,4 +54,9 @@ class MealPlanPolicy
     {
         return $user->getKey() === $mealPlan->user_id;
     }
+
+    public function copy(User $user, MealPlan $mealPlan): Response
+    {
+        return $this->view($user, $mealPlan);
+    }
 }
