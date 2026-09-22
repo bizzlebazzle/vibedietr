@@ -6,7 +6,13 @@
             <p class="mt-2 text-gray-700 dark:text-slate-200">{{ $mealPlan->starts_on->toFormattedDateString() }} – {{ $mealPlan->ends_on->toFormattedDateString() }}</p>
         @endif
         <p class="mt-2 text-sm text-gray-600 dark:text-slate-300">{{ $mealPlan->visibility === \App\Domain\MealPlans\MealPlanVisibility::Public ? 'Public read-only sharing is active' : 'Private' }}</p>
-        <a href="{{ route('meal-plans.edit', $mealPlan) }}" class="mt-6 inline-block text-indigo-700 underline dark:text-indigo-300">Edit meal plan</a>
+        <div class="mt-6 flex flex-wrap items-center gap-4">
+            <a href="{{ route('meal-plans.edit', $mealPlan) }}" class="text-indigo-700 underline dark:text-indigo-300">Edit meal plan</a>
+            <form method="POST" action="{{ route('meal-plans.copy', $mealPlan) }}">
+                @csrf
+                <x-secondary-button>Copy to my meal plans</x-secondary-button>
+            </form>
+        </div>
 
         <section class="mt-8 border-t border-gray-200 pt-6 dark:border-slate-700">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-slate-100">Sharing</h3>

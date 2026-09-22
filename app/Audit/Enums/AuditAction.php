@@ -37,6 +37,7 @@ enum AuditAction: string
     case PlanRecipeVersionReviewed = 'plan.recipe_version_reviewed';
     case PlanSharingChanged = 'plan.sharing_changed';
     case PlanBookmarkChanged = 'plan.bookmark_changed';
+    case PlanCopied = 'plan.copied';
     case DiaryConsumptionTransitioned = 'diary.consumption_transitioned';
     case AccountAnonymizationCompleted = 'account.anonymization_completed';
     case SecuritySecondFactorEvent = 'security.second_factor_event';
@@ -78,6 +79,7 @@ enum AuditAction: string
             self::PlanRecipeVersionReviewed,
             self::PlanSharingChanged,
             self::PlanBookmarkChanged,
+            self::PlanCopied,
             self::DiaryConsumptionTransitioned => AuditPurpose::ProductHistory,
             self::AccountAnonymizationCompleted => AuditPurpose::AccountErasureEvidence,
             self::SecuritySecondFactorEvent,
@@ -121,6 +123,7 @@ enum AuditAction: string
             self::PlanRecipeVersionReviewed,
             self::PlanSharingChanged,
             self::PlanBookmarkChanged,
+            self::PlanCopied,
             self::DiaryConsumptionTransitioned => AuditRetentionClass::PrivateContentUntilFinalPurge,
             self::AccountAnonymizationCompleted => AuditRetentionClass::PurgeReceiptTwelveMonths,
             self::SecuritySecondFactorEvent,
@@ -173,6 +176,7 @@ enum AuditAction: string
             self::PlanRecipeVersionReviewed,
             self::PlanSharingChanged,
             self::PlanBookmarkChanged,
+            self::PlanCopied,
             self::DiaryConsumptionTransitioned => [AuditActorType::AuthenticatedUser],
             self::RecipeNutritionOverrideApplied => [
                 AuditActorType::AuthenticatedUser,
@@ -232,7 +236,8 @@ enum AuditAction: string
             self::PlanSnapshotRecorded => [AuditSubjectType::PlanSnapshot],
             self::PlanRecipeVersionReviewed => [AuditSubjectType::PlanSnapshot],
             self::PlanSharingChanged,
-            self::PlanBookmarkChanged => [AuditSubjectType::MealPlan],
+            self::PlanBookmarkChanged,
+            self::PlanCopied => [AuditSubjectType::MealPlan],
             self::DiaryConsumptionTransitioned => [AuditSubjectType::DiaryConsumptionTransition],
             self::SecuritySecondFactorEvent,
             self::SecurityNotificationEvent => [AuditSubjectType::UserAccount],

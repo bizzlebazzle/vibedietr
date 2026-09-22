@@ -1132,6 +1132,8 @@ changes, it is deliberately split across multiple items.
 
 ### PLAN-09 — P2 — Copy an accessible meal plan
 
+- **Status:** Complete (2026-09-22).
+
 - **Outcome:** Let an authenticated viewer create an independent private copy
   they own.
 - **Dependencies:** PLAN-08.
