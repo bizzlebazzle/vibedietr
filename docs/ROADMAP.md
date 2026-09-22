@@ -1111,6 +1111,8 @@ changes, it is deliberately split across multiple items.
 
 ### PLAN-08 — P2 — Add selected-user sharing, public sharing, and plan bookmarks
 
+- **Status:** Complete (2026-09-22).
+
 - **Outcome:** Share a plan without granting edit rights, let authenticated
   users privately bookmark an active-owner public plan, and protect private
   recipe content.

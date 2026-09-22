@@ -1206,7 +1206,23 @@ Database-enforced rules:
 - Every meal plan belongs to exactly one existing user, and deleting that user
   deletes their private plans.
 - Meal-plan type is required and restricted to `reusable` or `dated` under one
-  planning model; visibility is required and defaults to `private`.
+  planning model; visibility is required and defaults to `private`. Active
+  owner plans may be `private` or `public`; `retained_unlisted` is reserved
+  for an ownerless DEC-014 lifecycle transition with a retention timestamp.
+- A selected-user plan share is unique per plan and recipient. It grants
+  read-only access and stores the owner's explicit private-recipe-snapshot
+  acknowledgement when that scope is authorized. Removing the share revokes
+  source access immediately and never changes an independently owned resource.
+- A public-plan bookmark is a private, unique user-to-plan pointer. It neither
+  copies the plan nor grants edit rights, is creatable only for another user's
+  active-owner public plan, and remains removable after a plan becomes
+  retained-unlisted. Removing the final bookmark deletes that retained plan.
+- Public and selected-user reads use a minimized projection that excludes
+  diary/consumption state, version-review notifications, target/account data,
+  share records, bookmark owners, and snapshot fields not deliberately
+  presented. Public publication fails closed unless all pinned recipe
+  snapshots were captured public and every item entry is a valid catalogue
+  snapshot; private one-off entries prohibit publication.
 - Reusable plans have no start or end date. Dated plans require both dates, and
   the end date cannot precede the start date.
 - Every plan day belongs to one meal plan and has exactly one identity: either
