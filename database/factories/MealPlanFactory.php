@@ -24,6 +24,24 @@ class MealPlanFactory extends Factory
         ];
     }
 
+    public function public(): static
+    {
+        return $this->state(fn (): array => [
+            'visibility' => MealPlanVisibility::Public,
+            'published_at' => now()->utc(),
+        ]);
+    }
+
+    public function retainedUnlisted(): static
+    {
+        return $this->state(fn (): array => [
+            'user_id' => null,
+            'visibility' => MealPlanVisibility::RetainedUnlisted,
+            'published_at' => now()->subDay()->utc(),
+            'retained_unlisted_at' => now()->utc(),
+        ]);
+    }
+
     public function reusable(): static
     {
         return $this->state(fn (): array => [

@@ -6,13 +6,16 @@ use App\Http\Controllers\CatalogueCorrectionProposalController;
 use App\Http\Controllers\DiaryEntryController;
 use App\Http\Controllers\IngredientController;
 use App\Http\Controllers\ManualCatalogueSubmissionController;
+use App\Http\Controllers\MealPlanBookmarkController;
 use App\Http\Controllers\MealPlanConsumptionController;
 use App\Http\Controllers\MealPlanController;
 use App\Http\Controllers\MealPlanDayController;
 use App\Http\Controllers\MealPlanItemEntryController;
 use App\Http\Controllers\MealPlanRecipeEntryController;
 use App\Http\Controllers\MealPlanRecipeVersionReviewController;
+use App\Http\Controllers\MealPlanShareController;
 use App\Http\Controllers\MealPlanSlotController;
+use App\Http\Controllers\MealPlanVisibilityController;
 use App\Http\Controllers\PrivateRecipeTagController;
 use App\Http\Controllers\PublicProfileController;
 use App\Http\Controllers\PublicProfileSettingsController;
@@ -54,10 +57,25 @@ Route::get('catalogue/{catalogueItem}', [CatalogueController::class, 'show'])
     ->whereNumber('catalogueItem')
     ->name('catalogue.show');
 
+Route::get('meal-plans/{mealPlan}', [MealPlanController::class, 'show'])
+    ->whereNumber('mealPlan')->name('meal-plans.show');
+
 Route::middleware(['auth'])->group(function () {
     Route::resource('meal-plans', MealPlanController::class)->only([
-        'index', 'create', 'store', 'show', 'edit', 'update',
+        'index', 'create', 'store', 'edit', 'update',
     ]);
+    Route::post('meal-plans/{mealPlan}/shares', [MealPlanShareController::class, 'store'])
+        ->middleware('throttle:sharing')->whereNumber('mealPlan')->name('meal-plans.shares.store');
+    Route::delete('meal-plans/{mealPlan}/shares/{share}', [MealPlanShareController::class, 'destroy'])
+        ->middleware('throttle:sharing')->whereNumber('mealPlan')->whereUlid('share')->name('meal-plans.shares.destroy');
+    Route::post('meal-plans/{mealPlan}/public', [MealPlanVisibilityController::class, 'store'])
+        ->middleware('throttle:sharing')->whereNumber('mealPlan')->name('meal-plans.public.store');
+    Route::delete('meal-plans/{mealPlan}/public', [MealPlanVisibilityController::class, 'destroy'])
+        ->middleware('throttle:sharing')->whereNumber('mealPlan')->name('meal-plans.public.destroy');
+    Route::post('meal-plans/{mealPlan}/bookmark', [MealPlanBookmarkController::class, 'store'])
+        ->middleware('throttle:sharing')->whereNumber('mealPlan')->name('meal-plans.bookmarks.store');
+    Route::delete('meal-plan-bookmarks/{bookmark}', [MealPlanBookmarkController::class, 'destroy'])
+        ->middleware('throttle:sharing')->whereNumber('bookmark')->name('meal-plans.bookmarks.destroy');
     Route::post('meal-plans/{mealPlan}/days', [MealPlanDayController::class, 'store'])
         ->whereNumber('mealPlan')->name('meal-plans.days.store');
     Route::post('meal-plans/{mealPlan}/days/{day}/slots', [MealPlanSlotController::class, 'store'])

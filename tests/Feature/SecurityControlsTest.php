@@ -132,6 +132,16 @@ class SecurityControlsTest extends TestCase
         $securityRead = Route::getRoutes()->getByName('security.second-factor.show');
 
         $this->assertContains('throttle:sharing', $visibility->gatherMiddleware());
+        foreach ([
+            'meal-plans.shares.store',
+            'meal-plans.shares.destroy',
+            'meal-plans.public.store',
+            'meal-plans.public.destroy',
+            'meal-plans.bookmarks.store',
+            'meal-plans.bookmarks.destroy',
+        ] as $routeName) {
+            $this->assertContains('throttle:sharing', Route::getRoutes()->getByName($routeName)->gatherMiddleware());
+        }
         $this->assertNotContains('throttle:sharing', $recipeRead->gatherMiddleware());
         $this->assertContains('throttle:security-sensitive', $securityWrite->gatherMiddleware());
         $this->assertNotContains('throttle:security-sensitive', $securityRead->gatherMiddleware());

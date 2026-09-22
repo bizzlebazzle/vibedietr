@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 
 class MealPlanController extends Controller
@@ -17,8 +18,19 @@ class MealPlanController extends Controller
         $owner = $this->owner($request);
         $this->authorize('viewAny', MealPlan::class);
         $mealPlans = $owner->mealPlans()->latest('id')->get();
+        $sharedMealPlans = MealPlan::query()
+            ->whereHas('shares', fn ($query) => $query->where('recipient_user_id', $owner->getKey()))
+            ->latest('id')
+            ->get()
+            ->filter(fn (MealPlan $mealPlan): bool => Gate::forUser($owner)->allows('view', $mealPlan));
+        $bookmarkedPlans = $owner->mealPlanBookmarks()
+            ->with('mealPlan')
+            ->latest('id')
+            ->get()
+            ->filter(fn ($bookmark): bool => $bookmark->mealPlan instanceof MealPlan
+                && Gate::forUser($owner)->allows('view', $bookmark->mealPlan));
 
-        return view('meal-plans.index', compact('mealPlans'));
+        return view('meal-plans.index', compact('mealPlans', 'sharedMealPlans', 'bookmarkedPlans'));
     }
 
     public function create(Request $request): View
@@ -40,17 +52,30 @@ class MealPlanController extends Controller
 
     public function show(Request $request, int $mealPlan): View
     {
-        $mealPlan = $this->mealPlan($request, $mealPlan);
+        $mealPlan = MealPlan::query()->findOrFail($mealPlan);
         $this->authorize('view', $mealPlan);
-        $mealPlan->load([
-            'days.slots.recipeEntries.versionReviews' => fn ($query) => $query
-                ->where('status', 'pending')
-                ->with('recipeVersion')
-                ->orderBy('created_at'),
-            'days.slots.itemEntries',
-        ]);
+        $viewer = $request->user();
+        $isOwner = $viewer instanceof User && (int) $viewer->getKey() === (int) $mealPlan->user_id;
 
-        return view('meal-plans.show', compact('mealPlan'));
+        if ($isOwner) {
+            $mealPlan->load([
+                'shares',
+                'days.slots.recipeEntries.versionReviews' => fn ($query) => $query
+                    ->where('status', 'pending')
+                    ->with('recipeVersion')
+                    ->orderBy('created_at'),
+                'days.slots.itemEntries',
+            ]);
+
+            return view('meal-plans.show', compact('mealPlan'));
+        }
+
+        $mealPlan->load(['days.slots.recipeEntries', 'days.slots.itemEntries']);
+        $bookmark = $viewer instanceof User
+            ? $viewer->mealPlanBookmarks()->where('meal_plan_id', $mealPlan->getKey())->first()
+            : null;
+
+        return view('meal-plans.read-only', compact('mealPlan', 'bookmark'));
     }
 
     public function edit(Request $request, int $mealPlan): View

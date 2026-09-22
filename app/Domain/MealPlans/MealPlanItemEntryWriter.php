@@ -16,6 +16,7 @@ use App\Domain\Nutrition\NutrientBasis;
 use App\Domain\Nutrition\NutrientRegistry;
 use App\Models\CatalogueItem;
 use App\Models\CatalogueItemVersion;
+use App\Models\MealPlan;
 use App\Models\MealPlanItemEntry;
 use App\Models\MealPlanSlot;
 use App\Models\User;
@@ -92,6 +93,11 @@ final class MealPlanItemEntryWriter
     ): MealPlanItemEntry {
         return DB::transaction(function () use ($slot, $wording, $plannedAmount, $plannedUnit, $nutritionBasis, $nutrition, $actor): MealPlanItemEntry {
             $slot = $this->authorizedSlot($slot, $actor);
+            if ($slot->day->mealPlan->visibility === MealPlanVisibility::Public) {
+                throw ValidationException::withMessages([
+                    'kind' => 'A private one-off item cannot be added while the plan is public.',
+                ]);
+            }
             $enteredValues = [];
 
             foreach ($nutrition as $identifier => $value) {
@@ -175,8 +181,10 @@ final class MealPlanItemEntryWriter
     private function authorizedSlot(MealPlanSlot $slot, User $actor): MealPlanSlot
     {
         $slot = MealPlanSlot::query()->lockForUpdate()->findOrFail($slot->getKey());
-        $slot->load('day.mealPlan');
-        Gate::forUser($actor)->authorize('update', $slot->day->mealPlan);
+        $slot->load('day');
+        $mealPlan = MealPlan::query()->lockForUpdate()->findOrFail($slot->day->meal_plan_id);
+        Gate::forUser($actor)->authorize('update', $mealPlan);
+        $slot->day->setRelation('mealPlan', $mealPlan);
 
         return $slot;
     }

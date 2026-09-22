@@ -128,14 +128,14 @@ class MealPlanIdentityTest extends TestCase
         $this->assertSame('Owner secret', $mealPlan->fresh()->name);
     }
 
-    public function test_guest_is_redirected_from_every_plan_boundary(): void
+    public function test_guest_is_redirected_from_mutations_and_private_plan_read_is_hidden(): void
     {
         $mealPlan = MealPlan::factory()->create();
 
         $this->get(route('meal-plans.index'))->assertRedirect(route('login'));
         $this->get(route('meal-plans.create'))->assertRedirect(route('login'));
         $this->post(route('meal-plans.store'), [])->assertRedirect(route('login'));
-        $this->get(route('meal-plans.show', $mealPlan))->assertRedirect(route('login'));
+        $this->get(route('meal-plans.show', $mealPlan))->assertNotFound();
         $this->get(route('meal-plans.edit', $mealPlan))->assertRedirect(route('login'));
         $this->patch(route('meal-plans.update', $mealPlan), [])->assertRedirect(route('login'));
     }
