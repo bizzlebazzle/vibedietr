@@ -74,6 +74,10 @@ new class extends Component
                             {{ __('Profile') }}
                         </x-dropdown-link>
 
+                        <x-dropdown-link :href="route('nutrition-target-profiles.index')">
+                            Nutrition targets
+                        </x-dropdown-link>
+
                         @can('access-admin')
                             <x-dropdown-link :href="route('admin.catalogue.index')">
                                 Catalogue moderation
@@ -141,6 +145,10 @@ new class extends Component
             <div class="mt-3 space-y-1">
                 <x-responsive-nav-link :href="route('profile')" wire:navigate>
                     {{ __('Profile') }}
+                </x-responsive-nav-link>
+
+                <x-responsive-nav-link :href="route('nutrition-target-profiles.index')">
+                    Nutrition targets
                 </x-responsive-nav-link>
 
                 @can('access-admin')

@@ -17,6 +17,7 @@ use App\Http\Controllers\MealPlanRecipeVersionReviewController;
 use App\Http\Controllers\MealPlanShareController;
 use App\Http\Controllers\MealPlanSlotController;
 use App\Http\Controllers\MealPlanVisibilityController;
+use App\Http\Controllers\NutritionTargetProfileController;
 use App\Http\Controllers\PrivateRecipeTagController;
 use App\Http\Controllers\PublicProfileController;
 use App\Http\Controllers\PublicProfileSettingsController;
@@ -79,6 +80,11 @@ Route::middleware(['auth'])->group(function () {
         ->middleware('throttle:sharing')->whereNumber('mealPlan')->name('meal-plans.bookmarks.store');
     Route::delete('meal-plan-bookmarks/{bookmark}', [MealPlanBookmarkController::class, 'destroy'])
         ->middleware('throttle:sharing')->whereNumber('bookmark')->name('meal-plans.bookmarks.destroy');
+    Route::post('nutrition-target-profiles/{profile}/default', [NutritionTargetProfileController::class, 'designateDefault'])
+        ->whereNumber('profile')->name('nutrition-target-profiles.default');
+    Route::resource('nutrition-target-profiles', NutritionTargetProfileController::class)
+        ->parameters(['nutrition-target-profiles' => 'profile'])
+        ->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
     Route::post('meal-plans/{mealPlan}/days', [MealPlanDayController::class, 'store'])
         ->whereNumber('mealPlan')->name('meal-plans.days.store');
     Route::post('meal-plans/{mealPlan}/days/{day}/slots', [MealPlanSlotController::class, 'store'])

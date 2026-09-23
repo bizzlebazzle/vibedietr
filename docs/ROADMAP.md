@@ -1149,6 +1149,8 @@ changes, it is deliberately split across multiple items.
 
 ### PLAN-10 — P2 — Add nutrition target profiles
 
+- **Status:** Complete (2026-09-23).
+
 - **Outcome:** Give each user a default daily target profile and optional named
   profiles for any supported nutrient.
 - **Dependencies:** FND-06, PLAN-01.

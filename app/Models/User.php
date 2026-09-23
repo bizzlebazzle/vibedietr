@@ -52,6 +52,12 @@ class User extends Authenticatable
 
         static::creating($protectPrivilege);
         static::updating($protectPrivilege);
+        static::created(function (User $user): void {
+            $user->nutritionTargetProfiles()->forceCreate([
+                'name' => NutritionTargetProfile::DEFAULT_NAME,
+                'is_default' => true,
+            ]);
+        });
         static::deleting(function (User $user): void {
             if ($user->isAdministrator()) {
                 app(LastAdministratorGuard::class)->assertAccountDeletionAllowed($user);
@@ -95,6 +101,12 @@ class User extends Authenticatable
     public function mealPlans(): HasMany
     {
         return $this->hasMany(MealPlan::class);
+    }
+
+    /** @return HasMany<NutritionTargetProfile, $this> */
+    public function nutritionTargetProfiles(): HasMany
+    {
+        return $this->hasMany(NutritionTargetProfile::class);
     }
 
     /** @return HasMany<MealPlanShare, $this> */
