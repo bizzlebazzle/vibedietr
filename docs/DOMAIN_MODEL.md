@@ -1193,7 +1193,19 @@ no hard domain foreign key. System actors have no identity mapping.
 There is intentionally no represented relationship between the user-owned
 `Ingredient` food/product record and a recipe ingredient line. Meal
 consumption and ad-hoc food-log entries are represented by the private diary
-resources above. Diet targets are not represented.
+resources above.
+
+Nutrition target profiles are private user-owned daily target collections. A
+new user receives one blank profile named “Daily targets” as the designated
+default. Additional named profiles use a nullable default marker so a unique
+owner/marker constraint permits many non-default profiles but at most one
+default. Application lifecycle services prevent removal of the default and
+switch the designation under an owner-profile lock, maintaining exactly one.
+Targets are sparse rows keyed by profile and the FND-06 nutrient identifier;
+absence means no target rather than zero. A row stores exactly one of exact,
+minimum, maximum, or inclusive range, using non-negative DECIMAL(38,18) values
+in the FND-06 canonical storage unit for that nutrient. Forms convert to and
+from the preferred display unit in that same registry definition.
 
 ## Current rules and constraints
 
@@ -1203,6 +1215,12 @@ Database-enforced rules:
 - Every ingredient belongs to an existing user.
 - User administrator status is non-null and defaults to false.
 - Deleting a user deletes their ingredients.
+- Every nutrition target profile belongs to an existing user, and deleting the
+  user deletes their profiles and targets. The owner/default uniqueness
+  constraint permits only one non-null default marker per user.
+- Every nutrition target belongs to one profile and is unique for its nutrient
+  identifier within that profile. Database checks enforce the target-type
+  value shape, non-negative values, and ordered inclusive range bounds.
 - Every meal plan belongs to exactly one existing user, and deleting that user
   deletes their private plans.
 - Meal-plan type is required and restricted to `reusable` or `dated` under one
@@ -1603,7 +1621,7 @@ representation:
 - Match between a recipe line and a food/ingredient record.
 - Recipe yield, portion, or serving.
 - Meal.
-- Diet plan, nutrition target, or dietary constraint.
+- Diet plan, dated target phase, or dietary constraint.
 
 ### Recipe imports
 
