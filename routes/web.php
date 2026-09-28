@@ -16,6 +16,7 @@ use App\Http\Controllers\MealPlanRecipeEntryController;
 use App\Http\Controllers\MealPlanRecipeVersionReviewController;
 use App\Http\Controllers\MealPlanShareController;
 use App\Http\Controllers\MealPlanSlotController;
+use App\Http\Controllers\MealPlanTargetPhaseController;
 use App\Http\Controllers\MealPlanVisibilityController;
 use App\Http\Controllers\NutritionTargetProfileController;
 use App\Http\Controllers\PrivateRecipeTagController;
@@ -85,6 +86,12 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('nutrition-target-profiles', NutritionTargetProfileController::class)
         ->parameters(['nutrition-target-profiles' => 'profile'])
         ->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
+    Route::post('meal-plans/{mealPlan}/target-phases', [MealPlanTargetPhaseController::class, 'store'])
+        ->whereNumber('mealPlan')->name('meal-plans.target-phases.store');
+    Route::patch('meal-plans/{mealPlan}/target-phases/{phase}', [MealPlanTargetPhaseController::class, 'update'])
+        ->whereNumber(['mealPlan', 'phase'])->name('meal-plans.target-phases.update');
+    Route::delete('meal-plans/{mealPlan}/target-phases/{phase}', [MealPlanTargetPhaseController::class, 'destroy'])
+        ->whereNumber(['mealPlan', 'phase'])->name('meal-plans.target-phases.destroy');
     Route::post('meal-plans/{mealPlan}/days', [MealPlanDayController::class, 'store'])
         ->whereNumber('mealPlan')->name('meal-plans.days.store');
     Route::post('meal-plans/{mealPlan}/days/{day}/slots', [MealPlanSlotController::class, 'store'])

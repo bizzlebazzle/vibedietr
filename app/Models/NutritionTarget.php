@@ -6,6 +6,7 @@ use App\Domain\NutritionTargets\NutritionTargetType;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/** @property NutritionTargetType $type */
 class NutritionTarget extends Model
 {
     protected $fillable = ['nutrient', 'type', 'exact_value', 'minimum_value', 'maximum_value'];

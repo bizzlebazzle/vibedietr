@@ -50,6 +50,7 @@ Backlog relationships mean:
 | DEC-017 | Culinary measurement jurisdictions | Decided | Product owner |
 | DEC-018 | Recipe remix attribution before public profiles | Decided | Product owner |
 | DEC-019 | Diary consumption time and correction history | Decided | Product owner |
+| DEC-020 | Dated nutrition target phases and history | Decided | Product owner |
 
 ## DEC-001 — Food-matching confidence thresholds
 
@@ -2141,6 +2142,57 @@ Backlog relationships mean:
   daylight-saving boundaries, keeps waking-day totals predictable, avoids
   silently invented times or quantities, and provides one authoritative
   immutable history for PLAN-05, PLAN-06, and PLAN-12.
+
+## DEC-020 — Dated nutrition target phases and history
+
+- **Question requiring resolution:** How do overlapping target phases resolve,
+  and when do profile and phase changes affect the targets used for each plan
+  date?
+- **Why it matters:** PLAN-11 needs one unambiguous target assignment and
+  stable target values for historical comparisons, including after profile
+  edits, phase edits, and profile deletion.
+- **Status:** Decided.
+- **Owner:** Product owner.
+- **Alternatives:** Reject overlapping phases or define precedence; freeze
+  profile values for a whole phase at assignment or let edits affect future
+  dates while preserving past values; forbid or allow explicit backfill of
+  previously unassigned past dates.
+- **Existing constraints from `PRODUCT_SPEC.md`:** A meal plan may assign
+  profiles in phases with a start and optional end date. Historical comparisons
+  use the phase that applied on the relevant date. Profiles and targets are
+  private to their owner. PLAN-11 requires the applicable historical values,
+  not the profile's current values.
+- **Backlog relationships:** Resolution unblocks PLAN-11 and constrains
+  PLAN-12. `Related`: PLAN-10, DEC-019.
+- **Resolution condition:** The product owner chooses overlap, effective-date,
+  historical preservation, backfill, and assigned-profile deletion rules.
+- **Final decision and rationale:** Phase ranges use calendar dates with an
+  inclusive start and inclusive optional end, consistent with dated plan-day
+  boundaries. Overlapping phases on the same plan are rejected; no phase has
+  precedence over another. A date with no phase has no assigned target, and
+  the default profile is not an implicit fallback. Only the plan owner may
+  assign or change phases, and a phase may use only that owner's profile.
+
+  A profile or phase change made on an account-local calendar date takes effect
+  on the next account-local calendar date. The current date and earlier assigned
+  dates retain the phase assignment and target values that applied to them.
+  The effective date is fixed when the change is made; a later timezone change
+  cannot reinterpret it. Changes to a profile's values therefore apply to
+  future eligible dates in existing phases, while past dates resolve through
+  retained immutable values rather than the current profile rows. Multiple
+  same-day changes may replace the pending next-day state, but cannot rewrite
+  already established dates.
+
+  An owner may explicitly backfill a previously unassigned past date or range
+  using the selected profile's values at the time of backfill. That assignment
+  and its values then become historical and remain stable. A phase edit or
+  removal preserves assignments and values for past dates; its changed or
+  removed assignment applies only from the next account-local date. Deleting
+  an assigned profile likewise leaves past assigned dates intact and makes its
+  future phase dates unassigned. Historical target values and phase selection
+  remain private owner data until account purge. This preserves an accurate
+  record without silently changing past comparisons or assigning unrelated
+  targets to gaps.
 
 ## Manual validation checklist
 

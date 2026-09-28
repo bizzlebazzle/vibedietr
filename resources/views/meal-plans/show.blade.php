@@ -62,6 +62,10 @@
             </div>
         </section>
 
+        @if ($mealPlan->type === \App\Domain\MealPlans\MealPlanType::Dated)
+            @include('meal-plans.partials.target-phases')
+        @endif
+
         <section class="mt-8 border-t border-gray-200 pt-6 dark:border-slate-700">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-slate-100">Plan days</h3>
             <x-input-error :messages="$errors->all()" class="mt-2" />
