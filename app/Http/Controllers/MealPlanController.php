@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Domain\MealPlans\MealPlanType;
+use App\Domain\NutritionTargets\DailyNutritionComparison;
 use App\Models\MealPlan;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
@@ -50,7 +51,7 @@ class MealPlanController extends Controller
         return redirect()->route('meal-plans.show', $mealPlan)->with('status', 'Meal plan created.');
     }
 
-    public function show(Request $request, int $mealPlan): View
+    public function show(Request $request, int $mealPlan, DailyNutritionComparison $comparison): View
     {
         $mealPlan = MealPlan::query()->findOrFail($mealPlan);
         $this->authorize('view', $mealPlan);
@@ -69,8 +70,14 @@ class MealPlanController extends Controller
             ]);
 
             $targetProfiles = $viewer->nutritionTargetProfiles()->orderBy('name')->get();
+            $dailyComparisons = [];
+            if ($mealPlan->type === MealPlanType::Dated) {
+                foreach ($mealPlan->days as $day) {
+                    $dailyComparisons[$day->getKey()] = $comparison->forDay($viewer, $mealPlan, $day);
+                }
+            }
 
-            return view('meal-plans.show', compact('mealPlan', 'targetProfiles'));
+            return view('meal-plans.show', compact('mealPlan', 'targetProfiles', 'dailyComparisons'));
         }
 
         $mealPlan->load(['days.slots.recipeEntries', 'days.slots.itemEntries']);

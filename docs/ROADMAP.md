@@ -1180,6 +1180,8 @@ changes, it is deliberately split across multiple items.
 
 ### PLAN-12 — P2 — Compare planned and consumed totals with targets
 
+- **Status:** Complete (2026-09-28).
+
 - **Outcome:** Show daily nutrient totals against the target phase that applies
   to each date without presenting targets as medical advice.
 - **Dependencies:** PLAN-06, PLAN-11.
