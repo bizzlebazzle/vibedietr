@@ -240,6 +240,7 @@ class Form extends Component
         }
 
         $this->loadRecipe($recipe->fresh(), $fingerprint);
+        $this->dispatch('recipe-saved');
         session()->flash('status', 'Recipe draft saved.');
     }
 

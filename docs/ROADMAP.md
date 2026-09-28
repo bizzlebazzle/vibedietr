@@ -1216,6 +1216,8 @@ changes, it is deliberately split across multiple items.
 
 ### UX-02 — P1 — Add accessible application feedback patterns
 
+- **Status:** Complete (2026-09-28).
+
 - **Outcome:** Standardize validation summaries, success/error notices,
   confirmations, loading states, and destructive-action warnings for keyboard
   and assistive-technology users.
@@ -1230,6 +1232,8 @@ changes, it is deliberately split across multiple items.
 - **Estimated size:** Medium.
 
 ### UX-03 — P1 — Make recipe authoring and resizing mobile-friendly
+
+- **Status:** Implemented (2026-09-28); browser verification pending.
 
 - **Outcome:** Provide a low-friction, keyboard-accessible workflow for adding,
   reordering, reviewing, and resizing recipe content on small and large

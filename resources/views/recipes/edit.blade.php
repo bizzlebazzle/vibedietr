@@ -9,6 +9,6 @@
                 <a href="{{ route('recipes.show', [$recipe, 'preview' => 'draft']) }}" class="inline-flex rounded border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100">Preview saved draft revision</a>
             </div>
         @endif
-        <div class="rounded-lg bg-white p-6 shadow dark:bg-slate-900">@livewire('recipes.form', ['recipe' => $recipe], key('recipe-edit-'.$recipe->id))</div>
+        <div class="min-w-0 rounded-lg bg-white p-4 shadow dark:bg-slate-900 sm:p-6">@livewire('recipes.form', ['recipe' => $recipe], key('recipe-edit-'.$recipe->id))</div>
     </div></div>
 </x-app-layout>

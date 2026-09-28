@@ -1,5 +1,5 @@
 @if ($import)
-    <section class="mb-6 space-y-4 rounded-lg border border-amber-300 bg-amber-50 p-5 text-amber-950 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100" aria-labelledby="import-review-heading">
+    <section class="recipe-content mb-6 min-w-0 space-y-4 rounded-lg border border-amber-300 bg-amber-50 p-5 text-amber-950 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100" aria-labelledby="import-review-heading">
         <div class="flex flex-wrap items-start justify-between gap-3">
             <div>
                 <h3 id="import-review-heading" class="font-semibold">Imported — needs review</h3>
