@@ -1199,6 +1199,8 @@ changes, it is deliberately split across multiple items.
 
 ### UX-01 — P1 — Establish VibeDietr identity and primary navigation
 
+- **Status:** Complete (2026-09-28).
+
 - **Outcome:** Replace Laravel placeholder content with a truthful product
   landing page, useful authenticated dashboard, product metadata, and
   navigation for implemented areas.
