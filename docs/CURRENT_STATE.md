@@ -149,9 +149,9 @@ work.
   consume/correct/reverse/re-consume history are retained. Reusable entries are
   rejected, and consumption history blocks move/removal.
 - PLAN-06 snapshots consumption nutrition; PLAN-07 queues audited review of newer versions for eligible unconsumed entries.
-- Product identity, primary navigation, broader responsive/accessibility work,
-  and general onboarding remain planned (UX-01 through UX-07). DEC-002 blocks
-  UX-04.
+- UX-01 implements VibeDietr identity, guest landing, owner-scoped dashboard,
+  and navigation. Accessibility and onboarding remain planned (UX-02 to UX-07);
+  DEC-002 blocks UX-04.
 - Backup/restore, self-service account export, delayed deletion/recovery,
   privacy/legal launch review, and release-readiness work remain incomplete
   (DEP-06 through DEP-10). DEC-008, DEC-010, and DEC-012 remain unresolved.
