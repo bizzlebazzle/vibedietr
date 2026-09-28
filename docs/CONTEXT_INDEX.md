@@ -81,7 +81,7 @@ Only explicit, machine-verifiable references are included.
 | `PLAN-09` - Copy an accessible meal plan | 5. Meal and diet planning | Complete (2026-09-22) | `PLAN-08` | - | `DEC-014` (Constrained) | - |
 | `PLAN-10` - Add nutrition target profiles | 5. Meal and diet planning | Complete (2026-09-23) | `FND-06`, `PLAN-01` | `PLAN-11` | `DEC-020` (Related) | - |
 | `PLAN-11` - Assign dated target phases | 5. Meal and diet planning | Complete (2026-09-28) | `PLAN-10` | `PLAN-12` | `DEC-020` (Unblocked) | - |
-| `PLAN-12` - Compare planned and consumed totals with targets | 5. Meal and diet planning | Not recorded | `PLAN-06`, `PLAN-11` | `UX-05`, `DEP-07` | `DEC-004` (Constrained), `DEC-019` (Constrained), `DEC-020` (Constrained) | - |
+| `PLAN-12` - Compare planned and consumed totals with targets | 5. Meal and diet planning | Complete (2026-09-28) | `PLAN-06`, `PLAN-11` | `UX-05`, `DEP-07` | `DEC-004` (Constrained), `DEC-019` (Constrained), `DEC-020` (Constrained) | - |
 | `UX-01` - Establish VibeDietr identity and primary navigation | 6. User experience and accessibility | Not recorded | `REC-01`, `NUT-03`, `PLAN-01` | `UX-06`, `UX-07` | - | - |
 | `UX-02` - Add accessible application feedback patterns | 6. User experience and accessibility | Not recorded | - | `UX-03`, `UX-04`, `UX-05`, `UX-07` | `DEC-002` (Related) | - |
 | `UX-03` - Make recipe authoring and resizing mobile-friendly | 6. User experience and accessibility | Not recorded | `REC-04`, `REC-08`, `UX-02` | `UX-07` | - | - |

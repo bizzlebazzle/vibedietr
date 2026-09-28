@@ -94,6 +94,9 @@
                         <h4 class="font-semibold text-gray-900 dark:text-slate-100">
                             {{ $day->date?->toFormattedDateString() ?? 'Day '.($day->day_index + 1) }}
                         </h4>
+                        @if (isset($dailyComparisons[$day->id]))
+                            @include('meal-plans.partials.daily-comparison', ['comparison' => $dailyComparisons[$day->id]])
+                        @endif
                         <div class="mt-3 space-y-3">
                             @foreach ($day->slots as $planSlot)
                                 <div class="rounded-md border border-gray-100 p-3 dark:border-slate-800">
