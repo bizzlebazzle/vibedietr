@@ -61,25 +61,16 @@
 >
 
   {{-- Alerts --}}
-  <div x-show="notice" x-text="notice" class="p-2 rounded bg-green-100 text-green-800"></div>
+  <div role="status" aria-live="polite" aria-atomic="true" x-show="notice" x-text="notice" class="p-2 rounded bg-green-100 text-green-800"></div>
 
-  @if($errors->any())
-    <div class="rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-100">
-      <div class="font-medium">Please fix the highlighted fields before saving.</div>
-      <ul class="mt-2 list-disc pl-5">
-        @foreach($errors->all() as $error)
-          <li>{{ $error }}</li>
-        @endforeach
-      </ul>
-    </div>
-  @endif
+  <x-validation-summary :errors="$errors" message="Please fix the fields before saving." />
 
-  <form wire:submit="save" class="grid grid-cols-1 gap-6 md:grid-cols-3">
+  <form wire:submit="save" wire:loading.attr="aria-busy" wire:target="save" class="grid grid-cols-1 gap-6 md:grid-cols-3">
     <div class="md:col-span-2 space-y-4">
       <div class="space-y-1">
         <label class="block font-medium">Name</label>
         <input type="text" wire:model.defer="name" class="w-full rounded border px-3 py-2">
-        @error('name') <div class="text-sm text-red-600">{{ $message }}</div> @enderror
+        @error('name') <div data-feedback-error data-feedback-for="name" class="text-sm text-red-600">{{ $message }}</div> @enderror
       </div>
 
       <div class="space-y-1">
@@ -88,7 +79,7 @@
           A barcode is saved only after OpenFoodFacts confirms the product.
         </p>
         <div class="flex flex-col gap-2">
-          <div class="flex gap-2">
+          <div class="flex gap-2" wire:loading.attr="aria-busy" wire:target="fetchFromOff">
             <input type="text" wire:model.defer="barcode" class="flex-1 rounded border px-3 py-2" placeholder="Scan or enter a barcode to look up">
             <button
               type="button"
@@ -98,7 +89,7 @@
               wire:target="fetchFromOff"
             >
               <span wire:loading.remove wire:target="fetchFromOff">Fetch from OFF</span>
-              <span wire:loading wire:target="fetchFromOff">Fetching…</span>
+              <span role="status" aria-live="polite" wire:loading wire:target="fetchFromOff">Fetching…</span>
             </button>
           </div>
           <details class="rounded border p-3">
@@ -112,14 +103,14 @@
             </div>
         </details>
         </div>
-        @error('barcode') <div class="text-sm text-red-600">{{ $message }}</div> @enderror
+        @error('barcode') <div data-feedback-error data-feedback-for="barcode" class="text-sm text-red-600">{{ $message }}</div> @enderror
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
           <label class="block font-medium sm:flex sm:min-h-[3rem] sm:items-end">Quantity</label>
           <input type="number" step="0.001" min="0" wire:model.defer="quantity" class="w-full rounded border px-3 py-2">
-          @error('quantity') <div class="text-sm text-red-600">{{ $message }}</div> @enderror
+          @error('quantity') <div data-feedback-error data-feedback-for="quantity" class="text-sm text-red-600">{{ $message }}</div> @enderror
         </div>
         <div>
           <label class="block font-medium sm:flex sm:min-h-[3rem] sm:items-end">Quantity unit</label>
@@ -134,12 +125,12 @@
               <option value="{{ $unit }}" label="Current custom unit"></option>
             @endforeach
           </datalist>
-          @error('quantity_unit') <div class="text-sm text-red-600">{{ $message }}</div> @enderror
+          @error('quantity_unit') <div data-feedback-error data-feedback-for="quantity_unit" class="text-sm text-red-600">{{ $message }}</div> @enderror
         </div>
         <div>
           <label class="block font-medium sm:flex sm:min-h-[3rem] sm:items-end">Recommended servings (optional)</label>
           <input type="number" step="0.01" min="0" wire:model.defer="recommended_servings" class="w-full rounded border px-3 py-2">
-          @error('recommended_servings') <div class="text-sm text-red-600">{{ $message }}</div> @enderror
+          @error('recommended_servings') <div data-feedback-error data-feedback-for="recommended_servings" class="text-sm text-red-600">{{ $message }}</div> @enderror
         </div>
       </div>
 
@@ -147,19 +138,19 @@
         <div>
           <label class="block font-medium">Serving quantity (optional)</label>
           <input type="number" step="0.001" min="0" wire:model.defer="serving_quantity" class="w-full rounded border px-3 py-2">
-          @error('serving_quantity') <div class="text-sm text-red-600">{{ $message }}</div> @enderror
+          @error('serving_quantity') <div data-feedback-error data-feedback-for="serving_quantity" class="text-sm text-red-600">{{ $message }}</div> @enderror
         </div>
         <div>
           <label class="block font-medium">Serving quantity unit (optional)</label>
           <input type="text" list="measurement-unit-options" wire:model.defer="serving_quantity_unit" class="w-full rounded border px-3 py-2" placeholder="e.g. ml, piece or splash">
-          @error('serving_quantity_unit') <div class="text-sm text-red-600">{{ $message }}</div> @enderror
+          @error('serving_quantity_unit') <div data-feedback-error data-feedback-for="serving_quantity_unit" class="text-sm text-red-600">{{ $message }}</div> @enderror
         </div>
       </div>
 
       <div>
         <label class="block font-medium">Image URL (automatic from OpenFoodFacts when barcode scanning)</label>
         <input type="url" wire:model.defer="image_url" class="w-full rounded border px-3 py-2" placeholder="https://…">
-        @error('image_url') <div class="text-sm text-red-600">{{ $message }}</div> @enderror
+        @error('image_url') <div data-feedback-error data-feedback-for="image_url" class="text-sm text-red-600">{{ $message }}</div> @enderror
       </div>
 
       <section class="space-y-3">
@@ -199,7 +190,7 @@
                               class="w-24 rounded border px-2 py-2 text-right text-sm"
                               placeholder="0"
                             >
-                            @error($input['model']) <div class="mt-1 text-xs text-red-600">{{ $message }}</div> @enderror
+                            @error($input['model']) <div data-feedback-error data-feedback-for="{{ $input['model'] }}" class="mt-1 text-xs text-red-600">{{ $message }}</div> @enderror
                           </div>
                         @endforeach
                       </div>
@@ -216,7 +207,7 @@
                           >
                           <span class="w-6 text-xs font-medium text-gray-500 dark:text-slate-400">{{ $row['unit'] }}</span>
                         </div>
-                        @error($row['model']) <div class="mt-1 text-xs text-red-600">{{ $message }}</div> @enderror
+                        @error($row['model']) <div data-feedback-error data-feedback-for="{{ $row['model'] }}" class="mt-1 text-xs text-red-600">{{ $message }}</div> @enderror
                       </div>
                     @endif
                   </div>
@@ -272,7 +263,7 @@
       </section>
 
       <div class="flex gap-3">
-        <x-primary-button wire:loading.attr="disabled" wire:target="save" type="submit">Save</x-primary-button>
+        <x-primary-button wire:loading.attr="disabled" wire:target="save" type="submit">Save</x-primary-button><span role="status" aria-live="polite" wire:loading wire:target="save">Saving…</span>
         <x-secondary-button wire:click="$dispatch('close-modal')">Cancel</x-secondary-button>
       </div>
     </div>

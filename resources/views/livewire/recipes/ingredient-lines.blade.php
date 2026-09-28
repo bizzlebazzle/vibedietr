@@ -30,7 +30,7 @@
                         <button type="button" wire:click="moveUp({{ $line->id }})" @disabled($loop->first) class="rounded border px-3 py-1 text-sm disabled:opacity-40 dark:border-slate-600">Up</button>
                         <button type="button" wire:click="moveDown({{ $line->id }})" @disabled($loop->last) class="rounded border px-3 py-1 text-sm disabled:opacity-40 dark:border-slate-600">Down</button>
                         <button type="button" wire:click="editLine({{ $line->id }})" class="rounded border px-3 py-1 text-sm dark:border-slate-600">Edit</button>
-                        <button type="button" wire:click="deleteLine({{ $line->id }})" wire:confirm="Remove this ingredient line?" class="rounded border border-red-300 px-3 py-1 text-sm text-red-700 dark:border-red-800 dark:text-red-300">Remove</button>
+                        <button type="button" wire:click="deleteLine({{ $line->id }})" wire:confirm="Remove this ingredient line? It will be removed from the recipe." class="rounded border border-red-300 px-3 py-1 text-sm text-red-700 dark:border-red-800 dark:text-red-300">Remove</button>
                     </div>
                 </li>
             @endforeach

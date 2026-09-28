@@ -1,5 +1,6 @@
 import './bootstrap';
 import './scanner.js';
+import './feedback.js';
 
 const resolvePreferredTheme = () => {
     const savedTheme = window.localStorage.getItem('theme');

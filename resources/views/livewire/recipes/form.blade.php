@@ -1,5 +1,7 @@
 <form
     wire:submit="save"
+    wire:loading.attr="aria-busy"
+    wire:target="save,finalize"
     class="space-y-8"
     x-data="{
         warn: null,
@@ -15,11 +17,7 @@
         destroy() { window.removeEventListener('beforeunload', this.warn); }
     }"
 >
-    @if ($errors->any())
-        <div role="alert" class="rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-100">
-            Please fix the highlighted fields before saving or finalizing. Your changes have been kept.
-        </div>
-    @endif
+    <x-validation-summary :errors="$errors" message="Please fix the fields before saving or finalizing. Your changes have been kept." />
 
     <x-input-error :messages="$errors->get('conflict')" />
     <x-input-error :messages="$errors->get('save')" />
@@ -163,7 +161,7 @@
                     <div class="flex flex-wrap gap-2">
                         <button type="button" wire:click="moveIngredientUp({{ $index }})" @disabled($loop->first) class="rounded border px-3 py-1 text-sm disabled:opacity-40 dark:border-slate-600">Up</button>
                         <button type="button" wire:click="moveIngredientDown({{ $index }})" @disabled($loop->last) class="rounded border px-3 py-1 text-sm disabled:opacity-40 dark:border-slate-600">Down</button>
-                        <button type="button" wire:click="removeIngredient({{ $index }})" wire:confirm="Remove this ingredient line?" class="rounded border border-red-300 px-3 py-1 text-sm text-red-700 dark:border-red-800 dark:text-red-300">Remove</button>
+                        <button type="button" wire:click="removeIngredient({{ $index }})" wire:confirm="Remove this ingredient line? It will be removed from the recipe." class="rounded border border-red-300 px-3 py-1 text-sm text-red-700 dark:border-red-800 dark:text-red-300">Remove</button>
                     </div>
                 </fieldset>
             @empty
@@ -195,7 +193,7 @@
                         <legend class="px-1 font-medium text-gray-900 dark:text-slate-100">Step {{ $index + 1 }}</legend>
                         <div><x-input-label for="step-{{ $step['key'] }}-text" value="Instruction text" /><textarea id="step-{{ $step['key'] }}-text" wire:model="steps.{{ $index }}.text" rows="4" maxlength="10000" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100" required></textarea><x-input-error :messages="$errors->get('steps.'.$index.'.text')" class="mt-2" /></div>
                         <div><x-input-label for="step-{{ $step['key'] }}-section" value="Section (optional)" /><select id="step-{{ $step['key'] }}-section" wire:model="steps.{{ $index }}.section_key" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"><option value="">No section</option>@foreach ($sections as $section)<option value="{{ $section['key'] }}">{{ $section['name'] !== '' ? $section['name'] : 'Unnamed section' }}</option>@endforeach</select><x-input-error :messages="$errors->get('steps.'.$index.'.section_key')" class="mt-2" /></div>
-                        <div class="flex flex-wrap gap-2"><button type="button" wire:click="moveStepUp({{ $index }})" @disabled($loop->first) class="rounded border px-3 py-1 text-sm disabled:opacity-40 dark:border-slate-600">Up</button><button type="button" wire:click="moveStepDown({{ $index }})" @disabled($loop->last) class="rounded border px-3 py-1 text-sm disabled:opacity-40 dark:border-slate-600">Down</button><button type="button" wire:click="removeStep({{ $index }})" wire:confirm="Remove this instruction step?" class="rounded border border-red-300 px-3 py-1 text-sm text-red-700 dark:border-red-800 dark:text-red-300">Remove</button></div>
+                        <div class="flex flex-wrap gap-2"><button type="button" wire:click="moveStepUp({{ $index }})" @disabled($loop->first) class="rounded border px-3 py-1 text-sm disabled:opacity-40 dark:border-slate-600">Up</button><button type="button" wire:click="moveStepDown({{ $index }})" @disabled($loop->last) class="rounded border px-3 py-1 text-sm disabled:opacity-40 dark:border-slate-600">Down</button><button type="button" wire:click="removeStep({{ $index }})" wire:confirm="Remove this instruction step? Its text will be removed from the recipe." class="rounded border border-red-300 px-3 py-1 text-sm text-red-700 dark:border-red-800 dark:text-red-300">Remove</button></div>
                     </fieldset>
                 @empty
                     <p class="rounded border border-dashed border-gray-300 p-4 text-sm text-gray-600 dark:border-slate-700 dark:text-gray-400">No instruction steps yet.</p>
@@ -207,9 +205,11 @@
     <div class="sticky bottom-0 flex items-center justify-between gap-4 border-t border-gray-200 bg-white py-4 dark:border-slate-700 dark:bg-slate-900">
         <span class="text-sm text-gray-600 dark:text-gray-400">{{ $recipeId !== null && $unsaved ? 'Changes are not saved yet.' : '' }}</span>
         <div class="flex flex-wrap justify-end gap-3">
-            <x-primary-button>{{ $recipeId === null ? 'Create draft' : 'Save draft' }}</x-primary-button>
+            <x-primary-button wire:loading.attr="disabled" wire:target="save">{{ $recipeId === null ? 'Create draft' : 'Save draft' }}</x-primary-button>
+            <span role="status" aria-live="polite" wire:loading wire:target="save">Saving draft…</span>
             @if ($recipeId !== null)
-                <button type="button" wire:click="finalize" wire:confirm="{{ $isRevision ? 'Publish this private draft as the next immutable recipe version?' : 'Finalize this recipe using the visible editor content?' }}" class="rounded bg-green-700 px-4 py-2 text-sm font-semibold text-white hover:bg-green-600">{{ $isRevision ? 'Publish revision' : 'Finalize recipe' }}</button>
+                <button type="button" wire:click="finalize" wire:loading.attr="disabled" wire:target="finalize" wire:confirm="{{ $isRevision ? 'Publish this private draft as the next immutable recipe version?' : 'Finalize this recipe using the visible editor content?' }}" class="rounded bg-green-700 px-4 py-2 text-sm font-semibold text-white hover:bg-green-600">{{ $isRevision ? 'Publish revision' : 'Finalize recipe' }}</button>
+                <span role="status" aria-live="polite" wire:loading wire:target="finalize">Finalizing recipe…</span>
             @endif
         </div>
     </div>
