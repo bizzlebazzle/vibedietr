@@ -493,6 +493,15 @@ A meal plan can assign target profiles in dated phases, each having a start
 date and an optional end date. Historical comparisons use the target phase
 that applied on the date of consumption rather than today's current target.
 
+DEC-020 defines phase boundaries as inclusive calendar dates. Overlapping
+phases are rejected. Dates without a phase have no assigned target. Profile or
+phase changes made today affect future dates from tomorrow in the account's
+timezone; established dates retain their applicable target values and phase.
+An owner may explicitly fill a previously unassigned past date using the
+profile's current values. Deleting an assigned profile clears its future phase
+dates while preserving historical targets. Target phases and their values remain
+private to the plan owner.
+
 The product compares planned and consumed nutrition with the applicable daily
 targets without implying that user-entered targets constitute medical advice.
 

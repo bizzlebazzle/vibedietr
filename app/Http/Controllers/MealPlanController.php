@@ -60,6 +60,7 @@ class MealPlanController extends Controller
         if ($isOwner) {
             $mealPlan->load([
                 'shares',
+                'targetPhases',
                 'days.slots.recipeEntries.versionReviews' => fn ($query) => $query
                     ->where('status', 'pending')
                     ->with('recipeVersion')
@@ -67,7 +68,9 @@ class MealPlanController extends Controller
                 'days.slots.itemEntries',
             ]);
 
-            return view('meal-plans.show', compact('mealPlan'));
+            $targetProfiles = $viewer->nutritionTargetProfiles()->orderBy('name')->get();
+
+            return view('meal-plans.show', compact('mealPlan', 'targetProfiles'));
         }
 
         $mealPlan->load(['days.slots.recipeEntries', 'days.slots.itemEntries']);

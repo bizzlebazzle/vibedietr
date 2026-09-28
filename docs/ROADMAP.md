@@ -1165,6 +1165,8 @@ changes, it is deliberately split across multiple items.
 
 ### PLAN-11 — P2 — Assign dated target phases
 
+- **Status:** Complete (2026-09-28).
+
 - **Outcome:** Apply named target profiles to a plan over dated phases while
   preserving the profile values that applied historically.
 - **Dependencies:** PLAN-10.

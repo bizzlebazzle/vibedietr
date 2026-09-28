@@ -30,9 +30,11 @@ final class NutritionTargetProfileManager
     public function update(NutritionTargetProfile $profile, string $name, array $targets): void
     {
         DB::transaction(function () use ($profile, $name, $targets): void {
+            $profile = NutritionTargetProfile::query()->lockForUpdate()->findOrFail($profile->getKey());
             $profile->forceFill(['name' => trim($name)])->save();
             $profile->targets()->delete();
             $this->replaceTargets($profile, $targets);
+            app(MealPlanTargetPhaseManager::class)->profileUpdated($profile, $profile->owner()->firstOrFail());
         });
     }
 
@@ -66,6 +68,7 @@ final class NutritionTargetProfileManager
                 ]);
             }
 
+            app(MealPlanTargetPhaseManager::class)->profileDeleting($locked, $locked->owner()->firstOrFail());
             $locked->delete();
         });
     }

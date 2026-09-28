@@ -34,6 +34,7 @@ class NutritionTargetProfile extends Model
         return ['is_default' => 'boolean'];
     }
 
+    /** @return BelongsTo<User, $this> */
     public function owner(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');

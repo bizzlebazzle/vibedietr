@@ -30,7 +30,17 @@ class MealPlan extends Model
     protected static function booted(): void
     {
         static::updating(function (MealPlan $mealPlan): void {
-            if (! $mealPlan->isDirty(['type', 'starts_on', 'ends_on']) || ! $mealPlan->days()->exists()) {
+            if (! $mealPlan->isDirty(['type', 'starts_on', 'ends_on'])) {
+                return;
+            }
+
+            if ($mealPlan->targetPhases()->exists()) {
+                throw ValidationException::withMessages([
+                    'type' => 'A plan with target-phase history cannot change its type or dates.',
+                ]);
+            }
+
+            if (! $mealPlan->days()->exists()) {
                 return;
             }
 
@@ -77,6 +87,12 @@ class MealPlan extends Model
     public function bookmarks(): HasMany
     {
         return $this->hasMany(MealPlanBookmark::class);
+    }
+
+    /** @return HasMany<MealPlanTargetPhase, $this> */
+    public function targetPhases(): HasMany
+    {
+        return $this->hasMany(MealPlanTargetPhase::class)->orderBy('starts_on');
     }
 
     public function isPubliclyAccessible(): bool

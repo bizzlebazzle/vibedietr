@@ -1207,6 +1207,20 @@ minimum, maximum, or inclusive range, using non-negative DECIMAL(38,18) values
 in the FND-06 canonical storage unit for that nutrient. Forms convert to and
 from the preferred display unit in that same registry definition.
 
+A dated meal plan may contain owner-only target phases. Each phase assigns one
+of the owner's named nutrition target profiles over an inclusive start date and
+optional inclusive end date; phase ranges cannot overlap. Phase target-value
+snapshots are versioned by effective calendar date. Profile edits replace only
+the pending next-day snapshot for assigned future dates, preserving earlier
+versions. A past date without an assignment may be explicitly backfilled with
+the profile's values at backfill time. Phase edits/removal and profile deletion
+preserve established dates while changing or clearing future dates from the
+next account-local date. No phase means no target, including when the owner has
+a default profile. Target phases and their value history are private owner
+data; plan shares and public projections exclude them. A plan with target-phase
+history cannot change type or date range because doing so could reinterpret or
+exclude established target dates.
+
 ## Current rules and constraints
 
 Database-enforced rules:
