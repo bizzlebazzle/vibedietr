@@ -16,11 +16,7 @@
                     </p>
                 </div>
 
-                @if ($errors->any())
-                    <div role="alert" class="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-100">
-                        Please correct the highlighted fields. Your entered details have been kept.
-                    </div>
-                @endif
+                <x-validation-summary :errors="$errors" message="Please correct the fields. Your entered details have been kept." />
 
                 @php($field = fn (string $key, mixed $default = '') => $input[$key] ?? old($key, $default))
 
