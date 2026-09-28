@@ -1216,6 +1216,8 @@ changes, it is deliberately split across multiple items.
 
 ### UX-02 — P1 — Add accessible application feedback patterns
 
+- **Status:** Complete (2026-09-28).
+
 - **Outcome:** Standardize validation summaries, success/error notices,
   confirmations, loading states, and destructive-action warnings for keyboard
   and assistive-technology users.
