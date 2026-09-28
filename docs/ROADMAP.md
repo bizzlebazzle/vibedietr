@@ -1231,6 +1231,8 @@ changes, it is deliberately split across multiple items.
 
 ### UX-03 — P1 — Make recipe authoring and resizing mobile-friendly
 
+- **Status:** Implemented (2026-09-28); browser verification pending.
+
 - **Outcome:** Provide a low-friction, keyboard-accessible workflow for adding,
   reordering, reviewing, and resizing recipe content on small and large
   screens.

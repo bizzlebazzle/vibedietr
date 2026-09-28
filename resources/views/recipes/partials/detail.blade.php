@@ -1,4 +1,4 @@
-<article class="space-y-5 rounded-lg bg-white p-6 shadow dark:bg-slate-900 dark:text-slate-100">
+<article class="recipe-content min-w-0 space-y-5 rounded-lg bg-white p-4 shadow sm:p-6 dark:bg-slate-900 dark:text-slate-100">
 
     @include('recipes.partials.public-metadata')
     @if (session('status'))
@@ -115,7 +115,7 @@
             @if ($previewingRevision)
                 <input type="hidden" name="preview" value="draft">
             @endif
-            <div>
+            <div class="min-w-0 flex-1 sm:flex-none">
                 <label for="display-servings" class="block text-sm font-medium">Servings</label>
                 <input
                     id="display-servings"
@@ -126,17 +126,18 @@
                     step="0.01"
                     value="{{ $quantityDisplay->requestedServings }}"
                     @disabled(! $quantityDisplay->canResize)
-                    class="mt-1 w-36 rounded border-gray-300 dark:border-slate-600 dark:bg-slate-800"
+                    @if ($quantityDisplay->error !== null) aria-invalid="true" aria-describedby="display-servings-error" @endif
+                    class="mt-1 w-full rounded border-gray-300 dark:border-slate-600 dark:bg-slate-800"
                 >
             </div>
-            <button type="submit" @disabled(! $quantityDisplay->canResize) class="rounded bg-blue-600 px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">Apply</button>
+            <button type="submit" @disabled(! $quantityDisplay->canResize) class="inline-flex min-h-11 items-center rounded bg-blue-600 px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">Apply</button>
             @if ($quantityDisplay->canResize)
-                <a href="{{ route('recipes.show', $previewingRevision ? [$recipe, 'preview' => 'draft'] : $recipe) }}" class="rounded border px-4 py-2 font-semibold dark:border-slate-600">Reset to {{ $quantityDisplay->originalServings }}</a>
+                <a href="{{ route('recipes.show', $previewingRevision ? [$recipe, 'preview' => 'draft'] : $recipe) }}" class="inline-flex min-h-11 items-center rounded border px-4 py-2 font-semibold dark:border-slate-600">Reset to {{ $quantityDisplay->originalServings }}</a>
             @endif
         </form>
         <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">Quantities are adjusted for display only. The saved recipe remains unchanged.</p>
         @if ($quantityDisplay->error !== null)
-            <p role="alert" class="mt-2 text-sm font-medium text-red-700 dark:text-red-300">{{ $quantityDisplay->error }}</p>
+            <p id="display-servings-error" role="alert" class="mt-2 text-sm font-medium text-red-700 dark:text-red-300">{{ $quantityDisplay->error }}</p>
         @endif
     </section>
 
@@ -290,9 +291,9 @@
         @if ($publicRecipe !== null)
             <ol class="mt-2 space-y-3">
                 @foreach ($publicRecipe->instructions as $instruction)
-                    <li class="flex gap-3">
+                    <li class="flex min-w-0 gap-3">
                         <span class="font-medium text-gray-500 dark:text-gray-400">{{ $loop->iteration }}.</span>
-                        <div>
+                        <div class="min-w-0">
                             @if ($instruction['section'] !== null)
                                 <p class="text-sm font-semibold text-blue-700 dark:text-blue-300">{{ $instruction['section'] }}</p>
                             @endif
@@ -306,9 +307,9 @@
         @else
             <ol class="mt-2 space-y-3">
                 @foreach ($recipe->instructionSteps as $step)
-                    <li class="flex gap-3">
+                    <li class="flex min-w-0 gap-3">
                         <span class="font-medium text-gray-500 dark:text-gray-400">{{ $loop->iteration }}.</span>
-                        <div>
+                        <div class="min-w-0">
                             @if ($step->section !== null)
                                 <p class="text-sm font-semibold text-blue-700 dark:text-blue-300">{{ $step->section->name }}</p>
                             @endif
