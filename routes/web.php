@@ -3,6 +3,7 @@
 use App\Http\Controllers\BookmarkController;
 use App\Http\Controllers\CatalogueController;
 use App\Http\Controllers\CatalogueCorrectionProposalController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DiaryEntryController;
 use App\Http\Controllers\IngredientController;
 use App\Http\Controllers\ManualCatalogueSubmissionController;
@@ -32,7 +33,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome');
 
-Route::view('dashboard', 'dashboard')
+Route::get('dashboard', DashboardController::class)
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
