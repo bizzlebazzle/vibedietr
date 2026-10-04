@@ -62,13 +62,14 @@ class MealPlanItemEntryController extends Controller
         $owner = $this->owner($request);
         $mealPlan = $owner->mealPlans()->findOrFail($mealPlan);
         $validated = $request->validate(['target_slot_id' => ['required', 'integer', 'min:1']]);
+        $entry = $this->entry($mealPlan, $entry);
         $writer->move(
-            $this->entry($mealPlan, $entry),
+            $entry,
             $this->slot($mealPlan, (int) $validated['target_slot_id']),
             $owner,
         );
 
-        return back()->with('status', 'Plan item moved.');
+        return back()->with('status', 'Plan item moved.')->with('planning_focus', 'entry-item-'.$entry->getKey());
     }
 
     public function destroy(

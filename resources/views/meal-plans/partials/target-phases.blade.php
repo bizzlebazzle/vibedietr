@@ -2,6 +2,9 @@
     <h3 class="text-lg font-semibold text-gray-900 dark:text-slate-100">Nutrition target phases</h3>
     <p class="mt-2 text-sm text-gray-600 dark:text-slate-300">Assign one of your named target profiles to plan dates. Dates without a phase have no target. Changes made today apply from tomorrow; explicitly filled past dates keep the values selected now.</p>
 
+    @if ($targetProfiles->isEmpty())
+        <p class="mt-3 text-sm text-gray-700 dark:text-slate-200">Create a target profile before assigning a phase. <a class="underline" href="{{ route('nutrition-target-profiles.create') }}">Create target profile</a></p>
+    @endif
     <form method="POST" action="{{ route('meal-plans.target-phases.store', $mealPlan) }}" class="mt-4 grid gap-3 rounded border border-gray-200 p-4 dark:border-slate-700 sm:grid-cols-2">
         @csrf
         <div>
@@ -20,7 +23,7 @@
             <x-input-label for="phase_ends_on" value="End date (optional)" />
             <x-text-input id="phase_ends_on" name="ends_on" type="date" :min="$mealPlan->starts_on->toDateString()" :max="$mealPlan->ends_on->toDateString()" :value="old('ends_on')" class="mt-1 block w-full" />
         </div>
-        <div class="flex items-end"><x-primary-button>Assign phase</x-primary-button></div>
+        <div class="flex items-end"><x-primary-button :disabled="$targetProfiles->isEmpty()">Assign phase</x-primary-button></div>
     </form>
 
     <div class="mt-5 space-y-3">
@@ -29,19 +32,19 @@
                 <p class="text-gray-800 dark:text-slate-200">{{ $phase->profile_name_snapshot }} · {{ $phase->starts_on->toDateString() }} – {{ $phase->ends_on?->toDateString() ?? 'open-ended' }}</p>
                 @if ($phase->ends_on === null || $phase->ends_on->toDateString() > now(auth()->user()->timezone)->toDateString())
                     @if ($phase->nutrition_target_profile_id !== null)
-                        <form method="POST" action="{{ route('meal-plans.target-phases.update', [$mealPlan, $phase]) }}" class="mt-3 flex flex-wrap items-end gap-2">
+                        <form method="POST" action="{{ route('meal-plans.target-phases.update', [$mealPlan, $phase]) }}" class="mt-3 grid gap-3 sm:grid-cols-2">
                             @csrf
                             @method('PATCH')
-                            <label class="text-gray-700 dark:text-slate-300">Profile
-                                <select name="profile_id" class="block rounded border-gray-300 bg-white dark:border-slate-700 dark:bg-slate-900">
+                            <label class="text-gray-700 dark:text-slate-300">Target profile
+                                <select name="profile_id" class="block w-full rounded border-gray-300 bg-white dark:border-slate-700 dark:bg-slate-900">
                                     @foreach ($targetProfiles as $profile)
                                         <option value="{{ $profile->id }}" @selected($phase->nutrition_target_profile_id === $profile->id)>{{ $profile->name }}</option>
                                     @endforeach
                                 </select>
                             </label>
-                            <label class="text-gray-700 dark:text-slate-300">Start <x-text-input name="starts_on" type="date" required :value="$phase->starts_on->toDateString()" /></label>
-                            <label class="text-gray-700 dark:text-slate-300">End <x-text-input name="ends_on" type="date" :value="$phase->ends_on?->toDateString()" /></label>
-                            <x-secondary-button>Change future dates</x-secondary-button>
+                            <label class="text-gray-700 dark:text-slate-300">Start date <x-text-input class="mt-1 block w-full" name="starts_on" type="date" required :value="$phase->starts_on->toDateString()" /></label>
+                            <label class="text-gray-700 dark:text-slate-300">End date (optional) <x-text-input class="mt-1 block w-full" name="ends_on" type="date" :value="$phase->ends_on?->toDateString()" /></label>
+                            <x-secondary-button type="submit">Change future dates</x-secondary-button>
                         </form>
                     @endif
                     <form method="POST" action="{{ route('meal-plans.target-phases.destroy', [$mealPlan, $phase]) }}" class="mt-2">

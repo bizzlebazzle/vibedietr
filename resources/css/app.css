@@ -58,6 +58,45 @@
         overflow-wrap: anywhere;
     }
 
+    .planning-content {
+        overflow-wrap: anywhere;
+    }
+
+    .planning-content :is(input, select, textarea, form, label, fieldset) {
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .planning-content .grid > * {
+        min-width: 0;
+    }
+
+    .planning-content .text-green-600 {
+        @apply text-green-800 dark:text-green-300;
+    }
+
+    .planning-content :is(button, summary, input:not([type='hidden']):not([type='checkbox']), select) {
+        min-height: 2.75rem;
+    }
+
+    .planning-content :is(button, a, summary, [data-entry-state]):focus-visible {
+        @apply outline outline-2 outline-offset-2 outline-blue-700 dark:outline-blue-300;
+    }
+
+    .planning-content button {
+        white-space: normal;
+    }
+
+    .planning-content a {
+        display: inline-flex;
+        align-items: center;
+        min-height: 2.75rem;
+    }
+
+    .planning-content button.bg-sky-600 {
+        @apply bg-sky-700 hover:bg-sky-800 focus:bg-sky-800;
+    }
+
     .nutrition-warning {
         @apply rounded border border-amber-600 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-400 dark:bg-amber-950 dark:text-amber-100;
         overflow-wrap: anywhere;

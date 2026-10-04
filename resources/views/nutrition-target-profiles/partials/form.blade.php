@@ -1,4 +1,6 @@
 @csrf
+<x-validation-summary :errors="$errors" class="mb-4" />
+<x-auth-session-status :status="session('status')" class="mb-4" />
 @if ($profile->exists) @method('put') @endif
 @php($existingTargets = $profile->exists ? $profile->targets->keyBy('nutrient') : collect())
 
@@ -16,9 +18,9 @@
         @php($prefix = 'targets.'.$nutrient->id->value)
         <fieldset class="rounded border border-gray-200 p-4 dark:border-slate-700">
             <legend class="px-1 font-semibold text-gray-900 dark:text-slate-100">{{ $nutrient->label }} ({{ $nutrient->preferredDisplayUnit->symbol() }})</legend>
-            <div class="grid gap-4 sm:grid-cols-4">
+            <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <div>
-                    <x-input-label :for="$prefix.'.type'" value="Target type" />
+                    <x-input-label :for="$prefix.'.type'" :value="$nutrient->label.' target type'" />
                     <select id="{{ $prefix }}.type" name="targets[{{ $nutrient->id->value }}][type]" class="mt-1 block w-full rounded-md border-gray-300 bg-white text-gray-900 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
                         <option value="">No target</option>
                         @foreach (\App\Domain\NutritionTargets\NutritionTargetType::cases() as $type)
@@ -29,7 +31,7 @@
                 </div>
                 @foreach (['exact_value' => 'Exact', 'minimum_value' => 'Minimum', 'maximum_value' => 'Maximum'] as $field => $label)
                     <div>
-                        <x-input-label :for="$prefix.'.'.$field" :value="$label" />
+                        <x-input-label :for="$prefix.'.'.$field" :value="$nutrient->label.' '.strtolower($label).' ('.$nutrient->preferredDisplayUnit->symbol().')'" />
                         <x-text-input :id="$prefix.'.'.$field" name="targets[{{ $nutrient->id->value }}][{{ $field }}]" type="number" min="0" step="any" class="mt-1 block w-full" :value="old($prefix.'.'.$field, data_get($targetInputs, $nutrient->id->value.'.'.$field))" />
                         <x-input-error class="mt-2" :messages="$errors->get($prefix.'.'.$field)" />
                     </div>

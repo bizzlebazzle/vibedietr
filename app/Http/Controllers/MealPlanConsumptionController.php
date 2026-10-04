@@ -16,19 +16,19 @@ class MealPlanConsumptionController extends Controller
     {
         [$user, $target] = $this->target($request, $mealPlan, $entryType, $entry);
         $data = $request->validate($this->rules($entryType));
-        $args = [$target, $data['actual_amount'] ?? null, $data['consumed_local_at'] ?? null, $data['timezone'] ?? null, isset($data['utc_offset_minutes']) ? (int) $data['utc_offset_minutes'] : null, $user];
+        $args = [$target, $data['actual_amount'] ?? null, $this->localTime($data['consumed_local_at'] ?? null), $data['timezone'] ?? null, isset($data['utc_offset_minutes']) ? (int) $data['utc_offset_minutes'] : null, $user];
         $entryType === 'recipe' ? $manager->consumeRecipe(...$args) : $manager->consumeItem(...$args);
 
-        return back()->with('status', 'Consumption recorded.');
+        return back()->with('status', 'Consumption recorded.')->with('planning_focus', 'entry-'.$entryType.'-'.$entry);
     }
 
     public function update(Request $request, int $mealPlan, string $entryType, int $entry, DiaryConsumptionManager $manager): RedirectResponse
     {
         [$user, $target] = $this->target($request, $mealPlan, $entryType, $entry);
         $data = $request->validate($this->rules($entryType));
-        $manager->correct($target, $entryType === 'recipe' ? 'meal_plan_recipe_entry_id' : 'meal_plan_item_entry_id', $data['actual_amount'] ?? null, $data['consumed_local_at'] ?? null, $data['timezone'] ?? null, isset($data['utc_offset_minutes']) ? (int) $data['utc_offset_minutes'] : null, null, $user);
+        $manager->correct($target, $entryType === 'recipe' ? 'meal_plan_recipe_entry_id' : 'meal_plan_item_entry_id', $data['actual_amount'] ?? null, $this->localTime($data['consumed_local_at'] ?? null), $data['timezone'] ?? null, isset($data['utc_offset_minutes']) ? (int) $data['utc_offset_minutes'] : null, null, $user);
 
-        return back()->with('status', 'Consumption corrected.');
+        return back()->with('status', 'Consumption corrected.')->with('planning_focus', 'entry-'.$entryType.'-'.$entry);
     }
 
     public function destroy(Request $request, int $mealPlan, string $entryType, int $entry, DiaryConsumptionManager $manager): RedirectResponse
@@ -36,7 +36,13 @@ class MealPlanConsumptionController extends Controller
         [$user, $target] = $this->target($request, $mealPlan, $entryType, $entry);
         $manager->reverse($target, $entryType === 'recipe' ? 'meal_plan_recipe_entry_id' : 'meal_plan_item_entry_id', $user);
 
-        return back()->with('status', 'Consumption reversed.');
+        return back()->with('status', 'Consumption reversed.')->with('planning_focus', 'entry-'.$entryType.'-'.$entry);
+    }
+
+    private function localTime(?string $value): ?string
+    {
+        // Native datetime-local controls submit a T between date and wall-clock time.
+        return $value === null ? null : str_replace('T', ' ', $value);
     }
 
     /** @return array{User, MealPlanRecipeEntry|MealPlanItemEntry} */
