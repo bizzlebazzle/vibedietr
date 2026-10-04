@@ -6,11 +6,13 @@ use App\Domain\Catalogue\CatalogueItemStatus;
 use App\Domain\Catalogue\CatalogueReadQuery;
 use App\Domain\Measurements\MeasurementUnitRegistry;
 use App\Domain\Measurements\StandardUnit;
+use App\Domain\Nutrition\RecipeNutritionEstimatePresenter;
 use App\Domain\Recipes\RecipeDraftEditor;
 use App\Domain\Recipes\RecipeDraftFingerprint;
 use App\Domain\Recipes\RecipeFinalizer;
 use App\Domain\Recipes\RecipeIngredientMatchManager;
 use App\Domain\Recipes\RecipeRevisionPublisher;
+use App\Domain\Recipes\RecipeVersionContent;
 use App\Domain\Recipes\RecipeVisibility;
 use App\Domain\Recipes\StaleRecipeDraft;
 use App\Domain\Recipes\StaleRecipeRevision;
@@ -22,6 +24,7 @@ use App\Models\User;
 use App\Rules\ValidMeasurementUnit;
 use Closure;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -350,7 +353,7 @@ class Form extends Component
         $this->catalogueMatches[$line->getKey()] = $this->matchState($match);
         $this->catalogueResults[$line->getKey()] = [];
         $this->refreshFingerprint($fingerprint);
-        session()->flash('status', 'Catalogue match saved.');
+        $this->announceMatchOutcome($index, 'Catalogue match saved. Selected by you.');
     }
 
     public function clearCatalogueMatch(
@@ -367,7 +370,7 @@ class Form extends Component
         $matches->clear($this->recipeId, (int) $line->getKey(), $user);
         unset($this->catalogueMatches[$line->getKey()]);
         $this->refreshFingerprint($fingerprint);
-        session()->flash('status', 'Catalogue match cleared.');
+        $this->announceMatchOutcome($index, 'Match cleared. Original wording kept; this ingredient is excluded from the estimate.');
     }
 
     public function confirmCatalogueReplacement(
@@ -388,7 +391,27 @@ class Form extends Component
         );
         $this->catalogueMatches[$line->getKey()] = $this->matchState($match);
         $this->refreshFingerprint($fingerprint);
-        session()->flash('status', 'Approved replacement selected. The ingredient wording was not changed.');
+        $this->announceMatchOutcome($index, 'Approved replacement selected. The ingredient wording was not changed.');
+    }
+
+    public function keepCatalogueMatch(int $index, string $versionId, RecipeIngredientMatchManager $matches, RecipeDraftFingerprint $fingerprint): void
+    {
+        $user = auth()->user();
+        if (! $user instanceof User || $this->recipeId === null) {
+            abort(403);
+        }
+        $line = $this->persistedIngredientLine($index);
+        $match = $matches->keep($this->recipeId, (int) $line->getKey(), $versionId, $user);
+        $this->catalogueMatches[$line->getKey()] = $this->matchState($match);
+        $this->refreshFingerprint($fingerprint);
+        $this->announceMatchOutcome($index, 'Food kept and reviewed. Nutrition remains an estimate; other limitations still apply.');
+    }
+
+    private function announceMatchOutcome(int $index, string $message): void
+    {
+        $count = count($this->ingredientAttention()['issues']);
+        session()->flash('status', 'Ingredient '.($index + 1).': '.$message.' Ingredients needing attention: '.$count.'.');
+        $this->dispatch('ingredient-match-updated', target: 'ingredient-review-'.($index + 1));
     }
 
     public function render()
@@ -397,7 +420,37 @@ class Form extends Component
             'visibilityOptions' => RecipeVisibility::cases(),
             'unitGroups' => MeasurementUnitRegistry::formGroups(),
             'customUnits' => MeasurementUnitRegistry::suggestedCustomUnits(),
+            'ingredientAttention' => $this->ingredientAttention(),
         ]);
+    }
+
+    /** @return array<string, mixed> */
+    private function ingredientAttention(): array
+    {
+        if ($this->recipeId === null) {
+            return ['issues' => []];
+        }
+        $recipe = Recipe::query()->where('user_id', auth()->id())->find($this->recipeId);
+        if ($recipe === null || Gate::denies('update', $recipe)) {
+            return ['issues' => []];
+        }
+        $servings = $recipe->getRawOriginal('servings');
+        try {
+            $hasServings = is_string($servings) && Decimal::parse($servings)->isPositive();
+        } catch (InvalidArgumentException) {
+            $hasServings = false;
+        }
+        $snapshot = app(RecipeVersionContent::class)->snapshot($recipe, includeEstimate: $hasServings);
+        $attention = app(RecipeNutritionEstimatePresenter::class)->present($snapshot);
+        $idsByPosition = $recipe->ingredientLines->pluck('id', 'position');
+        $indexesById = collect($this->ingredients)->pluck('id')->filter()->flip();
+        $attention['issues'] = collect($attention['issues'])->map(function (array $issue) use ($idsByPosition, $indexesById): ?array {
+            $index = $indexesById->get($idsByPosition->get($issue['position']));
+
+            return $index === null ? null : [...$issue, 'position' => $index];
+        })->filter()->values()->all();
+
+        return $attention;
     }
 
     /** @param array<string, mixed> $validated */
@@ -487,7 +540,7 @@ class Form extends Component
         return $recipe->ingredientLines()->findOrFail((int) $this->ingredients[$index]['id']);
     }
 
-    /** @return array{item_id:int, version_id:string, name:string, review_state:string, unavailable:bool, suggested_replacement:?array{id:int,name:string}} */
+    /** @return array{item_id:int, version_id:string, name:string, review_state:string, provenance:string, confidence_band:?string, unavailable:bool, suggested_replacement:?array{id:int,name:string}} */
     private function matchState(RecipeIngredientLineMatch $match): array
     {
         $match->loadMissing('catalogueItemVersion.catalogueItem');
@@ -511,6 +564,8 @@ class Form extends Component
             'version_id' => (string) $version->getKey(),
             'name' => trim((string) $version->name) ?: 'Unnamed catalogue item',
             'review_state' => $match->getRawOriginal('review_state'),
+            'provenance' => $match->getRawOriginal('provenance'),
+            'confidence_band' => $match->getRawOriginal('confidence_band'),
             'unavailable' => $item->status === CatalogueItemStatus::Rejected,
             'suggested_replacement' => $replacement,
         ];

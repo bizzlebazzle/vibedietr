@@ -1249,6 +1249,9 @@ changes, it is deliberately split across multiple items.
 
 ### UX-04 — P1 — Make matching and estimate limitations understandable
 
+- **Status:** Implemented (2026-10-04); browser verification pending.
+- **Verification:** [UX-04 presentation checks](UX_04_VERIFICATION.md).
+
 - **Outcome:** Help users distinguish source nutrition from estimates and
   quickly review low-confidence, unmatched, or unconvertible recipe lines.
 - **Dependencies:** NUT-16, UX-02, DEC-002.

@@ -3,6 +3,8 @@
 namespace Tests\Feature\Nutrition;
 
 use App\Audit\Enums\AuditAction;
+use App\Domain\Measurements\StandardUnit;
+use App\Domain\Nutrition\Nutrient;
 use App\Domain\Nutrition\RecipeNutritionPresenter;
 use App\Domain\Nutrition\RecipeNutritionSource;
 use App\Domain\Nutrition\RecipeNutritionSourceSelector;
@@ -23,6 +25,55 @@ use Tests\TestCase;
 class RecipeNutritionSourcePrecedenceTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_imported_and_overridden_primary_values_keep_estimate_limitations_in_the_collapsed_comparison(): void
+    {
+        foreach (['imported_source', 'creator_override'] as $source) {
+            foreach (['complete', 'partial', 'unavailable'] as $status) {
+                $owner = User::factory()->create();
+                $snapshot = $this->snapshot(importedProtein: '8');
+                $snapshot['ingredients'] = [[
+                    'position' => 0, 'original_text' => 'Original oats', 'quantity' => '100', 'standard_unit' => StandardUnit::Gram->value,
+                    'custom_unit' => null, 'generic_wording' => 'oats', 'notes' => null,
+                    'catalogue_match' => ['name' => 'Oats', 'provenance' => 'automatically_selected',
+                        'confidence_band' => $status === 'complete' ? 'high' : 'reviewable',
+                        'review_state' => $status === 'complete' ? 'confirmed' : 'needs_review'],
+                ]];
+                $values = $status === 'complete' ? collect(Nutrient::cases())->mapWithKeys(fn (Nutrient $nutrient): array => [$nutrient->value => ['value' => '5']])->all()
+                    : ($status === 'partial' ? ['protein' => ['value' => '5']] : []);
+                $snapshot['nutrition_estimate']['whole_recipe'] = $values;
+                $snapshot['nutrition_estimate']['per_serving'] = $values;
+                $snapshot['nutrition_estimate']['inputs'] = [['ingredient_position' => 0,
+                    'exclusions' => $status === 'complete' ? [] : [['reason' => 'custom_unit_not_convertible', 'nutrient' => 'fat']]]];
+                $recipe = $this->recipe($owner, $snapshot);
+                if ($source === 'creator_override') {
+                    $this->actingAs($owner)->put(route('recipes.nutrition-override.update', $recipe), [
+                        'source_version_id' => $recipe->currentVersion->id, 'nutrients' => ['protein' => '8'],
+                    ])->assertSessionHasNoErrors();
+                }
+                $response = $this->actingAs($owner)->get(route('recipes.show', $recipe))->assertOk()
+                    ->assertSee('Nutrition — whole recipe')->assertDontSee('Estimated nutrition — whole recipe')
+                    ->assertSee('Compare with ingredient estimate — '.ucfirst($status).' estimate')
+                    ->assertSee('Some source nutrition values are unavailable. Missing values are not zero.');
+                $dom = new \DOMDocument;
+                @$dom->loadHTML($response->getContent());
+                $xpath = new \DOMXPath($dom);
+                $details = $xpath->query('//details[summary[contains(., "Compare with ingredient estimate")]]');
+                $this->assertCount(1, $details);
+                $comparison = $details->item(0);
+                $this->assertInstanceOf(\DOMElement::class, $comparison);
+                $this->assertFalse($comparison->hasAttribute('open'));
+                $this->assertStringContainsString('Estimated nutrition — per serving', $comparison->textContent);
+                if ($status !== 'complete') {
+                    $this->assertStringContainsString('Ingredients needing attention: 1', $comparison->textContent);
+                    $this->assertStringContainsString('Original oats', $comparison->textContent);
+                    $this->assertStringContainsString('Selected food: Oats', $comparison->textContent);
+                    $this->assertStringContainsString('The custom unit cannot be converted reliably.', $comparison->textContent);
+                    $this->assertStringContainsString('Use a supported unit only if you know the equivalent amount', $comparison->textContent);
+                }
+            }
+        }
+    }
 
     public function test_estimate_is_primary_when_no_higher_precedence_source_exists(): void
     {

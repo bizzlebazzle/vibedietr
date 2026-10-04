@@ -2,6 +2,8 @@
 
 namespace App\Domain\Nutrition;
 
+use App\Models\CatalogueItemVersion;
+
 final readonly class RecipeNutritionEstimatePresenter
 {
     public function __construct(private NutrientDisplayFormatter $formatter) {}
@@ -12,7 +14,8 @@ final readonly class RecipeNutritionEstimatePresenter
      *     status: 'complete'|'partial'|'unavailable',
      *     whole_recipe: list<array{label: string, value: string, available: bool}>,
      *     per_serving: list<array{label: string, value: string, available: bool}>,
-     *     issues: list<array{position: int, original_text: string, reasons: list<string>}>
+     *     issues: list<array{position: int, original_text: string, selected_food: ?string, reasons: list<string>, remedies: list<string>}>,
+     *     matches: array<int, array<string, mixed>|null>
      * }
      */
     public function present(array $snapshot): array
@@ -27,21 +30,58 @@ final readonly class RecipeNutritionEstimatePresenter
             fn (mixed $input): int => (int) (is_array($input) ? ($input['ingredient_position'] ?? 0) : 0),
         );
 
+        $versions = CatalogueItemVersion::query()->with('catalogueItem')
+            ->whereKey($ingredients->pluck('catalogue_match.catalogue_item_version_id')->filter()->all())
+            ->get()->keyBy('id');
+        $matches = $ingredients->map(function (mixed $ingredient) use ($versions): ?array {
+            $match = is_array($ingredient) ? ($ingredient['catalogue_match'] ?? null) : null;
+            if (! is_array($match)) {
+                return null;
+            }
+            $version = $versions->get($match['catalogue_item_version_id'] ?? '');
+
+            return [...$match,
+                'name' => $match['name'] ?? $version->name ?? 'Name unavailable',
+                'unavailable' => $version?->catalogueItem->getRawOriginal('status') === 'rejected',
+            ];
+        });
+
         $issues = $ingredients
-            ->map(function (mixed $ingredient, int $position) use ($inputs): ?array {
+            ->map(function (mixed $ingredient, int $position) use ($inputs, $matches): ?array {
                 if (! is_array($ingredient)) {
                     return null;
                 }
 
                 $reasons = [];
-                $match = $ingredient['catalogue_match'] ?? null;
+                $remedies = [];
+                $match = $matches->get($position);
+                if ($match === null) {
+                    $reasons[] = 'No food selected — excluded from estimate.';
+                    $remedies[] = 'Search the catalogue to select a food for this ingredient.';
+                }
                 if (is_array($match) && ($match['review_state'] ?? null) === 'needs_review') {
                     $reasons[] = 'The selected catalogue match requires creator review.';
+                    if (! ($match['unavailable'] ?? false)) {
+                        $remedies[] = 'Check the selected food against the original ingredient; keep it, search to replace, or clear the match.';
+                    }
+                }
+                if ($match['unavailable'] ?? false) {
+                    $reasons[] = 'The selected food is unavailable.';
+                    $remedies[] = 'Choose an approved replacement or clear the match in the ingredient editor.';
                 }
 
                 $input = $inputs->get($position);
                 if (is_array($input)) {
                     $reasons = [...$reasons, ...$this->exclusionMessages($input['exclusions'] ?? [])];
+                    foreach ($input['exclusions'] ?? [] as $exclusion) {
+                        $remedies[] = match ($exclusion['reason'] ?? '') {
+                            'quantity_unavailable' => 'Enter the ingredient quantity in the editor.',
+                            'unit_unavailable' => 'Enter the ingredient measurement unit in the editor.',
+                            'catalogue_match_unavailable' => 'Search the catalogue to select a food for this ingredient.',
+                            'nutrient_value_unavailable', 'multiple_nutrient_bases', 'unsupported_nutrient_basis' => 'Search to replace with a food that has usable nutrient data; unavailable values cannot be assumed to be zero.',
+                            default => 'Check the quantity and unit in the ingredient editor. Use a supported unit only if you know the equivalent amount, or select a food with a reliable conversion.',
+                        };
+                    }
                 }
 
                 if ($reasons === []) {
@@ -51,7 +91,9 @@ final readonly class RecipeNutritionEstimatePresenter
                 return [
                     'position' => $position,
                     'original_text' => (string) ($ingredient['original_text'] ?? ''),
+                    'selected_food' => $match['name'] ?? null,
                     'reasons' => array_values(array_unique($reasons)),
+                    'remedies' => array_values(array_unique($remedies)),
                 ];
             })
             ->filter()
@@ -71,6 +113,7 @@ final readonly class RecipeNutritionEstimatePresenter
             'whole_recipe' => $wholeRecipe,
             'per_serving' => $perServing,
             'issues' => $issues,
+            'matches' => $matches->all(),
         ];
     }
 
@@ -138,10 +181,10 @@ final readonly class RecipeNutritionEstimatePresenter
             return match ($reason) {
                 'quantity_unavailable' => 'The quantity is unavailable, so this line is excluded.',
                 'unit_unavailable' => 'The measurement unit is unavailable, so this line is excluded.',
-                'catalogue_match_unavailable' => 'No catalogue match is selected, so this line is excluded.',
+                'catalogue_match_unavailable' => 'No food selected — excluded from estimate.',
                 'nutrient_value_unavailable' => 'The matched food has no usable value for some nutrients.'.$suffix,
-                'multiple_nutrient_bases' => 'The matched food has ambiguous nutrient bases.'.$suffix,
-                'unsupported_nutrient_basis' => 'The matched food uses an unsupported nutrient basis.'.$suffix,
+                'multiple_nutrient_bases' => 'The selected food has more than one nutrition basis (such as per serving or per 100 g), so the calculation cannot choose one.'.$suffix,
+                'unsupported_nutrient_basis' => 'The selected food gives nutrition for an amount this calculation does not support.'.$suffix,
                 'custom_unit_not_convertible' => 'The custom unit cannot be converted reliably.'.$suffix,
                 'unsupported_count_unit' => 'The count unit is not supported for this conversion.'.$suffix,
                 'invalid_dimension_combination' => 'The quantity and nutrient basis cannot be converted reliably.'.$suffix,

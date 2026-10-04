@@ -10,11 +10,47 @@ use App\Models\Recipe;
 use App\Models\RecipeVersion;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class RecipeNutritionEstimatePresentationTest extends TestCase
 {
     use RefreshDatabase;
+
+    /** @return iterable<string, array{string, string, string}> */
+    public static function exclusionCopy(): iterable
+    {
+        yield 'quantity' => ['quantity_unavailable', 'quantity is unavailable', 'Enter the ingredient quantity'];
+        yield 'unit' => ['unit_unavailable', 'measurement unit is unavailable', 'Enter the ingredient measurement unit'];
+        yield 'unmatched' => ['catalogue_match_unavailable', 'No food selected', 'Search the catalogue'];
+        yield 'missing nutrient' => ['nutrient_value_unavailable', 'no usable value', 'usable nutrient data'];
+        yield 'ambiguous basis' => ['multiple_nutrient_bases', 'more than one nutrition basis', 'usable nutrient data'];
+        yield 'unsupported basis' => ['unsupported_nutrient_basis', 'amount this calculation does not support', 'usable nutrient data'];
+        yield 'custom unit' => ['custom_unit_not_convertible', 'custom unit cannot be converted', 'equivalent amount'];
+        yield 'count unit' => ['unsupported_count_unit', 'count unit is not supported', 'equivalent amount'];
+        yield 'dimensions' => ['invalid_dimension_combination', 'quantity and nutrient basis cannot be converted', 'equivalent amount'];
+        yield 'missing conversion' => ['food_conversion_missing', 'no reliable conversion', 'reliable conversion'];
+        yield 'unapproved conversion' => ['food_context_not_approved', 'matched food is not approved', 'reliable conversion'];
+        yield 'unsourced conversion' => ['food_conversion_provenance_missing', 'source provenance is unavailable', 'reliable conversion'];
+    }
+
+    #[DataProvider('exclusionCopy')]
+    public function test_every_existing_exclusion_has_line_identification_a_plain_reason_and_remedy(string $reason, string $copy, string $remedy): void
+    {
+        $snapshot = $this->snapshot(
+            ingredients: [$this->ingredient(0, 'Original ingredient')],
+            wholeRecipe: $this->allNutrients('10'), perServing: $this->allNutrients('5'),
+            inputs: [$this->input(0, [['reason' => $reason, 'nutrient' => 'protein']])],
+        );
+        $estimate = app(RecipeNutritionEstimatePresenter::class)->present($snapshot);
+        $this->assertSame('partial', $estimate['status']);
+        $this->assertCount(1, $estimate['issues']);
+        $issue = $estimate['issues'][0];
+        $this->assertSame('Original ingredient', $issue['original_text']);
+        $this->assertStringContainsString($copy, implode(' ', $issue['reasons']));
+        $this->assertStringContainsString($remedy, implode(' ', $issue['remedies']));
+        $this->assertSame('10.0 g', $this->row($estimate['whole_recipe'], 'Protein')['value']);
+    }
 
     public function test_complete_estimate_labels_whole_recipe_and_per_serving_outputs(): void
     {
@@ -39,7 +75,7 @@ class RecipeNutritionEstimatePresentationTest extends TestCase
     {
         $ingredients = [
             $this->ingredient(0, '100 g oats'),
-            $this->ingredient(1, 'A pinch of mystery spice'),
+            $this->ingredient(1, 'A pinch of mystery spice', null),
             $this->ingredient(2, 'One handful of seeds'),
             $this->ingredient(3, 'One serving of sauce'),
             $this->ingredient(4, '50 g suggested yoghurt', 'needs_review'),
@@ -66,7 +102,7 @@ class RecipeNutritionEstimatePresentationTest extends TestCase
             ->assertSee('12.3 g')
             ->assertSee('6.2 g')
             ->assertSee('A pinch of mystery spice')
-            ->assertSee('No catalogue match is selected, so this line is excluded.')
+            ->assertSee('No food selected — excluded from estimate.')
             ->assertSee('One handful of seeds')
             ->assertSee('The custom unit cannot be converted reliably. Affected nutrients: Protein.')
             ->assertSee('One serving of sauce')
@@ -75,7 +111,9 @@ class RecipeNutritionEstimatePresentationTest extends TestCase
             ->assertSee('The selected catalogue match requires creator review.')
             ->assertSee(route('recipes.edit', $recipe).'#ingredient-line-2', false)
             ->assertSee(route('recipes.edit', $recipe).'#ingredient-line-5', false)
-            ->assertSee('role="status"', false)
+            ->assertSee('Ingredients needing attention: 4')
+            ->assertSee('Show affected ingredients and remedies')
+            ->assertSee('Search the catalogue to select a food for this ingredient.')
             ->assertSee('aria-labelledby="nutrition-limitations-heading"', false);
 
         $this->actingAs($owner)->get(route('recipes.edit', $recipe))
@@ -88,7 +126,7 @@ class RecipeNutritionEstimatePresentationTest extends TestCase
     {
         $presenter = app(RecipeNutritionEstimatePresenter::class);
         $unavailable = $presenter->present($this->snapshot(
-            ingredients: [$this->ingredient(0, 'Unknown ingredient')],
+            ingredients: [$this->ingredient(0, 'Unknown ingredient', null)],
             inputs: [$this->input(0, [['reason' => 'catalogue_match_unavailable']])],
         ));
 
@@ -114,7 +152,7 @@ class RecipeNutritionEstimatePresentationTest extends TestCase
     {
         $owner = User::factory()->create();
         $recipe = $this->finalizedRecipe($owner, $this->snapshot(
-            ingredients: [$this->ingredient(0, 'Unmatched public ingredient')],
+            ingredients: [$this->ingredient(0, 'Unmatched public ingredient', null)],
             inputs: [$this->input(0, [['reason' => 'catalogue_match_unavailable']])],
         ));
 
@@ -163,7 +201,7 @@ class RecipeNutritionEstimatePresentationTest extends TestCase
     }
 
     /** @return array<string, mixed> */
-    private function ingredient(int $position, string $text, ?string $reviewState = null): array
+    private function ingredient(int $position, string $text, ?string $reviewState = 'confirmed'): array
     {
         return [
             'position' => $position,
@@ -173,7 +211,12 @@ class RecipeNutritionEstimatePresentationTest extends TestCase
             'custom_unit' => null,
             'generic_wording' => null,
             'notes' => null,
-            'catalogue_match' => $reviewState === null ? null : ['review_state' => $reviewState],
+            'catalogue_match' => $reviewState === null ? null : [
+                'name' => 'Selected food '.$position,
+                'provenance' => 'automatically_selected',
+                'confidence_band' => $reviewState === 'needs_review' ? 'reviewable' : 'high',
+                'review_state' => $reviewState,
+            ],
         ];
     }
 

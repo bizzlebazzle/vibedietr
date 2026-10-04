@@ -142,6 +142,40 @@ final class RecipeIngredientMatchManager
         }, 3);
     }
 
+    public function keep(int $recipeId, int $lineId, string $expectedVersionId, User $actor): RecipeIngredientLineMatch
+    {
+        return DB::transaction(function () use ($recipeId, $lineId, $expectedVersionId, $actor): RecipeIngredientLineMatch {
+            $recipe = Recipe::query()->lockForUpdate()->findOrFail($recipeId);
+            Gate::forUser($actor)->authorize('update', $recipe);
+            $line = $recipe->ingredientLines()->lockForUpdate()->findOrFail($lineId);
+            $match = $line->catalogueMatch()->lockForUpdate()->first();
+
+            if ($match === null || $match->catalogue_item_version_id !== $expectedVersionId
+                || $match->getRawOriginal('provenance') !== RecipeIngredientMatchProvenance::AutomaticallySelected->value
+                || $match->getRawOriginal('confidence_band') !== RecipeIngredientMatchConfidenceBand::Reviewable->value) {
+                throw ValidationException::withMessages([
+                    'catalogue_match' => 'This selection is no longer available for review. Check the current food before continuing.',
+                ]);
+            }
+
+            $item = CatalogueItem::query()->lockForUpdate()->findOrFail($match->catalogueItemVersion->catalogue_item_id);
+            if ($item->status !== CatalogueItemStatus::Approved) {
+                throw ValidationException::withMessages([
+                    'catalogue_match' => 'This food is no longer available for review. Choose an approved replacement or clear the match.',
+                ]);
+            }
+
+            if ($match->getRawOriginal('review_state') === RecipeIngredientMatchReviewState::NeedsReview->value) {
+                $match->forceFill([
+                    'review_state' => RecipeIngredientMatchReviewState::Confirmed,
+                    'selected_by_user_id' => $actor->getKey(),
+                ])->save();
+            }
+
+            return $match->fresh(['catalogueItemVersion.catalogueItem']);
+        }, 3);
+    }
+
     public function confirmRejectedReplacement(
         int $recipeId,
         int $lineId,

@@ -58,6 +58,20 @@
         overflow-wrap: anywhere;
     }
 
+    .nutrition-warning {
+        @apply rounded border border-amber-600 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-400 dark:bg-amber-950 dark:text-amber-100;
+        overflow-wrap: anywhere;
+    }
+
+    .nutrition-unavailable {
+        @apply rounded border border-red-600 bg-red-50 p-4 text-sm text-red-900 dark:border-red-400 dark:bg-red-950 dark:text-red-100;
+        overflow-wrap: anywhere;
+    }
+
+    .recipe-content :is(a, button, summary, [data-ingredient-review]):focus-visible {
+        @apply outline outline-2 outline-offset-2 outline-blue-700 dark:outline-blue-300;
+    }
+
     .recipe-content input,
     .recipe-content textarea,
     .recipe-content select {
