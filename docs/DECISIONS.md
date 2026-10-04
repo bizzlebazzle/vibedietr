@@ -32,7 +32,7 @@ Backlog relationships mean:
 | ID | Title | Status | Owner |
 | --- | --- | --- | --- |
 | DEC-001 | Food-matching confidence thresholds | Decided | Technical investigation |
-| DEC-002 | Food-match review-warning treatment | Owner input required | Product owner |
+| DEC-002 | Food-match review-warning treatment | Decided | Product owner |
 | DEC-003 | Nutrient storage precision | Decided | Product owner |
 | DEC-004 | Nutrient display precision | Decided | Product owner |
 | DEC-005 | Recipe-import providers and formats | Decided | Product owner |
@@ -147,7 +147,7 @@ Backlog relationships mean:
 - **Why it matters:** The treatment must make uncertain matches noticeable and
   correctable without implying that confidence is certainty or relying on
   color alone.
-- **Status:** Owner input required.
+- **Status:** Decided.
 - **Owner:** Product owner.
 - **Alternatives:** Inline status and action; a review queue or summary with
   line-level detail; a combined summary and inline treatment. Specific visual
@@ -158,7 +158,8 @@ Backlog relationships mean:
   example, not a requirement. Partial estimates must identify review-needed
   lines, and suggested claims cannot be presented as verified when nutrition is
   incomplete.
-- **Backlog relationships:** `Blocked`: UX-04. `Constrained`: NUT-16.
+- **Backlog relationships:** Resolution removes DEC-002 as the open-decision
+  blocker for UX-04. The approved treatment constrains NUT-16 and UX-04.
   `Related`: UX-02.
 - **Resolution condition:** Review accessible interaction proposals for every
   confidence state and record the chosen warning, review, and correction flow.
@@ -168,12 +169,12 @@ Backlog relationships mean:
   mandatory checkpoint before saving or publishing. The owner explicitly
   approved the recommendation presented after repository investigation.
 
-  The requested register status remains `Owner input required` and ownership
-  remains `Product owner`. The interaction choice is approved, but this status
-  deliberately leaves the task router's UX-04 blocker in place until a status
-  transition is authorized. This record does not implement UX-04 or change
-  NUT-16's completeness logic, DEC-001's matching policy, or UX-02's established
-  feedback behavior.
+  On 2026-10-04 the product owner confirmed that the register may be marked
+  `Decided` once all questions are answered. No owner questions remain; the
+  approved presentation, correction actions, and optional review flow satisfy
+  the resolution condition. Ownership remains `Product owner`. UX-04 remains
+  planned; this decision preserves NUT-16's completeness logic, DEC-001's
+  matching policy, and UX-02's established feedback behavior.
 
   **Warning and discovery:** Show a persistent amber panel in light and dark
   themes beside each lower-confidence selection, labelled `Selected — needs
