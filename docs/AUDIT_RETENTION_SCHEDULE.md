@@ -200,6 +200,12 @@ is approved by this decision. A purged record in an immutable backup is beyond
 operational use, access-restricted, and encrypted until scheduled expiry. A
 restored system must replay completed purges before returning to service.
 
+The [DEC-012 investigation](BACKUP_ERASURE_RESEARCH.md) proposes an independent
+restore-time erasure journal and qualified expiry targets for Docker
+self-hosting. They remain unapproved. Its linkable post-purge references need
+separate owner privacy-policy review; the anonymous purge receipt does not
+authorize retaining those identifiers. DEC-012 remains unresolved.
+
 ## 8. Holds and exceptions
 
 A hold requires:

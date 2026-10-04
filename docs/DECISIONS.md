@@ -1322,7 +1322,30 @@ Backlog relationships mean:
   restoration flows, applicable rights and advice, then approve documented
   retention periods, restore-time controls, verification evidence, and user
   wording.
-- **Final decision and rationale:** Unresolved.
+- **Final decision and rationale:** Unresolved. Technical research on 4 October
+  2026 is recorded in [the backup erasure investigation](BACKUP_ERASURE_RESEARCH.md).
+  The owner confirmed user-operated self-hosting, ideally with Docker; no
+  hosting/backup provider is selected. Docker supplies no automatic backup
+  retention or account-erasure propagation. The existing MySQL/private
+  S3-compatible production contract remains in force.
+
+  Recommend daily consistent database/private-object recovery sets eligible
+  for seven days, a further 24-hour removal target, and an independent,
+  integrity-protected erasure journal checked before an isolated restore can
+  return to service. Replay must include expired erasure deadlines and
+  incomplete purges, not only completed jobs; object-only and partial restores
+  require the same controls. Restic is a technically supported candidate,
+  not an installed or selected backup tool. The investigation defines expiry
+  qualifications, verification/drill evidence, trade-offs, and draft notices.
+
+  These periods are not approved policy. The product owner/responsible
+  self-hosting operator must select and validate the reference backup/storage
+  stack, accept the recovery/retention trade-off, and review the narrowly
+  scoped post-purge journal purpose, fields, disposal, and qualified wording.
+  Linkable erasure references are personal data; DEC-013's anonymous purge
+  receipt does not approve retaining them. No provider physical-destruction
+  deadline or legal-compliance claim is established. Preserve the status and
+  owner above and all backlog relationships until those choices are recorded.
 
 ## DEC-013 — Security and legal audit retention
 

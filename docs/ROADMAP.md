@@ -1461,6 +1461,11 @@ changes, it is deliberately split across multiple items.
 - **Outcome:** Make database and private storage recoverable and schema rollout
   safe before production data exists.
 - **Dependencies:** FND-02, DEC-012, DEP-02.
+- **Decision research:** [DEC-012 investigation](BACKUP_ERASURE_RESEARCH.md)
+  records Docker self-hosting capabilities and proposed database/private-object
+  expiry, isolated restoration, and verification controls. DEC-012 remains
+  unresolved pending stack/retention and post-purge journal policy choices;
+  this item remains blocked and no backup period is approved.
 - **Acceptance criteria:** Backup scope, encryption, retention, restore target,
   expand/contract rollout, and rollback are documented; a restore drill proves
   referential integrity and representative public/private data access.
@@ -1493,6 +1498,11 @@ changes, it is deliberately split across multiple items.
   privacy-aware purge/anonymization, with an authenticated immediate-purge path.
 - **Dependencies:** DEC-012, FND-05, FND-09, FND-14, DEP-04, DEP-05,
   DEP-06, DEP-07, all owned domain models.
+- **Decision research:** [DEC-012 investigation](BACKUP_ERASURE_RESEARCH.md)
+  identifies restore-time replay of due and completed purges across database
+  and private objects, with an independent erasure journal and a fail-closed
+  release gate. Journal fields/retention need owner review; DEC-012 remains
+  unresolved and this item remains blocked.
 - **Acceptance criteria:** Recovery expiry and final purge run as idempotent,
   correlated scheduled queued work under FND-09. The request clearly explains
   consequences and makes
@@ -1536,6 +1546,11 @@ changes, it is deliberately split across multiple items.
   actual privacy, retention, erasure, moderation, and nutrition-advice
   behavior without claiming automatic legal compliance.
 - **Dependencies:** DEP-07, DEP-08, FND-05, DEC-010, DEC-012.
+- **Decision research:** [DEC-012 investigation](BACKUP_ERASURE_RESEARCH.md)
+  supplies capability evidence, retention alternatives, and qualified draft
+  wording for the responsible self-hosting operator's review. No retention or
+  post-purge journal policy is approved; DEC-012 remains unresolved and this
+  item remains blocked.
 - **Acceptance criteria:** Privacy notice, terms, retention schedule, processor/
   provider inventory, cookie behavior, rights-request process, moderation
   policy, children's age-band and safety handling, and nutrition disclaimers
