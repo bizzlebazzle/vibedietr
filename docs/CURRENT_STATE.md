@@ -149,10 +149,9 @@ work.
   consume/correct/reverse/re-consume history are retained. Reusable entries are
   rejected, and consumption history blocks move/removal.
 - PLAN-06 snapshots consumption nutrition; PLAN-07 queues audited review of newer versions for eligible unconsumed entries.
-- UX-01 implements VibeDietr identity, guest landing, owner-scoped dashboard,
-  and navigation. UX-02 adds accessible feedback; UX-03 makes recipe editing
-  and resizing responsive. UX-04 adds optional match review; browser checks are
-  pending ([verification](UX_04_VERIFICATION.md)). UX-05 to UX-07 remain planned.
+- UX-01 adds identity, landing, dashboard, and navigation; UX-02 adds accessible
+  feedback; UX-03 adds responsive recipe editing/resizing; UX-04 adds optional
+  match review ([browser checks pending](UX_04_VERIFICATION.md)). UX-05 to UX-07 remain planned.
 - Backup/restore, self-service account export, delayed deletion/recovery,
   privacy/legal launch review, and release-readiness work remain incomplete
   (DEP-06 through DEP-10). DEC-008, DEC-010, and DEC-012 remain unresolved.
