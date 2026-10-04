@@ -157,6 +157,11 @@
                                             </div>
                                         @endforeach
 
+                                        @if ($planSlot->recipeEntries->isEmpty() && $planSlot->itemEntries->isEmpty())
+                                            <p class="text-sm text-gray-600 dark:text-slate-300">This slot has no planned entries. Add a finalized recipe with planned servings, a catalogue food, or a private one-off item using the forms below. Draft recipes cannot be planned.</p>
+                                            <a href="{{ route('recipes.index') }}" class="inline-flex min-h-11 items-center text-sm font-semibold text-indigo-700 underline dark:text-indigo-300">Find a finalized public recipe</a>
+                                        @endif
+                                        <p class="text-sm text-gray-600 dark:text-slate-300">Use the recipe ID from its page URL (recipes/ID). You can add public finalized recipes or your own private finalized recipes. Each entry keeps a version snapshot; later recipe corrections do not silently change it.</p>
                                         <form method="POST" action="{{ route('meal-plans.recipe-entries.store', $mealPlan) }}" class="flex flex-wrap items-end gap-2">
                                             @csrf
                                             <input type="hidden" name="slot_id" value="{{ $planSlot->id }}">
@@ -275,7 +280,7 @@
                         </form>
                     </article>
                 @empty
-                    <p class="text-sm text-gray-600 dark:text-slate-300">No days added yet.</p>
+                    <p class="text-sm text-gray-600 dark:text-slate-300">No days added yet. Use Add day above to create meal slots. {{ $mealPlan->type->value === 'reusable' ? 'Day index starts at 0 for the first reusable day.' : 'Choose a date within the plan date range.' }}</p>
                 @endforelse
             </div>
         </section>

@@ -35,6 +35,9 @@ class Form extends Component
     #[Locked]
     public ?string $pendingImportToken = null;
 
+    #[Locked]
+    public ?string $lookupFailure = null;
+
     public $keywords = [];
 
     public $categories = [];
@@ -191,6 +194,7 @@ class Form extends Component
     public function fetchFromOff(?string $barcode = null): void
     {
         $this->authorizeMutation();
+        $this->lookupFailure = null;
 
         $pendingImports = app(PendingIngredientImportStore::class);
         $pendingImports->forget($this->pendingImportToken);
@@ -237,6 +241,7 @@ class Form extends Component
                 OpenFoodFactsLookupStatus::Success => 'Product data could not be read.',
             };
 
+            $this->lookupFailure = $message;
             $this->dispatch('notify', type: 'error', message: $message);
 
             return;

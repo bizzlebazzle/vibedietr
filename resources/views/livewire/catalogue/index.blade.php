@@ -4,7 +4,9 @@
     @endif
 
     <div class="flex flex-col gap-3 sm:flex-row">
+        <label for="catalogue-search" class="sr-only">Search foods by name or barcode</label>
         <input
+            id="catalogue-search"
             type="search"
             wire:model.live.debounce.300ms="search"
             placeholder="Search by name or barcode…"
@@ -39,7 +41,12 @@
                     </div>
                 </a>
             @empty
-                <p class="col-span-full rounded border border-dashed border-gray-300 p-4 text-sm text-gray-600 dark:border-slate-700 dark:text-gray-400">No visible catalogue records found.</p>
+                <div class="col-span-full rounded border border-dashed border-gray-300 p-4 text-sm text-gray-600 dark:border-slate-700 dark:text-gray-400">
+                    <p>No visible catalogue records found. Try another food name or barcode, or clear the search field.</p>
+                    @auth
+                        <p class="mt-2">If the food is missing, use Submit manual food above. Pending manual foods are visible and selectable only by their submitter until approved.</p>
+                    @endauth
+                </div>
             @endforelse
         </div>
 

@@ -8,11 +8,61 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Livewire\Features\SupportTesting\Testable;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class OpenFoodFactsLivewireTest extends TestCase
 {
     use RefreshDatabase;
+
+    /** @return iterable<string, array{int, string}> */
+    public static function lookupFailures(): iterable
+    {
+        yield 'not found' => [404, 'No product found for that barcode.'];
+        yield 'temporary failure' => [500, 'Food database temporarily unavailable.'];
+        yield 'rate limit' => [429, 'Too many lookups.'];
+        yield 'invalid response' => [200, 'Product data could not be read.'];
+    }
+
+    public function test_user_can_follow_manual_recovery_guidance_after_failed_lookup(): void
+    {
+        Http::fake(['*' => Http::response('unavailable', 500)]);
+        $owner = User::factory()->create();
+        Livewire::actingAs($owner)->test(Form::class)
+            ->set('name', 'Manual recovery food')
+            ->set('quantity', '100')->set('quantity_unit', 'g')
+            ->set('per_100g_protein', '7.5')
+            ->set('barcode', '1234567890123')->call('fetchFromOff')
+            ->assertSee('To continue manually, clear the barcode')
+            ->set('barcode', '')->call('save')->assertHasNoErrors();
+        $this->assertDatabaseHas('ingredients', [
+            'user_id' => $owner->id, 'name' => 'Manual recovery food', 'barcode' => null,
+        ]);
+    }
+
+    #[DataProvider('lookupFailures')]
+    public function test_failed_lookup_keeps_user_fields_and_presents_retry_and_manual_recovery(int $status, string $message): void
+    {
+        Http::fakeSequence()->push('private provider details', $status)->push($this->validResponse());
+        $component = Livewire::actingAs(User::factory()->create())->test(Form::class)
+            ->set('name', 'User-entered food')
+            ->set('quantity', '100')
+            ->set('quantity_unit', 'g')
+            ->set('per_100g_protein', '7.5')
+            ->set('barcode', '0123456789012')
+            ->call('fetchFromOff')
+            ->assertSee($message)
+            ->assertSee('Your entered fields have been kept.')
+            ->assertSee('use Fetch from OFF to try again when available')
+            ->assertSee('To continue manually, clear the barcode')
+            ->assertDontSee('private provider details')
+            ->assertSet('name', 'User-entered food')
+            ->assertSet('quantity', '100')
+            ->assertSet('per_100g_protein', '7.5');
+
+        $component->call('fetchFromOff')->assertSet('lookupFailure', null)
+            ->assertDontSee('Your entered fields have been kept.');
+    }
 
     protected function setUp(): void
     {

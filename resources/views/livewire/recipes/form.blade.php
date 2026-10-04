@@ -141,6 +141,8 @@
                                 <p class="text-xs text-gray-600 dark:text-gray-400">{{ $resultPage['total'] ?? 0 }} selectable result(s). Pending manual foods appear only to their submitter.</p>
                                 @if ($catalogueResults[$lineId] === [])
                                     <p class="text-sm text-gray-600 dark:text-gray-400">No selectable catalogue records found.</p>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">Try a simpler food name or barcode and search again. You can keep the original wording without a match; the line will be excluded from the estimate.</p>
+                                    <p class="text-sm"><a href="{{ route('catalogue.manual.create') }}" class="inline-flex min-h-11 items-center font-semibold text-blue-700 underline dark:text-blue-300">Submit a missing food manually</a>. Save draft changes before leaving. Your pending food can be selected after submission.</p>
                                 @else
                                     <ul class="space-y-2" aria-label="Catalogue search results">
                                         @foreach ($catalogueResults[$lineId] as $candidate)
@@ -176,7 +178,7 @@
                     </div>
                 </fieldset>
             @empty
-                <p class="rounded border border-dashed border-gray-300 p-4 text-sm text-gray-600 dark:border-slate-700 dark:text-gray-400">No ingredient lines yet.</p>
+                <p class="rounded border border-dashed border-gray-300 p-4 text-sm text-gray-600 dark:border-slate-700 dark:text-gray-400">No ingredient lines yet. Use Add ingredient line above, enter the original wording, and save the draft before selecting a food match.</p>
             @endforelse
             <datalist id="recipe-unit-options">
                 @foreach ($unitGroups as $options) @foreach ($options as $value => $label)<option value="{{ $value }}">{{ $label }}</option>@endforeach @endforeach
@@ -207,7 +209,7 @@
                         <div class="flex flex-wrap gap-2"><button type="button" wire:click="moveStepUp({{ $index }})" aria-label="Move step {{ $index + 1 }} up" @disabled($loop->first) class="inline-flex min-h-11 min-w-11 items-center justify-center rounded border px-3 py-2 text-sm disabled:opacity-40 dark:border-slate-600">Up</button><button type="button" wire:click="moveStepDown({{ $index }})" aria-label="Move step {{ $index + 1 }} down" @disabled($loop->last) class="inline-flex min-h-11 min-w-11 items-center justify-center rounded border px-3 py-2 text-sm disabled:opacity-40 dark:border-slate-600">Down</button><button type="button" wire:click="removeStep({{ $index }})" aria-label="Remove step {{ $index + 1 }}" wire:confirm="Remove this instruction step? Its text will be removed from the recipe." class="inline-flex min-h-11 items-center rounded border border-red-300 px-3 py-2 text-sm text-red-700 dark:border-red-800 dark:text-red-300">Remove</button></div>
                     </fieldset>
                 @empty
-                    <p class="rounded border border-dashed border-gray-300 p-4 text-sm text-gray-600 dark:border-slate-700 dark:text-gray-400">No instruction steps yet.</p>
+                    <p class="rounded border border-dashed border-gray-300 p-4 text-sm text-gray-600 dark:border-slate-700 dark:text-gray-400">No instruction steps yet. Use Add step above to enter the cooking method. Sections are optional.</p>
                 @endforelse
             </div>
         </section>

@@ -104,6 +104,12 @@
         </details>
         </div>
         @error('barcode') <div data-feedback-error data-feedback-for="barcode" class="text-sm text-red-600">{{ $message }}</div> @enderror
+        @if ($lookupFailure !== null)
+          <div role="alert" class="rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100">
+            <p>{{ $lookupFailure }}</p>
+            <p class="mt-2">Your entered fields have been kept. Check the barcode and use Fetch from OFF to try again when available. To continue manually, clear the barcode and enter the food details and nutrition values you have; an unconfirmed barcode cannot be saved.</p>
+          </div>
+        @endif
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">

@@ -56,7 +56,7 @@
                                         </div>
                                     @endforeach
                                     @if ($planSlot->recipeEntries->isEmpty() && $planSlot->itemEntries->isEmpty())
-                                        <p class="text-sm text-gray-500 dark:text-slate-400">No planned entries.</p>
+                                        <p class="text-sm text-gray-500 dark:text-slate-400">No planned entries. You are viewing a read-only plan.</p>
                                     @endif
                                 </div>
                             </div>
@@ -64,7 +64,7 @@
                     </div>
                 </article>
             @empty
-                <p class="text-sm text-gray-600 dark:text-slate-300">No days added yet.</p>
+                <p class="text-sm text-gray-600 dark:text-slate-300">No days added yet. You are viewing a read-only plan.</p>
             @endforelse
         </div>
     </section>
