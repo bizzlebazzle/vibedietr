@@ -125,18 +125,18 @@ untested.
   or presentation cannot be established by the existing PHPUnit tests alone.
   Relevant states include validation errors, loading and failure states,
   light and dark themes, and mobile and desktop layouts.
+- Planning changes pass the focused real Chromium keyboard, touch, zoom/reflow,
+  accessible name/state, and axe checks through `npm run test:planning`, with
+  screenshots for review. Use Sail locally as documented in
+  [README](../README.md#planning-browser-checks).
 
 **Desirable but not currently available**
 
-- There is no configured general frontend linter, browser/end-to-end suite,
-  automated accessibility scanner, or visual regression tool. The barcode
-  scanner has a focused Node test suite with browser API and decoder doubles,
-  but it is not a general browser-testing framework.
-- These checks must not be reported as passing. Where the acceptance criteria
-  depend on behavior they would normally cover, use the focused scanner or
-  PHPUnit coverage where applicable and documented manual verification, or
-  report the task as conditionally complete if adequate verification is not
-  possible.
+- There is no general frontend linter or pixel-based visual-regression suite.
+  The barcode scanner has focused Node coverage with browser API doubles.
+- Areas outside that browser suite still require applicable PHPUnit/Node and
+  manual browser evidence. Never report absent browser or visual checks as
+  passed; report conditionally complete if adequate verification is unavailable.
 
 ## 6. Continuous-integration quality gates
 
@@ -307,9 +307,9 @@ untested.
 - Privacy, visibility, attribution, estimate, and destructive-action wording
   matches the actual behavior and does not make unsupported legal, medical, or
   accuracy claims.
-- Automated Laravel/Livewire assertions and the production frontend build pass;
-  focused manual browser checks are recorded because browser and accessibility
-  automation are not currently available.
+- Automated Laravel/Livewire assertions and the production frontend build pass.
+  Applicable focused planning browser/axe checks pass; record manual browser and
+  assistive-technology checks where automation does not establish the behavior.
 
 ## 13. Additional requirements for nutrition calculations and food matching
 

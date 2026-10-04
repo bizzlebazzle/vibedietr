@@ -1266,6 +1266,9 @@ changes, it is deliberately split across multiple items.
 
 ### UX-05 — P2 — Build an accessible responsive planning interface
 
+- **Status:** Implemented (2026-10-04); remote CI pending.
+- **Implementation:** [Planning interface verification](UX_05_VERIFICATION.md).
+
 - **Outcome:** Make slot, entry, consumption, and target workflows efficient
   on touch, keyboard, and desktop interfaces.
 - **Dependencies:** PLAN-05, PLAN-12, UX-02.

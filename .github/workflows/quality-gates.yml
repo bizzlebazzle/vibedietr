@@ -16,6 +16,11 @@ jobs:
     timeout-minutes: 15
 
     services:
+      selenium:
+        image: selenium/standalone-chromium
+        ports:
+          - 4444:4444
+        options: --shm-size=2gb --add-host=host.docker.internal:host-gateway
       mysql:
         image: mysql:8.0
         env:
@@ -95,6 +100,32 @@ jobs:
 
       - name: Run backend tests
         run: composer test
+
+      - name: Set up Node.js for planning browser checks
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22.18'
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Build assets for planning browser checks
+        run: |
+          npm ci
+          npm run build
+
+      - name: Run planning browser and accessibility checks
+        env:
+          SELENIUM_URL: http://127.0.0.1:4444/wd/hub
+          PLANNING_BROWSER_URL: http://host.docker.internal:8015
+        run: npm run test:planning
+
+      - name: Preserve planning visual snapshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: planning-browser-snapshots
+          path: storage/app/testing/ux05
+          if-no-files-found: ignore
 
       - name: Validate cached production configuration
         env:

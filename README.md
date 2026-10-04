@@ -199,6 +199,7 @@ Additional focused regression commands are:
 
 ```bash
 ./vendor/bin/sail npm run test:scanner
+./vendor/bin/sail npm run test:planning
 ./vendor/bin/sail composer analyse:failure-regression
 ./vendor/bin/sail npm run docs:test
 ```
@@ -208,6 +209,35 @@ Run one backend test file by passing its path through the Composer script:
 ```bash
 ./vendor/bin/sail composer test -- tests/Feature/ExampleTest.php
 ```
+
+### Planning browser checks
+
+The focused UX-05 suite uses the existing Sail `selenium` Chromium service,
+Node's test runner, `selenium-webdriver`, and `axe-core`. Start Sail services,
+install locked npm dependencies, and build assets before running:
+
+```bash
+./vendor/bin/sail up -d
+./vendor/bin/sail npm ci
+./vendor/bin/sail npm run build
+./vendor/bin/sail npm run test:planning
+```
+
+Run separately from PHPUnit because both use MySQL's `testing` database.
+The suite applies additive migrations, creates synthetic records, starts its
+own testing-only HTTP server on port 8015, and removes only its synthetic user
+and dependent records afterward. It never resets the database or uses the
+normal development database. Keep port 8015 free and clear cached application
+configuration before running if you previously cached a different environment.
+The test server uses built assets even when Vite development mode is active.
+
+Screenshots are written under the already ignored `storage/app/testing/ux05`
+directory. These are review artifacts, not pixel comparison baselines.
+`SELENIUM_URL`, `PLANNING_BROWSER_URL`, and `PLANNING_BROWSER_ARTIFACTS` override
+runner locations; the default Sail browser URL is `http://laravel.test:8015`.
+CI runs this suite inside `Backend tests` and uploads the screenshots.
+See [UX-05 verification](docs/UX_05_VERIFICATION.md) for scope and remaining
+physical-device and assistive-technology checks.
 
 ## Roadmap task context
 
