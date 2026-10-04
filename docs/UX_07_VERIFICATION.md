@@ -57,7 +57,7 @@ never reset the database, and clean only their synthetic records. No live food,
 import or email provider is called. Run browser suites sequentially with PHPUnit
 because they share the testing database and port 8015.
 
-- `npm run test:accessibility`: 13 real Chromium tests, 98 representative
+- `npm run test:accessibility`: 15 real Chromium tests, 105 representative
   full-page/state axe scans in light/dark themes, **zero violations**, including
   zero serious/critical findings. The initial 54 scans recorded 98 serious
   contrast-node incidences across repeated pages/themes, plus missing landmarks
@@ -98,8 +98,8 @@ suite in `Backend tests`. Axe `incomplete` contrast checks for native select
 options remain review items rather than violations; native picker rendering
 requires physical-browser review.
 
-Local final gates on 2026-10-04 passed: the complete backend suite (1,055 tests,
-6,792 assertions), Pint, PHPStan, production build, documentation checks,
+Local final gates on 2026-10-04 passed: the complete backend suite (1,056 tests,
+6,816 assertions), Pint, PHPStan, production build, documentation checks,
 development-environment validation, all 24 frontend tests and all six planning
 browser tests. Initial title expectations and a planning heading-level defect
 were corrected before the final runs. The accessibility pixel comparison also
@@ -107,6 +107,25 @@ exposed inconsistent LCD font antialiasing after keyboard interaction; consisten
 browser font rendering fixed it without increasing the pixel tolerance.
 The build's existing stale Browserslist-data warning remains non-blocking.
 Migration/provider/queue/deployment gates are not applicable to these UI changes.
+
+### CI follow-up
+
+[Quality gates run 197](https://github.com/bizzlebazzle/vibedietr/actions/runs/37224012416)
+passed PHPUnit and planning checks but failed the accessibility step in
+`Backend tests`: the selected theme button reached 1.96:1 contrast during its
+150ms color transition. Theme buttons now change colors immediately. A focused
+regression samples all three buttons at five points through light, dark and
+system changes, including any active CSS transitions. It reproduced sub-4.5:1
+frames before the fix and passes afterwards; `theme-contrast.json` records the
+45 samples. Axe rules and visual tolerances are unchanged.
+
+The rerun also exposed pagination defects when the moderation queue has more
+than one page. Conventional Laravel and Livewire view overrides retain their
+existing links/actions while giving unavailable controls valid named roles and
+correcting dark count/current-page and arrow hover contrast. Fixtures now
+guarantee paginated catalogue/moderation states, independent of other testing
+records. First/last disabled controls have PHP coverage; desktop/mobile keyboard
+pagination and seven additional full-page axe states have browser coverage.
 
 ## Manual inspection and outstanding verification
 

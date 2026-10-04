@@ -150,6 +150,46 @@ test('rendered primary-button text, field boundaries and focus outlines meet con
     writeFileSync(`${artifacts}/contrast.json`,JSON.stringify(evidence,null,2));
 });
 
+test('theme changes retain readable text throughout color updates', async () => {
+    await login();
+    await browser.executeScript('localStorage.setItem("theme","light")');
+    await open('/profile');
+    const samples = await browser.executeAsyncScript(`
+        const done=arguments[arguments.length-1];
+        (async()=>{
+            const buttons=[...document.querySelectorAll('button')].filter(button=>button.getAttribute('x-on:click')?.startsWith('setTheme'));
+            const luminance=color=>color.match(/[\\d.]+/g).slice(0,3).map(v=>v/255)
+                .map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4)
+                .reduce((sum,v,i)=>sum+v*[.2126,.7152,.0722][i],0);
+            const contrast=(a,b)=>{const [hi,lo]=[luminance(a),luminance(b)].sort((a,b)=>b-a);return (hi+.05)/(lo+.05);};
+            const frame=()=>new Promise(requestAnimationFrame);
+            await frame();
+            buttons.flatMap(button=>button.getAnimations()).forEach(animation=>animation.finish());
+            const results=[];
+            for(const mode of ['dark','light','system']) {
+                buttons.find(button=>button.getAttribute('x-on:click')===\"setTheme('\"+mode+\"')\").click();
+                await frame();
+                // Pause and sample any real CSS transitions so fast CI cannot skip the failing frame.
+                const animations=buttons.flatMap(button=>button.getAnimations());
+                animations.forEach(animation=>animation.pause());
+                for(const progress of [0,.25,.5,.75,1]) {
+                    animations.forEach(animation=>animation.currentTime=Number(animation.effect.getTiming().duration)*progress);
+                    for(const button of buttons) {
+                        const style=getComputedStyle(button);
+                        results.push({mode,progress,button:button.textContent.replace('✓','').trim(),ratio:contrast(style.color,style.backgroundColor)});
+                    }
+                }
+                animations.forEach(animation=>animation.finish());
+            }
+            return results;
+        })().then(done).catch(error=>done({error:error.message}));
+    `);
+    assert.equal(samples.error,undefined);
+    assert.equal(samples.length,45);
+    writeFileSync(`${artifacts}/theme-contrast.json`,JSON.stringify(samples,null,2));
+    assert.deepEqual(samples.filter(sample=>sample.ratio<4.5),[]);
+});
+
 test('full-page guest authentication, catalogue, recipe and public-profile scans in both themes', async () => {
     for (const theme of ['light', 'dark']) {
         await open('/');
@@ -348,6 +388,36 @@ test('profile validation, theme selection and deletion dialog trap focus, isolat
     await browser.actions().sendKeys('browser-fixture-password',Key.ENTER).perform();
     await browser.wait(until.urlIs(`${base}/`),15000);
     await open('/profile'); await browser.wait(until.urlContains('/login'),10000);
+});
+
+test('catalogue pagination preserves names, disabled states and keyboard operation in both themes and mobile', async () => {
+    for (const theme of ['light','dark']) {
+        await browser.manage().deleteAllCookies(); await open('/catalogue');
+        await browser.executeScript('localStorage.setItem("theme",arguments[0])',theme); await open('/catalogue');
+        const next='section[aria-labelledby="shared-catalogue-heading"] nav button[dusk$=".after"][dusk^="nextPage"]';
+        await tabTo(next); await press();
+        await waitText('section[aria-labelledby="shared-catalogue-heading"] [aria-current="page"]','2');
+        await scan(`${theme} catalogue page 2`); await structure();
+        await login('admin'); await open('/admin/catalogue?type=manual_submission&state=pending');
+        const unavailable=await find('nav[aria-label="Pagination Navigation"] [aria-disabled="true"][aria-label]');
+        assert.equal(await unavailable.getAttribute('role'),'link');
+        assert.match(await unavailable.getAccessibleName(),/Previous/);
+        await scan(`${theme} moderation pagination first page`);
+        await tabTo('nav[aria-label="Pagination Navigation"] a[rel="next"]'); await press();
+        await browser.wait(until.urlContains('page=2'),10000);
+        await scan(`${theme} moderation pagination page 2`); await structure();
+    }
+    await browser.sendDevToolsCommand('Emulation.setDeviceMetricsOverride',{width:320,height:800,deviceScaleFactor:1,mobile:true});
+    try {
+        await browser.manage().deleteAllCookies(); await open('/catalogue');
+        await tabTo('section[aria-labelledby="shared-catalogue-heading"] nav button[dusk$=".before"][dusk^="nextPage"]');
+        assert.match(await (await browser.switchTo().activeElement()).getAccessibleName(),/Next/);
+        await press();
+        await waitText('section[aria-labelledby="shared-catalogue-heading"] [aria-current="page"]','2');
+        await reflow(); await scan('mobile catalogue pagination');
+    } finally {
+        await browser.sendDevToolsCommand('Emulation.clearDeviceMetricsOverride');
+    }
 });
 
 test('administrator filtering and detail controls are reachable without bypassing factor verification', async () => {

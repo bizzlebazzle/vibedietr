@@ -8,7 +8,7 @@
         {{-- Light --}}
         <button
             type="button"
-            class="px-3 py-2 rounded border text-sm transition"
+            class="px-3 py-2 rounded border text-sm"
             :class="themeOverride === 'light'
                      ? 'bg-indigo-700 text-white border-indigo-700'
                      : 'bg-gray-50 dark:bg-gray-700 dark:border-gray-600 text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600'"
@@ -19,7 +19,7 @@
         {{-- Dark --}}
         <button
             type="button"
-            class="px-3 py-2 rounded border text-sm transition"
+            class="px-3 py-2 rounded border text-sm"
             :class="themeOverride === 'dark'
                      ? 'bg-indigo-700 text-white border-indigo-700'
                      : 'bg-gray-50 dark:bg-gray-700 dark:border-gray-600 text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600'"
@@ -30,7 +30,7 @@
         {{-- System --}}
         <button
             type="button"
-            class="px-3 py-2 rounded border text-sm transition"
+            class="px-3 py-2 rounded border text-sm"
             :class="themeOverride === null
                     ? 'bg-indigo-700 text-white border-indigo-700'
                     : 'bg-gray-50 dark:bg-gray-700 dark:border-gray-600 text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600'"

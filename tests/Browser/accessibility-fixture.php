@@ -64,6 +64,15 @@ $fixture = DB::transaction(function (): array {
         ]);
         $items[$state] = $item->id;
     }
+    // Always exercise both public Livewire and administrator pagination, even on a clean database.
+    foreach (['approved', 'pending'] as $state) {
+        foreach (range(1, 26) as $number) {
+            $item = CatalogueItem::factory()->submittedBy($owner)->create(['status' => $state]);
+            CatalogueItemVersion::factory()->current()->completeNutrition()->create([
+                'catalogue_item_id' => $item->id, 'name' => 'Accessibility '.$state.' page food '.$number,
+            ]);
+        }
+    }
     $plan = MealPlan::factory()->for($owner, 'owner')->dated()->create([
         'name' => 'Accessible sharing plan', 'starts_on' => now()->toDateString(),
         'ends_on' => now()->addDays(2)->toDateString(),
