@@ -67,6 +67,8 @@ class MealPlanController extends Controller
                     ->with('recipeVersion')
                     ->orderBy('created_at'),
                 'days.slots.itemEntries',
+                'days.slots.itemEntries.consumptionState.currentTransition',
+                'days.slots.recipeEntries.consumptionState.currentTransition',
             ]);
 
             $targetProfiles = $viewer->nutritionTargetProfiles()->orderBy('name')->get();

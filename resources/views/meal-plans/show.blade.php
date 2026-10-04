@@ -1,6 +1,8 @@
 <x-app-layout>
     <x-slot name="header"><h2 class="text-xl font-semibold text-gray-800 dark:text-slate-100">{{ $mealPlan->name }}</h2></x-slot>
-    <div class="py-12"><div class="mx-auto max-w-3xl sm:px-6 lg:px-8"><div class="rounded-lg bg-white p-6 shadow dark:bg-slate-900">
+    <div class="planning-content py-8" data-planning-focus="{{ session('planning_focus') }}"><div class="mx-auto max-w-3xl sm:px-6 lg:px-8"><div class="rounded-lg bg-white p-3 sm:p-6 shadow dark:bg-slate-900">
+        <x-validation-summary :errors="$errors" class="mb-4" />
+        <x-auth-session-status :status="session('status')" class="mb-4" />
         <p class="text-gray-700 dark:text-slate-200">{{ $mealPlan->type === \App\Domain\MealPlans\MealPlanType::Reusable ? 'Reusable undated schedule' : 'Dated plan' }}</p>
         @if ($mealPlan->type === \App\Domain\MealPlans\MealPlanType::Dated)
             <p class="mt-2 text-gray-700 dark:text-slate-200">{{ $mealPlan->starts_on->toFormattedDateString() }} – {{ $mealPlan->ends_on->toFormattedDateString() }}</p>
@@ -17,7 +19,6 @@
         <section class="mt-8 border-t border-gray-200 pt-6 dark:border-slate-700">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-slate-100">Sharing</h3>
             <p class="mt-2 text-sm text-gray-600 dark:text-slate-300">Viewers are read-only. A share never grants edit or reshare rights.</p>
-            <x-input-error :messages="$errors->all()" class="mt-2" />
 
             @if ($mealPlan->visibility === \App\Domain\MealPlans\MealPlanVisibility::Public)
                 <form method="POST" action="{{ route('meal-plans.public.destroy', $mealPlan) }}" class="mt-4">
@@ -68,7 +69,6 @@
 
         <section class="mt-8 border-t border-gray-200 pt-6 dark:border-slate-700">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-slate-100">Plan days</h3>
-            <x-input-error :messages="$errors->all()" class="mt-2" />
 
             <form method="POST" action="{{ route('meal-plans.days.store', $mealPlan) }}" class="mt-4 flex flex-wrap items-end gap-3">
                 @csrf
@@ -90,7 +90,7 @@
 
             <div class="mt-6 space-y-6">
                 @forelse ($mealPlan->days as $day)
-                    <article class="rounded-md border border-gray-200 p-4 dark:border-slate-700">
+                    <article class="rounded-md border border-gray-200 p-2 sm:p-4 dark:border-slate-700">
                         <h4 class="font-semibold text-gray-900 dark:text-slate-100">
                             {{ $day->date?->toFormattedDateString() ?? 'Day '.($day->day_index + 1) }}
                         </h4>
@@ -100,21 +100,24 @@
                         <div class="mt-3 space-y-3">
                             @foreach ($day->slots as $planSlot)
                                 <div class="rounded-md border border-gray-100 p-3 dark:border-slate-800">
-                                    <div class="flex items-center gap-3">
+                                    <div class="flex flex-wrap items-center gap-3">
                                         <span class="w-8 text-sm text-gray-500 dark:text-slate-400">{{ $planSlot->position + 1 }}.</span>
                                         @if ($planSlot->standard_key?->hasFixedName())
                                             <span class="text-gray-800 dark:text-slate-200">{{ $planSlot->name }}</span>
                                         @else
-                                            <form method="POST" action="{{ route('meal-plans.days.slots.update', [$mealPlan, $day, $planSlot]) }}" class="flex flex-1 gap-2">
+                                            <form method="POST" action="{{ route('meal-plans.days.slots.update', [$mealPlan, $day, $planSlot]) }}" class="flex min-w-0 flex-1 flex-wrap items-end gap-2">
                                                 @csrf
                                                 @method('PATCH')
-                                                <x-text-input name="name" :value="$planSlot->name" required maxlength="255" class="flex-1" />
+                                                <label class="min-w-0 flex-1">
+                                                    <span class="block text-sm text-gray-700 dark:text-slate-300">Slot name</span>
+                                                    <x-text-input name="name" :value="$planSlot->name" required maxlength="255" class="w-full" />
+                                                </label>
                                                 <x-primary-button>Rename</x-primary-button>
                                             </form>
                                         @endif
                                     </div>
 
-                                    <div class="ml-11 mt-3 space-y-3">
+                                    <div class="mt-3 space-y-3 sm:ml-4">
                                         @foreach ($planSlot->itemEntries as $entry)
                                             <div class="rounded bg-gray-50 p-3 text-sm text-gray-800 dark:bg-slate-800 dark:text-slate-200">
                                                 <p class="font-medium">
@@ -127,30 +130,7 @@
                                                     {{ \App\Domain\Measurements\MeasurementUnitRegistry::definition($entry->planned_unit)->symbol }} planned
                                                     · {{ $entry->kind === \App\Domain\MealPlans\MealPlanItemEntryKind::Catalogue ? 'catalogue version '.$entry->catalogue_item_version_number : 'private one-off item' }}
                                                 </p>
-                                                <div class="mt-2 flex flex-wrap gap-2">
-                                                    <form method="POST" action="{{ route('meal-plans.item-entries.update', [$mealPlan, $entry]) }}" class="flex items-end gap-2">
-                                                        @csrf
-                                                        @method('PATCH')
-                                                        <label>
-                                                            <span class="block text-xs">Move to</span>
-                                                            <select name="target_slot_id" class="mt-1 rounded-md border-gray-300 bg-white text-gray-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100">
-                                                                @foreach ($mealPlan->days as $targetDay)
-                                                                    @foreach ($targetDay->slots as $targetSlot)
-                                                                        <option value="{{ $targetSlot->id }}" @selected($targetSlot->is($planSlot))>
-                                                                            {{ $targetDay->date?->toDateString() ?? 'Day '.($targetDay->day_index + 1) }} — {{ $targetSlot->name }}
-                                                                        </option>
-                                                                    @endforeach
-                                                                @endforeach
-                                                            </select>
-                                                        </label>
-                                                        <x-primary-button>Move</x-primary-button>
-                                                    </form>
-                                                    <form method="POST" action="{{ route('meal-plans.item-entries.destroy', [$mealPlan, $entry]) }}">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <x-danger-button>Remove</x-danger-button>
-                                                    </form>
-                                                </div>
+                                                @include('meal-plans.partials.entry-actions', ['entryType' => 'item'])
                                             </div>
                                         @endforeach
 
@@ -173,30 +153,7 @@
                                                         </div>
                                                     </div>
                                                 @endforeach
-                                                <div class="mt-2 flex flex-wrap gap-2">
-                                                    <form method="POST" action="{{ route('meal-plans.recipe-entries.update', [$mealPlan, $entry]) }}" class="flex items-end gap-2">
-                                                        @csrf
-                                                        @method('PATCH')
-                                                        <label>
-                                                            <span class="block text-xs">Move to</span>
-                                                            <select name="target_slot_id" class="mt-1 rounded-md border-gray-300 bg-white text-gray-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100">
-                                                                @foreach ($mealPlan->days as $targetDay)
-                                                                    @foreach ($targetDay->slots as $targetSlot)
-                                                                        <option value="{{ $targetSlot->id }}" @selected($targetSlot->is($planSlot))>
-                                                                            {{ $targetDay->date?->toDateString() ?? 'Day '.($targetDay->day_index + 1) }} — {{ $targetSlot->name }}
-                                                                        </option>
-                                                                    @endforeach
-                                                                @endforeach
-                                                            </select>
-                                                        </label>
-                                                        <x-primary-button>Move</x-primary-button>
-                                                    </form>
-                                                    <form method="POST" action="{{ route('meal-plans.recipe-entries.destroy', [$mealPlan, $entry]) }}">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <x-danger-button>Remove</x-danger-button>
-                                                    </form>
-                                                </div>
+                                                @include('meal-plans.partials.entry-actions', ['entryType' => 'recipe'])
                                             </div>
                                         @endforeach
 
@@ -292,9 +249,12 @@
                             @endforeach
                         </div>
 
-                        <form method="POST" action="{{ route('meal-plans.days.slots.store', [$mealPlan, $day]) }}" class="mt-4 flex gap-2">
+                        <form method="POST" action="{{ route('meal-plans.days.slots.store', [$mealPlan, $day]) }}" class="mt-4 flex flex-wrap items-end gap-2">
                             @csrf
-                            <x-text-input name="name" placeholder="Extra slot name" required maxlength="255" class="flex-1" />
+                            <label class="min-w-0 flex-1 text-sm text-gray-700 dark:text-slate-300">
+                                Extra slot name
+                                <x-text-input name="name" required maxlength="255" class="mt-1 block w-full" />
+                            </label>
                             <x-primary-button>Add slot</x-primary-button>
                         </form>
 
@@ -303,7 +263,7 @@
                             @method('PUT')
                             @foreach ($day->slots as $position => $planSlot)
                                 <label class="text-sm text-gray-700 dark:text-slate-300">
-                                    Position {{ $position + 1 }}
+                                    Slot at position {{ $position + 1 }}
                                     <select name="slot_ids[]" class="mt-1 block w-full rounded-md border-gray-300 bg-white text-gray-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100">
                                         @foreach ($day->slots as $option)
                                             <option value="{{ $option->id }}" @selected($option->is($planSlot))>{{ $option->name }}</option>

@@ -16,18 +16,21 @@
         "docs:links": "markdown-link-check --config .markdown-link-check.json ./*.md docs .github",
         "docs:lint": "markdownlint-cli2",
         "docs:test": "node --test tests/Documentation/*.test.mjs",
-        "test:scanner": "node --test tests/Frontend/*.test.mjs"
+        "test:scanner": "node --test tests/Frontend/*.test.mjs",
+        "test:planning": "node --test tests/Browser/planning.test.mjs"
     },
     "devDependencies": {
         "@tailwindcss/forms": "^0.5.2",
         "@tailwindcss/vite": "^4.0.0",
         "autoprefixer": "^10.4.2",
+        "axe-core": "4.13.0",
         "axios": "^1.11.0",
         "concurrently": "^9.0.1",
         "laravel-vite-plugin": "^2.0.0",
         "markdown-link-check": "3.15.0",
         "markdownlint-cli2": "0.23.2",
         "postcss": "^8.4.31",
+        "selenium-webdriver": "4.50.0",
         "tailwindcss": "^3.1.0",
         "vite": "^7.0.4"
     },

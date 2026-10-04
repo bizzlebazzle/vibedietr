@@ -48,7 +48,7 @@ class MealPlanRecipeEntryController extends Controller
 
         $writer->move($entry, $target, $owner);
 
-        return back()->with('status', 'Recipe entry moved.');
+        return back()->with('status', 'Recipe entry moved.')->with('planning_focus', 'entry-recipe-'.$entry->getKey());
     }
 
     public function destroy(

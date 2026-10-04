@@ -1,4 +1,5 @@
 @csrf
+<x-validation-summary :errors="$errors" class="mb-4" />
 @if ($mealPlan->exists)
     @method('patch')
 @endif

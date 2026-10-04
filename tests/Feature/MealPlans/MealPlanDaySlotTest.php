@@ -132,6 +132,16 @@ class MealPlanDaySlotTest extends TestCase
         }
     }
 
+    public function test_reorder_accepts_validated_string_ids_from_native_html_forms(): void
+    {
+        [$owner, $plan, $day] = $this->reusableDay();
+        $ids = $day->slots->pluck('id')->reverse()->values()->all();
+        $this->actingAs($owner)->put(route('meal-plans.days.slots.reorder', [$plan, $day]), [
+            'slot_ids' => array_map(strval(...), $ids),
+        ])->assertSessionHasNoErrors();
+        $this->assertSame($ids, $day->fresh()->slots->pluck('id')->all());
+    }
+
     public function test_day_identity_follows_reusable_index_and_dated_calendar_semantics(): void
     {
         $owner = User::factory()->create();

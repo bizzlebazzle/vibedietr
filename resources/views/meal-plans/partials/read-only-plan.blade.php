@@ -1,4 +1,4 @@
-<div class="rounded-lg bg-white p-6 shadow dark:bg-slate-900">
+<div class="rounded-lg bg-white p-3 sm:p-6 shadow dark:bg-slate-900">
     @if ($mealPlan->visibility === \App\Domain\MealPlans\MealPlanVisibility::RetainedUnlisted)
         <div class="rounded border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100">
             <p class="font-semibold">Former VibeDietr user</p>

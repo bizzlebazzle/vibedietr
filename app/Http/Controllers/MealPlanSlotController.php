@@ -35,7 +35,7 @@ class MealPlanSlotController extends Controller
             'slot_ids' => ['required', 'array'],
             'slot_ids.*' => ['required', 'integer'],
         ]);
-        $writer->reorderSlots($day, $validated['slot_ids']);
+        $writer->reorderSlots($day, array_map(static fn ($id): int => (int) $id, $validated['slot_ids']));
 
         return back()->with('status', 'Slots reordered.');
     }
