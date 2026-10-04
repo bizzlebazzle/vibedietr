@@ -1,6 +1,7 @@
 # UX-05 planning interface verification
 
-UX-05 remains P2. PLAN-05, PLAN-12, and UX-02 are complete; DEC-019 is decided.
+UX-05 is complete as confirmed by the product owner on 2026-10-04 and
+remains P2. PLAN-05, PLAN-12, and UX-02 are complete; DEC-019 is decided.
 The interface uses the established owner-only controller/domain boundaries.
 Calculation, target classification, pinned snapshots, diary dates, timezone
 resolution, correction history, and sharing rules remain unchanged.

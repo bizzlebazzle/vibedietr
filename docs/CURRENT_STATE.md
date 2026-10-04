@@ -150,7 +150,7 @@ work.
   rejected, and consumption history blocks move/removal.
 - PLAN-06 snapshots consumption nutrition; PLAN-07 queues audited review of newer versions for eligible unconsumed entries.
 - UX-01 adds identity/navigation; UX-02 adds accessible feedback; UX-03 adds
-  responsive recipe editing/resizing; UX-04 adds optional match review ([browser checks pending](UX_04_VERIFICATION.md)).
+  responsive recipe editing/resizing; UX-04 adds optional match review ([verification](UX_04_VERIFICATION.md)).
   UX-05 adds responsive planning/consumption ([verification](UX_05_VERIFICATION.md)); UX-06 adds empty/recovery guidance.
   UX-07 remains planned.
 - Backup/restore, self-service account export, delayed deletion/recovery,

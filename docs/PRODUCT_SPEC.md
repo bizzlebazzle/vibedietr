@@ -254,7 +254,7 @@ collapsed into one ambiguous `quantity` or `recommended servings` value.
   DEC-002 records the owner-approved combined summary and inline warning
   treatment, with optional creator review through `Keep this food`,
   `Search to replace`, and `Clear match`. DEC-002 is decided; UX-04 implements
-  this treatment, with browser verification pending.
+  this treatment; the product owner has confirmed UX-04 complete.
 
 The creator's selected match supplies the default estimate for all viewers.
 When adding the recipe to their own plan or diary, another user may substitute
