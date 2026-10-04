@@ -619,7 +619,7 @@ project decision point, not an automatic continuation of cut-over.
 - All existing rows are accounted for, ownership is preserved, and target-only
   data has independent backup/restore coverage.
 - DEP-06 backup/restore runbooks and a successful restore drill exist.
-- DEC-012 is resolved for backup erasure/restoration handling; relevant
+- Approved DEC-012 backup retention/restore-erasure controls are implemented; relevant
   controls from the approved DEC-013 schedule are implemented for migration
   provenance, purge evidence, access, deletion, and scoped holds.
 - A current, verified production backup or restore point is captured before
@@ -920,7 +920,7 @@ outcome.
 
 No unresolved decision blocks creating this document. The decisions below
 either constrain later implementation or identify a remaining blocker.
-DEC-013 and DEC-014 are decided and now supply mandatory audit, deletion,
+DEC-012, DEC-013 and DEC-014 are decided and supply mandatory backup, audit, deletion,
 planning, recovery, anonymization, and retention constraints rather than
 leaving those behaviours open.
 
@@ -933,8 +933,8 @@ leaving those behaviours open.
 | DEC-009 — Initial administrator assignment | Decided. Its resolution enabled FND-04 administrator persistence and central authorization. Operational bootstrap and lifecycle are implemented by FND-14 through the DEC-009 controls. |
 | DEC-010 — Moderation escalation and service levels | Related to the eventual queue and constrained moderation operations. It does not block modelling basic states, but the migration cannot promise response times, escalation, or stale-item handling. |
 | DEC-011 — Manual-food de-duplication and merge rules | Decided. NUT-08 is unblocked. NUT-02 remains unchanged and its mappings stay original provenance. Future current reads may resolve direct canonical redirects; only declared live references move with reversible evidence, while historical identities, versions, snapshots, and calculations remain unchanged. |
-| DEC-012 — Backup erasure timing | Explicitly constrains FND-02 and blocks DEP-06/DEP-08/DEP-09. It does not block additive planning, but destructive production contract work is blocked until backup retention and restore-time erasure handling are resolved. |
-| DEC-013 — Security and legal audit retention | Decided. It unblocks FND-05 and removes the DEC-013 dependency from DEP-08 and DEP-09. Migration provenance must be purpose-classified, data-minimized, access-controlled, and deleted under `AUDIT_RETENTION_SCHEDULE.md`; relevant purge receipts, actor-mapping destruction, hold handling, and deletion verification must be implemented before destructive contract work. DEC-012 still blocks final backup behavior. |
+| DEC-012 — Backup erasure timing | Decided. Removes its open-decision blockers from DEP-06/DEP-08/DEP-09 and constrains FND-02. Daily paired database/object backups, seven-day eligibility plus 24-hour removal, independent erasure truth and verified isolated restoration follow `BACKUP_ERASURE_RESEARCH.md`. Destructive production contract work still requires implementation and successful DEP-06/DEP-08 evidence, not decision approval alone. |
+| DEC-013 — Security and legal audit retention | Decided. It unblocks FND-05 and removes the DEC-013 dependency from DEP-08 and DEP-09. Migration provenance must be purpose-classified, data-minimized, access-controlled, and deleted under `AUDIT_RETENTION_SCHEDULE.md`; relevant purge receipts, actor-mapping destruction, hold handling, and deletion verification must be implemented before destructive contract work. Backup behavior follows decided DEC-012. |
 | DEC-014 — Public meal plans after owner deletion | Decided. It does not affect current ingredient copying. Future planning structures must support automatic bookmark-qualified retention, immediate anonymization and unlisting at the deletion request, stable URLs, disabled new bookmarks, last-bookmark deletion, public-safe snapshot minimization, protected 30-day restoration, final removal of recovery attribution, non-reclaimable retained plans, independent-copy survival, and exceptional administrator removal without administrator restoration or transfer. |
 
 Relevant roadmap sequence:

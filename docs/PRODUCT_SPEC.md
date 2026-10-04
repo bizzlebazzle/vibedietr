@@ -613,6 +613,20 @@ the requester can view shared content.
   submitting-user reference anonymized or removed.
 - Independent remixes and plan copies owned by other users are unaffected.
 
+Decided DEC-012 requires daily paired database/private-storage recovery sets,
+seven elapsed days of recovery eligibility from original capture, and removal
+within a further 24 hours. Backup copies do not extend the 30-day account
+recovery period. A protected independent erasure journal prevents restoration
+of data whose irrevocable erasure deadline has passed; all restored targets
+remain isolated until verified purge/anonymization and object filtering finish.
+Minimal linkable replay references remain only until affected copies are
+verified retired, normally within nine days of the deadline. Failed expiry and
+scoped holds require documented qualifications, never a silent clock reset.
+The approved reference design and wording are in
+[the backup erasure investigation](BACKUP_ERASURE_RESEARCH.md); implementation
+and installation-specific evidence are required before publishing these claims.
+Decision: DEC-012.
+
 The implementation must support applicable GDPR rights and must document the
 actual retention and erasure behavior. Product wording must not claim that
 technical design alone guarantees legal compliance. Security, audit, backup,
@@ -644,9 +658,9 @@ The following details are intentionally not fixed by this specification:
   Decision: DEC-008.
 - Administrator assignment, escalation, and moderation service-level rules.
   Decision: DEC-009, DEC-010.
-- Backup erasure timing and any narrowly required security or legal audit
-  retention within the GDPR-aligned deletion policy.
-  Decision: DEC-012, DEC-013.
+- Any narrowly required security or legal audit retention within the
+  GDPR-aligned deletion policy.
+  Decision: DEC-013.
 - Whether a public meal plan remains anonymized or is removed when its owner
   deletes their account.
   Decision: DEC-014.

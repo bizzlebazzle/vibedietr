@@ -155,7 +155,7 @@ work.
   UX-07 adds shared accessibility fixes and full-page/pixel regressions ([verification](UX_07_VERIFICATION.md)).
 - Backup/restore, self-service account export, delayed deletion/recovery,
   privacy/legal launch review, and release-readiness work remain incomplete
-  (DEP-06 through DEP-10). DEC-008, DEC-010, and DEC-012 remain unresolved.
+  (DEP-06 through DEP-10). DEC-008 and DEC-010 remain unresolved; DEC-012 is decided.
 - Account deletion is still immediate. Legacy ingredient rows cascade with the
   account; shared catalogue submitter references are nullable provenance and
   survive account deletion.
