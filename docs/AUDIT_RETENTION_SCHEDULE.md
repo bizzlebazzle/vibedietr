@@ -6,6 +6,12 @@ This schedule records the approved product and technical policy for DEC-013.
 It was security-reviewed as a technical design and completed through an
 owner-led legal-risk review on 31 July 2026.
 
+On 4 October 2026, the owner separately approved DEC-012's minimized protected
+restore-erasure journal purpose and qualified disposal clock. Its row and backup
+section supplement this schedule; ordinary audit mappings retain their original
+purge rules. Technical capability validation is recorded in
+[the investigation](BACKUP_ERASURE_RESEARCH.md), with operational drills pending.
+
 It is not legal advice and must not be described as professionally or legally
 approved. The owner decided that professional legal review is not proportionate
 for the initial personal project and accepts that residual risk. The policy
@@ -73,6 +79,7 @@ must omit any field it does not need for its stated purpose.
 | Authentication and account security | Planned durable events triggered by login outcome, lockout, recovery, credential/verification change, session misuse, or suspected attack | Account security; abuse prevention; incident detection and investigation | Account/system actor; audit subject; authentication/session resource | Audit-subject reference while link is needed; event code; method; outcome; structured reason; UTC timestamp; anonymous correlation/session reference. No raw IP, full user agent, secret, token, link, cookie, or body | Append-only and reliably ordered. Correlation remains useful after the account mapping is destroyed | DEC-009, DEC-013; FND-05, FND-14, DEP-08 |
 | Privileged-access lifecycle | Current FND-14; bootstrap, promotion, acceptance, refusal, cancellation, expiry, revocation, break-glass, and denied attempt | Privileged-access accountability; incident investigation | External/operator or administrator actor; target account; environment/instance | Operator and target references, action, prior/new role state, outcome, UTC timestamp, correlation ID, structured reason. No credentials or raw IP | Actor must remain resolvable for the approved accountability period; role-only history remains useful later | DEC-009, DEC-013, DEC-015, DEC-016; FND-05, FND-14 |
 | Account deletion, recovery, purge, and anonymization | Planned; deletion request, cancellation, recovery, waiver, purge job, or identity severance | Recovery; erasure workflow; deletion-job verification | Account actor/subject during recovery; purge system; affected account/resources | Request ID, account mapping until purge, state, deadlines, job/correlation ID, outcome, timestamps. No deleted payload | Identifiable through recovery; random non-derived purge receipt proves job completion without preserving identity | DEC-012, DEC-013, DEC-014; DEP-08 |
+| Independent restore-erasure journal | Planned; lifecycle intent and durable release/disposal checkpoints | Prevent backup restoration from resurrecting erased personal data | Installation/account generation; necessary resource/object references | Encrypted opaque reference, sequence/state, original deadline, policy/checkpoint and minimum resource mapping; no account profile or deleted content | Ordered, authenticated, durable outside app restore sets; linkable until verified copy retirement, separately disposed | DEC-012; DEP-06, DEP-08 |
 | Data export | Planned; request, generation, download, expiry, deletion | Account security; user-visible history; export accountability | Requesting account and export job; export resource | Subject reference, event code, outcome, timestamps, correlation ID. No archive, content, signed URL, or download credential | Event remains useful for detecting unauthorized export; content does not | DEC-008, DEC-013; DEP-07, FND-09 |
 | Catalogue sources, imports, refreshes, versions, and matching | Planned; source import/version, OpenFoodFacts refresh, match decision, or catalogue rebuild | Shared-catalogue provenance; source traceability; correction review | System/operator; catalogue item/version and source | Source/version reference, external record reference, affected resource/version IDs, method/confidence where applicable, outcome, timestamp | Normally non-personal after contributor anonymization; immutable provenance remains useful | DEC-001 through DEC-004, DEC-013; NUT roadmap items |
 | Catalogue submissions, corrections, vocabulary, and moderation | Planned; submit, approve, reject, correct, deprecate, report, decide, appeal, or complaint | Moderation accountability; public safety; shared-catalogue provenance | Contributor/reporter/author, moderator, affected resource/version | Temporary party references, moderator operator reference, decision code, structured reason, timestamps, version reference. Free text is exceptional and redacted | Decision provenance remains useful after contributor identity removal; moderator identity expires separately | DEC-009, DEC-010, DEC-011, DEC-013; FND-05, NUT-09 through NUT-11, REC-13 |
@@ -106,6 +113,7 @@ calendar days.
 | Catalogue/public-content provenance | Retain resource/version and minimum contributor/moderator provenance | Former contributor is irreversibly anonymized at final purge unless held. Qualifying public content follows DEC-014 where applicable | Contributor anonymous after purge; moderator identifiable for 12 months, then role-only | Life of affected active version plus 12 calendar months after supersession/withdrawal | Scoped catalogue/moderation access; immutable domain versions and controlled corrections | Delete expired personal mappings and later provenance record; backup beyond use | Product provenance period, not law. Medium confidence; owner approved |
 | Private recipe/plan/version/override/snapshot content | Domain data retained for user functionality and restoration | Retain during optional 30-day recovery, then delete; immediate purge when recovery is waived | Delete owner mapping and private content | Account life plus up to 30 calendar days from deletion request | Normal owner authorization; no duplication into security audit | Hard-delete at final purge; backup beyond use | Confirmed product classification, not audit retention. High confidence; owner approved |
 | Deletion/recovery/anonymization workflow | Identifiable through request and recovery | Optional 30-day disabled recovery. Authenticated user may waive it. At purge replace with random non-derived receipt | Delete subject mapping at purge | Identifiable until purge; anonymous receipt for 12 calendar months from successful purge | Privacy owner and required security access; idempotent/reconciled purge jobs | Delete receipt at 12 months; restoration must replay purge | Project verification period. Medium confidence; owner approved |
+| Independent restore-erasure journal (planned DEC-012 control) | Record minimized lifecycle intent/checkpoint outside app backups before acknowledgement | Retain only the replay references needed to prevent resurrection, separate from ordinary audit mappings and anonymous receipts | Encrypted opaque account-generation/resource references remain personal data | Until every affected recovery copy is verified retired; normal target nine elapsed days after irrevocable deadline, with documented incident/scoped-hold extensions | Named privacy/recovery operators only; two independent durable stores, authenticated integrity and separate keys | Exclude ordinary seven-day archive backups; dispose entries and recoverable storage/key generations on both stores; missing/stale truth blocks restoration | Owner-approved narrow technical purpose under DEC-012; probe establishes primitives, operational disposal still requires drills; no professional legal approval |
 | Confirmed under-13 account and public content | Disable account on confirmation | No recovery: purge private data immediately; hide and delete the child's public recipes/plans. Independent other-user copies retain their own lifecycle | Delete child identity except scoped required safety/legal evidence | Immediate purge, subject only to separate statutory evidence/hold periods | Privacy/security roles for the purge; content hidden immediately | Verified hard deletion; backup beyond use | Child-protection product policy. Medium confidence; owner legal-risk reviewed |
 | Export archive and export event | Archive accessible only to requesting user through expiring credential | Purge archive/event sooner at final purge unless held | Event subject follows security mapping | Archive and credential: 7 calendar days from creation. Content-free event: 6 months from event | Owner-only archive; security-role event; archive encrypted and unlogged | Delete archive/credential at 7 days; provider/backup expiry must honor policy | Project exposure-limitation period. Medium confidence; owner approved |
 | Online-safety assessments and measures | Keep current records durable, clear, accessible, and up to date | Not account-owned; owner/operator name remains as controller/responsible person | Responsible and approving operator remains identifiable in the governance record | Current version while current; each superseded version for 3 calendar years from replacement | Owner/safety role; protected governance repository; capable of controlled Ofcom production | Delete superseded record after three years unless a specific notice/hold applies | Ofcom regulator guidance, not a generic user-event period. High confidence in cited baseline; scope is owner-assessed, not professionally confirmed |
@@ -195,16 +203,22 @@ remain separately owned and subject to moderation.
 
 ### Backups and restoration
 
-DEC-012 must define the explicit backup lifecycle. Until then, no backup period
-is approved by this decision. A purged record in an immutable backup is beyond
-operational use, access-restricted, and encrypted until scheduled expiry. A
-restored system must replay completed purges before returning to service.
+Decided [DEC-012](BACKUP_ERASURE_RESEARCH.md) approves daily paired database and
+durable private-object recovery sets, seven elapsed UTC days of eligibility
+from original capture, then removal/pruning within a further 24 hours across
+all recovery copies. Restricted encrypted residual data is beyond ordinary use.
+Under successful operation without dirty post-deadline capture, affected copies
+retire by eight days after irrevocable erasure. Failure is an incident, not
+proof of deletion or permission to reset a clock.
 
-The [DEC-012 investigation](BACKUP_ERASURE_RESEARCH.md) proposes an independent
-restore-time erasure journal and qualified expiry targets for Docker
-self-hosting. They remain unapproved. Its linkable post-purge references need
-separate owner privacy-policy review; the anonymous purge receipt does not
-authorize retaining those identifiers. DEC-012 remains unresolved.
+Every restore remains isolated until current independent journal truth has
+reapplied due/incomplete and completed purges, object suppression and approved
+anonymization. The owner explicitly approved minimized linkable replay references
+until every affected copy is verified retired, normally within nine days after
+the deadline, including recoverable journal storage/key generations. This narrow
+purpose does not extend ordinary audit identity mappings or the anonymous receipt.
+Document scoped holds/incident extensions and fail closed on missing evidence.
+These are approved design rules; DEP-06/DEP-08 still implement and drill them.
 
 ## 8. Holds and exceptions
 
@@ -372,8 +386,8 @@ The complete policy is reviewed every 12 calendar months and after a serious
 incident, material product/architecture change, new jurisdictional targeting,
 or relevant change in official guidance or law.
 
-FND-05 is unblocked by this decision. DEP-08 is no longer blocked by DEC-013 but
-still depends on DEC-012 and its other roadmap prerequisites. DEP-09 must verify
+FND-05 is unblocked by this decision. DEP-08 is no longer blocked by DEC-013 or
+DEC-012 but must implement their controls and meet its other prerequisites. DEP-09 must verify
 that actual notices, processors, moderation behavior, and implemented deletion
-match this schedule before launch. DEP-06 remains constrained by DEC-012's
-unresolved backup lifecycle.
+match this schedule before launch. DEP-06 implements and proves decided
+DEC-012's backup lifecycle and restore safeguards.

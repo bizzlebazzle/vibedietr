@@ -163,8 +163,8 @@ FND-05 does not instrument current actions, implement FND-14 administrator
 bootstrap, create moderation/version/snapshot/account-deletion workflows, add a
 retention scheduler or legal holds, build protected-evidence storage, expose a
 production viewer or user activity projection, monitor reads/exports, or claim
-database-level immutability. DEC-012 still governs the unresolved backup
-lifecycle.
+database-level immutability. Decided DEC-012 governs backup expiry and protected
+restore-erasure truth; DEP-06/DEP-08 still implement and verify those controls.
 
 ## NUT-09 moderation events
 

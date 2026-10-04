@@ -42,7 +42,7 @@ Backlog relationships mean:
 | DEC-009 | Initial administrator assignment | Decided | Product owner |
 | DEC-010 | Moderation escalation and service levels | Owner input required | Product owner |
 | DEC-011 | Manual-food de-duplication and merge rules | Decided | Product owner |
-| DEC-012 | Backup erasure timing | Research required | Technical investigation |
+| DEC-012 | Backup erasure timing | Decided | Technical investigation |
 | DEC-013 | Security and legal audit retention | Decided | Product owner |
 | DEC-014 | Public meal plans after owner deletion | Decided | Product owner |
 | DEC-015 | Administrator second-factor mechanism and recovery | Decided | Product owner |
@@ -1305,7 +1305,7 @@ Backlog relationships mean:
 - **Why it matters:** The live-data 30-day recovery rule does not by itself
   define immutable backup retention, restoration safeguards, or the time at
   which erased personal data ceases to exist in recoverable copies.
-- **Status:** Research required.
+- **Status:** Decided.
 - **Owner:** Technical investigation.
 - **Alternatives:** Backup expiry on a documented fixed schedule; backup
   expiry by tier with restore-time re-erasure controls; another provider- and
@@ -1316,36 +1316,68 @@ Backlog relationships mean:
   retention and erasure behavior must be documented, applicable GDPR rights
   supported, and legal compliance must not be claimed from technical design
   alone.
-- **Backlog relationships:** `Blocked`: DEP-06, DEP-08, DEP-09. `Constrained`:
-  FND-02, FND-09, DEP-04. `Related`: DEP-07.
+- **Backlog relationships:** Resolution unblocks DEP-06, DEP-08 and DEP-09
+  and removes DEC-012 as their open-decision dependency. The recorded policy
+  constrains FND-02, FND-09 and DEP-04. `Related`: DEP-07.
 - **Resolution condition:** Investigate intended hosting and backup facilities,
   restoration flows, applicable rights and advice, then approve documented
   retention periods, restore-time controls, verification evidence, and user
   wording.
-- **Final decision and rationale:** Unresolved. Technical research on 4 October
-  2026 is recorded in [the backup erasure investigation](BACKUP_ERASURE_RESEARCH.md).
-  The owner confirmed user-operated self-hosting, ideally with Docker; no
-  hosting/backup provider is selected. Docker supplies no automatic backup
-  retention or account-erasure propagation. The existing MySQL/private
-  S3-compatible production contract remains in force.
+- **Final decision and rationale:** Decided on 4 October 2026 after explicit
+  owner approval of the short retention tier, protected erasure journal and
+  status change, and delegated reference-stack selection/validation. The
+  [backup erasure investigation](BACKUP_ERASURE_RESEARCH.md) records primary
+  sources, immutable probe versions, successful synthetic capability checks,
+  exact restore controls, verification gates, alternatives and approved
+  qualified user-wording template.
 
-  Recommend daily consistent database/private-object recovery sets eligible
-  for seven days, a further 24-hour removal target, and an independent,
-  integrity-protected erasure journal checked before an isolated restore can
-  return to service. Replay must include expired erasure deadlines and
-  incomplete purges, not only completed jobs; object-only and partial restores
-  require the same controls. Restic is a technically supported candidate,
-  not an installed or selected backup tool. The investigation defines expiry
-  qualifications, verification/drill evidence, trade-offs, and draft notices.
+  Select self-hosted Docker infrastructure: MySQL 8.4 LTS logical dumps,
+  Garage 2.3.0 private S3 objects, restic 0.19.1 encrypted paired recovery sets,
+  and off-host rest-server 0.14.0 with append-only capture access and separate
+  expiry maintenance. Revalidate maintained patches/digests before production.
+  MySQL 8.0 remains the development baseline; full application compatibility
+  and any upgrade belong to deployment. Garage production replication needs
+  separate failure domains, TLS and encrypted host storage. No bucket
+  versioning, Object Lock or provider-managed expiry is assumed.
 
-  These periods are not approved policy. The product owner/responsible
-  self-hosting operator must select and validate the reference backup/storage
-  stack, accept the recovery/retention trade-off, and review the narrowly
-  scoped post-purge journal purpose, fields, disposal, and qualified wording.
-  Linkable erasure references are personal data; DEC-013's anonymous purge
-  receipt does not approve retaining them. No provider physical-destruction
-  deadline or legal-compliance claim is established. Preserve the status and
-  owner above and all backlog relationships until those choices are recorded.
+  Capture at least daily. Sets cease recovery eligibility seven elapsed UTC
+  days after original capture; independently scheduled removal/pruning must
+  finish within a further 24 hours, including every copied/manual/host recovery
+  layer. Restic requires explicit wall-clock snapshot selection and zero-unused
+  pruning, not merely keep-last counts or snapshot metadata removal. Exclude
+  transient inputs/export archives and promptly dispose encrypted staging.
+  Under successful operation with no dirty post-deadline capture, affected
+  recovery copies retire by eight days after irrevocable erasure deadline `E`.
+  A delayed purge or failed expiry is a recorded incident, not a clock reset.
+
+  Preserve 30-day live account recovery and approved immediate-purge exceptions.
+  Before acknowledging lifecycle transitions, durably record minimized ordered
+  intent/checkpoints in two protected independently recoverable MySQL journal
+  stores outside app restores. References remain personal data. Retain them
+  only until every affected recovery copy is verified retired; normal disposal
+  target is `E + 9 days`, including journal storage generations/keys, with
+  documented incident or scoped-hold extensions. This explicitly approved
+  narrow purpose supplements DEC-013; its anonymous twelve-month receipt and
+  ordinary audit identity-erasure rules remain separate.
+
+  Every full, partial, database-only or object-only restore stays quarantined.
+  Verify current independent journal integrity, sequence and freshness; replay
+  completed and due/incomplete erasures using original deadlines, sanitize all
+  private objects independently, apply public/shared anonymization and DEC-014,
+  preserve independently owned content and scoped evidence, invalidate restored
+  credentials/sessions/jobs/caches, and verify a final checkpoint before release.
+  Missing evidence, partial purge or new intent prevents release. Restored
+  completion markers cannot bypass remediation. Daily monitoring, a full
+  preproduction drill, quarterly drills and change-triggered drills are required.
+
+  Reject fixed expiry alone because ordinary restores resurrect erased data;
+  reject longer tiers without renewed policy approval and unsupported per-account
+  rewriting/key erasure of shared backups. Seven days is an owner-approved
+  recovery/exposure trade-off, not a statutory period or physical-media guarantee.
+  DEP-09 retains installation-specific rights/notices and owner-led legal-risk
+  review, with specialist advice where needed. Technical validation proves no
+  GDPR compliance. DEP-06/DEP-08/DEP-09 remain implementation work with their
+  other dependencies; this decision does not deploy them.
 
 ## DEC-013 — Security and legal audit retention
 
@@ -1418,8 +1450,10 @@ Backlog relationships mean:
 
   Holds are evidence-specific, documented, access-restricted, and reviewed at
   least every 90 days. They do not reset the normal clock. Backup data is
-  beyond operational use and completed purges must be replayed before a restore
-  returns to service; the explicit backup lifecycle remains DEC-012.
+  beyond operational use and due/incomplete and completed purges must be replayed
+  before a restore returns to service under decided DEC-012. Its separately
+  approved protected journal purpose does not extend ordinary audit mappings;
+  the retention schedule records its minimized references and disposal gates.
 
   Security and moderation access are separated, ordinary users receive only a
   filtered activity view, and protected legal evidence is not stored in the

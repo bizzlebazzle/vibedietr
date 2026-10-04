@@ -43,7 +43,7 @@ Matrix wording has these meanings:
 - **Effect on FND-03:** DEC-014 no longer blocks FND-03. The public-plan,
   nested-snapshot, and anonymized-owner rows below now state the approved
   deletion, retention, recovery, and public-safety rules.
-- **Remaining boundaries:** Backup expiry remains DEC-012 and security/legal
+- **Remaining boundaries:** Backup expiry follows decided DEC-012 and security/legal
   audit handling follows the approved DEC-013 schedule. Broader inactive-data
   retention remains a future policy question; DEC-013 does not authorize
   blanket retention of inactive product data.
@@ -252,9 +252,20 @@ sole-administrator safeguard and scoped holds. DEC-014 is the explicit
 public-plan exception: its
 anonymization, unlisting, bookmark, and availability rules begin when deletion
 is requested, while protected reattribution remains possible until the
-deadline. Backup expiry remains subject to DEC-012. Audit access, retention,
+deadline. Backup expiry follows decided DEC-012. Audit access, retention,
 anonymization, and narrow legal/security exceptions follow the approved
 `AUDIT_RETENTION_SCHEDULE.md` under DEC-013.
+
+DEC-012 adds only the protected independent restore-erasure journal purpose:
+minimized encrypted account-generation/resource references remain personal data,
+available only to authorized privacy/recovery operators, until every affected
+copy is verified retired (normal target nine days after irrevocable deadline).
+They are separate from ordinary audit identity mappings and anonymous receipts.
+Restores of database or private storage remain quarantined until current journal
+truth, original deadlines, domain anonymization and object suppression are
+verified; missing evidence blocks release. The approved
+[backup erasure rules](BACKUP_ERASURE_RESEARCH.md) still require DEP-06/DEP-08
+implementation and installation-specific drills.
 
 | Resource | Current or planned | Owner | Creator | Default visibility | Logged-out viewer | Authenticated non-owner viewer | Owner permissions | Shared-user permissions | Administrator permissions | Create rule | View rule | Edit rule | Delete rule | Share or publish rule | Ownership-transfer rule | Behavior when the owner is deleted | Audit requirement | Relevant decision IDs | Relevant roadmap IDs | Notes or unresolved questions |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -415,8 +426,9 @@ pending/rejected identities do not create a user-owned fallback copy.
     period, and final purge removes recovery-only links. Retained plans are
     deleted after their final bookmark. Ordinary audit identity is removed or
     mapping-destroyed at purge as scheduled; separately protected evidence is
-    retained only for its documented purpose. Backup expiry remains unresolved
-    under DEC-012.
+    retained only for its documented purpose. Decided DEC-012 defines seven-day
+    backup eligibility, a further 24-hour removal target and independently
+    verified restore-erasure controls; these still require implementation.
 
 16. **Initial administrator bootstrap:** Production bootstrap is CLI-only and
     requires one authenticated/traceable trusted operator, explicit environment
@@ -449,8 +461,6 @@ pending/rejected identities do not create a user-owned fallback copy.
 
 The matrix does not select an answer for any of these items:
 
-- **DEC-012:** Define backup expiry and restore-time re-erasure behavior. Live
-  deletion rules above do not claim immediate physical erasure from backups.
 - **DEC-011:** Define manual catalogue duplicate/merge handling and dependent
   reference behavior. No row authorizes silent merging.
 - **DEC-010:** Define moderation escalation, appeal, stale-item handling, and

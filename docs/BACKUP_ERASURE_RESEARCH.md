@@ -2,25 +2,31 @@
 
 ## Status and scope
 
-Technical investigation recorded on 4 October 2026. DEC-012 remains **Research
-required**, owned by **Technical investigation**. This is a recommendation and
-evidence record, not an approved retention policy, implemented backup facility,
-restore runbook, or legal approval. DEP-06, DEP-08, and DEP-09 remain blocked.
+Technical investigation recorded on 4 October 2026. The owner subsequently
+approved seven-day backup retention, the protected erasure journal and its
+disposal/failure handling, and technical selection of a Docker reference stack.
+The owner also explicitly authorized changing DEC-012 to **Decided** after
+validation, retaining **Technical investigation** as owner. The approved clocks
+and restore requirements below are policy; this record is not an implemented
+backup facility, production restore runbook, or professional legal approval.
 
 The owner confirmed during this investigation that users should self-host the
-application, ideally with Docker; no hosting or backup provider is selected.
+application, ideally with Docker. The reference stack is self-hosted; it does
+not require selecting a cloud hosting or managed-backup provider.
 The existing production contract still requires MySQL, database-backed
 sessions/cache/queues, and private S3-compatible storage. Self-hosting does not
 authorize replacing that storage contract with local application files.
 Each installation's operator must identify its actual storage, backup, and
 infrastructure services; AWS variable names do not select Amazon services.
 
-## Repository evidence and capability boundary
+## Repository evidence at the start of investigation
 
 The documented context command rejects DEC-012 because it accepts roadmap IDs
 in `AAA-NN` format. Context was generated for DEP-06, DEP-08, and DEP-09 instead.
 The investigation inspected their routed requirements and the following
-implementation evidence without accessing production data or credentials:
+implementation evidence without accessing production data or credentials.
+These inventory findings predate the owner approval and reference-stack
+validation; the application implementation remains unchanged:
 
 | Evidence | Finding and limitation |
 | --- | --- |
@@ -34,9 +40,10 @@ implementation evidence without accessing production data or credentials:
 | [Audit retention](AUDIT_RETENTION_SCHEDULE.md#backups-and-restoration), [privacy matrix](AUTHORIZATION_PRIVACY_MATRIX.md), [migration boundaries](DOMAIN_MIGRATION_PLAN.md#11-rollback-expectations) | No approved backup period. Completed purges must be replayed before service. A random non-derived purge receipt cannot identify records requiring replay in an old backup. |
 | [Queue conventions](QUEUED_JOB_CONVENTIONS.md), [inventory](JOB_INVENTORY.md), [queue recovery](QUEUE_OPERATIONS.md#safe-replay-runbook), [operations](OPERATIONS_RUNBOOKS.md), [observability](OBSERVABILITY.md) | Existing operations do not implement backup monitoring or erasure replay. Database-backed locks, queues, and completion markers can themselves roll back; they cannot prove an erasure was never requested. |
 
-No live backup configuration, retention-expiry observation, recovery target,
-off-host copy inventory, or restore-drill evidence was found. No deployment or
-backup tool was installed or configured during this documentation task.
+No production backup configuration, retention-expiry observation, recovery
+target, off-host copy inventory, or production restore-drill evidence was found.
+Disposable tools and synthetic fixtures used for capability validation are
+separate from the application. No production deployment was configured.
 
 ## Facilities that can support the design
 
@@ -48,7 +55,7 @@ VibeDietr. Source links and access date appear below.
 | Docker volumes [S1] | Volumes persist independently of containers and can be backed up/restored. Container export omits mounted-volume contents [S2]. | Docker supplies neither a backup schedule nor retention/erasure propagation. Inventory volumes and bind mounts. A container image/export is not a database backup. |
 | MySQL 8.0 logical backup [S3] | `mysqldump` supports a consistent InnoDB transaction snapshot; concurrent DDL and nontransactional tables require additional controls. | Recommend application-database dumps with a schema/version manifest. An arbitrary tar of a running database volume does not establish a consistent backup. |
 | MySQL point-in-time recovery [S4] | Recovery requires a base backup and subsequent binary logs. | PITR is optional additional infrastructure, not supplied by current Compose. Logs and replicas carry personal data and need the same bounded lifecycle and restore gate. |
-| restic, candidate tool [S5–S8] | Encrypted authenticated repositories, filesystem/SFTP/S3-compatible destinations, explicit restore targets and subsets, snapshot removal plus data pruning, and integrity checks. | Recommend a pinned, operator-scheduled backup container and a separate failure domain. Neither automatic application erasure nor immutable expiry is supplied by restic itself. It is not currently installed. |
+| restic, selected reference tool [S5–S8] | Encrypted authenticated repositories, filesystem/SFTP/S3-compatible destinations, explicit restore targets and subsets, snapshot removal plus data pruning, and integrity checks. | Use a pinned, operator-scheduled backup container and a separate failure domain. Neither automatic application erasure nor immutable expiry is supplied by restic itself. Disposable validation does not install an application backup facility. |
 | Amazon S3, conditional example [S9–S11] | Versioned deletes can leave prior versions; lifecycle deletion can lag eligibility. Locked versions cannot be deleted before their lock permits it. Replication has separate delete behavior. | These are Amazon-specific limits, not guarantees for every compatible endpoint. Inventory all versions and destinations. Never infer physical deletion from a missing current object or an expiry setting. |
 | AWS Backup, conditional example [S12–S14] | S3 recovery can target another bucket; a current delete marker does not prevent restoration. Vault Lock can prevent early deletion. Failed lifecycle deletion can leave expired recovery points. | Provider backups are an additional lifecycle if an operator selects them. Provider restoration does not apply VibeDietr erasure decisions. A locked vault's retention setting is not erasure evidence. |
 
@@ -64,38 +71,148 @@ snapshots, replication, and destruction behavior. Backing up that server's
 volumes is an additional copy of object data. An application bucket and a
 backup bucket on the same host are not independent disaster recovery.
 
+## Selected Docker reference stack
+
+The delegated technical selection is MySQL 8.4 LTS with consistent logical dumps,
+Garage 2.3.0 for private application objects, restic 0.19.1 for encrypted paired
+recovery sets, and rest-server 0.14.0 for the off-host repository. Pin immutable
+image digests and revalidate supported security patches at deployment; these
+versions identify the investigated baseline, not an indefinite update freeze.
+No application dependency or production Compose file is changed here.
+
+The repository's development baseline remains MySQL 8.0. Oracle moved 8.0 to
+Sustaining Support in April 2026 and recommends an LTS upgrade [S27]. Use a
+maintained 8.4 patch for the production reference, with same-version dump and
+restore clients [S28]. DEP-02/DEP-06 must prove application/schema compatibility
+before deployment; this decision does not upgrade an existing database.
+
+The following boundaries are mandatory for this reference design:
+
+- Garage provides SigV4/path-style object access but not AWS-style ACLs,
+  bucket versioning or Object Lock [S18]. Use its own per-key/per-bucket access
+  control, private buckets, no website publishing, and a separate read-only
+  capture identity. The existing Laravel `s3` disk contract remains intact;
+  dependency provisioning belongs to deployment. Do not call ACL visibility
+  mutation/read APIs or infer privacy from an unsupported AWS control.
+- Production Garage uses three-way replication across separate failure
+  domains, following its cluster recommendation [S19]. Multiple containers on
+  one machine do not satisfy this. The single-node disposable probe establishes
+  API compatibility only; Garage's quick-start explicitly excludes that
+  topology from production. Independent encrypted restic recovery is required
+  even with replication.
+- Garage's HTTP endpoint needs a TLS reverse proxy or encrypted transport;
+  its ordinary data/metadata volumes need encrypted host storage [S20].
+  S3 deletion does not prove local block disposal. Tagged implementation has
+  a 600-second zero-reference block-deletion eligibility delay [S21], and the
+  repair documentation describes orphaned references after node loss [S22].
+  Treat unavailable nodes, overdue garbage collection, metadata snapshots,
+  orphan blocks, and full-host snapshots as inventoried erasure risks; require
+  reconciliation/retirement before dropping suppression. This is not a
+  ten-minute deletion guarantee. Identical blocks still needed by separately
+  owned content do not require destruction of that other content.
+- Store restic packs on an independent mutable filesystem through an
+  authenticated TLS rest-server [S23]. The capture client has append-only
+  remote access. A separate repository-host maintenance identity has the
+  password and filesystem access needed for wall-clock snapshot retirement,
+  zero-unused pruning, and integrity verification. Append-only access protects
+  against ordinary capture-client deletion; it is not immutable provider
+  retention and does not prevent authorized expiry. No unmanaged filesystem
+  snapshots or another backup of the repository may extend the policy.
+- Capture application MySQL state and a logical S3 object inventory while
+  application mutations/workers are quiesced, with DDL excluded. Pair both
+  under one capture cutoff and manifest. Preserve opaque account-generation
+  ownership in the restricted manifest so an old object absent from the live
+  database can still be suppressed. Exclude transient/export prefixes. Do not
+  use raw Garage volumes as the normal object-recovery format; recover objects
+  through S3 into a fresh private target after filtering.
+- The default reference does not offer PITR or archive binary logs. Disable
+  unneeded binary/general/slow-query logging on its dedicated databases;
+  inventory and bound any separately enabled logs, replicas and snapshots.
+  Never accept an image's default logging/retention as the seven-day policy.
+- Use dedicated MySQL/InnoDB journal stores on two independently recoverable
+  hosts outside the application restore set. DEP-08 must require matching,
+  durable acknowledgements of a bounded, authenticated operation/checkpoint
+  from both stores before acknowledging lifecycle transitions. Partly written
+  operations remain recoverable and reconcilable; disagreement or stale state
+  blocks release. A database connection is a supported primitive, not an
+  implemented multi-store protocol. Keep transactions flushed to disk and
+  verify actual host durability [S24]. Do not substitute default asynchronous
+  replication or semisynchronous replication with timeout fallback for this
+  acknowledgement requirement [S25].
+- Journal payloads contain only encrypted installation/account-generation
+  references, operation sequence/state, original deadline, policy version, and
+  necessary object/resource references. Integrity/checkpoint keys are separate
+  from application recovery sets. Journal stores retain current replay truth,
+  including pending recovery/cancellation transitions, and are excluded from
+  ordinary seven-day archival backups. Both stores, journals/redo logs, and
+  their storage layers must support verified disposal of linkable entries
+  within the approved window. An unavailable mirror prevents disposal proof
+  until reconciled or its affected media are verifiably retired. Content-free
+  checkpoint/disposal evidence may survive under DEC-013.
+
+Deleting a journal row is not proof that InnoDB pages, redo/undo logs or host
+snapshots have lost it. DEP-08's disposal must remove all recoverable copies:
+rebuild retained journal entries onto a fresh separately encrypted LUKS2 storage
+generation, verify both stores/checkpoints, and retire the previous generation
+and every recoverable encryption-key/header copy. The key inventory and
+retirement drill must cover host backups and recovery credentials. Cryptsetup
+supports keyslot erasure, but an old header backup plus its passphrase can still
+decrypt the old generation [S29]. Plain SQL
+deletion or shared host-disk encryption alone does not satisfy this gate.
+Unproven disposal is an overdue-retention incident, not a successful nine-day
+claim. This is a required operational design, not a tested key-retirement tool.
+
+This uses conventional Laravel MySQL connections and its existing S3 filesystem
+boundary. It selects infrastructure primitives and strict acceptance controls;
+DEP-06/DEP-08 still implement the capture, journal, expiry and release workflows.
+Operators using other infrastructure must demonstrate equivalent copy expiry,
+independent intent durability and fail-closed restoration, or review DEC-012
+before production use. No cloud-provider expiry or physical-media overwrite
+guarantee is inherited from this reference stack.
+
+MinIO Community is not selected: its upstream repository is archived and
+explicitly marked unmaintained [S26]. Managed AWS backup remains an optional
+alternative requiring fresh validation of its additional retention layers.
+
 ## Alternatives and technical recommendation
 
 | Alternative | Assessment |
 | --- | --- |
 | Fixed wall-clock expiry alone | Small operational burden, but restoration before expiry resurrects erased data. Reject as a complete design; finite expiry still needs erasure replay. |
 | Tiered daily/weekly/monthly retention plus replay | Technically viable with restic or supported provider recovery points. Longer corruption-detection coverage costs more, leaves personal data in recovery copies longer, and extends replay-record retention. No requirement or operator-approved period justifies monthly/yearly copies here. |
-| One short retention tier plus replay | Recommended starting design for Docker self-hosting: daily consistent database/object recovery sets, seven-day eligibility, bounded pruning, and an independent erasure journal. Fewer copies and clocks are easier to verify. Requires the operator to accept the recovery trade-off. |
+| One short retention tier plus replay | Selected and owner-approved for Docker self-hosting: daily consistent database/object recovery sets, seven-day eligibility, bounded pruning, and an independent erasure journal. Fewer copies and clocks are easier to verify; the owner accepted the shorter recovery horizon. |
 | Per-account backup rewriting or cryptographic erasure | No demonstrated selective removal in shared MySQL dumps or deduplicated packs, nor per-account key architecture covering every domain and processor. Reject for this task; deleting the shared repository key would destroy other users' recovery. |
 | Immediate destruction of all affected recovery sets | Possible on mutable storage but reduces recovery for everyone and cannot bypass a genuine immutable lock. Not a general replacement for scheduled expiry and replay. |
 
-The seven-day proposal is an exposure/recovery trade-off, not a legal period or
-an existing product decision. A 30-day recovery window operates on protected
+The approved seven-day policy is an exposure/recovery trade-off, not a legal
+period. A 30-day recovery window operates on protected
 live account state; it does not require keeping erased data in backups for 30
 more days. A supported longer option is daily points for seven days and weekly
-points through 30 days, with the same replay controls. The owner must justify
-that longer horizon before it becomes policy.
+points through 30 days, with the same replay controls. The owner chose the
+shorter horizon; adopting the longer option requires a new policy review.
 
-## Proposed clocks, scope, and expiry rules
+The selected topology costs separate storage failure domains and journal
+operations. Paired logical capture pauses mutations while capturing objects;
+its duration must be measured. Requiring both journal acknowledgements reduces
+deletion/recovery availability during a host outage in exchange for durable
+erasure truth. Quarantine similarly favors privacy over immediate restoration.
+These are operational trade-offs of the selected reference, not an HA promise.
 
-All periods below are **unapproved recommendations**. Use elapsed UTC time for
+## Approved clocks, scope, and expiry rules
+
+The owner approved the short-tier policy and protected journal. Use elapsed UTC time for
 backup ages; preserve the approved account recovery clock. Define `E` as the
 account's irrevocable erasure deadline (normal recovery expiry or an approved
 immediate-purge instruction), not the completion time of a delayed job.
 
-| Information or operation | Proposed period/control | Support and qualification |
+| Information or operation | Approved period/control | Support and qualification |
 | --- | --- | --- |
 | Database and durable private-object recovery sets | At least one successful paired set per 24 hours; sets cease to be eligible at capture time plus seven days. | Daily schedule is operator-managed. Approximately 24-hour recovery-point objective requires monitored successful capture, not merely a cron entry. Actual restore-time objective must be measured and accepted by the operator. |
 | Expired recovery data | Independent daily expiry sweep; finish snapshot removal and unreferenced-data pruning within 24 hours of eligibility. | Target recoverable-copy removal by `E + 8 days` if no dirty capture occurs after `E`. This is an operating target, not a provider physical-media guarantee. Failed deletion is an incident, never evidence of success. |
-| Manual/pre-migration copies, replicas, off-site copies, host snapshots, PITR logs if enabled | Same seven-day maximum recovery eligibility and 24-hour removal target; original capture time follows copied data. | No indefinite keep-last, migration exception, or copy-age reset. Full-host/object-server snapshots need inspection or exclusion; a separate provider retention rule can invalidate the proposal. |
+| Manual/pre-migration copies, replicas, off-site copies, host snapshots, PITR logs if enabled | Same seven-day maximum recovery eligibility and 24-hour removal target; original capture time follows copied data. | No indefinite keep-last, migration exception, or copy-age reset. Full-host/object-server snapshots need inspection or exclusion; a separate provider retention rule can invalidate this design. |
 | Plaintext dump/object staging and restore workspaces | Encrypted restricted staging; remove promptly after use, at most 24 hours after completion or abandonment. | No backup of staging, restore workspace, temporary exports, application logs, or credentials as ordinary user-content recovery sets. Minimize host swap/temp-file leakage. |
 | Transient import/OCR sources, abandoned uploads, export archives/download credentials | Exclude from ordinary recovery sets; live cleanup remains DEC-013's 24-hour/seven-day schedules, with earlier account purge. | Prefix/bucket separation must be proven. Restored database import/export metadata cannot restart expired processing or recreate an expired archive. Durable recipe drafts remain domain data and require backup/purge coverage. |
-| Independent erasure journal and its replicas/backups | Until every potentially affected copy is verifiably retired; normal disposal target `E + 9 days` under the proposed short tier. | Eight-day removal target plus one day for verification/journal disposal. Its own recoverable copies must support that disposal deadline without adding another seven-day tail. Extend only for a recorded unresolved recovery-copy incident or scoped hold; no deletion while a dirty copy remains restorable. This needs explicit owner privacy-policy approval. |
+| Independent erasure journal and its replicas/backups | Until every potentially affected copy is verifiably retired; normal disposal target `E + 9 days` under the approved short tier. | Eight-day removal target plus one day for verification/journal disposal. Its own recoverable copies must support that disposal deadline without adding another seven-day tail. Extend only for a recorded unresolved recovery-copy incident or scoped hold; no deletion while a dirty copy remains restorable. The owner explicitly approved this narrow purpose, minimization, and qualified failure handling. |
 | Anonymous purge/drill evidence | Existing DEC-013 twelve-month purge-evidence clock. | No account-identifying suppression data, object paths, or content in receipts, logs, tickets, or drill reports. |
 
 Expiration is based on wall clock even if backups stop. Restic retention counts
@@ -116,7 +233,7 @@ inventory and user communication; do not silently restart the clock.
 Pruning must remove unused data in partially referenced packs, not just whole
 unreferenced files. Restic's default permits residual unused data [S5]; require
 zero tolerated unused data and no repacking restriction that leaves it behind,
-then verify removal. These are requirements for a future pinned-tool runbook,
+then verify removal. These are requirements for a future deployment runbook,
 not a new runnable repository command. Reserve capacity for repacking.
 
 If the selected destination keeps deleted versions or immutable copies longer,
@@ -160,6 +277,9 @@ imports, object-only recovery, and recovery into staging or another machine.
    Provide only the restricted remediation path. Do not overwrite production
    in place, use a real erased account as a drill fixture, or serve a raw backup
    to another purpose such as development or analytics.
+   Authenticate the capture manifest and reject expired, future-dated or
+   unknown recovery sets. A copied set keeps its original capture time; the
+   additional 24-hour disposal interval does not extend recovery eligibility.
 5. **Reconcile current state and deadlines.** Apply authoritative journal
    transitions, including requests absent from the old database. At current
    UTC time, purge every account whose irrevocable deadline has passed,
@@ -204,14 +324,56 @@ storage is not one transaction; partial success must leave service closed and
 be resumable. If all trustworthy journal replicas are lost, preserve
 quarantine and investigate; no ordinary automatic restoration is safe.
 
+## Disposable capability validation
+
+On 4 October 2026, the technical investigation ran an isolated Docker probe
+with synthetic accounts, an InnoDB private-row foreign key, public contribution,
+owned S3 objects and excluded transient input. No repository dependency,
+application database, production credential or production configuration was
+changed. Fixtures used an internal network with no published ports; probe
+containers and that network were removed afterwards. Temporary harness permission/entrypoint failures were
+corrected before the complete successful run.
+
+| Capability check | Observed result |
+| --- | --- |
+| Laravel storage boundary | Probe-only AWS SDK 3.399.1, Flysystem 3.36.0 and S3 adapter 3.35.3 performed private PUT/stream, GET, HEAD and LIST against Garage. Anonymous access failed; no versioning was reported; ACL read returned 501. The application still needs its adapter provisioned. |
+| Retention and access separation | A simulated eight-day snapshot was selected by absolute UTC age while a current snapshot was retained. Append-only remote snapshot deletion failed with HTTP 403; repository-host maintenance successfully forgot/pruned it and checked every retained data pack. |
+| Paired restoration | Consistent MySQL dump and logical object capture restored into a separate database and quarantine bucket. Transient input was absent and surviving object checksums matched. Raw restoration contained the erased fixture, proving why expiry alone is insufficient. |
+| Replay feasibility | A newer intent in the separately stored journal survived app-database rollback. Synthetic remediation ran twice, removed the erased private records/object, anonymized public attribution and preserved another owner's private row/object. Journal intent survived its own container restart. |
+| Recoverable-copy retirement | After a sanitized capture, the dirty snapshot was forgotten, pruned with zero tolerated unused data, and all retained data checked. Attempted ordinary restoration of its retired snapshot ID failed. |
+
+The complete probe passed on both the existing cached MySQL 8.0.32 image and
+the selected 8.4.10 LTS baseline. The following immutable image identities
+record the latter run; they are evidence identifiers, not deployment commands:
+
+| Probe image | Repository digest |
+| --- | --- |
+| `mysql:8.4.10` | `sha256:8dbcf531a03aade657e181b9cf2f1d1803ce621a1d55610cb44cb531ab7d7db6` |
+| `dxflrs/garage:v2.3.0` | `sha256:866bd13ed2038ba7e7190e840482bc27234c4afaf77be8cfa439ae088c1e4690` |
+| `restic/restic:0.19.1` | `sha256:136600b6ff6843d61d355f7f71f460a166429f35de6fd11b568fece3c9a4d510` |
+| `restic/rest-server:0.14.0` | `sha256:d2aff06f47eb38637dff580c3e6bce4af98f386c396a25d32eb6727ec96214a5` |
+
+MySQL release notes list newer patches, but the Docker `mysql:8.4.12` manifest
+was unavailable during validation. Recheck the maintained patch/image at
+deployment; 8.4.10 is the tested baseline, not a claim to be the newest patch.
+
+This capability probe used one Garage node, two databases on one Docker host
+and manually invoked fixture remediation. Test rest-server authentication/TLS
+was disabled on the isolated network. It establishes tool/API feasibility,
+not production topology, access hardening, a deployed two-store acknowledgement
+protocol, power-loss durability, actual seven-day aging, journal-generation
+key retirement, Garage block disposal, complete domain purge or the fail-closed
+application release gate. Those require the evidence below before user data
+exists in production. The temporary harness is not a production runbook.
+
 ## Verification evidence required before production
 
 DEP-06 and DEP-08 must supply implementation/drill evidence; this research
-provides no claim that the controls already operate. Recommended cadence is
+provides no claim that the controls already operate. Required reference cadence is
 daily freshness/expiry monitoring, a full drill before first production data,
 quarterly thereafter, and another drill after backup, storage, schema, or
-erasure changes. Cadence and measured recovery objectives need operator
-acceptance.
+erasure changes. Each installation records its measured restore-time objective
+and responsible operator before launch; daily capture targets a 24-hour RPO.
 
 | Evidence | Required observation |
 | --- | --- |
@@ -249,16 +411,18 @@ belong to the installation's responsible operator and its privacy/legal review.
 Optional recovery must not automatically delay an applicable erasure right;
 use DEC-013's waiver path and assess valid requests and scoped exceptions.
 
-The recommended journal is a new narrowly scoped retention purpose. DEC-013
-already requires purge replay, but does not approve identifiable journal fields
-or their period after final purge. Obtain explicit owner review of necessity,
-access, disposal, incident overruns, and notice wording. Do not silently treat
-the anonymous twelve-month receipt as approval to retain account identifiers.
+The protected journal is a new narrowly scoped retention purpose explicitly
+approved by the owner in this session, including minimum replay references,
+restricted access, verified disposal, incident overruns, and qualified wording.
+This extends DEC-013 for this specific purpose; it does not authorize identifiable
+ordinary audit mappings after purge. The anonymous twelve-month receipt remains
+separate and cannot identify an account for restoration.
 Anonymized attribution alone does not prove that free-text public content is
 anonymous; handle identifying content and applicable rights through DEP-09.
 
-Suggested user wording, **draft for the short-tier option only**, to be approved
-and made true by DEP-08/DEP-09 before use:
+The following qualified short-tier wording is approved as the policy template.
+DEP-08/DEP-09 must make it true and review installation-specific details before
+publishing it:
 
 > Your account becomes inactive when deletion is accepted. You can securely
 > recover it for 30 days unless you choose immediate permanent deletion or a
@@ -286,17 +450,15 @@ promise. Retained public-plan wording must also match DEC-014. Existing
 DEC-013 review is owner-led, not professional legal approval; this research
 does not upgrade it.
 
-## Precise remaining decisions and downstream work
+## Approval and downstream work
 
-The investigation establishes a supportable design direction, but cannot
-approve a retention policy or assert capabilities of an unselected endpoint.
-The following must be resolved before recording a final DEC-012 decision:
-
-| Responsible owner | Remaining decision | Evidence-backed options and recommendation |
-| --- | --- | --- |
-| Product owner / responsible self-hosting operator | Accept recovery coverage, expiry periods, and drill cadence; identify a reference backup stack and private-storage implementation. | Recommend Docker-scheduled MySQL dumps plus restic to an independent mutable repository, daily sets eligible for seven days, 24-hour deletion target. Alternatively accept seven-day daily plus weekly points through 30 days with longer exposure and journal retention. Record the actual endpoint and its hidden-copy/lock behavior. |
-| Product owner, with privacy/legal advice where needed | Approve the minimized post-purge journal purpose/fields, bounded disposal policy, incident/hold handling, rights response, and qualified notice. | Recommend a separate protected journal until all dirty recovery copies are verifiably retired, normally nine days for the short tier. If linkable retention is rejected, all dirty recovery copies must be verifiably destroyed before suppression identity is removed; immutable or unknown copies make that option unavailable. No safe ordinary restore without either approach. |
-| Technical investigation | Validate the selected stack's documented expiry and recovery semantics against the chosen policy. | Pin source/tool versions and resolve any provider-managed, versioned, replicated, immutable, or full-host copies that exceed the period. An implementation drill belongs to DEP-06/DEP-08 after decision approval, not this task. |
+The owner approved the seven-day short tier, protected minimized journal,
+qualified disposal/incident handling and delegated Docker reference selection.
+The owner separately authorized **Decided** after validation, superseding the
+original instruction to preserve **Research required**. Owner remains
+**Technical investigation**. No product-policy or provider-selection question
+remains open for this reference design. Installation-specific verification and
+rights/legal launch review are implementation gates, not claims of compliance.
 
 DEP-06 will implement consistent paired backups, wall-clock expiry/pruning,
 isolated targets, off-host/key recovery, inventory, alerts, and drills. DEP-08
@@ -309,14 +471,16 @@ expiry/purge rules. FND-02 rollback must pass the same gate; FND-09 and DEP-04
 must preserve operation/deadline truth across restore and inventory any new
 jobs with DEP-05 monitoring before enablement.
 
-No downstream item is implemented or unblocked by this record. No production
+DEC-012 is removed as an open-decision blocker for DEP-06, DEP-08 and DEP-09;
+their other dependencies and acceptance criteria remain. No downstream item is
+implemented by this record. No production
 credentials, live restore, destructive cleanup, new dependency, or product
 compliance claim is introduced.
 
 ## Primary research sources
 
-All sources accessed on 4 October 2026. restic's stable documentation identified
-itself as 0.19.1; that is research evidence, not an installed/pinned release.
+All sources accessed on 4 October 2026. The disposable validation pins its
+baseline above; deployment must recheck maintained patches/digests.
 Amazon sources are conditional comparisons only; they do not select AWS.
 
 | ID | Primary source | Use |
@@ -338,3 +502,15 @@ Amazon sources are conditional comparisons only; they do not select AWS.
 | S15 | [RDS backup retention](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_WorkingWithAutomatedBackups.BackupRetention.html) | Stopped-time exception to configured retention. |
 | S16 | [ICO right to erasure](https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/individual-rights/individual-rights/right-to-erasure/) | Backup handling, transparency, response and recipient obligations; guidance review notice. |
 | S17 | [ICO storage limitation](https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/data-protection-principles/a-guide-to-the-data-protection-principles/storage-limitation/) | Justified retention rather than a universal statutory period. |
+| S18 | [Garage S3 compatibility](https://garagehq.deuxfleurs.fr/documentation/reference-manual/s3-compatibility/) | Supported object operations and unsupported ACL/versioning/lock APIs. |
+| S19 | [Garage cluster deployment](https://garagehq.deuxfleurs.fr/documentation/cookbook/real-world/), [quick start](https://garagehq.deuxfleurs.fr/documentation/quick-start/) | Production replication and single-node demonstration limits. |
+| S20 | [Garage encryption](https://garagehq.deuxfleurs.fr/documentation/cookbook/encryption/) | TLS/host encryption requirements and limits. |
+| S21 | [Garage 2.3.0 block manager](https://github.com/deuxfleurs-org/garage/blob/v2.3.0/src/block/manager.rs), [reference counts](https://github.com/deuxfleurs-org/garage/blob/v2.3.0/src/block/rc.rs) | Tagged 600-second block-deletion eligibility delay, not a completion guarantee. |
+| S22 | [Garage durability and repairs](https://garagehq.deuxfleurs.fr/documentation/operations/durability-repairs/) | Orphan references/blocks and reconciliation after node loss. |
+| S23 | [rest-server](https://github.com/restic/rest-server), [releases](https://github.com/restic/rest-server/releases), [restic releases](https://github.com/restic/restic/releases) | TLS/authentication, append-only boundary, maintenance and release baseline. |
+| S24 | [MySQL 8.4 InnoDB parameters](https://dev.mysql.com/doc/refman/8.4/en/innodb-parameters.html) | Commit flushing and actual-disk durability qualification. |
+| S25 | [MySQL 8.4 semisynchronous replication](https://dev.mysql.com/doc/refman/8.4/en/replication-semisync.html) | Timeout fallback cannot provide unconditional dual acknowledgement. |
+| S26 | [MinIO upstream](https://github.com/minio/minio) | Archived, unmaintained Community implementation rejected. |
+| S27 | [MySQL support announcements](https://www.mysql.com/support/eol-notice.html) | MySQL 8.0 Sustaining Support and recommended LTS upgrade. |
+| S28 | [MySQL 8.4 mysqldump](https://dev.mysql.com/doc/refman/8.4/en/mysqldump.html), [release notes](https://dev.mysql.com/doc/relnotes/mysql/8.4/en/) | Maintained logical-backup baseline and patch revalidation. |
+| S29 | [Cryptsetup keyslot erasure](https://gitlab.com/cryptsetup/cryptsetup/-/raw/main/man/cryptsetup-erase.8.adoc), [header backups](https://gitlab.com/cryptsetup/cryptsetup/-/raw/main/man/cryptsetup-luksHeaderBackup.8.adoc) | Journal storage-generation key retirement and surviving-header limitation; not a physical overwrite guarantee. |
