@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Domain\Nutrition\RecipeNutritionEstimatePresenter;
 use App\Domain\Nutrition\RecipeNutritionPresenter;
 use App\Domain\Recipes\ManagedRecipeTermSuggestionStatus;
 use App\Domain\Recipes\PublicRecipe;
@@ -9,6 +10,7 @@ use App\Domain\Recipes\RecipeQuantityDisplay;
 use App\Domain\Recipes\RecipeQuantityPresenter;
 use App\Domain\Recipes\RecipeRemixAttributionPresenter;
 use App\Domain\Recipes\RecipeRevisionManager;
+use App\Domain\Recipes\RecipeVersionContent;
 use App\Domain\Recipes\RecipeVisibility;
 use App\Domain\Recipes\RecipeVisibilityChanger;
 use App\Models\ManagedRecipeTerm;
@@ -124,7 +126,11 @@ class RecipeController extends Controller
             'pendingTagSuggestions' => $pendingTagSuggestions,
             'remixAttribution' => $remixAttribution,
             'remixOperationId' => $remixOperationId,
-            'nutritionEstimate' => null,
+            'nutritionEstimate' => [...app(RecipeNutritionEstimatePresenter::class)->present(app(RecipeVersionContent::class)->snapshot(
+                $recipe, includeEstimate: $recipe->servings !== null && (float) $recipe->servings > 0,
+            )),
+                'is_estimate' => true, 'source' => 'ingredient_estimate', 'source_label' => 'Ingredient estimate',
+                'comparisons' => [], 'history' => []],
         ]);
     }
 

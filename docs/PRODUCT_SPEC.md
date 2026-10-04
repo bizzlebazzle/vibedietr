@@ -253,8 +253,8 @@ collapsed into one ambiguous `quantity` or `recommended servings` value.
   score at `0.9900`, both inclusive, under threshold-policy version `1`.
   DEC-002 records the owner-approved combined summary and inline warning
   treatment, with optional creator review through `Keep this food`,
-  `Search to replace`, and `Clear match`. DEC-002 is decided; UX-04
-  implementation remains planned.
+  `Search to replace`, and `Clear match`. DEC-002 is decided; UX-04 implements
+  this treatment, with browser verification pending.
 
 The creator's selected match supplies the default estimate for all viewers.
 When adding the recipe to their own plan or diary, another user may substitute

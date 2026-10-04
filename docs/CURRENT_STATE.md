@@ -127,8 +127,8 @@ work.
   uses the newest completed estimate, but NUT-17 imported and creator-override
   sources retain precedence. Original recipe-version snapshots and their
   pinned matches are never updated; future plan/diary snapshots remain outside
-  this recalculation boundary. DEC-002 records approved review-warning UX;
-  UX-04 remains planned and DEC-002 is decided.
+  this recalculation boundary. UX-04 applies DEC-002 review warnings and counted
+  attention/remedy summaries to editing, previews, details, and comparisons.
 - PLAN-03 adds owner-managed recipe entries to every plan slot. Add records a
   positive planned serving amount, source recipe and immutable version
   identities, the complete immutable recipe-version snapshot, and a copied
@@ -151,7 +151,8 @@ work.
 - PLAN-06 snapshots consumption nutrition; PLAN-07 queues audited review of newer versions for eligible unconsumed entries.
 - UX-01 implements VibeDietr identity, guest landing, owner-scoped dashboard,
   and navigation. UX-02 adds accessible feedback; UX-03 makes recipe editing
-  and resizing responsive. UX-04 to UX-07 remain planned; DEC-002 is decided.
+  and resizing responsive. UX-04 adds optional match review; browser checks are
+  pending ([verification](UX_04_VERIFICATION.md)). UX-05 to UX-07 remain planned.
 - Backup/restore, self-service account export, delayed deletion/recovery,
   privacy/legal launch review, and release-readiness work remain incomplete
   (DEP-06 through DEP-10). DEC-008, DEC-010, and DEC-012 remain unresolved.
@@ -194,7 +195,7 @@ Done gate before completion.
 | Catalogue, nutrition, moderation, and refresh | `tests/Feature/Catalogue` |
 | Shared security | `SecurityControlsTest.php`, `TransientInputSecurityTest.php`, `RedactionPrivacyTest.php` |
 | Queues and observability | `tests/Feature/Queue*`, `tests/Feature/ObservabilityTest.php` |
-| Scanner | `./vendor/bin/sail npm run test:scanner` |
+| Scanner, feedback, and nutrition presentation | `./vendor/bin/sail npm run test:scanner`, `tests/Feature/Nutrition`, `RecipeMatchReviewUxTest.php` |
 | Documentation/context tooling | `./vendor/bin/sail npm run docs:test`, then `docs:check` |
 
 The complete quality requirements and canonical final commands remain in

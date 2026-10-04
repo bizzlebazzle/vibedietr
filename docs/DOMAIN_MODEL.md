@@ -520,6 +520,10 @@ scores from `0.9900` through `1.0000` as `high` with `confirmed`. Scores
 below `0.9500` create no match. Database constraints keep automatic evidence
 complete and within its band while requiring manual and owner-confirmed
 replacement matches to have confirmed review state and no automatic evidence.
+UX-04's optional `Keep this food` confirms a reviewable automatic selection,
+records the creator actor, and retains its score, band, policy, provenance, and
+pinned version. Confirmed reviewable automatic matches display as creator
+reviewed; high-confidence automatic matches remain automatically selected.
 The score is stored as an exact scale-18 decimal and threshold comparisons use
 that stored value.
 
@@ -542,7 +546,7 @@ creator actor when available, remain distinguishable from automatic matches,
 and atomically replace and clear any prior automatic evidence. These match
 provenance values are distinct from catalogue-field provenance.
 
-Only the recipe owner may attach, replace, or clear a match while the recipe is
+Only the recipe owner may attach, review, replace, or clear a match while the recipe is
 an editable draft or has an active REC-07 revision. The transaction locks and
 reauthorizes the recipe and line, then independently reloads the requested
 catalogue identity/version through the selectable NUT-03 query. Manual
@@ -563,7 +567,8 @@ Recipe-version snapshots retain catalogue item/version identity, score,
 confidence band, threshold version, provenance, and review state. Restoring a
 revision recreates the current match with its automatic/manual actor semantics.
 Public recipe projection deliberately omits this internal match
-object and its actor. Remixes continue to copy only the pre-existing allowlist
+object and its actor; UX-04 renders only the selected food name and review
+status alongside nutrition limitations. Remixes continue to copy only the pre-existing allowlist
 of ingredient wording and structure and therefore do not copy matches.
 Existing recipe lines stay unmatched unless their creator explicitly selects a
 candidate.

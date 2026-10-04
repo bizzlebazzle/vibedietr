@@ -19,8 +19,9 @@ final readonly class RecipeNutritionPresenter
     {
         $effective = $this->selector->effective($version);
         $source = $effective['source'];
+        $estimate = $this->presentEstimate($version);
         $primary = $source === RecipeNutritionSource::IngredientEstimate
-            ? $this->presentEstimate($version)
+            ? $estimate
             : $this->presentValues($version, $effective['values']);
         $comparisons = [];
         $imported = $this->selector->imported($version);
@@ -32,11 +33,12 @@ final readonly class RecipeNutritionPresenter
         if ($source !== RecipeNutritionSource::IngredientEstimate) {
             $comparisons[] = ['source' => RecipeNutritionSource::IngredientEstimate->value,
                 'source_label' => RecipeNutritionSource::IngredientEstimate->label(),
-                ...$this->presentEstimate($version)];
+                ...$estimate];
         }
         $override = $this->selector->currentOverride($version);
 
         return [...$primary,
+            'matches' => $estimate['matches'],
             'source' => $source->value,
             'source_label' => $source->label(),
             'is_estimate' => $source === RecipeNutritionSource::IngredientEstimate,

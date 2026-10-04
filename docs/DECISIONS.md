@@ -172,8 +172,9 @@ Backlog relationships mean:
   On 2026-10-04 the product owner confirmed that the register may be marked
   `Decided` once all questions are answered. No owner questions remain; the
   approved presentation, correction actions, and optional review flow satisfy
-  the resolution condition. Ownership remains `Product owner`. UX-04 remains
-  planned; this decision preserves NUT-16's completeness logic, DEC-001's
+  the resolution condition. Ownership remains `Product owner`. UX-04 implements
+  this treatment with browser verification pending; this decision preserves
+  NUT-16's completeness logic, DEC-001's
   matching policy, and UX-02's established feedback behavior.
 
   **Warning and discovery:** Show a persistent amber panel in light and dark
@@ -227,10 +228,10 @@ Backlog relationships mean:
 
   After a successful action, update the persistent line status and summary
   count, retaining any remaining limitation. Announce the outcome politely;
-  a transient saved message alone is insufficient. The current editor has
+  a transient saved message alone is insufficient. At decision time the editor had
   search, replacement, and clearing, but no dedicated lower-confidence
-  confirmation action; adding that action and distinguishing its recorded
-  review state belong to future implementation, not this documentation task.
+  confirmation action. UX-04 now adds that action and distinguishes its recorded
+  review state; browser interaction verification remains pending.
 
   **Responsive and accessible interaction:** Wrap long text and stack controls
   on narrow screens, preserving the editor's existing 44px action targets and

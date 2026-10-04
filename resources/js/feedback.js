@@ -47,10 +47,39 @@ export function connectFeedback(root = document) {
     });
 }
 
+export function focusIngredientReview(hash, root = document) {
+    if (!/^#ingredient-line-\d+$/.test(hash)) return false;
+    const line = root.getElementById(hash.slice(1));
+    const target = line?.querySelector('[data-ingredient-review]');
+    if (!target) return false;
+    target.focus({ preventScroll: true });
+    target.scrollIntoView({ block: 'nearest', behavior: 'auto' });
+    return true;
+}
+
+export function focusMatchOutcome(targetId, root = document) {
+    const target = root.getElementById(targetId);
+    if (root.querySelector('[data-validation-summary]')) return;
+    target?.focus({ preventScroll: true });
+}
+
 if (typeof document !== 'undefined') {
     const refresh = () => connectFeedback();
     document.addEventListener('DOMContentLoaded', refresh);
     document.addEventListener('livewire:navigated', refresh);
+    const reviewHash = () => focusIngredientReview(window.location.hash);
+    document.addEventListener('DOMContentLoaded', reviewHash);
+    document.addEventListener('livewire:navigated', reviewHash);
+    window.addEventListener('hashchange', reviewHash);
+    document.addEventListener('click', event => {
+        const link = event.target.closest('[data-review-link]');
+        if (link && new URL(link.href).pathname === window.location.pathname) {
+            requestAnimationFrame(() => focusIngredientReview(new URL(link.href).hash));
+        }
+    });
+    window.addEventListener('ingredient-match-updated', event => {
+        requestAnimationFrame(() => focusMatchOutcome(event.detail.target));
+    });
     const observer = new MutationObserver(() => queueMicrotask(refresh));
     observer.observe(document.documentElement, { childList: true, subtree: true });
 }

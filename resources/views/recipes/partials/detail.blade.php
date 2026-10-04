@@ -154,6 +154,9 @@
                         @else
                             {{ $ingredient['original_text'] }}
                         @endif
+                        @if ($nutritionEstimate !== null)
+                            <x-recipe-match-status :match="$nutritionEstimate['matches'][$loop->index] ?? null" :original="$ingredient['original_text']" :id="'detail-ingredient-review-'.$loop->iteration" :creator="auth()->id() === $recipe->user_id" />
+                        @endif
                     </li>
                 @endforeach
             </ol>
@@ -166,7 +169,10 @@
                 <h2 id="recipe-nutrition-heading" class="font-semibold">{{ $nutritionEstimate['is_estimate'] ? 'Nutrition estimates' : 'Nutrition' }}</h2>
                 <p class="mt-1 text-sm text-gray-600 dark:text-gray-400"><strong>Primary source:</strong> {{ $nutritionEstimate['source_label'] }}.</p>
                 @if ($nutritionEstimate['is_estimate'])
-                    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Calculated from the ingredient lines and catalogue data saved with this recipe version. Values are estimates, not verified nutrition facts.</p>
+                    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Calculated from saved ingredient lines and catalogue data. Values are estimates, not verified nutrition facts.</p>
+                    @if ($publicRecipe === null && $recipe->servings === null)
+                        <p class="mt-1 text-sm">Enter suggested servings in the recipe editor to calculate whole-recipe and per-serving estimates.</p>
+                    @endif
                 @else
                     <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Source-provided values are per serving; whole-recipe totals use this version's declared serving count.</p>
                     @if ($nutritionEstimate['source'] === 'imported_source' && is_array($nutritionEstimate['provenance']))
@@ -177,38 +183,13 @@
 
             @if (! $nutritionEstimate['is_estimate'])
                 <p class="rounded border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-100">These are source-provided nutrition values, not an ingredient calculation.</p>
-            @elseif ($nutritionEstimate['status'] === 'complete')
-                <p class="rounded border border-green-200 bg-green-50 p-3 text-sm text-green-800 dark:border-green-900 dark:bg-green-950/40 dark:text-green-100">
-                    Complete estimate: every ingredient line contributed and none requires review.
-                </p>
+                <p class="text-sm">{{ match ($nutritionEstimate['status']) {
+                    'complete' => 'All supported nutrients have source-provided values.',
+                    'unavailable' => 'No source nutrition values are available. Missing values are not zero.',
+                    default => 'Some source nutrition values are unavailable. Missing values are not zero.',
+                } }}</p>
             @else
-                <aside role="status" aria-labelledby="nutrition-limitations-heading" class="rounded border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100">
-                    <h3 id="nutrition-limitations-heading" class="font-semibold">Estimate limitations</h3>
-                    <p class="mt-1">
-                        @if ($nutritionEstimate['status'] === 'unavailable')
-                            No nutrition values are currently available for this recipe estimate.
-                        @else
-                            This is a partial estimate. Available values remain useful, but the lines below are excluded from some or all calculations or require review.
-                        @endif
-                    </p>
-                    @if ($nutritionEstimate['issues'] !== [])
-                        <ol class="mt-3 list-decimal space-y-3 pl-5">
-                            @foreach ($nutritionEstimate['issues'] as $issue)
-                                <li>
-                                    <p class="font-medium">{{ $issue['original_text'] !== '' ? $issue['original_text'] : 'Ingredient '.($issue['position'] + 1) }}</p>
-                                    <ul class="mt-1 list-disc space-y-1 pl-5">
-                                        @foreach ($issue['reasons'] as $reason)
-                                            <li>{{ $reason }}</li>
-                                        @endforeach
-                                    </ul>
-                                    @can('startRevision', $recipe)
-                                        <a href="{{ route('recipes.edit', $recipe) }}#ingredient-line-{{ $issue['position'] + 1 }}" class="mt-2 inline-flex font-semibold text-blue-700 underline dark:text-blue-300">Review or correct ingredient {{ $issue['position'] + 1 }}</a>
-                                    @endcan
-                                </li>
-                            @endforeach
-                        </ol>
-                    @endif
-                </aside>
+                <x-recipe-estimate-limitations :estimate="$nutritionEstimate" :edit-url="auth()->id() === $recipe->user_id ? route('recipes.edit', $recipe) : null" />
             @endif
 
             <div class="grid gap-5 md:grid-cols-2">
@@ -228,10 +209,12 @@
             </div>
             @foreach ($nutritionEstimate['comparisons'] as $comparison)
                 <details class="rounded border border-gray-200 p-3 dark:border-slate-700">
-                    <summary class="cursor-pointer font-semibold">Compare with {{ strtolower($comparison['source_label']) }}</summary>
+                    <summary class="min-h-11 cursor-pointer font-semibold">Compare with {{ strtolower($comparison['source_label']) }}@if ($comparison['source'] === 'ingredient_estimate') — {{ ucfirst($comparison['status']) }} estimate · Ingredients needing attention: {{ count($comparison['issues']) }}@endif</summary>
                     @if ($comparison['source'] === 'ingredient_estimate')
                         <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">This lower-precedence ingredient estimate is retained for comparison and remains an estimate.</p>
+                        <div class="mt-3"><x-recipe-estimate-limitations :estimate="$comparison" :id="'comparison-'.$loop->index.'-limitations'" :edit-url="auth()->id() === $recipe->user_id ? route('recipes.edit', $recipe) : null" /></div>
                     @endif
+                    <h3 class="mt-3 font-semibold">{{ $comparison['source'] === 'ingredient_estimate' ? 'Estimated nutrition — per serving' : 'Nutrition — per serving' }}</h3>
                     <dl class="mt-2 divide-y divide-gray-200 text-sm dark:divide-slate-700">
                         @foreach ($comparison['per_serving'] as $nutrient)
                             <div class="flex items-center justify-between gap-4 py-2">
@@ -243,6 +226,7 @@
                 </details>
             @endforeach
 
+            @if ($publicRecipe !== null)
             @can('overrideNutrition', $recipe)
                 <details class="rounded border border-gray-200 p-3 dark:border-slate-700" @if ($errors->has('nutrients') || $errors->has('source_version_id')) open @endif>
                     <summary class="cursor-pointer font-semibold">{{ $nutritionEstimate['source'] === 'creator_override' ? 'Change creator override' : 'Add creator override' }}</summary>
@@ -284,6 +268,7 @@
                     </details>
                 @endif
             @endcan
+            @endif
         </section>
     @endif
     <section aria-labelledby="recipe-instructions-heading">

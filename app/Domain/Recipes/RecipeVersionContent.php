@@ -42,7 +42,7 @@ final class RecipeVersionContent
     }
 
     /** @return array<string, mixed> */
-    public function snapshot(Recipe $recipe): array
+    public function snapshot(Recipe $recipe, bool $includeEstimate = true): array
     {
         $recipe->loadMissing(['ingredientLines.catalogueMatch.catalogueItemVersion', 'sourceImport']);
 
@@ -61,6 +61,7 @@ final class RecipeVersionContent
                 'catalogue_match' => $line->catalogueMatch === null ? null : [
                     'catalogue_item_id' => $line->catalogueMatch->catalogueItemVersion->catalogue_item_id,
                     'catalogue_item_version_id' => $line->catalogueMatch->catalogue_item_version_id,
+                    'name' => $line->catalogueMatch->catalogueItemVersion->name,
                     'candidate_score' => $line->catalogueMatch->candidate_score,
                     'confidence_band' => $line->catalogueMatch->getRawOriginal('confidence_band'),
                     'threshold_version' => $line->catalogueMatch->threshold_version,
@@ -78,7 +79,7 @@ final class RecipeVersionContent
                 'text' => $step->text,
                 'section_key' => $step->section_id === null ? null : 'section-'.$step->section_id,
             ])->values()->all(),
-            'nutrition_estimate' => $this->nutritionEstimator->estimate($recipe),
+            'nutrition_estimate' => $includeEstimate ? $this->nutritionEstimator->estimate($recipe) : [],
             'imported_nutrition' => is_array($recipe->sourceImport?->nutrition_source)
                 ? $recipe->sourceImport->nutrition_source
                 : null,
@@ -131,6 +132,7 @@ final class RecipeVersionContent
                     'confidence_band' => $matchState['confidence_band'] ?? null,
                     'threshold_version' => $matchState['threshold_version'] ?? null,
                     'selected_by_user_id' => $provenance === RecipeIngredientMatchProvenance::AutomaticallySelected
+                        && ! (($matchState['confidence_band'] ?? null) === 'reviewable' && $matchState['review_state'] === 'confirmed')
                         ? null
                         : $recipe->user_id,
                     'provenance' => $provenance,
