@@ -32,7 +32,7 @@ Backlog relationships mean:
 | ID | Title | Status | Owner |
 | --- | --- | --- | --- |
 | DEC-001 | Food-matching confidence thresholds | Decided | Technical investigation |
-| DEC-002 | Food-match review-warning treatment | Owner input required | Product owner |
+| DEC-002 | Food-match review-warning treatment | Decided | Product owner |
 | DEC-003 | Nutrient storage precision | Decided | Product owner |
 | DEC-004 | Nutrient display precision | Decided | Product owner |
 | DEC-005 | Recipe-import providers and formats | Decided | Product owner |
@@ -147,7 +147,7 @@ Backlog relationships mean:
 - **Why it matters:** The treatment must make uncertain matches noticeable and
   correctable without implying that confidence is certainty or relying on
   color alone.
-- **Status:** Owner input required.
+- **Status:** Decided.
 - **Owner:** Product owner.
 - **Alternatives:** Inline status and action; a review queue or summary with
   line-level detail; a combined summary and inline treatment. Specific visual
@@ -158,11 +158,106 @@ Backlog relationships mean:
   example, not a requirement. Partial estimates must identify review-needed
   lines, and suggested claims cannot be presented as verified when nutrition is
   incomplete.
-- **Backlog relationships:** `Blocked`: UX-04. `Constrained`: NUT-16.
+- **Backlog relationships:** Resolution removes DEC-002 as the open-decision
+  blocker for UX-04. The approved treatment constrains NUT-16 and UX-04.
   `Related`: UX-02.
 - **Resolution condition:** Review accessible interaction proposals for every
   confidence state and record the chosen warning, review, and correction flow.
-- **Final decision and rationale:** Unresolved.
+- **Final decision and rationale:** On 2026-10-04 the product owner approved
+  Option C: a combined summary and inline treatment, with `Keep this food`,
+  `Search to replace`, and `Clear match` actions. Review is optional, with no
+  mandatory checkpoint before saving or publishing. The owner explicitly
+  approved the recommendation presented after repository investigation.
+
+  On 2026-10-04 the product owner confirmed that the register may be marked
+  `Decided` once all questions are answered. No owner questions remain; the
+  approved presentation, correction actions, and optional review flow satisfy
+  the resolution condition. Ownership remains `Product owner`. UX-04 remains
+  planned; this decision preserves NUT-16's completeness logic, DEC-001's
+  matching policy, and UX-02's established feedback behavior.
+
+  **Warning and discovery:** Show a persistent amber panel in light and dark
+  themes beside each lower-confidence selection, labelled `Selected — needs
+  review`. Explain that the automatic match has weaker matching evidence and
+  ask the creator to check that the named food fits the original ingredient.
+  State that the selection remains included wherever nutrition can be
+  calculated. Text and structure carry the meaning; color is supplementary,
+  and no essential explanation is available only through a tooltip. Do not
+  invent a specific mismatch explanation unsupported by stored evidence.
+
+  Provide a compact `Ingredients needing attention` summary with the affected
+  line count always visible and a collapsible detailed list. Each entry names
+  the original ingredient, selected food where present, reason, and remedy,
+  and links to the corresponding ingredient in the existing editor. Count
+  affected lines once even when they have multiple reasons; show every reason
+  without conflating review-needed selections with exclusions.
+
+  **Screens and states:** Apply the treatment to creator ingredient editing,
+  saved draft/revision preview, owner recipe detail, and public/read-only recipe
+  detail. Readers see limitations without source-recipe correction controls.
+  High-confidence selections use neutral `Automatically selected` wording and
+  remain replaceable without a warning or interruption. A creator-selected or
+  reviewed food is labelled `Selected by you` or `Reviewed by you` according to
+  the recorded action; neither means verified nutrition. Unmatched lines say
+  `No food selected — excluded from estimate` and offer creator catalogue
+  search. Rejected/unavailable selected foods retain their distinct unavailable
+  warning and explicit approved-replacement or clearing path.
+
+  NUT-16 remains authoritative for complete, partial, and unavailable estimates
+  and for every review-needed or excluded line. Quantity/unit conversion gaps
+  and missing or ambiguous nutrient data retain their specific reasons,
+  affected nutrients, and appropriate correction path. Missing values remain
+  distinct from zero. Reviewing a match does not remove unrelated limitations.
+  Whole-recipe and per-serving calculated values remain estimates even when
+  complete. When an ingredient estimate is a collapsed comparison beneath
+  imported or overridden primary nutrition, expose its own completeness and
+  affected lines within the comparison; do not relabel the primary source.
+  Incomplete nutrition cannot support suggested claims presented as verified.
+
+  **Review and correction:** `Keep this food` explicitly records creator review
+  of the selected food without claiming accuracy or clearing other issues.
+  `Search to replace` reuses the existing line-level catalogue search and
+  selection controls. `Clear match` explains that the original ingredient text
+  stays intact but the selection is removed; the result is unmatched and
+  excluded, not a resolved estimate. No selection is silently replaced and
+  opening or dismissing a warning does not count as review. Mutations remain
+  creator-authorized, retain required provenance, and follow existing
+  draft/revision boundaries. Corrections in a revision do not alter published
+  immutable versions until that revision is published.
+
+  After a successful action, update the persistent line status and summary
+  count, retaining any remaining limitation. Announce the outcome politely;
+  a transient saved message alone is insufficient. The current editor has
+  search, replacement, and clearing, but no dedicated lower-confidence
+  confirmation action; adding that action and distinguishing its recorded
+  review state belong to future implementation, not this documentation task.
+
+  **Responsive and accessible interaction:** Wrap long text and stack controls
+  on narrow screens, preserving the editor's existing 44px action targets and
+  desktop flex layout. Use native links, buttons, and disclosure controls with
+  visible focus and ingredient-specific accessible names. Associate warning
+  explanations with relevant controls; a review-needed selection is not a
+  validation error and does not by itself make a valid field invalid.
+
+  Following a review link deliberately focuses the target ingredient's review
+  heading or control rather than only scrolling. Preserve unsaved edits and
+  focus during ordinary updates; if an action removes the focused control,
+  place focus predictably on the updated line status. Use one polite status
+  announcement for the outcome and changed count rather than repeatedly
+  announcing the entire issue list. Validation failures retain UX-02's alert,
+  field association, and validation-summary focus behavior. Respect reduced
+  motion. Implementation must verify keyboard navigation, screen-reader
+  behavior, contrast in both themes, and zoom/reflow in a browser.
+
+  **Rationale and trade-offs:** Combining NUT-16's existing limitations list
+  and correction links with warnings beside the existing editor controls makes
+  affected lines discoverable both globally and in context. The visible count
+  scales to many affected lines while collapsible detail limits page length.
+  Some information repeats, but a separate queue/editor and modal interruption
+  are unnecessary. Inline-only treatment requires more scanning; summary-led
+  treatment separates the explanation from correction context. The approved
+  approach reuses repository patterns and UX-02 feedback rather than creating
+  a parallel interaction system.
 
 ## DEC-003 — Nutrient storage precision
 

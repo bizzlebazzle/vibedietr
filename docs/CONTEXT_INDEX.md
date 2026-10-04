@@ -85,7 +85,7 @@ Only explicit, machine-verifiable references are included.
 | `UX-01` - Establish VibeDietr identity and primary navigation | 6. User experience and accessibility | Complete (2026-09-28) | `REC-01`, `NUT-03`, `PLAN-01` | `UX-06`, `UX-07` | - | - |
 | `UX-02` - Add accessible application feedback patterns | 6. User experience and accessibility | Complete (2026-09-28) | - | `UX-03`, `UX-04`, `UX-05`, `UX-07` | `DEC-002` (Related) | - |
 | `UX-03` - Make recipe authoring and resizing mobile-friendly | 6. User experience and accessibility | Implemented (2026-09-28); browser verification pending | `REC-04`, `REC-08`, `UX-02` | `UX-07` | - | - |
-| `UX-04` - Make matching and estimate limitations understandable | 6. User experience and accessibility | Not recorded | `NUT-16`, `UX-02`, `DEC-002` | `UX-07` | `DEC-001` (Constrained), `DEC-002` (Blocked), `DEC-004` (Constrained) | - |
+| `UX-04` - Make matching and estimate limitations understandable | 6. User experience and accessibility | Not recorded | `NUT-16`, `UX-02`, `DEC-002` | `UX-07` | `DEC-001` (Constrained), `DEC-002` (Unblocked), `DEC-004` (Constrained) | - |
 | `UX-05` - Build an accessible responsive planning interface | 6. User experience and accessibility | Not recorded | `PLAN-05`, `PLAN-12`, `UX-02` | `UX-07` | `DEC-019` (Constrained) | - |
 | `UX-06` - Add onboarding, empty states, and recovery guidance | 6. User experience and accessibility | Not recorded | `UX-01`, `REC-15`, `NUT-16`, `PLAN-03` | `UX-07` | `DEC-005` (Related), `DEC-006` (Constrained), `DEC-007` (Constrained) | - |
 | `UX-07` - Run a WCAG 2.2 AA remediation pass | 6. User experience and accessibility | Not recorded | `UX-01` through `UX-06` and the corresponding feature pages | `DEP-10` | - | - |
@@ -105,7 +105,7 @@ Only explicit, machine-verifiable references are included.
 | Decision | Status | Roadmap relationships | Domain-model sections |
 | --- | --- | --- | --- |
 | `DEC-001` - Food-matching confidence thresholds | Decided | `NUT-07` (Related), `NUT-12` (Unblocked), `NUT-13` (Unblocked), `NUT-15` (Constrained), `NUT-16` (Constrained), `UX-04` (Constrained) | Recipe ingredient catalogue match (line 501) |
-| `DEC-002` - Food-match review-warning treatment | Owner input required | `NUT-16` (Constrained), `UX-02` (Related), `UX-04` (Blocked) | - |
+| `DEC-002` - Food-match review-warning treatment | Decided | `NUT-16` (Constrained), `UX-02` (Related), `UX-04` (Unblocked) | - |
 | `DEC-003` - Nutrient storage precision | Decided | `FND-06` (Unblocked), `STB-04` (Constrained), `STB-06` (Unblocked), `NUT-05` (Unblocked), `NUT-15` (Constrained), `NUT-17` (Constrained) | Catalogue nutrition observation and normalized fact (line 775), Nutrient definition (line 1058), Current rules and constraints (line 1224), Nutrition schema and units (line 1521) |
 | `DEC-004` - Nutrient display precision | Decided | `FND-06` (Unblocked), `STB-06` (Unblocked), `NUT-05` (Related), `NUT-16` (Constrained), `PLAN-12` (Constrained), `UX-04` (Constrained) | Catalogue nutrition observation and normalized fact (line 775), Nutrient definition (line 1058), Nutrition dataset (line 1077), Current rules and constraints (line 1224) |
 | `DEC-005` - Recipe-import providers and formats | Decided | `FND-09` (Related), `REC-15` (Constrained), `REC-16` (Unblocked), `REC-17` (Constrained), `UX-06` (Related), `DEP-02` (Unblocked), `DEP-03` (Constrained) | Recipe imports (line 1640) |
