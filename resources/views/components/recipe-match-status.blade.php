@@ -1,6 +1,6 @@
 @props(['match' => null, 'original', 'id', 'creator' => false])
 <div id="{{ $id }}" tabindex="-1" data-ingredient-review class="recipe-match-status whitespace-normal {{ ($match['unavailable'] ?? false) ? 'nutrition-unavailable' : (($match['review_state'] ?? null) === 'needs_review' ? 'nutrition-warning' : 'rounded border border-gray-200 p-3 text-sm dark:border-slate-600') }}">
-    <h4 class="font-semibold">{{ app(\App\Domain\Recipes\RecipeIngredientMatchPresenter::class)->label($match, $creator) }}</h4>
+    <p class="font-semibold">{{ app(\App\Domain\Recipes\RecipeIngredientMatchPresenter::class)->label($match, $creator) }}</p>
     @if ($match !== null)
         <p class="mt-1">Selected food: <strong>{{ $match['name'] ?? 'Name unavailable' }}</strong></p>
         @if ($match['unavailable'] ?? false)

@@ -1,4 +1,5 @@
 <x-app-layout>
+    <x-slot name="title">Save your recovery codes</x-slot>
     <div class="max-w-xl mx-auto py-8">
         <h1 class="text-xl font-semibold">Save your recovery codes</h1>
         <p>Keep these separately from your authenticator. Each code can be used once. They will not be shown again.</p>

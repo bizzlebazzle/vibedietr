@@ -3,7 +3,7 @@
         'type' => 'button',
         'title' => 'Close',
         'aria-label' => 'Close',
-        'class' => 'absolute top-2 right-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none'
+        'class' => 'absolute top-2 right-2 inline-flex min-h-8 min-w-8 items-center justify-center text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none'
     ]) }}
 >
     <svg xmlns="http://www.w3.org/2000/svg"

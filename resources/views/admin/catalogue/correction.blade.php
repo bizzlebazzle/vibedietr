@@ -4,7 +4,7 @@
         <a class="underline" href="{{ route('admin.catalogue.index', ['type' => 'correction_proposal']) }}">Back to queue</a>
         <p><strong>State:</strong> {{ $proposal->state->value }}</p>
         <p><strong>Private proposer reason:</strong> {{ $proposal->reason }}</p>
-        <p><strong>Base version:</strong> {{ $proposal->base_catalogue_item_version_id }} · <strong>Current version:</strong> {{ $review->currentVersionId }}</p>
+        <p><strong>Base version:</strong> {{ $proposal->base_catalogue_item_version_id }} Â· <strong>Current version:</strong> {{ $review->currentVersionId }}</p>
         @if($review->stale)
             <div class="rounded border border-amber-400 p-4" role="status"><strong>Stale proposal.</strong> Current catalogue state has advanced since the proposer viewed it. Review every base/current/proposed value. Conflicts: {{ implode(', ', $review->conflicts()) ?: 'none; changes are on unrelated fields' }}.</div>
         @endif

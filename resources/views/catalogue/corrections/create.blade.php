@@ -2,7 +2,7 @@
     <x-slot name="header"><h1 class="text-xl font-semibold text-gray-800 dark:text-gray-100">Suggest a catalogue correction</h1></x-slot>
     <div class="mx-auto max-w-3xl p-6 text-gray-900 dark:text-gray-100">
         <p class="mb-4">You are proposing changes to version {{ $version->version_number }} of <strong>{{ $version->name }}</strong>. The catalogue will not change until an administrator accepts the proposal.</p>
-        <x-input-error :messages="$errors->all()" class="mb-4" />
+        <x-validation-summary :errors="$errors" class="mb-4" />
         <form method="POST" action="{{ route('catalogue.corrections.store', $item) }}" class="space-y-6">
             @csrf
             <input type="hidden" name="base_version_id" value="{{ $version->id }}">

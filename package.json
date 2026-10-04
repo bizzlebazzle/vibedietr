@@ -17,7 +17,8 @@
         "docs:lint": "markdownlint-cli2",
         "docs:test": "node --test tests/Documentation/*.test.mjs",
         "test:scanner": "node --test tests/Frontend/*.test.mjs",
-        "test:planning": "node --test tests/Browser/planning.test.mjs"
+        "test:planning": "node --test tests/Browser/planning.test.mjs",
+        "test:accessibility": "node --test tests/Browser/accessibility.test.mjs"
     },
     "devDependencies": {
         "@tailwindcss/forms": "^0.5.2",

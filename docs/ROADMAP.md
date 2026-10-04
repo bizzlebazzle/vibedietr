@@ -1233,7 +1233,7 @@ changes, it is deliberately split across multiple items.
 
 ### UX-03 — P1 — Make recipe authoring and resizing mobile-friendly
 
-- **Status:** Implemented (2026-09-28); browser verification pending.
+- **Status:** Complete (2026-10-04); completion confirmed by the product owner.
 
 - **Outcome:** Provide a low-friction, keyboard-accessible workflow for adding,
   reordering, reviewing, and resizing recipe content on small and large
@@ -1249,7 +1249,7 @@ changes, it is deliberately split across multiple items.
 
 ### UX-04 — P1 — Make matching and estimate limitations understandable
 
-- **Status:** Implemented (2026-10-04); browser verification pending.
+- **Status:** Complete (2026-10-04); completion confirmed by the product owner.
 - **Verification:** [UX-04 presentation checks](UX_04_VERIFICATION.md).
 
 - **Outcome:** Help users distinguish source nutrition from estimates and
@@ -1266,7 +1266,7 @@ changes, it is deliberately split across multiple items.
 
 ### UX-05 — P2 — Build an accessible responsive planning interface
 
-- **Status:** Implemented (2026-10-04); remote CI pending.
+- **Status:** Complete (2026-10-04); completion confirmed by the product owner.
 - **Implementation:** [Planning interface verification](UX_05_VERIFICATION.md).
 
 - **Outcome:** Make slot, entry, consumption, and target workflows efficient
@@ -1282,7 +1282,7 @@ changes, it is deliberately split across multiple items.
 
 ### UX-06 — P2 — Add onboarding, empty states, and recovery guidance
 
-- **Status:** Implemented (2026-10-04); remote CI pending.
+- **Status:** Complete (2026-10-04); completion confirmed by the product owner.
 - **Outcome:** Guide a new or blocked user toward creating/importing a recipe,
   matching food, building a plan, and correcting incomplete nutrition.
 - **Dependencies:** UX-01, REC-15, NUT-16, PLAN-03.
@@ -1300,6 +1300,9 @@ changes, it is deliberately split across multiple items.
 - **Estimated size:** Medium.
 
 ### UX-07 — P2 — Run a WCAG 2.2 AA remediation pass
+
+- **Status:** Implemented (2026-10-04); human accessibility verification and remote CI pending.
+- **Verification:** [UX-07 accessibility remediation](UX_07_VERIFICATION.md).
 
 - **Outcome:** Resolve accessibility defects across authentication, catalogue,
   recipe, planning, profile, sharing, moderation, and deletion/export flows.

@@ -1,5 +1,5 @@
 <x-app-layout>
-    <x-slot name="header"><h2 class="text-xl font-semibold text-gray-800 dark:text-slate-100">Nutrition targets</h2></x-slot>
+    <x-slot name="header"><h1 class="text-xl font-semibold text-gray-800 dark:text-slate-100">Nutrition targets</h1></x-slot>
     <div class="planning-content py-8"><div class="mx-auto max-w-3xl space-y-4 sm:px-6 lg:px-8">
         <div class="flex justify-end"><a href="{{ route('nutrition-target-profiles.create') }}" class="rounded bg-indigo-600 px-4 py-2 text-sm font-semibold text-white">Create target profile</a></div>
         <x-validation-summary :errors="$errors" />

@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="text-xl font-semibold text-gray-800 dark:text-slate-100">{{ $recipe->isFinalized() ? 'Edit private draft revision' : 'Edit recipe draft' }}</h2>
+        <h1 class="text-xl font-semibold text-gray-800 dark:text-slate-100">{{ $recipe->isFinalized() ? 'Edit private draft revision' : 'Edit recipe draft' }}</h1>
     </x-slot>
     <div class="py-12"><div class="mx-auto max-w-3xl sm:px-6 lg:px-8">
         @include('recipes.partials.import-review', ['import' => $recipe->sourceImport])

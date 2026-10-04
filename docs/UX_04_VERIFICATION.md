@@ -1,6 +1,7 @@
 # UX-04 presentation verification
 
-UX-04 remains P1. NUT-16 and UX-02 are complete, and DEC-002 is decided.
+UX-04 is complete as confirmed by the product owner on 2026-10-04 and
+remains P1. NUT-16 and UX-02 are complete, and DEC-002 is decided.
 The implementation follows DEC-002's combined summary and inline treatment.
 Review is optional and does not block saving or publication. Match confirmation
 retains automatic evidence and the selected version; it does not repair quantity,
@@ -35,10 +36,11 @@ The existing `npm run test:scanner` command includes all frontend tests above.
 
 ## Outstanding browser and external checks
 
-The repository has no installed browser/end-to-end, axe, or visual-regression
-tooling, and this execution environment exposes no browser. No browser checks
-or visual snapshots are claimed. UX-04 is conditionally complete only after
-applicable local gates pass; browser evidence and remote CI remain outstanding.
+At the original UX-04 handoff, browser evidence and remote CI were pending.
+The product owner subsequently confirmed completion on 2026-10-04. The
+repository now has Selenium/axe tooling introduced by UX-05; UX-07 extends
+that coverage. The following checklist records the original verification scope,
+without inventing retrospective test results.
 
 Verify the following using the existing application in a browser:
 

@@ -13,12 +13,15 @@ $width = match ($width) {
 };
 @endphp
 
-<div class="relative" x-data="{ open: false }" @click.outside="open = false" @close.stop="open = false">
-    <div @click="open = ! open">
+<div class="relative" x-data="{ open: false }" x-id="['dropdown']"
+     @click.outside="open = false" @close.stop="open = false"
+     @keydown.escape.stop.prevent="open = false; $refs.trigger.querySelector('button').focus()"
+     @focusout="if (!$el.contains($event.relatedTarget)) open = false">
+    <div x-ref="trigger" @click="open = ! open">
         {{ $trigger }}
     </div>
 
-    <div x-show="open"
+    <div x-show="open" :id="$id('dropdown')"
             x-transition:enter="transition ease-out duration-200"
             x-transition:enter-start="opacity-0 scale-95"
             x-transition:enter-end="opacity-100 scale-100"

@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="text-xl font-semibold leading-tight">Recipe classifications</h2>
+        <h1 class="text-xl font-semibold leading-tight">Recipe classifications</h1>
     </x-slot>
 
     <div class="mx-auto max-w-5xl space-y-6 p-6">
@@ -15,7 +15,7 @@
         @endif
 
         <section class="rounded-lg bg-white p-6 shadow dark:bg-slate-900">
-            <h3 class="text-lg font-semibold">Add a controlled term</h3>
+            <h2 class="text-lg font-semibold">Add a controlled term</h2>
             <form method="POST" action="{{ route('admin.managed-recipe-terms.store') }}" class="mt-4 grid gap-4 sm:grid-cols-[12rem_1fr_auto] sm:items-end">
                 @csrf
                 <div>
@@ -35,7 +35,7 @@
         </section>
 
         <section class="rounded-lg bg-white p-6 shadow dark:bg-slate-900">
-            <h3 class="text-lg font-semibold">Suggest a classification</h3>
+            <h2 class="text-lg font-semibold">Suggest a classification</h2>
             <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">This sends a pending suggestion. The recipe creator must accept it before it becomes public metadata.</p>
             <form method="POST" action="{{ route('admin.managed-recipe-term-suggestions.store') }}" class="mt-4 grid gap-4 sm:grid-cols-[10rem_1fr_auto] sm:items-end">
                 @csrf
@@ -57,7 +57,7 @@
 
         @foreach ($categories as $category)
             <section class="rounded-lg bg-white p-6 shadow dark:bg-slate-900">
-                <h3 class="text-lg font-semibold">{{ $category->label() }}</h3>
+                <h2 class="text-lg font-semibold">{{ $category->label() }}</h2>
                 <div class="mt-4 space-y-3">
                     @forelse ($terms->where('category', $category) as $term)
                         <form method="POST" action="{{ route('admin.managed-recipe-terms.update', $term) }}" class="grid gap-3 rounded border p-3 dark:border-slate-700 sm:grid-cols-[1fr_auto_auto] sm:items-end">

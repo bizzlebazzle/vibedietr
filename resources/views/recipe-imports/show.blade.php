@@ -1,10 +1,10 @@
 <x-app-layout>
-    <x-slot name="header"><h2 class="text-xl font-semibold text-gray-800 dark:text-slate-100">Recipe import</h2></x-slot>
+    <x-slot name="header"><h1 class="text-xl font-semibold text-gray-800 dark:text-slate-100">Recipe import</h1></x-slot>
     <div class="py-12"><div class="mx-auto max-w-3xl space-y-6 sm:px-6 lg:px-8">
         @if (session('status'))<x-auth-session-status :status="session('status')" />@endif
         <section class="space-y-4 rounded-lg bg-white p-6 shadow dark:bg-slate-900">
             <div class="flex flex-wrap items-center justify-between gap-3">
-                <div><h3 class="font-semibold text-gray-900 dark:text-slate-100">Status: {{ str_replace('_', ' ', ucfirst($import->status->value)) }}</h3><p class="text-sm text-gray-600 dark:text-gray-400">This import and its source are visible only to you.</p></div>
+                <div><h2 class="font-semibold text-gray-900 dark:text-slate-100">Status: {{ str_replace('_', ' ', ucfirst($import->status->value)) }}</h2><p class="text-sm text-gray-600 dark:text-gray-400">This import and its source are visible only to you.</p></div>
                 @if ($import->status->value === 'review_ready' && $import->recipe)<a href="{{ route('recipes.edit', $import->recipe) }}" class="rounded bg-indigo-600 px-4 py-2 text-sm font-semibold text-white">Review draft</a>@endif
             </div>
             @if ($import->status->value === 'failed')

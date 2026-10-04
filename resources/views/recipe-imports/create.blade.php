@@ -1,10 +1,10 @@
 <x-app-layout>
-    <x-slot name="header"><h2 class="text-xl font-semibold text-gray-800 dark:text-slate-100">Import a recipe</h2></x-slot>
+    <x-slot name="header"><h1 class="text-xl font-semibold text-gray-800 dark:text-slate-100">Import a recipe</h1></x-slot>
     <div class="py-12"><div class="mx-auto max-w-3xl space-y-8 sm:px-6 lg:px-8">
         <form method="POST" enctype="multipart/form-data" action="{{ route('recipe-imports.upload.store') }}" class="space-y-6 rounded-lg bg-white p-6 shadow dark:bg-slate-900">
             @csrf
             <div>
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-slate-100">Import a document or photo</h3>
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-slate-100">Import a document or photo</h2>
                 <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Documents: TXT, Markdown, or HTML up to 2 MiB. Photos: one still JPEG, PNG, HEIC, or HEIF up to 20 MiB and 50 megapixels.</p>
             </div>
             <div>
@@ -24,7 +24,7 @@
         <form method="POST" action="{{ route('recipe-imports.webpage.store') }}" class="space-y-6 rounded-lg bg-white p-6 shadow dark:bg-slate-900">
             @csrf
             <div>
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-slate-100">Import a public webpage</h3>
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-slate-100">Import a public webpage</h2>
                 <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Public HTTP/HTTPS HTML only. Login, paywall, CAPTCHA, private-network, raw-file, and JavaScript-rendered pages are not supported.</p>
             </div>
             <div>
@@ -39,7 +39,7 @@
         </form>
         <form id="pasted-text-import" method="POST" action="{{ route('recipe-imports.store') }}" class="space-y-6 rounded-lg bg-white p-6 shadow dark:bg-slate-900">
             @csrf
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-slate-100">Import pasted recipe text</h3>
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-slate-100">Import pasted recipe text</h2>
             <div role="note" class="rounded border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-100">
                 Your pasted source stays private and is preserved exactly. If a local parser finds usable recipe structure, it creates a private draft for review; it never publishes automatically. If a webpage or upload cannot be imported, paste its recipe text here or create a recipe manually.
             </div>

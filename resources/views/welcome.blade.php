@@ -17,6 +17,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="min-h-screen bg-slate-50 font-sans text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+    <x-skip-link />
     <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <header class="flex flex-wrap items-center justify-between gap-4 py-6">
             <a href="{{ url('/') }}" aria-label="VibeDietr home"><x-application-logo class="text-xl" /></a>
@@ -33,7 +34,7 @@
                 @endauth
             </nav>
         </header>
-        <main>
+        <main id="main-content" tabindex="-1">
             <section class="py-16 sm:py-24">
                 <p class="font-semibold text-sky-700 dark:text-sky-300">Recipes, food and plans in one place</p>
                 <h1 class="mt-4 max-w-3xl text-4xl font-bold tracking-tight sm:text-6xl">Make room for the meals you want to make.</h1>

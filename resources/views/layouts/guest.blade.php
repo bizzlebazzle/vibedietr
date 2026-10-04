@@ -39,7 +39,7 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
         <meta name="description" content="VibeDietr recipes, food catalogue and meal planning.">
-        <title>VibeDietr</title>
+        <x-document-title :title="$title ?? null" />
 
         @livewireStyles(['nonce' => Vite::cspNonce()])
 
@@ -47,16 +47,17 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="font-sans antialiased bg-gray-100 text-gray-900 dark:bg-slate-950 dark:text-slate-100">
+        <x-skip-link />
         <div class="min-h-screen flex flex-col items-center bg-gray-100 px-4 pt-6 text-gray-900 sm:justify-center sm:pt-0 dark:bg-slate-950 dark:text-slate-100">
-            <div>
+            <header>
                 <a href="/" wire:navigate>
                     <x-application-logo class="h-20 w-20 fill-current text-gray-500 dark:text-slate-300" />
                 </a>
-            </div>
+            </header>
 
-            <div class="mt-6 w-full overflow-hidden rounded-lg border border-gray-200 bg-white px-6 py-4 shadow-sm sm:max-w-md sm:rounded-lg dark:border-slate-800 dark:bg-slate-900/80">
+            <main id="main-content" tabindex="-1" class="mt-6 w-full overflow-hidden rounded-lg border border-gray-200 bg-white px-6 py-4 shadow-sm sm:max-w-md sm:rounded-lg dark:border-slate-800 dark:bg-slate-900/80">
                 {{ $slot }}
-            </div>
+            </main>
         </div>
         @livewireScripts(['nonce' => Vite::cspNonce()])
     </body>

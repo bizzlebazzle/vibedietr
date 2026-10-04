@@ -2,8 +2,67 @@
 @tailwind components;
 @tailwind utilities;
 
+html {
+    scroll-padding-block: 6rem;
+}
+
+.recipe-content :is(input, textarea, select, button, a[href], summary) {
+    scroll-margin-block: 6rem;
+}
+
 [x-cloak] {
     display: none !important;
+}
+
+/* Shared keyboard visibility also covers controls with local outline utilities. */
+:is(a[href], button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 2px solid #1d4ed8 !important;
+    outline-offset: 2px;
+}
+
+.dark :is(a[href], button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline-color: #93c5fd !important;
+}
+
+.skip-link {
+    position: fixed;
+    top: .5rem;
+    left: .5rem;
+    z-index: 100;
+    padding: .75rem 1rem;
+    background: #fff;
+    color: #1d4ed8;
+    transform: translateY(-200%);
+}
+
+.skip-link:focus {
+    transform: none;
+}
+
+.dark .skip-link:focus-visible {
+    outline-color: #1d4ed8 !important;
+}
+
+/* Field boundaries must remain distinguishable on the surrounding surface. */
+:is(input:not([type='hidden']), select, textarea):not(:disabled) {
+    border-color: #6b7280;
+}
+
+.dark :is(input:not([type='hidden']), select, textarea):not(:disabled) {
+    border-color: #64748b;
+}
+
+main, header {
+    overflow-wrap: anywhere;
+}
+
+main :is(input, select, textarea, fieldset), main .grid > * {
+    min-width: 0;
+    max-width: 100%;
+}
+
+main :is(button, summary) {
+    white-space: normal;
 }
 
 @layer base {

@@ -43,7 +43,7 @@
 
     <section class="space-y-5" aria-labelledby="recipe-details-heading">
         <div>
-            <h3 id="recipe-details-heading" class="text-lg font-semibold text-gray-900 dark:text-slate-100">Recipe details</h3>
+            <h2 id="recipe-details-heading" class="text-lg font-semibold text-gray-900 dark:text-slate-100">Recipe details</h2>
             @if ($recipeId !== null)<p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Details and all rows below are saved together.</p>@endif
         </div>
         <div>
@@ -71,7 +71,7 @@
     @if ($recipeId !== null)
         <section class="space-y-4 border-t border-gray-200 pt-8 dark:border-slate-700" aria-labelledby="ingredients-heading">
             <div class="flex flex-wrap items-start justify-between gap-3">
-                <div><h3 id="ingredients-heading" class="text-lg font-semibold text-gray-900 dark:text-slate-100">Ingredients</h3><p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Original wording is preserved exactly; structured details are optional.</p></div>
+                <div><h2 id="ingredients-heading" class="text-lg font-semibold text-gray-900 dark:text-slate-100">Ingredients</h2><p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Original wording is preserved exactly; structured details are optional.</p></div>
                 <button type="button" wire:click="addIngredient" class="inline-flex min-h-11 items-center rounded border px-3 py-2 text-sm dark:border-slate-600">Add ingredient line</button>
             </div>
             <p class="text-sm text-gray-600 dark:text-gray-400">Attention details use saved ingredient quantities and units. Save edits to update conversion limitations. Review is optional and does not prevent saving or publishing.</p>
@@ -152,7 +152,7 @@
                                                     @if ($candidate['barcode'])<span class="text-gray-600 dark:text-gray-400">Barcode {{ $candidate['barcode'] }}</span>@endif
                                                     @if ($candidate['pending'])<span class="rounded bg-amber-100 px-1.5 py-0.5 text-xs text-amber-900 dark:bg-amber-900/40 dark:text-amber-100">Your pending item</span>@endif
                                                 </span>
-                                                <button type="button" wire:click="selectCatalogueMatch({{ $index }}, {{ $candidate['item_id'] }}, '{{ $candidate['version_id'] }}')" class="inline-flex min-h-11 items-center rounded border px-3 py-2 dark:border-slate-600">
+                                                <button type="button" wire:click="selectCatalogueMatch({{ $index }}, {{ $candidate['item_id'] }}, '{{ $candidate['version_id'] }}')" aria-label="{{ $currentMatch ? 'Replace with this' : 'Select' }} food: {{ $candidate['name'] }} for ingredient {{ $index + 1 }}" class="inline-flex min-h-11 items-center rounded border px-3 py-2 dark:border-slate-600">
                                                     {{ $currentMatch ? 'Replace with this' : 'Select' }}
                                                 </button>
                                             </li>
@@ -187,9 +187,9 @@
         </section>
 
         <section class="space-y-6 border-t border-gray-200 pt-8 dark:border-slate-700" aria-labelledby="instructions-heading">
-            <div><h3 id="instructions-heading" class="text-lg font-semibold text-gray-900 dark:text-slate-100">Instructions</h3><p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Step wording is preserved exactly. Sections are optional.</p></div>
+            <div><h2 id="instructions-heading" class="text-lg font-semibold text-gray-900 dark:text-slate-100">Instructions</h2><p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Step wording is preserved exactly. Sections are optional.</p></div>
             <div class="space-y-4">
-                <div class="flex flex-wrap items-center justify-between gap-3"><h4 class="font-medium text-gray-900 dark:text-slate-100">Sections</h4><button type="button" wire:click="addSection" class="inline-flex min-h-11 items-center rounded border px-3 py-2 text-sm dark:border-slate-600">Add section</button></div>
+                <div class="flex flex-wrap items-center justify-between gap-3"><h3 class="font-medium text-gray-900 dark:text-slate-100">Sections</h3><button type="button" wire:click="addSection" class="inline-flex min-h-11 items-center rounded border px-3 py-2 text-sm dark:border-slate-600">Add section</button></div>
                 @foreach ($sections as $index => $section)
                     <div wire:key="{{ $section['key'] }}" class="min-w-0 rounded border border-gray-200 p-4 dark:border-slate-700">
                         <x-input-label for="section-{{ $section['key'] }}" :value="'Section '.($index + 1).' name'" />
@@ -200,7 +200,7 @@
                 @endforeach
             </div>
             <div class="space-y-4">
-                <div class="flex flex-wrap items-center justify-between gap-3"><h4 class="font-medium text-gray-900 dark:text-slate-100">Ordered steps</h4><button type="button" wire:click="addStep" class="inline-flex min-h-11 items-center rounded border px-3 py-2 text-sm dark:border-slate-600">Add step</button></div>
+                <div class="flex flex-wrap items-center justify-between gap-3"><h3 class="font-medium text-gray-900 dark:text-slate-100">Ordered steps</h3><button type="button" wire:click="addStep" class="inline-flex min-h-11 items-center rounded border px-3 py-2 text-sm dark:border-slate-600">Add step</button></div>
                 @forelse ($steps as $index => $step)
                     <fieldset wire:key="{{ $step['key'] }}" class="min-w-0 space-y-4 rounded border border-gray-200 p-4 dark:border-slate-700">
                         <legend class="px-1 font-medium text-gray-900 dark:text-slate-100">Step {{ $index + 1 }}</legend>

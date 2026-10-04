@@ -173,7 +173,7 @@ Backlog relationships mean:
   `Decided` once all questions are answered. No owner questions remain; the
   approved presentation, correction actions, and optional review flow satisfy
   the resolution condition. Ownership remains `Product owner`. UX-04 implements
-  this treatment with browser verification pending; this decision preserves
+  this treatment, confirmed complete by the product owner; this decision preserves
   NUT-16's completeness logic, DEC-001's
   matching policy, and UX-02's established feedback behavior.
 

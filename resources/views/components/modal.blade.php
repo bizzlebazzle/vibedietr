@@ -29,17 +29,36 @@ $titleId = $title ? $name . '-title' : null;
     x-data="{
         show: @js($show),
         opener: null,
+        openerId: null,
         open() {
             this.opener = document.activeElement;
+            this.openerId = this.opener?.id;
             this.show = true;
             this.$nextTick(() => (this.$refs.panel.querySelector('[data-validation-summary]') || this.firstFocusable() || this.$refs.panel).focus());
         },
+        background: [],
+        isolate() {
+            this.restoreBackground();
+            for (let branch = this.$el; branch.parentElement && branch !== document.body; branch = branch.parentElement) {
+                for (const sibling of branch.parentElement.children) {
+                    if (sibling === branch || ['SCRIPT', 'STYLE', 'LINK'].includes(sibling.tagName)) continue;
+                    this.background.push([sibling, sibling.inert]);
+                    sibling.inert = true;
+                }
+            }
+        },
+        restoreBackground() {
+            for (const [element, inert] of this.background) element.inert = inert;
+            this.background = [];
+        },
+        destroy() { this.restoreBackground(); document.body.classList.remove('overflow-y-hidden'); },
         close() {
             if (!this.show) return;
             this.show = false;
             this.$dispatch('close-modal');
             this.$nextTick(() => {
                 if (this.opener?.isConnected) this.opener.focus();
+                else if (this.openerId && document.getElementById(this.openerId)) document.getElementById(this.openerId).focus();
                 else {
                     const destination = document.querySelector('main h1, main h2, main');
                     destination?.setAttribute('tabindex', '-1');
@@ -59,11 +78,13 @@ $titleId = $title ? $name . '-title' : null;
         nextFocusableIndex() { return (this.focusables().indexOf(document.activeElement) + 1) % (this.focusables().length + 1) },
         prevFocusableIndex() { return Math.max(0, this.focusables().indexOf(document.activeElement)) -1 },
     }"
-    x-init="if (show) { opener = document.activeElement; document.body.classList.add('overflow-y-hidden'); $nextTick(() => ($refs.panel.querySelector('[data-validation-summary]') || firstFocusable() || $refs.panel).focus()); }
+    x-init="if (show) { opener = document.activeElement; isolate(); document.body.classList.add('overflow-y-hidden'); $nextTick(() => ($refs.panel.querySelector('[data-validation-summary]') || firstFocusable() || $refs.panel).focus()); }
     $watch('show', value => {
         if (value) {
+            isolate();
             document.body.classList.add('overflow-y-hidden');
         } else {
+            restoreBackground();
             document.body.classList.remove('overflow-y-hidden');
         }
     })"
@@ -71,7 +92,7 @@ $titleId = $title ? $name . '-title' : null;
     x-on:close.stop="close()"
     x-on:close-modal.window="close()"
     x-on:keydown.escape.window="if (show) { $event.preventDefault(); close() }"
-    x-on:keydown.tab="if (show && $event.target === lastFocusable() && !$event.shiftKey) { $event.preventDefault(); firstFocusable()?.focus() } else if (show && $event.target === firstFocusable() && $event.shiftKey) { $event.preventDefault(); lastFocusable()?.focus() }"
+    x-on:keydown.tab="if (show && !focusables().includes($event.target)) { $event.preventDefault(); ($event.shiftKey ? lastFocusable() : firstFocusable())?.focus() } else if (show && $event.target === lastFocusable() && !$event.shiftKey) { $event.preventDefault(); firstFocusable()?.focus() } else if (show && $event.target === firstFocusable() && $event.shiftKey) { $event.preventDefault(); lastFocusable()?.focus() }"
     x-show="show"
     class="fixed inset-0 overflow-y-auto px-4 py-6 sm:px-0 z-50"
 >

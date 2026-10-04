@@ -1,5 +1,5 @@
 <section class="mt-8 border-t border-gray-200 pt-6 dark:border-slate-700">
-    <h3 class="text-lg font-semibold text-gray-900 dark:text-slate-100">Nutrition target phases</h3>
+    <h2 class="text-lg font-semibold text-gray-900 dark:text-slate-100">Nutrition target phases</h2>
     <p class="mt-2 text-sm text-gray-600 dark:text-slate-300">Assign one of your named target profiles to plan dates. Dates without a phase have no target. Changes made today apply from tomorrow; explicitly filled past dates keep the values selected now.</p>
 
     @if ($targetProfiles->isEmpty())

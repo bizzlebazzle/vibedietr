@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="text-xl font-semibold text-gray-800 dark:text-slate-100">Bookmarks</h2>
+        <h1 class="text-xl font-semibold text-gray-800 dark:text-slate-100">Bookmarks</h1>
     </x-slot>
 
     <div class="py-12">
