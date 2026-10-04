@@ -127,8 +127,8 @@ work.
   uses the newest completed estimate, but NUT-17 imported and creator-override
   sources retain precedence. Original recipe-version snapshots and their
   pinned matches are never updated; future plan/diary snapshots remain outside
-  this recalculation boundary. DEC-002 remains unresolved for broader review-
-  warning UX under UX-04.
+  this recalculation boundary. DEC-002 records approved review-warning UX;
+  UX-04 remains planned and the requested decision status is unchanged.
 - PLAN-03 adds owner-managed recipe entries to every plan slot. Add records a
   positive planned serving amount, source recipe and immutable version
   identities, the complete immutable recipe-version snapshot, and a copied

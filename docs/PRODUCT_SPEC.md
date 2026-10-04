@@ -251,9 +251,10 @@ collapsed into one ambiguous `quantity` or `recommended servings` value.
 - The recipe creator can easily replace any automatic match.
 - DEC-001 sets the minimum selectable score at `0.9500` and high-confidence
   score at `0.9900`, both inclusive, under threshold-policy version `1`.
-  The final warning treatment remains a design decision under DEC-002. An
-  orange outline or tooltip is one possible treatment, not a specification
-  requirement.
+  DEC-002 records the owner-approved combined summary and inline warning
+  treatment, with optional creator review through `Keep this food`,
+  `Search to replace`, and `Clear match`. Its register status remains
+  `Owner input required` as requested; UX-04 implementation remains planned.
 
 The creator's selected match supplies the default estimate for all viewers.
 When adding the recipe to their own plan or diary, another user may substitute
@@ -639,8 +640,10 @@ purpose and follow the documented retention policy.
 
 The following details are intentionally not fixed by this specification:
 
-- Exact match-score thresholds and the visual treatment of review warnings.
-  Decision: DEC-001, DEC-002.
+- The food-match warning treatment is owner-approved in DEC-002, but its
+  requested register status remains `Owner input required`; implementation
+  remains deferred to UX-04.
+  Decision: DEC-002.
 - The data-export file format.
   Decision: DEC-008.
 - Administrator assignment, escalation, and moderation service-level rules.
