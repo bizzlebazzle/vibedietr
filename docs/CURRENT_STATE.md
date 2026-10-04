@@ -33,8 +33,8 @@ not after every internal refactor.
 - Authentication and profile screens derive from Laravel Breeze. Email
   verification routes exist, but `User` does not implement
   `MustVerifyEmail`, so verification is currently optional.
-- The public landing page and authenticated dashboard remain minimal Laravel
-  defaults. Product identity and primary navigation remain roadmap work.
+- The public landing page, dashboard, and navigation use VibeDietr identity.
+  New accounts receive recipe, food-match, nutrition, and planning guidance.
 - GitHub Actions exposes the required `Backend tests`, `PHP formatting`,
   `Static analysis`, and `Frontend build` checks. The frontend job also
   validates environment alignment, scanner behavior, documentation, and the
@@ -151,7 +151,8 @@ work.
 - PLAN-06 snapshots consumption nutrition; PLAN-07 queues audited review of newer versions for eligible unconsumed entries.
 - UX-01 adds identity/navigation; UX-02 adds accessible feedback; UX-03 adds
   responsive recipe editing/resizing; UX-04 adds optional match review ([browser checks pending](UX_04_VERIFICATION.md)).
-  UX-05 adds responsive planning/consumption ([verification](UX_05_VERIFICATION.md)); UX-06 and UX-07 remain planned.
+  UX-05 adds responsive planning/consumption ([verification](UX_05_VERIFICATION.md)); UX-06 adds empty/recovery guidance.
+  UX-07 remains planned.
 - Backup/restore, self-service account export, delayed deletion/recovery,
   privacy/legal launch review, and release-readiness work remain incomplete
   (DEP-06 through DEP-10). DEC-008, DEC-010, and DEC-012 remain unresolved.
@@ -198,8 +199,7 @@ Done gate before completion.
 | Documentation/context tooling | `./vendor/bin/sail npm run docs:test`, then `docs:check` |
 
 The complete quality requirements and canonical final commands remain in
-[Definition of done](DEFINITION_OF_DONE.md) and the
-[README](../README.md#tests-and-quality-checks).
+[Definition of done](DEFINITION_OF_DONE.md) and [README](../README.md#tests-and-quality-checks).
 
 ## Maintenance rule
 

@@ -13,9 +13,9 @@
                 <x-input-error :messages="$errors->get('recipe_file')" class="mt-2" />
             </div>
             <div role="note" class="rounded border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-100">
-                The upload is private transient extraction input, never an attachment. It is deleted after processing. Photo text is recovered locally with Tesseract and may be inaccurate; every result remains a private draft for review.
+                The upload is private transient extraction input, never an attachment. It is deleted after processing. Photo OCR uses local Tesseract first and may be inaccurate. Usable low-confidence text creates a warning-marked private draft for review; no usable text fails without a draft. After terminal cleanup, retrying OCR requires you to upload the source again.
                 @if (config('production.ocr.google.enabled'))
-                    If local OCR technically fails or finds no usable text, a metadata-free canonical image may be processed by Google Document AI in the EU.
+                    If local OCR technically fails or finds no usable text, a metadata-free canonical image may be processed by Google Document AI in the EU. Low confidence alone does not trigger this fallback.
                 @endif
             </div>
             <x-primary-button>Import upload as private draft</x-primary-button>
@@ -37,11 +37,11 @@
             </div>
             <x-primary-button>Import webpage as private draft</x-primary-button>
         </form>
-        <form method="POST" action="{{ route('recipe-imports.store') }}" class="space-y-6 rounded-lg bg-white p-6 shadow dark:bg-slate-900">
+        <form id="pasted-text-import" method="POST" action="{{ route('recipe-imports.store') }}" class="space-y-6 rounded-lg bg-white p-6 shadow dark:bg-slate-900">
             @csrf
             <h3 class="text-lg font-semibold text-gray-900 dark:text-slate-100">Import pasted recipe text</h3>
             <div role="note" class="rounded border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-100">
-                Your pasted source stays private and is preserved exactly. A local parser will create a private draft for review; it will never publish automatically.
+                Your pasted source stays private and is preserved exactly. If a local parser finds usable recipe structure, it creates a private draft for review; it never publishes automatically. If a webpage or upload cannot be imported, paste its recipe text here or create a recipe manually.
             </div>
             <div>
                 <x-input-label for="source_format" value="Pasted format" />

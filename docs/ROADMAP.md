@@ -1282,6 +1282,7 @@ changes, it is deliberately split across multiple items.
 
 ### UX-06 — P2 — Add onboarding, empty states, and recovery guidance
 
+- **Status:** Implemented (2026-10-04); remote CI pending.
 - **Outcome:** Guide a new or blocked user toward creating/importing a recipe,
   matching food, building a plan, and correcting incomplete nutrition.
 - **Dependencies:** UX-01, REC-15, NUT-16, PLAN-03.

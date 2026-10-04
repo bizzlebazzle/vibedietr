@@ -39,7 +39,10 @@
                                 @csrf @method('DELETE')<button class="text-sm font-semibold text-red-700 dark:text-red-300">Remove</button>
                             </form>
                         </article>
-                    @empty <p class="text-sm text-gray-600 dark:text-slate-400">No owned recipes organized here.</p> @endforelse
+                    @empty
+                        <p class="text-sm text-gray-600 dark:text-slate-400">No owned recipes organized here. {{ $ownedRecipes->isEmpty() ? 'Create or import a recipe first, then return to organize it here.' : 'Choose an owned recipe above and use '.$applyVerb.'.' }}</p>
+                        @if ($ownedRecipes->isEmpty())<x-recipe-start-actions />@endif
+                    @endforelse
                 </section>
                 <section class="space-y-4 rounded border bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
                     <h2 class="text-lg font-semibold">Bookmarks</h2>
@@ -65,7 +68,10 @@
                                 @csrf @method('DELETE')<button class="text-sm font-semibold text-red-700 dark:text-red-300">Remove</button>
                             </form>
                         </article>
-                    @empty <p class="text-sm text-gray-600 dark:text-slate-400">No bookmarks organized here.</p> @endforelse
+                    @empty
+                        <p class="text-sm text-gray-600 dark:text-slate-400">No bookmarks organized here. {{ $ownedBookmarks->isEmpty() ? 'Bookmark a public recipe first, then return to organize it here.' : 'Choose a bookmark above and use '.$applyVerb.'.' }}</p>
+                        @if ($ownedBookmarks->isEmpty())<a href="{{ route('recipes.index') }}" class="inline-flex min-h-11 items-center text-sm font-semibold text-blue-700 underline dark:text-blue-300">Discover recipes to bookmark</a>@endif
+                    @endforelse
                 </section>
             </div>
         </div>

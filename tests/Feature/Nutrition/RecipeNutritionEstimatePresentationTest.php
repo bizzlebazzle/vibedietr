@@ -99,6 +99,9 @@ class RecipeNutritionEstimatePresentationTest extends TestCase
 
         $response->assertOk()
             ->assertSee('This is a partial estimate.')
+            ->assertSee('not verified facts or medical advice')
+            ->assertSee('Open the affected ingredient remedies below')
+            ->assertSee('Existing plan and diary snapshots keep their recorded values.')
             ->assertSee('12.3 g')
             ->assertSee('6.2 g')
             ->assertSee('A pinch of mystery spice')
@@ -161,11 +164,14 @@ class RecipeNutritionEstimatePresentationTest extends TestCase
             ->assertSee('No nutrition values are currently available for this recipe estimate.')
             ->assertSee('Unmatched public ingredient')
             ->assertDontSee('Review or correct ingredient')
+            ->assertSee('not verified facts or medical advice')
+            ->assertDontSee('Open the affected ingredient remedies below')
             ->assertDontSee(route('recipes.edit', $recipe), false);
 
         $this->actingAs($owner)->get(route('recipes.show', $recipe))
             ->assertOk()
             ->assertSee('Review or correct ingredient 1')
+            ->assertSee('Open the affected ingredient remedies below')
             ->assertSee(route('recipes.edit', $recipe).'#ingredient-line-1', false);
     }
 

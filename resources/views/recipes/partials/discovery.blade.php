@@ -26,6 +26,8 @@
     @if ($recipes->isEmpty())
         <div class="rounded border border-gray-200 bg-white p-6 text-gray-700 shadow-sm dark:border-slate-800 dark:bg-slate-900/80 dark:text-slate-300">
             {{ $search === '' ? 'No public recipes yet.' : 'No recipes match your search.' }}
+            <p class="mt-2 text-sm">{{ $search === '' ? 'You can return later to discover public recipes.' : 'Try a broader title or tag, or clear your search above.' }}</p>
+            <x-recipe-start-actions />
         </div>
     @else
         <p class="text-sm text-gray-600 dark:text-slate-400">

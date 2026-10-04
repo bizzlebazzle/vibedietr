@@ -10,6 +10,10 @@
             This is a partial estimate. Available values remain useful, but some ingredients are excluded from some or all calculations or need review. Missing values are not zero.
         @endif
     </p>
+    <p class="mt-2 text-sm">Nutrition calculations are estimates, not verified facts or medical advice.</p>
+    @if ($estimate['status'] !== 'complete' && $editUrl !== null)
+        <p class="mt-2 text-sm">Open the affected ingredient remedies below to review food matches, quantities, units, and missing nutrient data. Save corrections in the draft; finalize the recipe or publish its revision to update the recipe. Existing plan and diary snapshots keep their recorded values.</p>
+    @endif
     @if ($estimate['issues'] !== [])
         <div class="mt-3"><x-recipe-attention :issues="$estimate['issues']" :id="$id.'-attention'" :edit-url="$editUrl" /></div>
     @endif

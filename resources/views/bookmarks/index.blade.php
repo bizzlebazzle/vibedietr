@@ -17,6 +17,8 @@
             @if ($bookmarks->isEmpty())
                 <div class="rounded border border-gray-200 bg-white p-6 text-gray-700 shadow-sm dark:border-slate-800 dark:bg-slate-900/80 dark:text-slate-300">
                     You have not bookmarked any recipes yet.
+                    <p class="mt-2 text-sm">Open a public recipe and choose Bookmark to save a private pointer to its latest public version.</p>
+                    <a href="{{ route('recipes.index') }}" class="mt-3 inline-flex min-h-11 items-center font-semibold text-blue-700 underline dark:text-blue-300">Discover recipes to bookmark</a>
                 </div>
             @else
                 <div class="grid gap-4 sm:grid-cols-2">

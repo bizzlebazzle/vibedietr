@@ -17,7 +17,7 @@
                 <x-input-error :messages="$errors->get('name')" class="mt-2" />
             </form>
             @if ($items->isEmpty())
-                <p class="rounded border bg-white p-6 dark:border-slate-800 dark:bg-slate-900">No {{ $noun }}s yet.</p>
+                <p class="rounded border bg-white p-6 dark:border-slate-800 dark:bg-slate-900">No {{ $noun }}s yet. Enter a name above to create one, then organize your owned recipes or bookmarks.</p>
             @else
                 <div class="grid gap-4 sm:grid-cols-2">
                     @foreach ($items as $item)

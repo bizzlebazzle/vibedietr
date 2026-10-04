@@ -7,6 +7,7 @@
             </div>
             <a href="{{ route('recipe-imports.show', $import) }}" class="rounded border border-amber-500 px-3 py-2 text-sm font-semibold">View import source</a>
         </div>
+        @include('recipe-imports.partials.ocr-guidance')
 
         @php
             $reviewIngredients = $recipe->ingredientLines()->where('requires_review', true)->get();
