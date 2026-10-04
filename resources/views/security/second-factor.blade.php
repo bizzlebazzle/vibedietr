@@ -1,5 +1,5 @@
 <x-app-layout>
-    <x-slot name="header"><h2 class="font-semibold text-xl">Two-step verification</h2></x-slot>
+    <x-slot name="header"><h1 class="font-semibold text-xl">Two-step verification</h1></x-slot>
     <div class="max-w-xl mx-auto py-8">
         @if (session('status')) <p role="status">{{ session('status') }}</p> @endif
         @if ($enrolled)

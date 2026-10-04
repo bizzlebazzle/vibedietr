@@ -1,8 +1,8 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="text-xl font-semibold leading-tight text-gray-800 dark:text-slate-100">
+        <h1 class="text-xl font-semibold leading-tight text-gray-800 dark:text-slate-100">
             Edit ingredient
-        </h2>
+        </h1>
     </x-slot>
 
     <div class="py-12">

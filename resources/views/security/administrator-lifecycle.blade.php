@@ -1,5 +1,5 @@
 <x-app-layout>
-    <x-slot name="header"><h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200">Administrator lifecycle</h2></x-slot>
+    <x-slot name="header"><h1 class="font-semibold text-xl text-gray-800 dark:text-gray-200">Administrator lifecycle</h1></x-slot>
     <div class="py-8"><div class="max-w-4xl mx-auto space-y-6 sm:px-6 lg:px-8">
         @if (session('status')) <p role="status" class="p-3 bg-green-100">{{ session('status') }}</p> @endif
         <x-input-error :messages="$errors->get('lifecycle')" />
@@ -8,21 +8,21 @@
 
         @if (auth()->user()->isAdministrator())
             <section class="p-6 bg-white dark:bg-gray-800 shadow sm:rounded-lg">
-                <h3 class="font-semibold">Initiate promotion</h3>
+                <h2 class="font-semibold">Initiate promotion</h2>
                 <form method="POST" action="{{ route('administrator.lifecycle.promotions.initiate') }}" class="mt-3 space-y-3">@csrf
                     <x-input-label for="target_user_id" value="Target user ID" />
                     <x-text-input id="target_user_id" name="target_user_id" inputmode="numeric" required />
                     <x-primary-button>Initiate promotion</x-primary-button>
                 </form>
             </section>
-            <section class="p-6 bg-white dark:bg-gray-800 shadow sm:rounded-lg"><h3 class="font-semibold">Pending promotions</h3>
+            <section class="p-6 bg-white dark:bg-gray-800 shadow sm:rounded-lg"><h2 class="font-semibold">Pending promotions</h2>
                 @forelse ($pending as $promotion)
                     <div class="mt-3">{{ $promotion->target->name }} · expires {{ $promotion->expires_at->utc()->toIso8601String() }}
                         <form class="inline" method="POST" action="{{ route('administrator.lifecycle.promotions.cancel', $promotion) }}">@csrf <x-danger-button>Cancel</x-danger-button></form>
                     </div>
                 @empty <p class="mt-2">No pending promotions.</p> @endforelse
             </section>
-            <section class="p-6 bg-white dark:bg-gray-800 shadow sm:rounded-lg"><h3 class="font-semibold">Active administrators</h3>
+            <section class="p-6 bg-white dark:bg-gray-800 shadow sm:rounded-lg"><h2 class="font-semibold">Active administrators</h2>
                 @foreach ($administrators as $administrator)
                     <div class="mt-3">{{ $administrator->name }}
                         @if (! $administrator->is(auth()->user()))
@@ -33,7 +33,7 @@
             </section>
         @endif
 
-        <section class="p-6 bg-white dark:bg-gray-800 shadow sm:rounded-lg"><h3 class="font-semibold">Your promotion requests</h3>
+        <section class="p-6 bg-white dark:bg-gray-800 shadow sm:rounded-lg"><h2 class="font-semibold">Your promotion requests</h2>
             @forelse ($ownPromotions as $promotion)
                 <div class="mt-3">{{ ucfirst($promotion->status) }} · expires {{ $promotion->expires_at->utc()->toIso8601String() }}
                     @if ($promotion->status === 'pending')

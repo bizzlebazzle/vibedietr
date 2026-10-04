@@ -200,6 +200,7 @@ Additional focused regression commands are:
 ```bash
 ./vendor/bin/sail npm run test:scanner
 ./vendor/bin/sail npm run test:planning
+./vendor/bin/sail npm run test:accessibility
 ./vendor/bin/sail composer analyse:failure-regression
 ./vendor/bin/sail npm run docs:test
 ```
@@ -238,6 +239,39 @@ runner locations; the default Sail browser URL is `http://laravel.test:8015`.
 CI runs this suite inside `Backend tests` and uploads the screenshots.
 See [UX-05 verification](docs/UX_05_VERIFICATION.md) for scope and remaining
 physical-device and assistive-technology checks.
+
+### Product accessibility browser checks
+
+UX-07 extends the same Sail Selenium/axe tooling to full guest, owner, shared
+reader, and administrator pages. After building assets, run separately from
+PHPUnit and the planning suite because they share the testing database and port:
+
+```bash
+./vendor/bin/sail npm run test:accessibility
+```
+
+The guarded server applies additive migrations and creates/cleans only synthetic
+fixtures. It never uses the normal development database or calls a live food,
+email, or import provider. Reports and review screenshots go to the already
+ignored `storage/app/testing/ux07` directory. `ACCESSIBILITY_BROWSER_URL`,
+`ACCESSIBILITY_BROWSER_ARTIFACTS`, and `SELENIUM_URL` override runner locations.
+CI runs both browser suites sequentially inside `Backend tests` and uploads
+their artifacts.
+
+Six committed cropped PNG baselines cover the remediated primary button, theme
+controls, and dialog header in both themes. The suite compares dimensions and
+pixels, allowing at most 2% changed pixels with a channel difference above 30
+to tolerate small rasterization differences. Update only after reviewing the
+actual UI change and resulting images:
+
+```bash
+./vendor/bin/sail exec -u sail -e UPDATE_ACCESSIBILITY_SNAPSHOTS=1 laravel.test npm run test:accessibility
+```
+
+The suite checks WCAG 2.2 AA tags, keyboard journeys, ARIA references and
+structure, rendered contrast, actual 200%/400% browser zoom, 320px reflow, and
+reduced motion. These checks do not establish WCAG conformance or replace real
+screen-reader/manual verification. See [UX-07 verification](docs/UX_07_VERIFICATION.md).
 
 ## Roadmap task context
 

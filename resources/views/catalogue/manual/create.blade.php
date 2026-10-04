@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="text-xl font-semibold text-gray-800 dark:text-slate-100">Submit a manual catalogue food</h2>
+        <h1 class="text-xl font-semibold text-gray-800 dark:text-slate-100">Submit a manual catalogue food</h1>
     </x-slot>
 
     <div class="py-12">
@@ -21,7 +21,7 @@
                 @php($field = fn (string $key, mixed $default = '') => $input[$key] ?? old($key, $default))
 
                 <section class="space-y-4" aria-labelledby="manual-identity-heading">
-                    <h3 id="manual-identity-heading" class="text-lg font-semibold">Food identity</h3>
+                    <h2 id="manual-identity-heading" class="text-lg font-semibold">Food identity</h2>
                     <div>
                         <x-input-label for="name" value="Food name" />
                         <x-text-input id="name" name="name" value="{{ $field('name') }}" maxlength="255" class="mt-1 block w-full" required />
@@ -57,7 +57,7 @@
 
                 <section class="space-y-4 border-t pt-6 dark:border-slate-700" aria-labelledby="package-heading">
                     <div>
-                        <h3 id="package-heading" class="text-lg font-semibold">Package and serving</h3>
+                        <h2 id="package-heading" class="text-lg font-semibold">Package and serving</h2>
                         <p class="text-sm text-gray-600 dark:text-gray-400">Leave unknown values blank. Amounts and their units must be supplied together.</p>
                     </div>
                     <div class="grid gap-4 sm:grid-cols-2">
@@ -87,7 +87,7 @@
 
                 <section class="space-y-4 border-t pt-6 dark:border-slate-700" aria-labelledby="nutrition-heading">
                     <div>
-                        <h3 id="nutrition-heading" class="text-lg font-semibold">Nutrition (optional)</h3>
+                        <h2 id="nutrition-heading" class="text-lg font-semibold">Nutrition (optional)</h2>
                         <p class="text-sm text-gray-600 dark:text-gray-400">Incomplete panels are accepted. A blank value is unknown; zero means a known zero.</p>
                     </div>
                     <div>

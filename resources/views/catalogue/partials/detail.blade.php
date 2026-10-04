@@ -52,15 +52,15 @@
 
             <dl class="grid gap-3 sm:grid-cols-3">
                 <div class="rounded border border-gray-200 p-3 dark:border-slate-700">
-                    <dt class="text-xs font-semibold uppercase text-gray-500">Quantity</dt>
+                    <dt class="text-xs font-semibold uppercase text-gray-600 dark:text-slate-400">Quantity</dt>
                     <dd class="mt-1">{{ trim(($item->quantity ?? '').' '.($item->quantityUnit ?? '')) ?: 'Not set' }}</dd>
                 </div>
                 <div class="rounded border border-gray-200 p-3 dark:border-slate-700">
-                    <dt class="text-xs font-semibold uppercase text-gray-500">Serving</dt>
+                    <dt class="text-xs font-semibold uppercase text-gray-600 dark:text-slate-400">Serving</dt>
                     <dd class="mt-1">{{ trim(($item->servingQuantity ?? '').' '.($item->servingQuantityUnit ?? '')) ?: 'Not set' }}</dd>
                 </div>
                 <div class="rounded border border-gray-200 p-3 dark:border-slate-700">
-                    <dt class="text-xs font-semibold uppercase text-gray-500">Recommended servings</dt>
+                    <dt class="text-xs font-semibold uppercase text-gray-600 dark:text-slate-400">Recommended servings</dt>
                     <dd class="mt-1">{{ $item->recommendedServings ?? 'Not set' }}</dd>
                 </div>
             </dl>
@@ -82,7 +82,7 @@
                             <dt>{{ str_replace('_', ' ', ucfirst($fact->nutrient)) }}</dt>
                             <dd class="text-right">
                                 <span>{{ $fact->display }}</span>
-                                <span class="block text-xs text-gray-500">{{ str_replace('_', ' ', $fact->provenance) }}</span>
+                                <span class="block text-xs text-gray-600 dark:text-slate-400">{{ str_replace('_', ' ', $fact->provenance) }}</span>
                             </dd>
                         </div>
                     @endforeach

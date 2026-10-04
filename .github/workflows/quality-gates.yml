@@ -119,6 +119,20 @@ jobs:
           PLANNING_BROWSER_URL: http://host.docker.internal:8015
         run: npm run test:planning
 
+      - name: Run product accessibility remediation regressions
+        env:
+          SELENIUM_URL: http://127.0.0.1:4444/wd/hub
+          ACCESSIBILITY_BROWSER_URL: http://host.docker.internal:8015
+        run: npm run test:accessibility
+
+      - name: Preserve accessibility reports and screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: accessibility-browser-evidence
+          path: storage/app/testing/ux07
+          if-no-files-found: ignore
+
       - name: Preserve planning visual snapshots
         if: always()
         uses: actions/upload-artifact@v4

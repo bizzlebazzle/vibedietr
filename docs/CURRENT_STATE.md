@@ -152,7 +152,7 @@ work.
 - UX-01 adds identity/navigation; UX-02 adds accessible feedback; UX-03 adds
   responsive recipe editing/resizing; UX-04 adds optional match review ([verification](UX_04_VERIFICATION.md)).
   UX-05 adds responsive planning/consumption ([verification](UX_05_VERIFICATION.md)); UX-06 adds empty/recovery guidance.
-  UX-07 remains planned.
+  UX-07 adds shared accessibility fixes and full-page/pixel regressions ([verification](UX_07_VERIFICATION.md)).
 - Backup/restore, self-service account export, delayed deletion/recovery,
   privacy/legal launch review, and release-readiness work remain incomplete
   (DEP-06 through DEP-10). DEC-008, DEC-010, and DEC-012 remain unresolved.
@@ -171,8 +171,8 @@ work.
   unversioned nutrition JSON and has no per-user database uniqueness invariant
   for barcodes. Native shared-catalogue imports use the global catalogue
   barcode constraint.
-- Focused planning Selenium/axe checks cover keyboard, touch, zoom, and snapshots;
-  a general browser/visual-regression suite remains absent. The barcode scanner
+- Planning and UX-07 Selenium/axe checks cover journeys, zoom, motion and focused pixel baselines;
+  real assistive-technology verification remains external. The barcode scanner
   has deterministic Node coverage but still needs physical-camera checks.
 - Measurement presentation remains duplicated in retained ingredient views,
   and the static-analysis baseline contains reviewed existing findings.

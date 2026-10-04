@@ -16,7 +16,7 @@ new class extends Component
     }
 }; ?>
 
-<nav x-data="{ open: false }" class="border-b border-gray-200 bg-white/95 text-gray-900 dark:border-slate-800 dark:bg-slate-900/95 dark:text-slate-100">
+<nav aria-label="Primary navigation" x-data="{ open: false }" x-on:keydown.escape="if (open) { open = false; $refs.mobileToggle.focus() }" class="border-b border-gray-200 bg-white/95 text-gray-900 dark:border-slate-800 dark:bg-slate-900/95 dark:text-slate-100">
     <!-- Primary Navigation Menu -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
@@ -41,7 +41,8 @@ new class extends Component
             <div class="hidden lg:flex lg:items-center lg:ms-6">
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
-                        <button class="inline-flex items-center rounded-md border border-transparent bg-white px-3 py-2 text-sm font-medium leading-4 text-gray-600 transition ease-in-out duration-150 hover:text-gray-900 focus:outline-none dark:bg-slate-900 dark:text-slate-300 dark:hover:text-slate-100">
+                        <button type="button" :aria-expanded="open.toString()" :aria-controls="$id('dropdown')" class="inline-flex items-center rounded-md border border-transparent bg-white px-3 py-2 text-sm font-medium leading-4 text-gray-600 transition ease-in-out duration-150 hover:text-gray-900 focus:outline-none dark:bg-slate-900 dark:text-slate-300 dark:hover:text-slate-100">
+                            <span class="sr-only">Account menu for</span>
                             <div x-data="{{ json_encode(['name' => auth()->user()->name]) }}" x-text="name" x-on:profile-updated.window="name = $event.detail.name"></div>
 
                             <div class="ms-1">
@@ -71,18 +72,14 @@ new class extends Component
                         @endcan
 
                         <!-- Authentication -->
-                        <button wire:click="logout" class="w-full text-start">
-                            <x-dropdown-link>
-                                {{ __('Log Out') }}
-                            </x-dropdown-link>
-                        </button>
+                        <button type="button" wire:click="logout" class="block w-full px-4 py-2 text-start text-sm text-gray-700 hover:bg-gray-100 dark:text-slate-200 dark:hover:bg-slate-800">{{ __('Log Out') }}</button>
                     </x-slot>
                 </x-dropdown>
             </div>
 
             <!-- Hamburger -->
             <div class="-me-2 flex items-center lg:hidden">
-                <button type="button" aria-label="Toggle navigation" aria-controls="mobile-navigation" :aria-expanded="open.toString()" @click="open = ! open" class="inline-flex items-center justify-center rounded-md p-2 text-gray-500 transition duration-150 ease-in-out hover:bg-gray-100 hover:text-gray-700 focus:bg-gray-100 focus:outline-none focus:text-gray-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100 dark:focus:bg-slate-800 dark:focus:text-slate-100">
+                <button type="button" aria-label="Toggle navigation" x-ref="mobileToggle" aria-controls="mobile-navigation" :aria-expanded="open.toString()" @click="open = ! open" class="inline-flex items-center justify-center rounded-md p-2 text-gray-500 transition duration-150 ease-in-out hover:bg-gray-100 hover:text-gray-700 focus:bg-gray-100 focus:outline-none focus:text-gray-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100 dark:focus:bg-slate-800 dark:focus:text-slate-100">
                     <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
                         <path :class="{'hidden': open, 'inline-flex': ! open }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                         <path :class="{'hidden': ! open, 'inline-flex': open }" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -127,11 +124,7 @@ new class extends Component
                 @endcan
 
                 <!-- Authentication -->
-                <button wire:click="logout" class="w-full text-start">
-                    <x-responsive-nav-link>
-                        {{ __('Log Out') }}
-                    </x-responsive-nav-link>
-                </button>
+                <button type="button" wire:click="logout" class="block w-full px-4 py-2 text-start text-gray-600 dark:text-slate-400">{{ __('Log Out') }}</button>
             </div>
         </div>
     </div>

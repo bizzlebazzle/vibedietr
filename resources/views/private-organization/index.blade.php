@@ -1,5 +1,5 @@
 <x-app-layout>
-    <x-slot name="header"><h2 class="text-xl font-semibold">{{ $heading }}</h2></x-slot>
+    <x-slot name="header"><h1 class="text-xl font-semibold">{{ $heading }}</h1></x-slot>
     <div class="py-12">
         <div class="mx-auto max-w-5xl space-y-6 px-4 sm:px-6 lg:px-8">
             @if (session('status')) <x-auth-session-status :status="session('status')" /> @endif

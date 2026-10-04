@@ -29,7 +29,7 @@ class ProductIdentityTest extends TestCase
         $this->get(route('login'))
             ->assertOk()
             ->assertSee('VibeDietr')
-            ->assertSee('<title>VibeDietr</title>', false);
+            ->assertSee('<title>Log in — VibeDietr</title>', false);
     }
 
     public function test_authenticated_landing_and_empty_dashboard_offer_available_actions(): void
@@ -50,7 +50,7 @@ class ProductIdentityTest extends TestCase
             ->assertSee('Private tags')
             ->assertSee('Create a meal plan')
             ->assertSee('Browse the food catalogue')
-            ->assertSee('<title>VibeDietr</title>', false);
+            ->assertSee('<title>Your dashboard — VibeDietr</title>', false);
     }
 
     public function test_dashboard_counts_only_owners_private_records(): void

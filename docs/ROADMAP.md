@@ -1301,6 +1301,9 @@ changes, it is deliberately split across multiple items.
 
 ### UX-07 — P2 — Run a WCAG 2.2 AA remediation pass
 
+- **Status:** Implemented (2026-10-04); human accessibility verification and remote CI pending.
+- **Verification:** [UX-07 accessibility remediation](UX_07_VERIFICATION.md).
+
 - **Outcome:** Resolve accessibility defects across authentication, catalogue,
   recipe, planning, profile, sharing, moderation, and deletion/export flows.
 - **Dependencies:** UX-01 through UX-06 and the corresponding feature pages.

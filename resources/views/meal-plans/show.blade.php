@@ -1,5 +1,5 @@
 <x-app-layout>
-    <x-slot name="header"><h2 class="text-xl font-semibold text-gray-800 dark:text-slate-100">{{ $mealPlan->name }}</h2></x-slot>
+    <x-slot name="header"><h1 class="text-xl font-semibold text-gray-800 dark:text-slate-100">{{ $mealPlan->name }}</h1></x-slot>
     <div class="planning-content py-8" data-planning-focus="{{ session('planning_focus') }}"><div class="mx-auto max-w-3xl sm:px-6 lg:px-8"><div class="rounded-lg bg-white p-3 sm:p-6 shadow dark:bg-slate-900">
         <x-validation-summary :errors="$errors" class="mb-4" />
         <x-auth-session-status :status="session('status')" class="mb-4" />
@@ -17,7 +17,7 @@
         </div>
 
         <section class="mt-8 border-t border-gray-200 pt-6 dark:border-slate-700">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-slate-100">Sharing</h3>
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-slate-100">Sharing</h2>
             <p class="mt-2 text-sm text-gray-600 dark:text-slate-300">Viewers are read-only. A share never grants edit or reshare rights.</p>
 
             @if ($mealPlan->visibility === \App\Domain\MealPlans\MealPlanVisibility::Public)
@@ -68,7 +68,7 @@
         @endif
 
         <section class="mt-8 border-t border-gray-200 pt-6 dark:border-slate-700">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-slate-100">Plan days</h3>
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-slate-100">Plan days</h2>
 
             <form method="POST" action="{{ route('meal-plans.days.store', $mealPlan) }}" class="mt-4 flex flex-wrap items-end gap-3">
                 @csrf
@@ -91,9 +91,9 @@
             <div class="mt-6 space-y-6">
                 @forelse ($mealPlan->days as $day)
                     <article class="rounded-md border border-gray-200 p-2 sm:p-4 dark:border-slate-700">
-                        <h4 class="font-semibold text-gray-900 dark:text-slate-100">
+                        <h3 class="font-semibold text-gray-900 dark:text-slate-100">
                             {{ $day->date?->toFormattedDateString() ?? 'Day '.($day->day_index + 1) }}
-                        </h4>
+                        </h3>
                         @if (isset($dailyComparisons[$day->id]))
                             @include('meal-plans.partials.daily-comparison', ['comparison' => $dailyComparisons[$day->id]])
                         @endif

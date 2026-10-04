@@ -129,11 +129,17 @@ untested.
   accessible name/state, and axe checks through `npm run test:planning`, with
   screenshots for review. Use Sail locally as documented in
   [README](../README.md#planning-browser-checks).
+- Shared UI and product accessibility changes pass `npm run test:accessibility`
+  through Sail. UX-07 covers representative full-page axe, markup/reference,
+  keyboard, contrast, zoom, motion and focused pixel-baseline regressions; real
+  assistive-technology/manual evidence remains required where automation cannot
+  establish the behavior. See [UX-07 verification](UX_07_VERIFICATION.md).
 
 **Desirable but not currently available**
 
-- There is no general frontend linter or pixel-based visual-regression suite.
-  The barcode scanner has focused Node coverage with browser API doubles.
+- There is no general frontend linter or comprehensive visual-regression suite.
+  UX-07 has focused pixel baselines; the barcode scanner has focused Node
+  coverage with browser API doubles.
 - Areas outside that browser suite still require applicable PHPUnit/Node and
   manual browser evidence. Never report absent browser or visual checks as
   passed; report conditionally complete if adequate verification is unavailable.

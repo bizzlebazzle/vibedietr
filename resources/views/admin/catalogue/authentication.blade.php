@@ -3,8 +3,8 @@
     <p><a class="underline" href="{{ route('password.confirm') }}">Confirm your password</a>, then verify a fresh authenticator code. Each successful decision consumes one proof.</p>
     <form method="POST" action="{{ route('security.second-factor.verify') }}" class="flex flex-wrap gap-3 items-end">@csrf
         <input type="hidden" name="operation" value="catalogue-moderation" />
-        <div><x-input-label for="moderation-code" value="Six-digit authenticator code" /><x-text-input id="moderation-code" name="code" inputmode="numeric" autocomplete="one-time-code" required maxlength="6" /></div>
+        <div><x-input-label for="moderation-code" value="Six-digit authenticator code" /><x-text-input id="moderation-code" name="code" inputmode="numeric" autocomplete="one-time-code" required maxlength="6" /><x-input-error :messages="$errors->get('code')" /></div>
         <x-primary-button>Verify code</x-primary-button>
     </form>
-    <x-input-error :messages="$errors->all()" />
+    <x-validation-summary :errors="$errors" />
 </section>

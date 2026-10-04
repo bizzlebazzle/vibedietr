@@ -1,4 +1,5 @@
 <x-app-layout>
+    <x-slot name="title">Confirm your authenticator</x-slot>
     <div class="max-w-xl mx-auto py-8">
         <h1 class="text-xl font-semibold">Confirm your authenticator</h1>
         <p>Scan this QR code or enter the manual key. The secret will not be shown after activation.</p>

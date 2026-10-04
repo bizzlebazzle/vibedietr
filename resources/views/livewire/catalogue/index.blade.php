@@ -13,7 +13,7 @@
             class="min-w-0 flex-1 rounded border px-3 py-2"
         />
         @auth
-            <a href="{{ route('catalogue.manual.create') }}" class="inline-flex items-center justify-center rounded-md bg-sky-600 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white hover:bg-sky-500">
+            <a href="{{ route('catalogue.manual.create') }}" class="inline-flex items-center justify-center rounded-md bg-sky-700 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white hover:bg-sky-800">
                 Submit manual food
             </a>
         @endauth
