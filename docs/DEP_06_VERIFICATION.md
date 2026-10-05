@@ -89,3 +89,14 @@ is a host-side repeatable check; it is not an enabled production schedule.
 No user-interface or product flow changes were made. Browser/accessibility checks
 are not applicable to these operator commands. Production topology, legal review,
 full erasure lifecycle and service-release approval are not claimed by this drill.
+
+## CI runtime pin repair
+
+The initial DEP-06 CI run failed before backend tests: Ubuntu's current archive
+no longer supplied `libheif1`/`libheif-plugin-libde265` version
+`1.17.6-1ubuntu4.8`. CI and Sail now both pin `1.17.6-1ubuntu4.9`. Installing
+all four exact OCR packages on clean Ubuntu 24.04 succeeded; the English
+trained-data SHA-256 remained unchanged. In a disposable Sail runtime with the
+updated decoder, all nine uploaded-import tests passed (96 assertions), including
+real HEIC conversion, metadata removal and Tesseract extraction. Live OCR
+readiness accepted the reviewed pin and rejected a configured obsolete pin.

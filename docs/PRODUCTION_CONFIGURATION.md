@@ -214,8 +214,10 @@ versions with `OCR_HEIC_DECODER_VERSION`. Deployment images must install those
 exact reviewed packages; configuration validation does not install or upgrade
 dependencies.
 `docker/8.4/Dockerfile` is the reviewed local/Sail baseline and pins Tesseract
-5.3.4, the English trained-data package, libheif 1.17.6, and its libde265
-decoder plugin. Update those pins, the production configuration, and the
+5.3.4, the English trained-data package, libheif `1.17.6-1ubuntu4.9`, and its
+matching libde265 decoder plugin. CI installs the same exact decoder packages.
+Enabled production OCR must set `OCR_HEIC_DECODER_VERSION=1.17.6-1ubuntu4.9`.
+Update those pins, the production configuration, and the
 reviewed trained-data SHA-256 together after testing any dependency change.
 `OCR_MAX_OUTPUT_BYTES` is capped at eight MiB and abandoned inputs expire at
 exactly seven days.
