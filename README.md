@@ -184,6 +184,13 @@ graceful restart, recovery, health and privacy procedures and
 
 ## Tests and quality checks
 
+Backup capture/expiry, quarantined restore and migration rollout procedures are
+in [the backup/restore runbook](docs/BACKUP_RESTORE_RUNBOOK.md) and
+[the migration runbook](docs/MIGRATION_RUNBOOK.md). Run the disposable synthetic
+drill from WSL with `bash scripts/recovery/drill.sh`; set
+`RECOVERY_DRILL_FULL_SUITE=yes` to also check the full application suite on its
+isolated MySQL 8.4 target. See [DEP-06 evidence and launch gates](docs/DEP_06_VERIFICATION.md).
+
 Run the same commands used as local equivalents of the CI quality gates:
 
 ```bash

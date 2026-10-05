@@ -289,6 +289,9 @@ jobs:
       - name: Run frontend scanner tests
         run: npm run test:scanner
 
+      - name: Verify recovery set and retention controls
+        run: npm run test:recovery
+
       - name: Validate documentation
         run: npm run docs:check
 

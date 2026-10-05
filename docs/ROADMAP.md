@@ -1461,6 +1461,12 @@ changes, it is deliberately split across multiple items.
 - **Outcome:** Make database and private storage recoverable and schema rollout
   safe before production data exists.
 - **Dependencies:** FND-02, DEC-012, DEP-02.
+- **Status:** Conditionally complete (2026-10-05): repository tooling and
+  synthetic restore/expiry/migration drill implemented; installation-specific
+  production gates and remote CI remain required before launch/merge.
+- **Implementation:** [Backup/restore runbook](BACKUP_RESTORE_RUNBOOK.md),
+  [schema rollout runbook](MIGRATION_RUNBOOK.md), and
+  [verification and remaining gates](DEP_06_VERIFICATION.md).
 - **Decision controls:** Decided DEC-012 selects the Docker reference stack
   and daily paired database/private-object recovery sets: seven-day UTC
   eligibility, removal/zero-unused pruning within a further 24 hours, all-copy

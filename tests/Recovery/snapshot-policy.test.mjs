@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { classifySnapshots, requireEligible } from '../../scripts/recovery/snapshot-policy.mjs';
+import { classifySnapshots, monitorSnapshots, requireEligible } from '../../scripts/recovery/snapshot-policy.mjs';
 
 const now = new Date('2026-10-05T12:00:00Z');
 const snapshot = (id, time, extra = {}) => ({ id: id.repeat(64), time, ...extra });
@@ -26,4 +26,15 @@ test('future, non-UTC, malformed and duplicate snapshots fail closed', () => {
         [snapshot('a', now.toISOString()), snapshot('a', now.toISOString())],
         {},
     ]) assert.throws(() => classifySnapshots(inventory, now));
+});
+
+test('missing/stale expiry proof, missed captures and overdue removal are failures', () => {
+    const fresh = snapshot('a', now.toISOString(), { tags: ['vibedietr-paired'] });
+    const proof = { installation: 'synthetic', verified_at: now.toISOString() };
+    assert.deepEqual(monitorSnapshots([fresh], proof, 'synthetic', now), { eligible_count: 1, expired_count: 0 });
+    assert.throws(() => monitorSnapshots([fresh], null, 'synthetic', now));
+    assert.throws(() => monitorSnapshots([fresh], proof, 'other', now));
+    assert.throws(() => monitorSnapshots([fresh], { ...proof, verified_at: '2026-10-04T12:00:00Z' }, 'synthetic', now));
+    assert.throws(() => monitorSnapshots([snapshot('a', '2026-10-04T12:00:00Z', { tags: ['vibedietr-paired'] })], proof, 'synthetic', now));
+    assert.throws(() => monitorSnapshots([fresh, snapshot('b', '2026-09-27T12:00:00Z')], proof, 'synthetic', now));
 });

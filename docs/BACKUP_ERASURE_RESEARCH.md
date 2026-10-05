@@ -26,7 +26,8 @@ in `AAA-NN` format. Context was generated for DEP-06, DEP-08, and DEP-09 instead
 The investigation inspected their routed requirements and the following
 implementation evidence without accessing production data or credentials.
 These inventory findings predate the owner approval and reference-stack
-validation; the application implementation remains unchanged:
+validation and describe that investigation baseline. Subsequent DEP-06 tooling
+and dependency changes are recorded in the [implemented runbook](BACKUP_RESTORE_RUNBOOK.md):
 
 | Evidence | Finding and limitation |
 | --- | --- |
