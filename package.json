@@ -3,6 +3,7 @@
     "private": true,
     "type": "module",
     "scripts": {
+        "test:recovery": "node --test tests/Recovery/*.test.mjs",
         "build": "vite build",
         "context:index": "node scripts/docs/context-index.mjs",
         "context:index:check": "node scripts/docs/context-index.mjs --check",

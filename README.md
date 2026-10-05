@@ -198,12 +198,21 @@ Run the same commands used as local equivalents of the CI quality gates:
 Additional focused regression commands are:
 
 ```bash
+./vendor/bin/sail npm run test:recovery
 ./vendor/bin/sail npm run test:scanner
 ./vendor/bin/sail npm run test:planning
 ./vendor/bin/sail npm run test:accessibility
 ./vendor/bin/sail composer analyse:failure-regression
 ./vendor/bin/sail npm run docs:test
 ```
+
+For frozen-database recovery and additive migration checks, use
+`php artisan operations:reconcile-database --quiesced --write=/restricted/before.json`
+and `--compare=/restricted/before.json` afterward. Add `--additive` only for a
+reviewed additive migration: existing columns, indexes, constraints and values
+must survive, and every migration in the inspected release must be applied.
+The command requires MySQL/InnoDB, checks every declared foreign key and writes
+count/digest evidence without row contents. It does not release restored data.
 
 Run one backend test file by passing its path through the Composer script:
 
