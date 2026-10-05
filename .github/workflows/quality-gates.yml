@@ -65,8 +65,8 @@ jobs:
           sudo apt-get install --no-install-recommends --yes \
             tesseract-ocr=5.3.4-1build5 \
             tesseract-ocr-eng=1:4.1.0-2 \
-            libheif1=1.17.6-1ubuntu4.8 \
-            libheif-plugin-libde265=1.17.6-1ubuntu4.8
+            libheif1=1.17.6-1ubuntu4.9 \
+            libheif-plugin-libde265=1.17.6-1ubuntu4.9
 
       - name: Locate the Composer download cache
         id: composer-cache
@@ -288,6 +288,9 @@ jobs:
 
       - name: Run frontend scanner tests
         run: npm run test:scanner
+
+      - name: Verify recovery set and retention controls
+        run: npm run test:recovery
 
       - name: Validate documentation
         run: npm run docs:check

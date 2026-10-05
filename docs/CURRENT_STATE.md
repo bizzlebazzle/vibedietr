@@ -153,9 +153,9 @@ work.
   responsive recipe editing/resizing; UX-04 adds optional match review ([verification](UX_04_VERIFICATION.md)).
   UX-05 adds responsive planning/consumption ([verification](UX_05_VERIFICATION.md)); UX-06 adds empty/recovery guidance.
   UX-07 adds shared accessibility fixes and full-page/pixel regressions ([verification](UX_07_VERIFICATION.md)).
-- Backup/restore, self-service account export, delayed deletion/recovery,
-  privacy/legal launch review, and release-readiness work remain incomplete
-  (DEP-06 through DEP-10). DEC-008 and DEC-010 remain unresolved; DEC-012 is decided.
+- [Recovery tooling and drill](DEP_06_VERIFICATION.md) exist; production release needs DEP-08 and installation gates.
+- Export, delayed deletion/recovery, privacy/legal and release readiness remain
+  incomplete (DEP-07–DEP-10). DEC-008/010 remain unresolved; DEC-012 is decided.
 - Account deletion is still immediate. Legacy ingredient rows cascade with the
   account; shared catalogue submitter references are nullable provenance and
   survive account deletion.

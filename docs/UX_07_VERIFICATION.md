@@ -127,6 +127,35 @@ guarantee paginated catalogue/moderation states, independent of other testing
 records. First/last disabled controls have PHP coverage; desktop/mobile keyboard
 pagination and seven additional full-page axe states have browser coverage.
 
+### Browser timing regressions found during DEP-06 CI
+
+[Quality gates run 203](https://github.com/bizzlebazzle/vibedietr/actions/runs/37355085838)
+passed PHPUnit and planning checks, then failed profile deletion and a navigation
+contrast scan in the accessibility suite. Navigation colors now update together
+without intermediate color transitions. The theme regression samples all visible
+theme/navigation text at five transition positions in each of three modes,
+compositing translucent background layers; its 135 samples reproduced ratios
+below 4.5:1 before the correction and pass afterward.
+
+Delayed modal autofocus could steal focus after the user had already tabbed into
+the password field. A delayed-frame keyboard regression reproduced eight typed
+characters followed by focus moving to Close, so Enter closed the dialog rather
+than submitting deletion. Initial autofocus now preserves focus already inside
+the open panel and does not focus a closed panel. The regression retains delayed
+frames and paused keyboard entry; cancellation, validation-summary focus,
+background isolation, focus trapping, successful deletion and guest enforcement
+remain tested. Redirect failures report focus, field length and validation state
+without printing the password. Contrast thresholds and pixel baselines are unchanged.
+
+The final local run passed all 15 accessibility tests and 105 axe scans with zero
+violations, all six planning tests, and the unchanged visual baselines. The
+135 theme/navigation samples stayed at or above 4.81:1. The unchanged Composer
+gate passed 1,062 tests / 6,827 assertions in 84.66 seconds on a disposable MySQL
+8.0 target in Sail. The persistent-database attempt hit Composer's 300-second
+timeout while several schema resets each took about 44 seconds; the disposable
+run retained that timeout. Pint, PHPStan, build, 24 frontend tests, documentation
+checks and CI's cached production-configuration smoke check also passed locally.
+
 ## Manual inspection and outstanding verification
 
 On 2026-10-04 the agent inspected source/markup and generated PNGs using the

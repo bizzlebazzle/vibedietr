@@ -184,6 +184,13 @@ graceful restart, recovery, health and privacy procedures and
 
 ## Tests and quality checks
 
+Backup capture/expiry, quarantined restore and migration rollout procedures are
+in [the backup/restore runbook](docs/BACKUP_RESTORE_RUNBOOK.md) and
+[the migration runbook](docs/MIGRATION_RUNBOOK.md). Run the disposable synthetic
+drill from WSL with `bash scripts/recovery/drill.sh`; set
+`RECOVERY_DRILL_FULL_SUITE=yes` to also check the full application suite on its
+isolated MySQL 8.4 target. See [DEP-06 evidence and launch gates](docs/DEP_06_VERIFICATION.md).
+
 Run the same commands used as local equivalents of the CI quality gates:
 
 ```bash
@@ -198,12 +205,21 @@ Run the same commands used as local equivalents of the CI quality gates:
 Additional focused regression commands are:
 
 ```bash
+./vendor/bin/sail npm run test:recovery
 ./vendor/bin/sail npm run test:scanner
 ./vendor/bin/sail npm run test:planning
 ./vendor/bin/sail npm run test:accessibility
 ./vendor/bin/sail composer analyse:failure-regression
 ./vendor/bin/sail npm run docs:test
 ```
+
+For frozen-database recovery and additive migration checks, use
+`php artisan operations:reconcile-database --quiesced --write=/restricted/before.json`
+and `--compare=/restricted/before.json` afterward. Add `--additive` only for a
+reviewed additive migration: existing columns, indexes, constraints and values
+must survive, and every migration in the inspected release must be applied.
+The command requires MySQL/InnoDB, checks every declared foreign key and writes
+count/digest evidence without row contents. It does not release restored data.
 
 Run one backend test file by passing its path through the Composer script:
 

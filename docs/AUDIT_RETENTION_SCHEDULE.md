@@ -218,7 +218,8 @@ until every affected copy is verified retired, normally within nine days after
 the deadline, including recoverable journal storage/key generations. This narrow
 purpose does not extend ordinary audit identity mappings or the anonymous receipt.
 Document scoped holds/incident extensions and fail closed on missing evidence.
-These are approved design rules; DEP-06/DEP-08 still implement and drill them.
+DEP-06 implements [quarantined recovery and expiry tooling](BACKUP_RESTORE_RUNBOOK.md);
+DEP-08 still implements independent journal disposal, purge and verified release.
 
 ## 8. Holds and exceptions
 

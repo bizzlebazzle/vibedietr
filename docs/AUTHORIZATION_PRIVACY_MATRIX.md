@@ -264,8 +264,9 @@ They are separate from ordinary audit identity mappings and anonymous receipts.
 Restores of database or private storage remain quarantined until current journal
 truth, original deadlines, domain anonymization and object suppression are
 verified; missing evidence blocks release. The approved
-[backup erasure rules](BACKUP_ERASURE_RESEARCH.md) still require DEP-06/DEP-08
-implementation and installation-specific drills.
+[backup erasure rules](BACKUP_ERASURE_RESEARCH.md) have DEP-06's
+[quarantined recovery tooling](BACKUP_RESTORE_RUNBOOK.md); DEP-08 release controls
+and installation-specific privacy/disposal drills remain required.
 
 | Resource | Current or planned | Owner | Creator | Default visibility | Logged-out viewer | Authenticated non-owner viewer | Owner permissions | Shared-user permissions | Administrator permissions | Create rule | View rule | Edit rule | Delete rule | Share or publish rule | Ownership-transfer rule | Behavior when the owner is deleted | Audit requirement | Relevant decision IDs | Relevant roadmap IDs | Notes or unresolved questions |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
