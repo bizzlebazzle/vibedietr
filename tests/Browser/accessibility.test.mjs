@@ -158,36 +158,46 @@ test('theme changes retain readable text throughout color updates', async () => 
         const done=arguments[arguments.length-1];
         (async()=>{
             const buttons=[...document.querySelectorAll('button')].filter(button=>button.getAttribute('x-on:click')?.startsWith('setTheme'));
-            const luminance=color=>color.match(/[\\d.]+/g).slice(0,3).map(v=>v/255)
+            const controls=[...buttons,...document.querySelectorAll('nav a,nav button')]
+                .filter(control=>control.checkVisibility() && control.textContent.trim());
+            const rgba=color=>color.match(/[\\d.]+/g).map(Number);
+            const background=element=>{
+                const layers=[];
+                for(let parent=element;parent;parent=parent.parentElement) layers.push(rgba(getComputedStyle(parent).backgroundColor));
+                return layers.reverse().reduce((below,layer)=>below.map((value,index)=>
+                    layer[index]*(layer[3]??1)+value*(1-(layer[3]??1))),[255,255,255]);
+            };
+            const luminance=color=>color.slice(0,3).map(v=>v/255)
                 .map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4)
                 .reduce((sum,v,i)=>sum+v*[.2126,.7152,.0722][i],0);
             const contrast=(a,b)=>{const [hi,lo]=[luminance(a),luminance(b)].sort((a,b)=>b-a);return (hi+.05)/(lo+.05);};
             const frame=()=>new Promise(requestAnimationFrame);
             await frame();
-            buttons.flatMap(button=>button.getAnimations()).forEach(animation=>animation.finish());
+            controls.flatMap(control=>control.getAnimations()).forEach(animation=>animation.finish());
             const results=[];
             for(const mode of ['dark','light','system']) {
                 buttons.find(button=>button.getAttribute('x-on:click')===\"setTheme('\"+mode+\"')\").click();
                 await frame();
                 // Pause and sample any real CSS transitions so fast CI cannot skip the failing frame.
-                const animations=buttons.flatMap(button=>button.getAnimations());
+                const animations=controls.flatMap(control=>control.getAnimations());
                 animations.forEach(animation=>animation.pause());
                 for(const progress of [0,.25,.5,.75,1]) {
                     animations.forEach(animation=>animation.currentTime=Number(animation.effect.getTiming().duration)*progress);
-                    for(const button of buttons) {
-                        const style=getComputedStyle(button);
-                        results.push({mode,progress,button:button.textContent.replace('✓','').trim(),ratio:contrast(style.color,style.backgroundColor)});
+                    for(const control of controls) {
+                        const style=getComputedStyle(control);
+                        results.push({mode,progress,control:control.textContent.replace('✓','').trim(),ratio:contrast(rgba(style.color),background(control))});
                     }
                 }
                 animations.forEach(animation=>animation.finish());
             }
-            return results;
+            return {samples:results,controlCount:controls.length};
         })().then(done).catch(error=>done({error:error.message}));
     `);
     assert.equal(samples.error,undefined);
-    assert.equal(samples.length,45);
-    writeFileSync(`${artifacts}/theme-contrast.json`,JSON.stringify(samples,null,2));
-    assert.deepEqual(samples.filter(sample=>sample.ratio<4.5),[]);
+    assert.ok(samples.controlCount>3, 'Theme and navigation controls must be sampled');
+    assert.equal(samples.samples.length,samples.controlCount*15);
+    writeFileSync(`${artifacts}/theme-contrast.json`,JSON.stringify(samples.samples,null,2));
+    assert.deepEqual(samples.samples.filter(sample=>sample.ratio<4.5),[]);
 });
 
 test('full-page guest authentication, catalogue, recipe and public-profile scans in both themes', async () => {
@@ -383,10 +393,32 @@ test('profile validation, theme selection and deletion dialog trap focus, isolat
     await browser.wait(async()=>browser.executeScript('return document.activeElement.matches(arguments[0])',opener),5000)
         .catch(async error=>{throw new Error(await browser.executeScript('return JSON.stringify({active:document.activeElement.tagName+"#"+document.activeElement.id,opener:Alpine.$data(document.querySelector("[role=dialog]").parentElement).openerId})'),{cause:error});});
     await scan('deletion-cancelled');
-    await login('deletion'); await open('/profile'); await tabTo(opener); await press();
-    await tabTo('[role="dialog"] input[name="password"]');
-    await browser.actions().sendKeys('browser-fixture-password',Key.ENTER).perform();
-    await browser.wait(until.urlIs(`${base}/`),15000);
+    await login('deletion'); await open('/profile');
+    // Delay Alpine's transition ticks so initial autofocus occurs during typing.
+    await browser.executeScript(`window.ux07NativeFrame = window.requestAnimationFrame;
+        window.requestAnimationFrame = callback => window.ux07NativeFrame(time => setTimeout(() => callback(time), 200));`);
+    try {
+        await tabTo(opener); await press();
+        await tabTo('[role="dialog"] input[name="password"]');
+        await browser.actions().sendKeys('browser-').pause(500).perform();
+        assert.ok(await browser.executeScript('return document.activeElement.matches(\'[role="dialog"] input[name="password"]\')'), 'Delayed modal autofocus must preserve keyboard input focus');
+        await browser.actions().sendKeys('fixture-password',Key.ENTER).perform();
+        await browser.wait(until.urlIs(`${base}/`),15000).catch(async error => {
+            const state = await browser.executeScript(`return {
+                url: location.href,
+                active: document.activeElement.tagName + '#' + document.activeElement.id,
+                passwordLength: document.querySelector('[role="dialog"] input[name="password"]')?.value.length,
+                validation: document.querySelector('[role="dialog"] [data-validation-summary]')?.textContent.trim(),
+                dialogVisible: document.querySelector('[role="dialog"]')?.checkVisibility(),
+            }`);
+            throw new Error(`Account deletion failed: ${JSON.stringify(state)}`, { cause: error });
+        });
+    } finally {
+        await browser.executeScript(`if (window.ux07NativeFrame) {
+            window.requestAnimationFrame = window.ux07NativeFrame;
+            delete window.ux07NativeFrame;
+        }`);
+    }
     await open('/profile'); await browser.wait(until.urlContains('/login'),10000);
 });
 

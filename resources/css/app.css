@@ -14,6 +14,11 @@ html {
     display: none !important;
 }
 
+/* Theme changes must update navigation text and surfaces together. */
+nav[aria-label='Primary navigation'] :is(a, button) {
+    transition-property: none;
+}
+
 /* Shared keyboard visibility also covers controls with local outline utilities. */
 :is(a[href], button, input, select, textarea, summary, [tabindex]):focus-visible {
     outline: 2px solid #1d4ed8 !important;

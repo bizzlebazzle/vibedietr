@@ -100,3 +100,8 @@ trained-data SHA-256 remained unchanged. In a disposable Sail runtime with the
 updated decoder, all nine uploaded-import tests passed (96 assertions), including
 real HEIC conversion, metadata removal and Tesseract extraction. Live OCR
 readiness accepted the reviewed pin and rejected a configured obsolete pin.
+
+The next CI run passed PHPUnit and planning checks but exposed two intermittent
+accessibility failures. The navigation contrast and modal autofocus corrections
+have deterministic browser regressions documented in
+[the UX-07 verification record](UX_07_VERIFICATION.md#browser-timing-regressions-found-during-dep-06-ci).

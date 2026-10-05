@@ -34,7 +34,11 @@ $titleId = $title ? $name . '-title' : null;
             this.opener = document.activeElement;
             this.openerId = this.opener?.id;
             this.show = true;
-            this.$nextTick(() => (this.$refs.panel.querySelector('[data-validation-summary]') || this.firstFocusable() || this.$refs.panel).focus());
+            this.$nextTick(() => {
+                if (this.show && !this.$refs.panel.contains(document.activeElement)) {
+                    (this.$refs.panel.querySelector('[data-validation-summary]') || this.firstFocusable() || this.$refs.panel).focus();
+                }
+            });
         },
         background: [],
         isolate() {
