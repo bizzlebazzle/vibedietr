@@ -13,7 +13,7 @@ use Throwable;
 
 final class ProvisionErasureStores extends Command
 {
-    protected $signature = 'erasure:provision {store=journal : journal or evidence}';
+    protected $signature = 'erasure:provision {store=journal : journal, next-journal or evidence}';
 
     protected $description = 'Add erasure schemas on explicitly configured dedicated stores.';
 
@@ -22,10 +22,11 @@ final class ProvisionErasureStores extends Command
         try {
             $operator->reference();
             $evidence = $this->argument('store') === 'evidence';
-            if (! in_array($this->argument('store'), ['journal', 'evidence'], true)) {
+            if (! in_array($this->argument('store'), ['journal', 'next-journal', 'evidence'], true)) {
                 throw new RuntimeException;
             }
-            $names = $evidence ? ['erasure_evidence'] : config('erasure.journal_connections');
+            $next = $this->argument('store') === 'next-journal';
+            $names = $evidence ? ['erasure_evidence'] : ($next ? ['erasure_next_primary', 'erasure_next_mirror'] : config('erasure.journal_connections'));
             if (! is_array($names) || $names === []) {
                 throw new RuntimeException;
             }
@@ -36,11 +37,14 @@ final class ProvisionErasureStores extends Command
                     throw new RuntimeException;
                 }
                 $table = $evidence ? 'erasure_evidence_holds' : 'erasure_journal_entries';
+                if ($next && $db->getSchemaBuilder()->hasTable($table) && $db->table($table)->exists()) {
+                    throw new RuntimeException;
+                }
                 if (! $db->getSchemaBuilder()->hasTable($table)) {
                     $evidence ? app(ErasureEvidenceSchema::class)->install($db) : app(ErasureJournalSchema::class)->install($db);
                 }
             }
-            if (! $evidence) {
+            if (! $evidence && ! $next) {
                 app(ProtectedErasureJournal::class)->repair();
             }
             $this->info('Dedicated erasure schema ready. Verify independent storage, TLS, key custody and copy inventory before activation.');

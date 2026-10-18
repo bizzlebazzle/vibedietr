@@ -77,5 +77,11 @@ for privacy_round in 1 2; do
         app_run "$drill_target" scripts/recovery/erasure-drill.php repeat > "$drill_workspace/privacy-repeat.log"
     fi
 done
+drill_step=privacy-luks2-disposal-primitive
+docker exec "$drill_primary" sh -c 'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysqldump -uroot --single-transaction --quick --hex-blob --no-tablespaces --set-gtid-purged=OFF testing erasure_journal_entries' > "$drill_workspace/journal-disposal-probe.sql"
+docker build -f scripts/recovery/cryptsetup.Dockerfile -t vibedietr-erasure-cryptsetup:synthetic scripts/recovery > "$drill_workspace/cryptsetup-build.log" 2>&1
+docker run --rm --network none --privileged --ulimit memlock=-1:-1 \
+    -e RECOVERY_DRILL=yes -v "$drill_workspace:/drill" -v "$drill_root/scripts/recovery:/scripts:ro" \
+    --entrypoint bash vibedietr-erasure-cryptsetup:synthetic /scripts/luks-disposal-drill.sh "dep08-$drill_id" > "$drill_workspace/luks-disposal.log"
 unset drill_restore_target drill_restore_set drill_restore_manifest drill_release_certificate drill_target_bucket
 echo 'DEP-08 synthetic lifecycle replay, independent-object filtering, mirror host-loss repair and frozen-target release checks passed.'

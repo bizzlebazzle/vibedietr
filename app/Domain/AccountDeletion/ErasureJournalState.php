@@ -11,7 +11,7 @@ final class ErasureJournalState
     /** A release/replay anchor must be current independent evidence, never an app-backup checkpoint.
      * @return list<array<string, mixed>>
      */
-    public function at(ErasureCheckpoint $anchor): array
+    public function at(ErasureCheckpoint $anchor, bool $withSequence = false): array
     {
         $journal = app(ProtectedErasureJournal::class);
         $current = $journal->checkpoint();
@@ -46,9 +46,12 @@ final class ErasureJournalState
             }
         }
         $expanded = [];
-        foreach ($entries as $entry) {
+        foreach ($entries as $index => $entry) {
             if ($entry['state'] !== 'inventory') {
                 $entry['resources'] = app(JournalManifest::class)->resources($entry, $entries);
+                if ($withSequence) {
+                    $entry['_sequence'] = $index + 1;
+                }
                 $expanded[] = $entry;
             }
         }

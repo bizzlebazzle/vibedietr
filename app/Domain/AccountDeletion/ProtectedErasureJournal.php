@@ -299,7 +299,7 @@ final class ProtectedErasureJournal
         $allowed = ['account_generation', 'correlation_id', 'deadline', 'installation', 'policy', 'resources', 'state'];
         if (array_diff(array_keys($intent), $allowed) !== []
             || array_diff($allowed, array_keys($intent)) !== []
-            || ! in_array($intent['state'], ['requested', 'recovered', 'waived', 'under13', 'purge_started', 'purged', 'inventory', 'plan_suppressed', 'plan_removed', 'hold_started', 'hold_released'], true)
+            || ! in_array($intent['state'], ['requested', 'recovered', 'waived', 'under13', 'purge_started', 'purged', 'inventory', 'plan_suppressed', 'plan_removed', 'hold_started', 'hold_released', 'copy_registered', 'copy_retired'], true)
             || ! in_array($intent['policy'], ['DEC-012/DEC-013/DEC-014/DEC-021', 'DEC-012/DEC-013/DEC-014/DEC-021/DEC-022'], true)
             || ! is_string($intent['deadline'])
             || ! preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/D', $intent['deadline'])

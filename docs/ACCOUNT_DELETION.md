@@ -322,3 +322,83 @@ Lifecycle time boundaries were simulated with synthetic fixtures. Actual
 production aging, all-layer copy retirement, journal storage-generation/key
 disposal, partial-restoration installation procedures and final Definition of
 Done gates are not established by this unit.
+
+## Copy inventory and journal storage generations
+
+`RecoveryCopyCatalog` records original capture clocks, coverage checkpoints,
+manifests and necessary opaque owner/resource scope in both protected journals.
+Register every recovery set, database/object replica, host snapshot, staging
+workspace, restore target, journal store/backup, key/header copy and recovery
+credential. Operator request/evidence files, credentials, swap and temporary
+material belong in this inventory too. Unknown or unmanaged copies prevent a
+complete inventory attestation; absence from the app database proves nothing.
+
+Copied sets inherit their parent's scope and cannot gain a later capture clock.
+A post-deadline copy containing erased-owner scope is marked
+`incident_dirty_capture`; it retains suppression truth under the original E,
+rather than granting another recovery period. The protected controller incident
+register must document unresolved copy disposal or a scoped lawful exception.
+Content-free monitoring alerts on unretired recovery copies at capture + eight
+days and surviving erasure references at E + nine days. Alerts never count
+failed or unproven deletion as success.
+
+The separate backend/retirement observer holds
+`ERASURE_RETIREMENT_SIGNING_KEY`; remediation receives only
+`ERASURE_RETIREMENT_PUBLIC_KEY`. Ed25519 proofs bind their purpose and
+installation. A signed statement is trusted observer evidence, not a physical
+deletion primitive. The observer must perform and retain restricted evidence of
+the actual backend checks, including all layers, before signing. Ordinary app
+administrators have no signing or inventory powers.
+
+Restricted commands require the configured privacy operator, `--fenced` and
+`--owner-approved`:
+
+- `erasure:copies register --request=/protected/copy.json` accepts `id`
+  (ULID), `kind`, `captured_at`, `manifest_sha256` and `references`.
+  References use `owner_`, `recovering_`, `plan_`, `recipe_`, `hold_`,
+  `parent_` or `generation_` prefixes. Pure journal/key/header copies use
+  generation scope without copying the account inventory recursively.
+- `erasure:copies retire --evidence=/protected/observation.json` accepts only
+  a valid observer-signed `copy-retirement` proof: copy ID, original manifest
+  digest, observation digest, exact verification instant, mechanism and every
+  registered generation reference. A restic-only receipt cannot retire journal
+  storage. Restic observations require actual forget, zero-unused pruning,
+  read checking and failed access to the retired copy; generation observations
+  require actual LUKS2/key/header/credential disposal. Synthetic volatile-store
+  evidence is rejected outside testing.
+- `erasure:copies monitor` reports only overdue counts. Missing independent
+  journal truth and overdue disposal also raise critical operational alerts.
+- `erasure:copies new-generation --write=/protected/next.json` generates a
+  fresh ULID and independent random keys without printing them. Provision the
+  fresh LUKS2-backed endpoint pair with `ERASURE_NEXT_JOURNAL_PRIMARY_URL`,
+  `ERASURE_NEXT_JOURNAL_MIRROR_URL` and `erasure:provision next-journal`.
+- `erasure:copies prepare-generation --request=/protected/next.json
+  --evidence=/protected/inventory.json --storage=/protected/storage.json
+  --write=/protected/rebuild.json` requires a current signed
+  `complete-copy-inventory` and a `fresh-luks2-journal-storage` observation.
+  The inventory names every active copy, binds the exact current checkpoint,
+  and covers all data/journal/key/header/credential/host layers. Fresh storage
+  evidence binds the new generation, two distinct LUKS2 UUIDs, connection
+  scopes and backend observation digest. The rebuild carries still-needed
+  lifecycle/resource/hold truth and active copies into both fresh stores.
+  Original deadlines survive; fully retired erasure scope can be omitted.
+- With all writers still fenced, physically retire the previous generation and
+  every recoverable journal/redo/undo, host backup, key, header and credential
+  copy. Record each verified retirement against the new stores. A SQL
+  `DELETE`, empty table, hidden bucket or successful rebuild is insufficient.
+- Point the restricted operator configuration at the new endpoints/keys, then
+  run `erasure:copies complete-generation --prepared=/protected/rebuild.json
+  --evidence=/protected/current-inventory.json --write=/protected/disposed.json`.
+  The command rejects unrelated intervening intent and any unretired old-layer
+  copy. It requires both old stores plus key/header/credential coverage before
+  issuing content-free disposal evidence. Only then perform the fenced
+  authoritative checkpoint/configuration cutover.
+
+Proofs and generation requests stay outside app backups in restricted encrypted
+storage. Protect and retire them under their own inventoried purpose; never
+commit or log keys, URLs, source manifests or linkable account references.
+The isolated cryptsetup probe uses synthetic images and volatile no-swap key
+files. It verifies journal-byte encryption, current-slot erasure and the
+old-header recovery limitation, then retires a separate header-custody image.
+It does not prove installation-wide disposal, host snapshot absence, encrypted
+swap policy, independently durable live MySQL mounts or physical overwrite.

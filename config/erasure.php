@@ -6,6 +6,8 @@ return [
     'evidence_key' => env('ERASURE_EVIDENCE_ENCRYPTION_KEY'),
     'privacy_operator' => env('ERASURE_PRIVACY_OPERATOR_REFERENCE'),
     'operator_environment' => env('ERASURE_OPERATOR_ENVIRONMENT'),
+    'retirement_signing_key' => env('ERASURE_RETIREMENT_SIGNING_KEY'),
+    'retirement_public_key' => env('ERASURE_RETIREMENT_PUBLIC_KEY'),
     'restore_target' => env('ERASURE_RESTORE_TARGET'),
     'restore_set' => env('ERASURE_RESTORE_SET'),
     'restore_manifest_digest' => env('ERASURE_RESTORE_MANIFEST_SHA256'),
