@@ -24,7 +24,7 @@ use Tests\TestCase;
 
 class MealPlanCopyTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, \Tests\Concerns\UsesErasureJournal;
 
     public function test_public_plan_copy_materializes_planning_content_privately_without_source_relationships(): void
     {

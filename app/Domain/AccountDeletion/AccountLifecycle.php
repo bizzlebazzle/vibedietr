@@ -6,6 +6,9 @@ use App\Administrator\LastAdministratorGuard;
 use App\Domain\MealPlans\MealPlanPublicSafety;
 use App\Domain\MealPlans\MealPlanVisibility;
 use App\Models\AccountDeletion;
+use App\Models\AccountExport;
+use App\Models\Recipe;
+use App\Models\RecipeImport;
 use App\Models\User;
 use App\Security\Notifications\ProductionSecurityReadiness;
 use Illuminate\Support\Facades\DB;
@@ -27,7 +30,7 @@ final class AccountLifecycle
             }
             $plans = [];
             foreach ($user->mealPlans()->lockForUpdate()->get() as $plan) {
-                $plans[(string) $plan->getKey()] = ['visibility' => $plan->visibility->value];
+                $plans[(string) $plan->getKey()] = ['visibility' => $plan->visibility->value, 'generation' => $plan->erasure_generation];
             }
             $record = new AccountDeletion;
             $record->forceFill([
@@ -35,7 +38,7 @@ final class AccountLifecycle
                 'state' => 'preparing', 'reason' => $under13 ? 'under13' : ($waive ? 'waived' : 'ordinary'),
                 'requested_at' => now()->utc(), 'deadline' => ($waive || $under13) ? now()->utc() : now()->utc()->addDays(30),
                 'correlation_id' => (string) Str::ulid(), 'operation_id' => (string) Str::ulid(),
-                'recovery_state' => ['plans' => $plans],
+                'recovery_state' => ['plans' => $plans, 'resources' => $this->resources($user)],
             ])->save();
 
             return $record->id;
@@ -90,13 +93,13 @@ final class AccountLifecycle
             $user = User::query()->lockForUpdate()->findOrFail($record->user_id);
             $state = $record->state === 'recovering' ? 'recovered'
                 : ($record->reason === 'ordinary' ? 'requested' : ($record->reason === 'under13' ? 'under13' : 'waived'));
-            app(ProtectedErasureJournal::class)->append($record->operation_id, $this->intent($record, $state));
+            app(JournalManifest::class)->append($record->operation_id, $this->intent($record, $state));
             if ($state === 'recovered') {
                 foreach (($record->recovery_state['plans'] ?? []) as $planId => $prior) {
-                    if (DB::table('retained_plan_removals')->where('meal_plan_id', $planId)->exists()) {
+                    if (DB::table('retained_plan_removals')->where('resource_generation', $prior['generation'])->exists()) {
                         continue;
                     }
-                    DB::table('meal_plans')->where('id', $planId)->whereNull('user_id')->update([
+                    DB::table('meal_plans')->where('id', $planId)->where('erasure_generation', $prior['generation'])->whereNull('user_id')->update([
                         'user_id' => $user->getKey(), 'visibility' => $prior['visibility'],
                         'retained_unlisted_at' => null,
                     ]);
@@ -112,7 +115,7 @@ final class AccountLifecycle
                     && $plan->bookmarks()->where('user_id', '!=', $user->getKey())->exists()
                     && app(MealPlanPublicSafety::class)->isPublicSafe($plan);
                 if ($qualifies) {
-                    $recovery['plans'][(string) $plan->getKey()] = ['visibility' => 'public'];
+                    $recovery['plans'][(string) $plan->getKey()] = ['visibility' => 'public', 'generation' => $plan->erasure_generation];
                     $plan->forceFill([
                         'user_id' => null, 'visibility' => MealPlanVisibility::RetainedUnlisted,
                         'retained_unlisted_at' => $record->requested_at,
@@ -127,12 +130,36 @@ final class AccountLifecycle
         }, 3);
     }
 
+    /** @return list<string> */
+    private function resources(User $user): array
+    {
+        $resources = [];
+        foreach ($user->mealPlans()->get() as $plan) {
+            $resources[] = 'plan_'.$plan->erasure_generation;
+        }
+        foreach (Recipe::query()->where('user_id', $user->getKey())->get() as $recipe) {
+            $resources[] = 'recipe_'.$recipe->erasure_generation;
+        }
+        foreach (RecipeImport::query()->where('user_id', $user->getKey())->get() as $import) {
+            foreach (['source', 'canonical'] as $kind) {
+                if ($import->{$kind.'_key'} !== null) {
+                    $resources[] = 'object_'.hash('sha256', $import->{$kind.'_disk'}.'|'.$import->{$kind.'_key'});
+                }
+            }
+        }
+        foreach (AccountExport::query()->where('user_id', $user->getKey())->get() as $export) {
+            $resources[] = 'object_'.hash('sha256', $export->disk.'|'.$export->storageKey());
+        }
+
+        return $resources;
+    }
+
     /** @return array<string, mixed> */
     public function intent(AccountDeletion $record, string $state): array
     {
-        $references = ['request_'.$record->id, 'user_'.str_pad((string) $record->user_id, 20, '0', STR_PAD_LEFT)];
-        foreach (($record->recovery_state['plans'] ?? []) as $id => $prior) {
-            $references[] = 'plan_'.str_pad((string) $id, 20, '0', STR_PAD_LEFT);
+        $references = ['request_'.$record->id, ...($record->recovery_state['resources'] ?? [])];
+        if ($record->reason === 'under13') {
+            $references[] = 'policy_under13_no_recovery';
         }
 
         return [

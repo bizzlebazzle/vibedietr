@@ -8,6 +8,13 @@ content access. Requests use the existing `security-sensitive` hashed limiter
 
 ## Content and consistency
 
+DEP-08 adds schema 1.1.0. Its diary contains owner-only archived consumption
+history when a retained public plan is permanently removed during recovery
+(DEC-022). Original chains, nutrition, target snapshots and source entry facts
+remain private after successful account recovery. They cannot restore the
+removed plan. Final purge deletes the archive. The released 1.0.0 contract
+remains unchanged for previously generated exports.
+
 The archive contains eight domain JSON files, a manifest, released Draft
 2020-12 schema/dictionary, README and static offline index. Fixed ASCII paths
 contain only application-generated identifiers. The manifest inventories every

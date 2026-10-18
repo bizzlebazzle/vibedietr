@@ -23,6 +23,7 @@ final class ProtectedErasureJournal
      */
     public function append(string $operationId, array $intent): ErasureCheckpoint
     {
+        $operationId = strtoupper($operationId);
         $primary = null;
         $locked = false;
         try {
@@ -109,6 +110,54 @@ final class ProtectedErasureJournal
             return array_map(fn (array $row): array => json_decode(
                 $encrypter->decryptString($row['ciphertext']), true, 64, JSON_THROW_ON_ERROR,
             ), $left);
+        } catch (Throwable) {
+            throw new JournalUnavailable;
+        }
+    }
+
+    /** Live retries reuse the first durable clock, including an unacknowledged primary suffix.
+     * @param  array<string, mixed>  $intent
+     * @return array<string, mixed>
+     */
+    public function appendOnce(string $operation, array $intent): array
+    {
+        $operation = strtoupper($operation);
+        try {
+            [$primary, , $generation, $key, $encrypter] = $this->configuration();
+            foreach ($this->validatedRows($primary, $generation, $key, $encrypter) as $row) {
+                if ($row['operation_id'] !== $operation) {
+                    continue;
+                }
+                $stored = json_decode($encrypter->decryptString($row['ciphertext']), true, flags: JSON_THROW_ON_ERROR);
+                $candidate = $intent;
+                $candidate['deadline'] = $stored['deadline'];
+                if ($this->intentJson($candidate) !== $this->intentJson($stored)) {
+                    throw new JournalUnavailable;
+                }
+                $intent = $stored;
+                break;
+            }
+            $this->append($operation, $intent);
+
+            return $intent;
+        } catch (Throwable) {
+            throw new JournalUnavailable;
+        }
+    }
+
+    /** Current live head; restore release additionally requires an independent anchor. */
+    public function checkpoint(): ErasureCheckpoint
+    {
+        try {
+            [$primary, $mirror, $generation, $key, $encrypter] = $this->configuration();
+            $left = $this->validatedRows($primary, $generation, $key, $encrypter);
+            $right = $this->validatedRows($mirror, $generation, $key, $encrypter);
+            if ($left !== $right || $left === []) {
+                throw new JournalUnavailable;
+            }
+            $head = $left[array_key_last($left)];
+
+            return new ErasureCheckpoint($generation, $head['sequence'], $head['digest']);
         } catch (Throwable) {
             throw new JournalUnavailable;
         }
@@ -223,7 +272,7 @@ final class ProtectedErasureJournal
         $allowed = ['account_generation', 'correlation_id', 'deadline', 'installation', 'policy', 'resources', 'state'];
         if (array_diff(array_keys($intent), $allowed) !== []
             || array_diff($allowed, array_keys($intent)) !== []
-            || ! in_array($intent['state'], ['requested', 'recovered', 'waived', 'under13', 'purge_started', 'purged'], true)
+            || ! in_array($intent['state'], ['requested', 'recovered', 'waived', 'under13', 'purge_started', 'purged', 'inventory', 'plan_suppressed', 'plan_removed', 'hold_started', 'hold_released'], true)
             || $intent['policy'] !== 'DEC-012/DEC-013/DEC-014/DEC-021'
             || ! is_string($intent['deadline'])
             || ! preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/D', $intent['deadline'])

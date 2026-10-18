@@ -10,9 +10,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 /**
+ * @property string $erasure_generation
  * @property Carbon|null $starts_on
  * @property Carbon|null $ends_on
  * @property MealPlanType $type
@@ -29,6 +31,9 @@ class MealPlan extends Model
 
     protected static function booted(): void
     {
+        static::creating(function (MealPlan $model): void {
+            $model->erasure_generation ??= (string) Str::ulid();
+        });
         static::updating(function (MealPlan $mealPlan): void {
             if (! $mealPlan->isDirty(['type', 'starts_on', 'ends_on'])) {
                 return;

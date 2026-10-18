@@ -7,6 +7,7 @@ use App\Audit\AuditEventRecorder;
 use App\Audit\AuditSubject;
 use App\Audit\Enums\AuditAction;
 use App\Audit\Enums\AuditSubjectType;
+use App\Domain\AccountDeletion\PublicContentMinimizer;
 use App\Models\MealPlan;
 use App\Models\MealPlanDay;
 use App\Models\MealPlanItemEntry;
@@ -69,8 +70,10 @@ final class MealPlanCopier
                             'recipe_version_id' => $sourceEntry->recipe_version_id,
                             'recipe_version_number' => $sourceEntry->recipe_version_number,
                             'planned_servings' => $sourceEntry->planned_servings,
-                            'recipe_snapshot' => $sourceEntry->recipe_snapshot,
-                            'nutrition_snapshot' => $sourceEntry->nutrition_snapshot,
+                            'recipe_snapshot' => $source->visibility === MealPlanVisibility::RetainedUnlisted
+                                ? app(PublicContentMinimizer::class)->recipe($sourceEntry->recipe_snapshot) : $sourceEntry->recipe_snapshot,
+                            'nutrition_snapshot' => $source->visibility === MealPlanVisibility::RetainedUnlisted
+                                ? app(PublicContentMinimizer::class)->nutrition($sourceEntry->nutrition_snapshot) : $sourceEntry->nutrition_snapshot,
                         ]);
                         $entry->slot()->associate($slot);
                         $entry->save();
@@ -85,7 +88,8 @@ final class MealPlanCopier
                             'catalogue_item_id' => $sourceEntry->catalogue_item_id,
                             'catalogue_item_version_id' => $sourceEntry->catalogue_item_version_id,
                             'catalogue_item_version_number' => $sourceEntry->catalogue_item_version_number,
-                            'catalogue_snapshot' => $sourceEntry->catalogue_snapshot,
+                            'catalogue_snapshot' => $source->visibility === MealPlanVisibility::RetainedUnlisted
+                                ? app(PublicContentMinimizer::class)->catalogue($sourceEntry->catalogue_snapshot) : $sourceEntry->catalogue_snapshot,
                             'catalogue_nutrition_snapshot' => $sourceEntry->catalogue_nutrition_snapshot,
                             'one_off_wording' => $sourceEntry->one_off_wording,
                             'one_off_nutrition' => $sourceEntry->one_off_nutrition,

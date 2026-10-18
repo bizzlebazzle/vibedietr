@@ -24,7 +24,7 @@ class MealPlanPolicy
 
     public function view(?User $user, MealPlan $mealPlan): Response
     {
-        if (DB::table('retained_plan_removals')->where('meal_plan_id', $mealPlan->getKey())->exists()
+        if (DB::table('retained_plan_removals')->where('resource_generation', $mealPlan->erasure_generation)->exists()
             || ($mealPlan->user_id !== null && ! $mealPlan->owner?->isActive())) {
             return Response::denyAsNotFound();
         }

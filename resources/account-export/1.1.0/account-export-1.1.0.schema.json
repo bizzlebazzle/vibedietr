@@ -1,0 +1,5191 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$comment": "Validate each data file with its corresponding <domain>_envelope definition. No external references.",
+  "title": "VibeDietr account export 1.1.0",
+  "$defs": {
+    "fact": {
+      "type": "object",
+      "properties": {
+        "nutrient": {
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "basis": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "type": "string"
+        },
+        "is_estimate": {
+          "type": "boolean"
+        },
+        "source": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "provenance": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "derivation": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "warning": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "threshold_value": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source_value": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source_unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source_basis": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source_operator": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "normalization_policy_version": {
+          "type": "integer"
+        },
+        "derived_basis": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source_field": {
+          "type": "string"
+        },
+        "display": {
+          "type": "string"
+        },
+        "amount": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": []
+    },
+    "values": {
+      "type": "object",
+      "properties": {
+        "energy_kcal": {
+          "$ref": "#/$defs/fact"
+        },
+        "energy_kj": {
+          "$ref": "#/$defs/fact"
+        },
+        "fat": {
+          "$ref": "#/$defs/fact"
+        },
+        "saturated_fat": {
+          "$ref": "#/$defs/fact"
+        },
+        "carbohydrates": {
+          "$ref": "#/$defs/fact"
+        },
+        "sugars": {
+          "$ref": "#/$defs/fact"
+        },
+        "fibre": {
+          "$ref": "#/$defs/fact"
+        },
+        "protein": {
+          "$ref": "#/$defs/fact"
+        },
+        "salt": {
+          "$ref": "#/$defs/fact"
+        },
+        "sodium": {
+          "$ref": "#/$defs/fact"
+        }
+      },
+      "additionalProperties": false,
+      "required": []
+    },
+    "decimals": {
+      "type": "object",
+      "properties": {
+        "energy_kcal": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "energy_kj": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fat": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "saturated_fat": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "carbohydrates": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sugars": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fibre": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "protein": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "salt": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sodium": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": []
+    },
+    "provenance": {
+      "type": "object",
+      "properties": {
+        "channel": {
+          "type": "string"
+        },
+        "extractor": {
+          "type": "string"
+        },
+        "extractor_version": {
+          "type": "string"
+        },
+        "extracted_at": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(\\.\\d+)?Z$",
+          "x-instant": true
+        },
+        "parser": {
+          "type": "string"
+        },
+        "parser_version": {
+          "type": "string"
+        },
+        "parsed_at": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(\\.\\d+)?Z$",
+          "x-instant": true
+        },
+        "extraction_method": {
+          "type": "string"
+        },
+        "redirect_count": {
+          "type": "integer"
+        },
+        "language": {
+          "type": "string"
+        },
+        "preprocessing_version": {
+          "type": "string"
+        },
+        "quality_policy_version": {
+          "type": "string"
+        },
+        "override_event_id": {
+          "type": "string",
+          "pattern": "^override:[^:]+$",
+          "x-id-prefix": "override"
+        }
+      },
+      "additionalProperties": false,
+      "required": [],
+      "x-omitted": [
+        "recipe_import_id",
+        "correlation_id",
+        "submitted_url",
+        "final_url"
+      ]
+    },
+    "food_conversion": {
+      "type": "object",
+      "properties": {
+        "catalogue_item_version_id": {
+          "type": "string",
+          "pattern": "^catalogue-version:[^:]+$",
+          "x-id-prefix": "catalogue-version"
+        },
+        "source": {
+          "type": "string"
+        },
+        "basis": {
+          "type": "string"
+        },
+        "reliable": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "required": []
+    },
+    "contribution": {
+      "type": "object",
+      "properties": {
+        "nutrient": {
+          "type": "string"
+        },
+        "catalogue_nutrient_value_id": {
+          "type": "string",
+          "pattern": "^catalogue-nutrient:[^:]+$",
+          "x-id-prefix": "catalogue-nutrient"
+        },
+        "catalogue_nutrient_basis": {
+          "type": "string"
+        },
+        "catalogue_nutrient_value": {
+          "type": "string",
+          "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+          "x-decimal": true
+        },
+        "catalogue_nutrient_status": {
+          "type": "string"
+        },
+        "normalization_policy_version": {
+          "type": "integer"
+        },
+        "converted_quantity": {
+          "type": "string",
+          "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+          "x-decimal": true
+        },
+        "converted_unit": {
+          "type": "string"
+        },
+        "estimated_amount": {
+          "type": "string",
+          "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+          "x-decimal": true
+        },
+        "food_conversion": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/food_conversion"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": []
+    },
+    "exclusion": {
+      "type": "object",
+      "properties": {
+        "nutrient": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": []
+    },
+    "input": {
+      "type": "object",
+      "properties": {
+        "ingredient_position": {
+          "type": "integer"
+        },
+        "quantity": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "standard_unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "custom_unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "catalogue_item_version_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^catalogue-version:[^:]+$",
+              "x-id-prefix": "catalogue-version"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "contributions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/contribution"
+          }
+        },
+        "exclusions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/exclusion"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": []
+    },
+    "estimate": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "is_estimate": {
+          "type": "boolean"
+        },
+        "calculation_policy_version": {
+          "type": "integer"
+        },
+        "whole_recipe": {
+          "$ref": "#/$defs/values"
+        },
+        "per_serving": {
+          "$ref": "#/$defs/values"
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/input"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": []
+    },
+    "imported": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "type": "string"
+        },
+        "basis": {
+          "type": "string"
+        },
+        "per_serving": {
+          "$ref": "#/$defs/values"
+        },
+        "whole_recipe": {
+          "$ref": "#/$defs/values"
+        },
+        "provenance": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/provenance"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "entered_values": {
+          "$ref": "#/$defs/decimals"
+        },
+        "values": {
+          "$ref": "#/$defs/values"
+        },
+        "type": {
+          "type": "string"
+        },
+        "is_estimate": {
+          "type": "boolean"
+        },
+        "observations": {
+          "type": "object",
+          "properties": {
+            "energy_kcal": {
+              "type": "object",
+              "properties": {
+                "source_field": {
+                  "type": "string"
+                },
+                "source_value": {
+                  "type": "string"
+                },
+                "source_unit": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "source_field",
+                "source_value",
+                "source_unit"
+              ]
+            },
+            "energy_kj": {
+              "type": "object",
+              "properties": {
+                "source_field": {
+                  "type": "string"
+                },
+                "source_value": {
+                  "type": "string"
+                },
+                "source_unit": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "source_field",
+                "source_value",
+                "source_unit"
+              ]
+            },
+            "fat": {
+              "type": "object",
+              "properties": {
+                "source_field": {
+                  "type": "string"
+                },
+                "source_value": {
+                  "type": "string"
+                },
+                "source_unit": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "source_field",
+                "source_value",
+                "source_unit"
+              ]
+            },
+            "saturated_fat": {
+              "type": "object",
+              "properties": {
+                "source_field": {
+                  "type": "string"
+                },
+                "source_value": {
+                  "type": "string"
+                },
+                "source_unit": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "source_field",
+                "source_value",
+                "source_unit"
+              ]
+            },
+            "carbohydrates": {
+              "type": "object",
+              "properties": {
+                "source_field": {
+                  "type": "string"
+                },
+                "source_value": {
+                  "type": "string"
+                },
+                "source_unit": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "source_field",
+                "source_value",
+                "source_unit"
+              ]
+            },
+            "sugars": {
+              "type": "object",
+              "properties": {
+                "source_field": {
+                  "type": "string"
+                },
+                "source_value": {
+                  "type": "string"
+                },
+                "source_unit": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "source_field",
+                "source_value",
+                "source_unit"
+              ]
+            },
+            "fibre": {
+              "type": "object",
+              "properties": {
+                "source_field": {
+                  "type": "string"
+                },
+                "source_value": {
+                  "type": "string"
+                },
+                "source_unit": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "source_field",
+                "source_value",
+                "source_unit"
+              ]
+            },
+            "protein": {
+              "type": "object",
+              "properties": {
+                "source_field": {
+                  "type": "string"
+                },
+                "source_value": {
+                  "type": "string"
+                },
+                "source_unit": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "source_field",
+                "source_value",
+                "source_unit"
+              ]
+            },
+            "salt": {
+              "type": "object",
+              "properties": {
+                "source_field": {
+                  "type": "string"
+                },
+                "source_value": {
+                  "type": "string"
+                },
+                "source_unit": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "source_field",
+                "source_value",
+                "source_unit"
+              ]
+            },
+            "sodium": {
+              "type": "object",
+              "properties": {
+                "source_field": {
+                  "type": "string"
+                },
+                "source_value": {
+                  "type": "string"
+                },
+                "source_unit": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "source_field",
+                "source_value",
+                "source_unit"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": []
+        }
+      },
+      "additionalProperties": false,
+      "required": []
+    },
+    "nutrition": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "values": {
+          "$ref": "#/$defs/values"
+        },
+        "provenance": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/provenance"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ingredient_estimate": {
+          "$ref": "#/$defs/estimate"
+        },
+        "basis": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "entered_values": {
+          "$ref": "#/$defs/decimals"
+        }
+      },
+      "additionalProperties": false,
+      "required": []
+    },
+    "match": {
+      "type": "object",
+      "properties": {
+        "catalogue_item_id": {
+          "type": "string",
+          "pattern": "^catalogue:[^:]+$",
+          "x-id-prefix": "catalogue"
+        },
+        "catalogue_item_version_id": {
+          "type": "string",
+          "pattern": "^catalogue-version:[^:]+$",
+          "x-id-prefix": "catalogue-version"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "candidate_score": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "confidence_band": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "threshold_version": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "provenance": {
+          "type": "string"
+        },
+        "review_state": {
+          "type": "string"
+        },
+        "confirmed_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(\\.\\d+)?Z$",
+              "x-instant": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [],
+      "x-omitted": [
+        "selected_by_user_id"
+      ]
+    },
+    "line": {
+      "type": "object",
+      "properties": {
+        "position": {
+          "type": "integer"
+        },
+        "original_text": {
+          "type": "string"
+        },
+        "quantity": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "standard_unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "custom_unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "generic_wording": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "notes": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "catalogue_match": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/match"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "requires_review": {
+          "type": "boolean"
+        },
+        "parser_warnings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "uncertain_fields": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": []
+    },
+    "section": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "position": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": []
+    },
+    "step": {
+      "type": "object",
+      "properties": {
+        "position": {
+          "type": "integer"
+        },
+        "text": {
+          "type": "string"
+        },
+        "section_key": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "requires_review": {
+          "type": "boolean"
+        },
+        "parser_warnings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "uncertain_fields": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": []
+    },
+    "content": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "servings": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "visibility": {
+          "type": "string"
+        },
+        "ingredients": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/line"
+          }
+        },
+        "sections": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/section"
+          }
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/step"
+          }
+        },
+        "nutrition_estimate": {
+          "$ref": "#/$defs/estimate"
+        },
+        "imported_nutrition": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/imported"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [],
+      "x-omitted": [
+        "public_attribution_name",
+        "source_creator_user_id",
+        "creator_user_id"
+      ]
+    },
+    "override": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^override:[^:]+$",
+          "x-id-prefix": "override"
+        },
+        "event": {
+          "type": "string"
+        },
+        "prior_source": {
+          "type": "string"
+        },
+        "resulting_source": {
+          "type": "string"
+        },
+        "prior_values": {
+          "$ref": "#/$defs/values"
+        },
+        "resulting_values": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/values"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "note": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "occurred_at": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(\\.\\d+)?Z$",
+          "x-instant": true
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "event",
+        "prior_source",
+        "resulting_source",
+        "prior_values",
+        "resulting_values",
+        "note",
+        "occurred_at"
+      ]
+    },
+    "recalculation": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^recalculation:[^:]+$",
+          "x-id-prefix": "recalculation"
+        },
+        "approved_catalogue_item_version_id": {
+          "type": "string",
+          "pattern": "^catalogue-version:[^:]+$",
+          "x-id-prefix": "catalogue-version"
+        },
+        "state": {
+          "type": "string"
+        },
+        "estimate": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/estimate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "started_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(\\.\\d+)?Z$",
+              "x-instant": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "completed_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(\\.\\d+)?Z$",
+              "x-instant": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "approved_catalogue_item_version_id",
+        "state",
+        "estimate",
+        "started_at",
+        "completed_at"
+      ]
+    },
+    "version": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^recipe-version:[^:]+$",
+          "x-id-prefix": "recipe-version"
+        },
+        "version_number": {
+          "type": "integer"
+        },
+        "visibility": {
+          "type": "string"
+        },
+        "public_attribution_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "finalized_at": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(\\.\\d+)?Z$",
+          "x-instant": true
+        },
+        "content": {
+          "$ref": "#/$defs/content"
+        },
+        "effective_nutrition": {
+          "$ref": "#/$defs/nutrition"
+        },
+        "override_history": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/override"
+          }
+        },
+        "recalculation_history": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/recalculation"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "version_number",
+        "visibility",
+        "public_attribution_name",
+        "finalized_at",
+        "content",
+        "effective_nutrition",
+        "override_history",
+        "recalculation_history"
+      ]
+    },
+    "revision": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^revision:[^:]+$",
+          "x-id-prefix": "revision"
+        },
+        "base_recipe_version_id": {
+          "type": "string",
+          "pattern": "^recipe-version:[^:]+$",
+          "x-id-prefix": "recipe-version"
+        },
+        "created_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(\\.\\d+)?Z$",
+              "x-instant": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "updated_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(\\.\\d+)?Z$",
+              "x-instant": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "base_recipe_version_id",
+        "created_at",
+        "updated_at"
+      ]
+    },
+    "term": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^term:[^:]+$",
+          "x-id-prefix": "term"
+        },
+        "category": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "category",
+        "name"
+      ]
+    },
+    "recipe": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^recipe:[^:]+$",
+          "x-id-prefix": "recipe"
+        },
+        "title": {
+          "type": "string"
+        },
+        "servings": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "lifecycle": {
+          "type": "string"
+        },
+        "visibility": {
+          "type": "string"
+        },
+        "current_recipe_version_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^recipe-version:[^:]+$",
+              "x-id-prefix": "recipe-version"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "finalized_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(\\.\\d+)?Z$",
+              "x-instant": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "created_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(\\.\\d+)?Z$",
+              "x-instant": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "updated_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(\\.\\d+)?Z$",
+              "x-instant": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "content": {
+          "$ref": "#/$defs/content"
+        },
+        "versions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/version"
+          }
+        },
+        "active_revision": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/revision"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "public_tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "managed_terms": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/term"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "servings",
+        "lifecycle",
+        "visibility",
+        "current_recipe_version_id",
+        "finalized_at",
+        "created_at",
+        "updated_at",
+        "content",
+        "versions",
+        "active_revision",
+        "public_tags",
+        "managed_terms"
+      ]
+    },
+    "profile": {
+      "type": "object",
+      "properties": {
+        "attribution_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "profile_enabled": {
+          "type": "boolean"
+        },
+        "show_public_recipes": {
+          "type": "boolean"
+        },
+        "show_public_remixes": {
+          "type": "boolean"
+        },
+        "created_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(\\.\\d+)?Z$",
+              "x-instant": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "updated_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(\\.\\d+)?Z$",
+              "x-instant": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "attribution_name",
+        "profile_enabled",
+        "show_public_recipes",
+        "show_public_remixes",
+        "created_at",
+        "updated_at"
+      ]
+    },
+    "account": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "const": "self"
+        },
+        "name": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "email_verified_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(\\.\\d+)?Z$",
+              "x-instant": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "timezone": {
+          "type": "string"
+        },
+        "created_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(\\.\\d+)?Z$",
+              "x-instant": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "updated_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(\\.\\d+)?Z$",
+              "x-instant": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "public_profile": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/profile"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "email",
+        "email_verified_at",
+        "timezone",
+        "created_at",
+        "updated_at",
+        "public_profile"
+      ]
+    },
+    "membership": {
+      "type": "object",
+      "properties": {
+        "recipe_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^recipe:[^:]+$",
+              "x-id-prefix": "recipe"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bookmark_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^bookmark:[^:]+$",
+              "x-id-prefix": "bookmark"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "created_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(\\.\\d+)?Z$",
+              "x-instant": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "updated_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(\\.\\d+)?Z$",
+              "x-instant": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "created_at",
+        "updated_at"
+      ]
+    },
+    "organisation_group": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "created_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(\\.\\d+)?Z$",
+              "x-instant": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "updated_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(\\.\\d+)?Z$",
+              "x-instant": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "memberships": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/membership"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "created_at",
+        "updated_at",
+        "memberships"
+      ]
+    },
+    "bookmark": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "recipe_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^recipe:[^:]+$",
+              "x-id-prefix": "recipe"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "meal_plan_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^plan:[^:]+$",
+              "x-id-prefix": "plan"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "availability": {
+          "type": "string"
+        },
+        "created_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(\\.\\d+)?Z$",
+              "x-instant": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "updated_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(\\.\\d+)?Z$",
+              "x-instant": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "availability",
+        "created_at",
+        "updated_at"
+      ]
+    },
+    "lineage": {
+      "type": "object",
+      "properties": {
+        "remix_recipe_id": {
+          "type": "string",
+          "pattern": "^recipe:[^:]+$",
+          "x-id-prefix": "recipe"
+        },
+        "source_recipe_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^recipe:[^:]+$",
+              "x-id-prefix": "recipe"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source_recipe_version_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^recipe-version:[^:]+$",
+              "x-id-prefix": "recipe-version"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source_version_number": {
+          "type": "integer"
+        },
+        "availability": {
+          "type": "string"
+        },
+        "created_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(\\.\\d+)?Z$",
+              "x-instant": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "remix_recipe_id",
+        "source_recipe_id",
+        "source_recipe_version_id",
+        "source_version_number",
+        "availability",
+        "created_at"
+      ]
+    },
+    "organisation": {
+      "type": "object",
+      "properties": {
+        "collections": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/organisation_group"
+          }
+        },
+        "private_tags": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/organisation_group"
+          }
+        },
+        "recipe_bookmarks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/bookmark"
+          }
+        },
+        "plan_bookmarks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/bookmark"
+          }
+        },
+        "lineage": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/lineage"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "collections",
+        "private_tags",
+        "recipe_bookmarks",
+        "plan_bookmarks",
+        "lineage"
+      ]
+    },
+    "catalogue_content": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "brand": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "manufacturer": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "package_count": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "item_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "amount_per_item": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "amount_per_item_unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "servings_per_item": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "serving_amount": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "serving_amount_unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "serving_amount_basis": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": []
+    },
+    "recipe_entry": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^recipe-entry:[^:]+$",
+          "x-id-prefix": "recipe-entry"
+        },
+        "recipe_id": {
+          "type": "string",
+          "pattern": "^recipe:[^:]+$",
+          "x-id-prefix": "recipe"
+        },
+        "recipe_version_id": {
+          "type": "string",
+          "pattern": "^recipe-version:[^:]+$",
+          "x-id-prefix": "recipe-version"
+        },
+        "recipe_version_number": {
+          "type": "integer"
+        },
+        "planned_servings": {
+          "type": "string",
+          "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+          "x-decimal": true
+        },
+        "recipe_snapshot": {
+          "$ref": "#/$defs/content"
+        },
+        "nutrition_snapshot": {
+          "$ref": "#/$defs/nutrition"
+        },
+        "created_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(\\.\\d+)?Z$",
+              "x-instant": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "updated_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(\\.\\d+)?Z$",
+              "x-instant": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "recipe_id",
+        "recipe_version_id",
+        "recipe_version_number",
+        "planned_servings",
+        "recipe_snapshot",
+        "nutrition_snapshot",
+        "created_at",
+        "updated_at"
+      ]
+    },
+    "item_entry": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^item-entry:[^:]+$",
+          "x-id-prefix": "item-entry"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "planned_amount": {
+          "type": "string",
+          "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+          "x-decimal": true
+        },
+        "planned_unit": {
+          "type": "string"
+        },
+        "catalogue_item_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^catalogue:[^:]+$",
+              "x-id-prefix": "catalogue"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "catalogue_item_version_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^catalogue-version:[^:]+$",
+              "x-id-prefix": "catalogue-version"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "catalogue_item_version_number": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "catalogue_snapshot": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/catalogue_content"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "catalogue_nutrition_snapshot": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/fact"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "one_off_wording": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "one_off_nutrition": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/nutrition"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "created_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(\\.\\d+)?Z$",
+              "x-instant": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "updated_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(\\.\\d+)?Z$",
+              "x-instant": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "planned_amount",
+        "planned_unit",
+        "catalogue_item_id",
+        "catalogue_item_version_id",
+        "catalogue_item_version_number",
+        "catalogue_snapshot",
+        "catalogue_nutrition_snapshot",
+        "one_off_wording",
+        "one_off_nutrition",
+        "created_at",
+        "updated_at"
+      ]
+    },
+    "slot": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^slot:[^:]+$",
+          "x-id-prefix": "slot"
+        },
+        "name": {
+          "type": "string"
+        },
+        "position": {
+          "type": "integer"
+        },
+        "recipe_entries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/recipe_entry"
+          }
+        },
+        "item_entries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/item_entry"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "position",
+        "recipe_entries",
+        "item_entries"
+      ]
+    },
+    "day": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^day:[^:]+$",
+          "x-id-prefix": "day"
+        },
+        "day_index": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "date": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "slots": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/slot"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "day_index",
+        "date",
+        "slots"
+      ]
+    },
+    "share": {
+      "type": "object",
+      "properties": {
+        "recipient_alias": {
+          "type": "string"
+        },
+        "created_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(\\.\\d+)?Z$",
+              "x-instant": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "updated_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(\\.\\d+)?Z$",
+              "x-instant": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "private_recipe_snapshots_acknowledged_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(\\.\\d+)?Z$",
+              "x-instant": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "recipient_alias",
+        "created_at",
+        "updated_at",
+        "private_recipe_snapshots_acknowledged_at"
+      ]
+    },
+    "plan": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^plan:[^:]+$",
+          "x-id-prefix": "plan"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "visibility": {
+          "type": "string"
+        },
+        "starts_on": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ends_on": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "created_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(\\.\\d+)?Z$",
+              "x-instant": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "updated_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(\\.\\d+)?Z$",
+              "x-instant": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "days": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/day"
+          }
+        },
+        "outgoing_shares": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/share"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "type",
+        "visibility",
+        "starts_on",
+        "ends_on",
+        "created_at",
+        "updated_at",
+        "days",
+        "outgoing_shares"
+      ]
+    },
+    "diary_source": {
+      "type": "object",
+      "properties": {
+        "recipe": {
+          "$ref": "#/$defs/content"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "brand": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "nutrition": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/nutrition"
+            },
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/fact"
+              }
+            }
+          ]
+        },
+        "wording": {
+          "type": "string"
+        },
+        "nutrition_basis": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "entered_nutrition": {
+          "$ref": "#/$defs/decimals"
+        },
+        "normalized_nutrition": {
+          "$ref": "#/$defs/decimals"
+        }
+      },
+      "additionalProperties": false,
+      "required": []
+    },
+    "diary_entry": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^diary-entry:[^:]+$",
+          "x-id-prefix": "diary-entry"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "source_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source_version_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source_version_number": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source_snapshot": {
+          "$ref": "#/$defs/diary_source"
+        },
+        "created_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(\\.\\d+)?Z$",
+              "x-instant": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "updated_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(\\.\\d+)?Z$",
+              "x-instant": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "source_id",
+        "source_version_id",
+        "source_version_number",
+        "source_snapshot",
+        "created_at",
+        "updated_at"
+      ]
+    },
+    "state": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^state:[^:]+$",
+          "x-id-prefix": "state"
+        },
+        "meal_plan_recipe_entry_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^recipe-entry:[^:]+$",
+              "x-id-prefix": "recipe-entry"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "meal_plan_item_entry_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^item-entry:[^:]+$",
+              "x-id-prefix": "item-entry"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "diary_entry_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^diary-entry:[^:]+$",
+              "x-id-prefix": "diary-entry"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "current_transition_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^transition:[^:]+$",
+              "x-id-prefix": "transition"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "meal_plan_recipe_entry_id",
+        "meal_plan_item_entry_id",
+        "diary_entry_id",
+        "current_transition_id"
+      ]
+    },
+    "transition": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^transition:[^:]+$",
+          "x-id-prefix": "transition"
+        },
+        "diary_consumption_state_id": {
+          "type": "string",
+          "pattern": "^state:[^:]+$",
+          "x-id-prefix": "state"
+        },
+        "sequence": {
+          "type": "integer"
+        },
+        "action": {
+          "type": "string"
+        },
+        "predecessor_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^transition:[^:]+$",
+              "x-id-prefix": "transition"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "target_transition_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^transition:[^:]+$",
+              "x-id-prefix": "transition"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "recorded_at": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(\\.\\d+)?Z$",
+          "x-instant": true
+        },
+        "actual_amount": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "actual_unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "consumed_local_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "timezone": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "utc_offset_minutes": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "consumed_at_utc": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(\\.\\d+)?Z$",
+              "x-instant": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "effective_diary_date": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "consumption_snapshot_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^consumption-snapshot:[^:]+$",
+              "x-id-prefix": "consumption-snapshot"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "diary_consumption_state_id",
+        "sequence",
+        "action",
+        "predecessor_id",
+        "target_transition_id",
+        "recorded_at",
+        "actual_amount",
+        "actual_unit",
+        "consumed_local_at",
+        "timezone",
+        "utc_offset_minutes",
+        "consumed_at_utc",
+        "effective_diary_date",
+        "consumption_snapshot_id"
+      ]
+    },
+    "consumption_snapshot": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^consumption-snapshot:[^:]+$",
+          "x-id-prefix": "consumption-snapshot"
+        },
+        "diary_consumption_state_id": {
+          "type": "string",
+          "pattern": "^state:[^:]+$",
+          "x-id-prefix": "state"
+        },
+        "source_entry_type": {
+          "type": "string"
+        },
+        "source_entry_id": {
+          "type": "string"
+        },
+        "item_kind": {
+          "type": "string"
+        },
+        "source_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source_version_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source_version_number": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "nutrition_source": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "is_estimate": {
+          "type": "boolean"
+        },
+        "actual_amount": {
+          "type": "string",
+          "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+          "x-decimal": true
+        },
+        "actual_unit": {
+          "type": "string"
+        },
+        "nutrition": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/nutrition"
+            },
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/fact"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "created_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(\\.\\d+)?Z$",
+              "x-instant": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "diary_consumption_state_id",
+        "source_entry_type",
+        "source_entry_id",
+        "item_kind",
+        "source_id",
+        "source_version_id",
+        "source_version_number",
+        "nutrition_source",
+        "is_estimate",
+        "actual_amount",
+        "actual_unit",
+        "nutrition",
+        "created_at"
+      ]
+    },
+    "diary": {
+      "type": "object",
+      "properties": {
+        "entries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/diary_entry"
+          }
+        },
+        "states": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/state"
+          }
+        },
+        "transitions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/transition"
+          }
+        },
+        "nutrition_snapshots": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/consumption_snapshot"
+          }
+        },
+        "archived_history": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/archived_history"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "entries",
+        "states",
+        "transitions",
+        "nutrition_snapshots",
+        "archived_history"
+      ]
+    },
+    "target": {
+      "type": "object",
+      "properties": {
+        "nutrient": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "exact_value": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "minimum_value": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "maximum_value": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "nutrient",
+        "type",
+        "exact_value",
+        "minimum_value",
+        "maximum_value"
+      ]
+    },
+    "target_map": {
+      "type": "object",
+      "properties": {
+        "energy_kcal": {
+          "$ref": "#/$defs/target_value"
+        },
+        "energy_kj": {
+          "$ref": "#/$defs/target_value"
+        },
+        "fat": {
+          "$ref": "#/$defs/target_value"
+        },
+        "saturated_fat": {
+          "$ref": "#/$defs/target_value"
+        },
+        "carbohydrates": {
+          "$ref": "#/$defs/target_value"
+        },
+        "sugars": {
+          "$ref": "#/$defs/target_value"
+        },
+        "fibre": {
+          "$ref": "#/$defs/target_value"
+        },
+        "protein": {
+          "$ref": "#/$defs/target_value"
+        },
+        "salt": {
+          "$ref": "#/$defs/target_value"
+        },
+        "sodium": {
+          "$ref": "#/$defs/target_value"
+        }
+      },
+      "additionalProperties": false,
+      "required": []
+    },
+    "target_value": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "exact_value": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "minimum_value": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "maximum_value": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "exact_value",
+        "minimum_value",
+        "maximum_value"
+      ]
+    },
+    "target_profile": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^target-profile:[^:]+$",
+          "x-id-prefix": "target-profile"
+        },
+        "name": {
+          "type": "string"
+        },
+        "is_default": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "targets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/target"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "is_default",
+        "targets"
+      ]
+    },
+    "phase_value": {
+      "type": "object",
+      "properties": {
+        "effective_on": {
+          "type": "string"
+        },
+        "targets": {
+          "$ref": "#/$defs/target_map"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "effective_on",
+        "targets"
+      ]
+    },
+    "phase": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^phase:[^:]+$",
+          "x-id-prefix": "phase"
+        },
+        "meal_plan_id": {
+          "type": "string",
+          "pattern": "^plan:[^:]+$",
+          "x-id-prefix": "plan"
+        },
+        "nutrition_target_profile_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^target-profile:[^:]+$",
+              "x-id-prefix": "target-profile"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "profile_name_snapshot": {
+          "type": "string"
+        },
+        "starts_on": {
+          "type": "string"
+        },
+        "ends_on": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/phase_value"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "meal_plan_id",
+        "nutrition_target_profile_id",
+        "profile_name_snapshot",
+        "starts_on",
+        "ends_on",
+        "values"
+      ]
+    },
+    "targets": {
+      "type": "object",
+      "properties": {
+        "profiles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/target_profile"
+          }
+        },
+        "phases": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/phase"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "profiles",
+        "phases"
+      ]
+    },
+    "import": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^import:[^:]+$",
+          "x-id-prefix": "import"
+        },
+        "recipe_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^recipe:[^:]+$",
+              "x-id-prefix": "recipe"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "type": {
+          "type": "string"
+        },
+        "source_format": {
+          "type": "string"
+        },
+        "source_text": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status": {
+          "type": "string"
+        },
+        "parser_identifier": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "parser_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "requires_review": {
+          "type": "boolean"
+        },
+        "warnings": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "provenance": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/provenance"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "nutrition_source": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/imported"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "created_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(\\.\\d+)?Z$",
+              "x-instant": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "updated_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(\\.\\d+)?Z$",
+              "x-instant": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extractor_identifier": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "extractor_version": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "extraction_method": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "extracted_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "x-instant": true,
+              "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(\\.\\d+)?Z$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "recipe_id",
+        "type",
+        "source_format",
+        "source_text",
+        "status",
+        "parser_identifier",
+        "parser_version",
+        "requires_review",
+        "warnings",
+        "provenance",
+        "nutrition_source",
+        "created_at",
+        "updated_at",
+        "extractor_identifier",
+        "extractor_version",
+        "extraction_method",
+        "extracted_at"
+      ]
+    },
+    "change_value": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "basis": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "type": "string"
+        },
+        "operator": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source_value": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source_unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source_basis": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "nutrient": {
+          "type": "string"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "brand": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "manufacturer": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "food_form": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "preparation": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "treatment": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "composition": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "amount": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reliable": {
+          "type": "boolean"
+        },
+        "derivation": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "derivation_basis": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "normalization_policy_version": {
+          "type": "integer"
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "threshold_value": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "source_scale": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "package_count": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "item_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "amount_per_item": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "amount_per_item_unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "servings_per_item": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "serving_amount": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "serving_amount_unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "serving_amount_basis": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": []
+    },
+    "change": {
+      "type": "object",
+      "properties": {
+        "field_key": {
+          "type": "string"
+        },
+        "before_value": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/change_value"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "proposed_value": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/change_value"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "field_key",
+        "before_value",
+        "proposed_value"
+      ]
+    },
+    "proposal": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^proposal:[^:]+$",
+          "x-id-prefix": "proposal"
+        },
+        "catalogue_item_id": {
+          "type": "string",
+          "pattern": "^catalogue:[^:]+$",
+          "x-id-prefix": "catalogue"
+        },
+        "base_catalogue_item_version_id": {
+          "type": "string",
+          "pattern": "^catalogue-version:[^:]+$",
+          "x-id-prefix": "catalogue-version"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "state": {
+          "type": "string"
+        },
+        "submitted_at": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(\\.\\d+)?Z$",
+          "x-instant": true
+        },
+        "changes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/change"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "catalogue_item_id",
+        "base_catalogue_item_version_id",
+        "reason",
+        "state",
+        "submitted_at",
+        "changes"
+      ]
+    },
+    "legacy_nutrients": {
+      "type": "object",
+      "properties": {
+        "energy_kcal": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "energy_kj": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fat": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "saturated_fat": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "carbohydrates": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sugars": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fibre": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "protein": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "salt": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sodium": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fiber": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "proteins": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "energy": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "saturated-fat": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": []
+    },
+    "legacy_nutriments": {
+      "type": "object",
+      "properties": {
+        "per_100g": {
+          "$ref": "#/$defs/legacy_nutrients"
+        },
+        "per_serving": {
+          "$ref": "#/$defs/legacy_nutrients"
+        }
+      },
+      "additionalProperties": false,
+      "required": [],
+      "x-omitted": [
+        "raw"
+      ]
+    },
+    "legacy": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^ingredient:[^:]+$",
+          "x-id-prefix": "ingredient"
+        },
+        "name": {
+          "type": "string"
+        },
+        "keywords": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "categories": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "nutriments": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/legacy_nutriments"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "quantity": {
+          "type": "string",
+          "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+          "x-decimal": true
+        },
+        "quantity_unit": {
+          "type": "string"
+        },
+        "serving_quantity": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "serving_quantity_unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "recommended_servings": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "barcode": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "barcode_source": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "barcode_provenance": {
+          "type": "string"
+        },
+        "barcode_imported_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(\\.\\d+)?Z$",
+              "x-instant": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "created_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(\\.\\d+)?Z$",
+              "x-instant": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "updated_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(\\.\\d+)?Z$",
+              "x-instant": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "keywords",
+        "categories",
+        "nutriments",
+        "quantity",
+        "quantity_unit",
+        "serving_quantity",
+        "serving_quantity_unit",
+        "recommended_servings",
+        "barcode",
+        "barcode_source",
+        "barcode_provenance",
+        "barcode_imported_at",
+        "created_at",
+        "updated_at"
+      ]
+    },
+    "submission": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^catalogue:[^:]+$",
+          "x-id-prefix": "catalogue"
+        },
+        "origin": {
+          "type": "string"
+        },
+        "barcode": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source": {
+          "type": "string"
+        },
+        "source_identifier": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "introduced_at": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(\\.\\d+)?Z$",
+          "x-instant": true
+        },
+        "status": {
+          "type": "string"
+        },
+        "submitted_version": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/submitted_content"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "origin",
+        "barcode",
+        "source",
+        "source_identifier",
+        "introduced_at",
+        "status",
+        "submitted_version"
+      ]
+    },
+    "suggestion": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^suggestion:[^:]+$",
+          "x-id-prefix": "suggestion"
+        },
+        "recipe_id": {
+          "type": "string",
+          "pattern": "^recipe:[^:]+$",
+          "x-id-prefix": "recipe"
+        },
+        "managed_recipe_term_id": {
+          "type": "string",
+          "pattern": "^term:[^:]+$",
+          "x-id-prefix": "term"
+        },
+        "source": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "created_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(\\.\\d+)?Z$",
+              "x-instant": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "recipe_id",
+        "managed_recipe_term_id",
+        "source",
+        "status",
+        "created_at"
+      ]
+    },
+    "proposals": {
+      "type": "object",
+      "properties": {
+        "corrections": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/proposal"
+          }
+        },
+        "legacy_ingredients": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/legacy"
+          }
+        },
+        "catalogue_submissions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/submission"
+          }
+        },
+        "term_suggestions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/suggestion"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "corrections",
+        "legacy_ingredients",
+        "catalogue_submissions",
+        "term_suggestions"
+      ]
+    },
+    "account_envelope": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "1.1.0"
+        },
+        "data": {
+          "$ref": "#/$defs/account"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "data"
+      ]
+    },
+    "recipes_envelope": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "1.1.0"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/recipe"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "data"
+      ]
+    },
+    "organisation_envelope": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "1.1.0"
+        },
+        "data": {
+          "$ref": "#/$defs/organisation"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "data"
+      ]
+    },
+    "plans_envelope": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "1.1.0"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/plan"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "data"
+      ]
+    },
+    "diary_envelope": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "1.1.0"
+        },
+        "data": {
+          "$ref": "#/$defs/diary"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "data"
+      ]
+    },
+    "targets_envelope": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "1.1.0"
+        },
+        "data": {
+          "$ref": "#/$defs/targets"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "data"
+      ]
+    },
+    "imports_envelope": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "1.1.0"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/import"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "data"
+      ]
+    },
+    "proposals_envelope": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "1.1.0"
+        },
+        "data": {
+          "$ref": "#/$defs/proposals"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "data"
+      ]
+    },
+    "observation": {
+      "type": "object",
+      "properties": {
+        "nutrient": {
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "basis": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "type": "string"
+        },
+        "is_estimate": {
+          "type": "boolean"
+        },
+        "source": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "provenance": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "derivation": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "warning": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "threshold_value": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source_value": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source_unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source_basis": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source_operator": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "normalization_policy_version": {
+          "type": "integer"
+        },
+        "derived_basis": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source_field": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "source_scale": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "precision_reduced": {
+          "type": "boolean"
+        },
+        "source_observed_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "x-instant": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "imported_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "x-instant": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [],
+      "x-omitted": [
+        "display"
+      ]
+    },
+    "stored_fact": {
+      "type": "object",
+      "properties": {
+        "nutrient": {
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "basis": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "type": "string"
+        },
+        "is_estimate": {
+          "type": "boolean"
+        },
+        "source": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "provenance": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "derivation": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "warning": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "threshold_value": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source_value": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source_unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source_basis": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source_operator": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "normalization_policy_version": {
+          "type": "integer"
+        },
+        "derived_basis": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "normalization_warning": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [],
+      "x-omitted": [
+        "display"
+      ]
+    },
+    "submitted_content": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "brand": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "manufacturer": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "package_count": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "item_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "amount_per_item": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "amount_per_item_unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "servings_per_item": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "serving_amount": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "x-decimal": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "serving_amount_unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "serving_amount_basis": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "manual_food_classification": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "food_form": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "preparation": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "treatment": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "composition": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "observations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/observation"
+          }
+        },
+        "nutrient_values": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/stored_fact"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": []
+    },
+    "file_inventory": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string",
+          "pattern": "^(data|schema)/[a-z0-9.\\-]+$|^(README.txt|index.html)$"
+        },
+        "media_type": {
+          "enum": [
+            "application/json",
+            "text/plain",
+            "text/html"
+          ]
+        },
+        "counting_unit": {
+          "type": "string"
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "media_type",
+        "counting_unit",
+        "count",
+        "bytes"
+      ]
+    },
+    "manifest": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "vibedietr-account-export"
+        },
+        "schema_version": {
+          "const": "1.1.0"
+        },
+        "schema_path": {
+          "const": "schema/account-export-1.1.0.schema.json"
+        },
+        "export_id": {
+          "type": "string"
+        },
+        "generated_at": {
+          "type": "string"
+        },
+        "encoding": {
+          "const": "UTF-8"
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/file_inventory"
+          }
+        },
+        "excluded_categories": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "understood_omissions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "format",
+        "schema_version",
+        "schema_path",
+        "export_id",
+        "generated_at",
+        "encoding",
+        "files",
+        "excluded_categories",
+        "understood_omissions"
+      ]
+    },
+    "archived_history": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "recipe_entries",
+        "item_entries",
+        "states",
+        "transitions",
+        "nutrition_snapshots",
+        "phases",
+        "days",
+        "slots"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "x-id-prefix": "history",
+          "pattern": "^history:[^:]+$"
+        },
+        "name": {
+          "type": "string"
+        },
+        "recipe_entries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/recipe_entry"
+          }
+        },
+        "item_entries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/item_entry"
+          }
+        },
+        "states": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/state"
+          }
+        },
+        "transitions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/transition"
+          }
+        },
+        "nutrition_snapshots": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/consumption_snapshot"
+          }
+        },
+        "phases": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/phase"
+          }
+        },
+        "days": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/day"
+          }
+        },
+        "slots": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/slot"
+          }
+        }
+      }
+    }
+  },
+  "anyOf": [
+    {
+      "$ref": "#/$defs/account_envelope"
+    },
+    {
+      "$ref": "#/$defs/recipes_envelope"
+    },
+    {
+      "$ref": "#/$defs/organisation_envelope"
+    },
+    {
+      "$ref": "#/$defs/plans_envelope"
+    },
+    {
+      "$ref": "#/$defs/diary_envelope"
+    },
+    {
+      "$ref": "#/$defs/targets_envelope"
+    },
+    {
+      "$ref": "#/$defs/imports_envelope"
+    },
+    {
+      "$ref": "#/$defs/proposals_envelope"
+    },
+    {
+      "$ref": "#/$defs/manifest"
+    }
+  ]
+}

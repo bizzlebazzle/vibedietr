@@ -126,3 +126,25 @@ recovery. Administrator counts exclude inactive accounts under the existing
 FND-14 locking service, so a replacement must be active first. Public attribution
 profiles are unavailable during recovery; ordinary public recipe retention is
 unchanged until final purge, while confirmed under-13 public recipes are hidden.
+
+## Purge and private-history unit
+
+The next implementation unit adds non-reusable recipe/plan generations and
+chunked protected journal manifests. Final purge services remove private source
+graphs, detach qualifying public recipes/plans, null catalogue submission
+links and erase ordinary audit identity mappings. Independently owned copies
+keep their own generations and lifecycle.
+
+Permanent retained-plan removal writes independently replicated intent before
+the domain acknowledgement. During unwaived recovery, DEC-022 moves original
+consumption chains, source entry facts, nutrition and historical target
+snapshots into an encrypted owner-only archive before removing the public plan.
+Recovery keeps that history without recreating the plan. Final purge deletes
+the archive and its private audit history. Export schema 1.1.0 includes it through
+explicit owner-scoped projections; released 1.0.0 files remain unchanged.
+Retained-plan safety rejects unclassified fields across the entire plan, and
+copies exclude schema-omitted private/recovery attribution.
+
+This is service-level implementation, not production enablement. HTTP flows,
+scheduler/queue integration, complete purpose-retention execution and the
+DEC-012 restore/release/disposal gates remain required.

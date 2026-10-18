@@ -12,8 +12,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Str;
 
 /**
+ * @property string $erasure_generation
  * @property RecipeLifecycle $lifecycle
  * @property RecipeVisibility $visibility
  */
@@ -23,6 +25,13 @@ class Recipe extends Model
     use HasFactory;
 
     protected $fillable = ['title', 'servings', 'visibility'];
+
+    protected static function booted(): void
+    {
+        static::creating(function (Recipe $model): void {
+            $model->erasure_generation ??= (string) Str::ulid();
+        });
+    }
 
     protected function casts(): array
     {

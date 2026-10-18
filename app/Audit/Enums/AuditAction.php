@@ -208,8 +208,8 @@ enum AuditAction: string
     public function allowedSubjectTypes(): array
     {
         return match ($this) {
-            self::AdministratorBootstrapCompleted,
-            self::AccountAnonymizationCompleted => [AuditSubjectType::UserAccount],
+            self::AdministratorBootstrapCompleted => [AuditSubjectType::UserAccount],
+            self::AccountAnonymizationCompleted => [AuditSubjectType::UserAccount, AuditSubjectType::SystemOperation],
             self::AdministratorBootstrapRefused,
             self::AdministratorLifecycleEvent => [AuditSubjectType::UserAccount, AuditSubjectType::SystemOperation],
             self::CatalogueProposalApproved,
