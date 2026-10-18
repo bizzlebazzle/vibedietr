@@ -506,6 +506,24 @@ test('320px, actual 200%/400% zoom and reduced motion retain forms, names and fo
     await browser.sendDevToolsCommand('Emulation.setEmulatedMedia',{features:[]});
 });
 
+test('account export request, ready download, keyboard and responsive themes remain accessible', async () => {
+    await login();
+    await open('/account-exports');
+    await structure(); await scan('account-export-empty');
+    await tabTo('form[action$="/account-exports"] button'); await press();
+    await browser.wait(until.elementLocated(By.css('a[href*="/account-exports/"][href$="/download"]')), 20000);
+    await tabTo('a[href*="/account-exports/"][href$="/download"]');
+    for (const theme of ['light', 'dark']) {
+        await browser.executeScript('document.documentElement.classList.toggle("dark",arguments[0])', theme === 'dark');
+        await structure(); await scan(`account-export-ready-${theme}`);
+        await screenshot(`account-export-ready-${theme}`);
+        await browser.sendDevToolsCommand('Emulation.setDeviceMetricsOverride',{width:320,height:800,deviceScaleFactor:1,mobile:true});
+        await reflow(); await scan(`account-export-mobile-${theme}`);
+        await screenshot(`account-export-mobile-${theme}`);
+        await browser.sendDevToolsCommand('Emulation.clearDeviceMetricsOverride');
+    }
+});
+
 test('every scanned representative state has no accessibility violations', () => {
     assert.deepEqual(reports.filter(r=>r.violations.length),[]);
 });

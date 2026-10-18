@@ -4,6 +4,7 @@ namespace App\Audit\Enums;
 
 enum AuditAction: string
 {
+    case AccountExportEvent = 'account.export_event';
     case CatalogueCandidateCreated = 'catalogue.candidate_created';
     case CataloguePendingApproved = 'catalogue.pending_approved';
     case CataloguePendingRejected = 'catalogue.pending_rejected';
@@ -82,6 +83,7 @@ enum AuditAction: string
             self::PlanCopied,
             self::DiaryConsumptionTransitioned => AuditPurpose::ProductHistory,
             self::AccountAnonymizationCompleted => AuditPurpose::AccountErasureEvidence,
+            self::AccountExportEvent,
             self::SecuritySecondFactorEvent,
             self::SecurityNotificationEvent => AuditPurpose::AccountSecurity,
         };
@@ -126,6 +128,7 @@ enum AuditAction: string
             self::PlanCopied,
             self::DiaryConsumptionTransitioned => AuditRetentionClass::PrivateContentUntilFinalPurge,
             self::AccountAnonymizationCompleted => AuditRetentionClass::PurgeReceiptTwelveMonths,
+            self::AccountExportEvent,
             self::SecuritySecondFactorEvent,
             self::SecurityNotificationEvent => AuditRetentionClass::SecurityEventSixMonths,
         };
@@ -185,6 +188,7 @@ enum AuditAction: string
             self::RecipeNutritionRecalculated,
             self::PlanSnapshotRecorded,
             self::AccountAnonymizationCompleted => [AuditActorType::System],
+            self::AccountExportEvent,
             self::SecuritySecondFactorEvent,
             self::SecurityNotificationEvent => [
                 AuditActorType::AuthenticatedUser,
@@ -239,6 +243,7 @@ enum AuditAction: string
             self::PlanBookmarkChanged,
             self::PlanCopied => [AuditSubjectType::MealPlan],
             self::DiaryConsumptionTransitioned => [AuditSubjectType::DiaryConsumptionTransition],
+            self::AccountExportEvent => [AuditSubjectType::UserAccount, AuditSubjectType::SystemOperation],
             self::SecuritySecondFactorEvent,
             self::SecurityNotificationEvent => [AuditSubjectType::UserAccount],
         };

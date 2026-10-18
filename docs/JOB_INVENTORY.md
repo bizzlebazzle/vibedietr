@@ -1,5 +1,37 @@
 # Job inventory
 
+## GenerateAccountExport and DeleteAccountExport
+
+- **Classes / owner / dependencies:** `App\Jobs\GenerateAccountExport` and
+  `App\Jobs\DeleteAccountExport`; DEP-07, FND-09, DEP-04 and DEP-05.
+- **Purpose:** Owner-only DEC-008 JSON ZIP generation and seven-day retention
+  cleanup. See [export operations and capacity](ACCOUNT_EXPORTS.md).
+- **Queue / worker:** Explicit `default`; existing single-process default
+  worker, 60-second jobs, 70-second worker, 90-second `retry_after` and enforced
+  20-second margin. No new queue or larger process budget.
+- **Retries / locks:** Three attempts, 10/60-second backoff, 75-second unique
+  dispatch and shared per-export 75-second overlap lock. Missing resources
+  complete as obsolete. Terminal-state replay is harmless.
+- **Idempotency:** Operation type plus export ULID fingerprint, durable unique
+  active-account key, locked row state, deterministic private object key and
+  transactional state/audit. Upload-before-commit replay replaces the same
+  unpublished object. Failed cleanup remains expired and safely repeatable.
+- **Resource bounds:** 35-second/160 MiB projection guards; 40-second/192 MiB
+  assembly and 64 MiB JSON bound; S3 connect/total timeouts 3/10 seconds. Local
+  private staging plus one completed archive; no provider calls or OCR.
+- **Telemetry / alert:** Default queue depth/age, execution, retry, final
+  failure and worker heartbeat. Critical retention count after five overdue
+  minutes or owner removal, plus scheduler heartbeat. Logs/metrics contain
+  safe categories and counts, never content, email, recipients or storage keys.
+- **Failed payload / pruning:** Export and correlation ULIDs only;
+  `metadata-only` classification, exact 168-hour failed-job pruning.
+- **Replay:** Generation only when queued/failed and unexpired; request new
+  exports after terminal completion/expiry. Retry expired deletion after
+  storage/audit repair; never bulk replay. Original deadline never changes.
+- **Schedule:** UTC `account-exports:cleanup` every minute queues deletion in
+  100-row chunks; one server, ten-minute scheduler overlap lock. Crashed lock
+  expires in ten minutes. The next sweep safely retries missed work.
+
 ## Operating contract
 
 This is the authoritative DEP-04 inventory. Every new queued or scheduled job

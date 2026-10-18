@@ -72,6 +72,14 @@ escape hatch.
 
 ## Payload and reference restrictions
 
+DEP-07 adds `account.export_event` for requested/generated/downloaded/expired/
+deleted outcomes. Its strict payload is event, completed outcome and opaque
+export ULID. Actors are authenticated user or system; subjects use the erasable
+requester mapping, or system operation after owner removal. Purpose is account
+security with six-month security-event retention. No archive content, storage
+key, URL or download credential is recorded. Publication/deletion state and
+their events commit together; download means an authorized stream was opened.
+
 `AuditPayloadValidator` applies an action-specific key and value schema. It
 also rejects commonly dangerous key families and raw IP values, limits depth,
 field/list counts, individual strings, and encoded size, and rejects all

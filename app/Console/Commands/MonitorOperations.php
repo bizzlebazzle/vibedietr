@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\AccountExport;
 use App\Observability\Alerts\AlertSink;
 use App\Observability\Health\HealthService;
 use App\Observability\Monitoring\OperationalState;
@@ -25,6 +26,12 @@ final class MonitorOperations extends Command
         $readiness = $health->readiness();
         if ($readiness['status'] === 'unhealthy') {
             $alerts->send('application_readiness', 'critical');
+        }
+
+        $overdueExports = AccountExport::query()->where('state', '!=', 'deleted')
+            ->where(fn ($query) => $query->where('expires_at', '<=', now()->utc()->subMinutes(5))->orWhereNull('user_id'))->count();
+        if ($overdueExports > 0) {
+            $alerts->send('account_export_retention', 'critical', ['count' => $overdueExports]);
         }
 
         foreach ($monitor->queues() as $queue) {

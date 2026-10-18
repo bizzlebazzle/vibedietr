@@ -58,6 +58,11 @@ automatic failed-job replay is allowed.
 
 ## Scheduler and locking
 
+DEP-07 uses the existing default worker for bounded export generation and
+deletion. `account-exports:cleanup` dispatches due deletion every minute in UTC
+with one-server/ten-minute scheduler locks. The shared per-export job lock
+coordinates generation and deletion. See [export recovery](ACCOUNT_EXPORTS.md).
+
 The application and infrastructure timezone is UTC. A supervised
 `schedule:work` process evaluates the checked-in schedule; user timezones do
 not alter infrastructure execution.

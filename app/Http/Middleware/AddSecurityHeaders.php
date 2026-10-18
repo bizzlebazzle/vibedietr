@@ -77,7 +77,7 @@ final class AddSecurityHeaders
         return $request->is(
             'login', 'register', 'forgot-password*', 'reset-password*',
             'confirm-password', 'verify-email*', 'profile*', 'security/*',
-            'recipe-imports*', 'catalogue/manual*', 'admin/catalogue*',
+            'recipe-imports*', 'catalogue/manual*', 'admin/catalogue*', 'account-exports*',
         );
     }
 }

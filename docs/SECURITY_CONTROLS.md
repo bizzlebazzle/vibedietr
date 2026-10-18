@@ -62,6 +62,7 @@ filename or import content is never a limiter key or telemetry label.
 | Password reset IP ceiling | IP, hashed | 20 | 1 hour | Distributed-identifier abuse from one source | Application config |
 | Password confirmation | Authenticated user plus IP, hashed | 10 | 1 minute | Re-authentication guessing | Application config |
 | Email verification link | Laravel signed-link identity | 6 | 1 minute | Replay/verification abuse | Existing route policy |
+| Account export requests | Existing `security-sensitive` authenticated user plus IP, hashed | 10 | 1 minute | Bounded generation abuse; one active export reused | Application config |
 | Second-factor and administrator-security writes | Authenticated user plus IP, hashed | 10 | 1 minute | Security-flow abuse | Application config |
 | Public recipe search | Authenticated user plus IP, or guest IP, hashed | 60 | 1 minute | Scraping/query cost | Application config |
 | Barcode lookup | Authenticated user plus IP, hashed | 30 | 1 minute | Upstream cost/proxy abuse | Application config |

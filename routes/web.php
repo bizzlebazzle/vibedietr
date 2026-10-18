@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AccountExportController;
 use App\Http\Controllers\BookmarkController;
 use App\Http\Controllers\CatalogueController;
 use App\Http\Controllers\CatalogueCorrectionProposalController;
@@ -32,6 +33,12 @@ use App\Http\Controllers\RecipeRemixController;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome');
+
+Route::middleware('auth')->prefix('account-exports')->name('account-exports.')->group(function () {
+    Route::get('/', [AccountExportController::class, 'index'])->name('index');
+    Route::post('/', [AccountExportController::class, 'store'])->middleware('throttle:security-sensitive')->name('store');
+    Route::get('/{export}/download', [AccountExportController::class, 'download'])->whereUlid('export')->name('download');
+});
 
 Route::get('dashboard', DashboardController::class)
     ->middleware(['auth', 'verified'])

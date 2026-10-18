@@ -153,6 +153,9 @@ final class ProductionConfigurationValidator
     /** @param list<string> $failures */
     private function persistence(array &$failures): void
     {
+        if (! class_exists(\ZipArchive::class)) {
+            $failures[] = 'Account exports require the PHP ZIP extension.';
+        }
         if (config('database.default') !== 'mysql') {
             $failures[] = 'DB_CONNECTION=mysql is required in production.';
         }

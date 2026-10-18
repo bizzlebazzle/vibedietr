@@ -49,6 +49,11 @@ non-destructive observations before repair.
 
 ## Scheduler stale
 
+For DEP-07 expiry/deletion alerts, follow the
+[account-export cleanup runbook](ACCOUNT_EXPORTS.md#cleanup-and-recovery).
+Confirm default-worker/storage/audit recovery and the overdue count returning
+to zero; backend connectivity alone is insufficient.
+
 1. Check the supervised UTC `schedule:work` process and recent logs.
 2. Confirm shared database cache and one-server locks.
 3. Restart or reconfigure through the deployment supervisor.
