@@ -69,6 +69,31 @@ final class PruneAuditRetention
             }
         }
 
+        DB::table('catalogue_moderation_decisions')->whereNotNull('note')
+            ->where('created_at', '<=', now()->utc()->subDays(30))->update(['note' => null]);
+        foreach (DB::table('catalogue_moderation_decisions')->whereNotNull('actor_identity_id')
+            ->where('created_at', '<=', now()->utc()->subMonthsNoOverflow(12)->addDay())->orderBy('created_at')->limit(200)->get() as $decision) {
+            if (CarbonImmutable::parse($decision->created_at)->addMonthsNoOverflow(12)->lessThanOrEqualTo(now()->utc())) {
+                DB::table('catalogue_moderation_decisions')->where('id', $decision->id)->update(['actor_identity_id' => null]);
+            }
+        }
+        $identities = DB::table('audit_actor_identities')->whereNotExists(fn ($query) => $query->selectRaw('1')->from('audit_events')
+            ->whereColumn('audit_events.actor_identity_id', 'audit_actor_identities.id')
+            ->orWhereColumn('audit_events.subject_identity_id', 'audit_actor_identities.id'))->limit(200)->pluck('id');
+        foreach ($identities as $id) {
+            DB::transaction(function () use ($id): void {
+                $identity = DB::table('audit_actor_identities')->where('id', $id)->lockForUpdate()->first();
+                if (! $identity || ($identity->user_id !== null && DB::table('account_deletions')->where('user_id', $identity->user_id)->exists())) {
+                    return;
+                }
+                if (DB::table('audit_events')->where('actor_identity_id', $id)->orWhere('subject_identity_id', $id)->exists()
+                    || DB::table('catalogue_moderation_decisions')->where('actor_identity_id', $id)->exists()) {
+                    return;
+                }
+                DB::table('audit_actor_identities')->where('id', $id)->delete();
+            }, 3);
+        }
+
         return ['deleted' => $deleted, 'missing_clocks' => $missing];
     }
 }

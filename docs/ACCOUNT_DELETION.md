@@ -211,3 +211,67 @@ content-free critical alert rather than inventing a new date.
 `PruneAccountRetention` performs bounded, idempotent scheduled sweeps under the
 existing queue contract. The independent protected journal and scoped legal
 evidence do not inherit ordinary audit expiry.
+
+## Separately protected scoped evidence
+
+`erasure:provision journal` adds the two dedicated journal schemas and verifies
+their current chains. `erasure:provision evidence` adds the independently stored
+case schema. Both require the configured privacy/security operator and exact
+environment. Neither provisions into the application connection or changes
+existing case data. Schema presence is not proof of failure-domain separation,
+TLS, encryption at rest, durable flushes or complete copy retirement.
+
+`ERASURE_EVIDENCE_URL` points to a dedicated MySQL store outside application
+restores. Its `ERASURE_EVIDENCE_ENCRYPTION_KEY` is a separate base64-encoded
+32-byte AES-GCM key, distinct from the app and both journal keys. Keep its
+credentials/key and operator settings in the protected operator environment,
+outside web processes and ordinary recovery sets. The similarly named reserved
+application table is unused and contains no case evidence.
+
+The owner selects exact records, validates the incident/dispute/proceeding or
+legal authority, and records approval before opening a hold. The tool does not
+determine legal applicability, age or the validity of a notice. It never reads
+a whole private account automatically and gives ordinary administrators no case
+access. Source timestamps/expiry are preserved; decimals use exact strings and
+verbatim byte evidence uses explicitly selected encoded fields. Unclassified
+record-envelope fields, model graphs, floats, excessive depth/size and missing
+authority/approval are rejected.
+
+Operator commands:
+
+- `erasure:evidence open --request=/protected/case.json --owner-approved`.
+  The operator-created, owner-only 0600 JSON file must be outside the app tree,
+  no larger than 64 KiB. Its exact fields are `id`, `account_generation`,
+  `category`, `authority_reference`, `owner_approval_reference`, `records`,
+  and optional `expires_at`. Categories are `security_incident`, `proceedings`,
+  `legal_requirement` and `defined_dispute`. Each record has `reference`,
+  `source_timestamp`, nullable `source_expires_at`, and explicitly approved
+  `data`. IDs are ULIDs; timestamps are original UTC instants. Register the
+  input and every other case copy in the protected case inventory.
+- `erasure:evidence review --id=HOLD_ULID` records the named operator review
+  and next review no later than 90 days, without changing notice expiry,
+  source clocks or account recovery.
+- `erasure:evidence release --id=HOLD_ULID --owner-approved` releases only the
+  scoped copy. A notice with a future exact end additionally requires a
+  separately validated `--release-authority=REFERENCE`. Keep that underlying
+  authority in the protected controller case register.
+- `erasure:evidence maintain` applies original notice expiry and reports
+  overdue reviews using only a count. The protected operator must run this
+  through independently supervised maintenance, review exceptions no later
+  than 90 days, and remediate an overdue review/expiry as an incident. This
+  command is not an ordinary web-worker case reader.
+
+The independently durable evidence copy precedes hold acknowledgement.
+Protected journal transitions and minimized twelve-month operator audit record
+opening/read/review/release; reads require the named case operator and current
+journal truth. A restored released case cannot be read or reopened. Release
+removes its protected copy promptly; source clocks are never restarted.
+Account final purge proceeds for unrelated data, while only approved scoped
+evidence remains separate. No hold changes the account recovery deadline.
+
+Case files, private-store backups, replicas and keys have their own explicit
+inventory and original case/notice clocks. Do not freeze ordinary whole-account
+backups merely because selected evidence is held. Statutory reporting,
+controller case records, recipient/provider propagation and installation legal
+review remain the separate DEP-09 operator duties; this implementation claims
+no legal compliance or automatic adjudication.

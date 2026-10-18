@@ -108,6 +108,7 @@ final class AuditPayloadValidator
             AuditAction::PlanCopied => $this->validatePlanCopied($payload),
             AuditAction::DiaryConsumptionTransitioned => $this->validateDiaryConsumptionTransition($payload),
             AuditAction::RetainedPlanModerated => $this->validateRetainedPlanModeration($payload),
+            AuditAction::ErasureOperatorEvent => $this->validateErasureOperator($payload),
             AuditAction::AccountLifecycleEvent => $this->validateAccountLifecycle($payload),
             AuditAction::AccountExportEvent => $this->validateAccountExport($payload),
             AuditAction::AccountAnonymizationCompleted => $this->validateAnonymization($payload),
@@ -127,6 +128,15 @@ final class AuditPayloadValidator
         $this->assertEnum($payload, 'event', ['plan_suppressed', 'plan_removed']);
         $this->assertEnum($payload, 'outcome', ['completed']);
         $this->assertEnum($payload, 'reason', ['privacy', 'security', 'legal', 'moderation']);
+
+        return $payload;
+    }
+
+    private function validateErasureOperator(array $payload): array
+    {
+        $this->assertShape($payload, ['event', 'outcome'], ['event', 'outcome']);
+        $this->assertEnum($payload, 'event', ['under13_confirmed', 'hold_opened', 'hold_read', 'hold_reviewed', 'hold_released', 'journal_generation_retired']);
+        $this->assertEnum($payload, 'outcome', ['completed']);
 
         return $payload;
     }

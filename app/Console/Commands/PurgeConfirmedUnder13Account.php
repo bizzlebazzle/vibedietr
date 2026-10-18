@@ -2,7 +2,12 @@
 
 namespace App\Console\Commands;
 
+use App\Audit\AuditActor;
+use App\Audit\AuditEventRecorder;
+use App\Audit\AuditSubject;
+use App\Audit\Enums\AuditAction;
 use App\Domain\AccountDeletion\AccountLifecycle;
+use App\Domain\AccountDeletion\PrivacyOperator;
 use App\Jobs\ProcessAccountDeletion;
 use App\Models\User;
 use Illuminate\Console\Command;
@@ -16,11 +21,15 @@ final class PurgeConfirmedUnder13Account extends Command
 
     public function handle(AccountLifecycle $lifecycle): int
     {
-        $operator = config('erasure.privacy_operator');
-        if (! $this->option('confirmed') || ! is_string($operator)
-            || ! preg_match('/^[A-Za-z0-9:_-]{8,128}$/D', $operator)
-            || config('erasure.operator_environment') !== app()->environment()) {
-            $this->error('A configured privacy operator, exact environment and prior under-13 confirmation are required.');
+        try {
+            $operator = app(PrivacyOperator::class)->reference();
+        } catch (\RuntimeException) {
+            $this->error('A configured privacy operator and exact environment are required.');
+
+            return self::FAILURE;
+        }
+        if (! $this->option('confirmed')) {
+            $this->error('Prior under-13 confirmation is required.');
 
             return self::FAILURE;
         }
@@ -32,6 +41,9 @@ final class PurgeConfirmedUnder13Account extends Command
         }
         $user = User::query()->where('account_generation', $generation)->firstOrFail();
         $record = $lifecycle->request($user, under13: true);
+        app(AuditEventRecorder::class)->record(AuditAction::ErasureOperatorEvent,
+            AuditActor::externalOperator($operator), AuditSubject::user($user),
+            ['event' => 'under13_confirmed', 'outcome' => 'completed'], $record->correlation_id);
         ProcessAccountDeletion::dispatch($record->id, $record->correlation_id);
         $this->info('Confirmed under-13 account disabled; final purge queued.');
 

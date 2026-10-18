@@ -3,6 +3,7 @@
 return [
     // These connections, keys and storage generation are outside application restores.
     // No application-database fallback is permitted.
+    'evidence_key' => env('ERASURE_EVIDENCE_ENCRYPTION_KEY'),
     'privacy_operator' => env('ERASURE_PRIVACY_OPERATOR_REFERENCE'),
     'operator_environment' => env('ERASURE_OPERATOR_ENVIRONMENT'),
     'installation' => env('ERASURE_INSTALLATION'),

@@ -116,7 +116,7 @@ class AuditEventRecorder
 
     private function identityForUser(int $userId): string
     {
-        $identity = AuditActorIdentity::query()->where('user_id', $userId)->first();
+        $identity = AuditActorIdentity::query()->where('user_id', $userId)->lockForUpdate()->first();
 
         if ($identity !== null) {
             return $identity->getKey();
@@ -138,7 +138,7 @@ class AuditEventRecorder
         $identity = AuditActorIdentity::query()
             ->where('identity_type', $type)
             ->where('external_reference', $reference)
-            ->first();
+            ->lockForUpdate()->first();
 
         if ($identity !== null) {
             return $identity->getKey();

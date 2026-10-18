@@ -122,6 +122,23 @@ final class ProtectedErasureJournal
         }
     }
 
+    /** Repair only an authenticated durable primary suffix; never guess between divergent stores. */
+    public function repair(): ErasureCheckpoint
+    {
+        try {
+            [$primary, , $generation, $key, $encrypter] = $this->configuration();
+            $rows = $this->validatedRows($primary, $generation, $key, $encrypter);
+            if ($rows !== []) {
+                $head = $rows[array_key_last($rows)];
+                $this->append($head['operation_id'], json_decode($encrypter->decryptString($head['ciphertext']), true, flags: JSON_THROW_ON_ERROR));
+            }
+
+            return $this->checkpoint();
+        } catch (Throwable) {
+            throw new JournalUnavailable;
+        }
+    }
+
     /** Live retries reuse the first durable clock, including an unacknowledged primary suffix.
      * @param  array<string, mixed>  $intent
      * @return array<string, mixed>
