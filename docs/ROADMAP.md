@@ -1493,9 +1493,8 @@ changes, it is deliberately split across multiple items.
   [version 1 export contract](ACCOUNT_EXPORT_RESEARCH.md#approved-version-1-contract):
   documented JSON ZIP, exact stored precision, immutable owned history and
   minimized external references, including archive-local recipient aliases.
-  Its register status remains `Owner input required` by explicit owner
-  instruction, so status-based dependency tooling still reports a blocker;
-  no format/privacy choice remains pending. Implementation and production
+  DEC-008 is decided and no longer blocks this item; no format/privacy choice
+  remains pending. Implementation and production
   verification remain this item's work.
 - **Acceptance criteria:** Export generation and scheduled file cleanup run as
   idempotent, correlated queued work under FND-09. Export includes account,

@@ -38,7 +38,7 @@ Backlog relationships mean:
 | DEC-005 | Recipe-import providers and formats | Decided | Product owner |
 | DEC-006 | OCR providers and formats | Decided | Product owner |
 | DEC-007 | Import and OCR extraction-quality thresholds | Decided | Product owner |
-| DEC-008 | Account data-export format | Owner input required | Product owner |
+| DEC-008 | Account data-export format | Decided | Product owner |
 | DEC-009 | Initial administrator assignment | Decided | Product owner |
 | DEC-010 | Moderation escalation and service levels | Owner input required | Product owner |
 | DEC-011 | Manual-food de-duplication and merge rules | Decided | Product owner |
@@ -1000,7 +1000,7 @@ Backlog relationships mean:
 - **Why it matters:** The choice affects portability, readability, versioning,
   archive generation, download cleanup, and the risk of including data the
   requester does not own.
-- **Status:** Owner input required.
+- **Status:** Decided.
 - **Owner:** Product owner.
 - **Alternatives:** A structured JSON export; tabular files in an archive; a
   documented archive containing both machine-readable data and a human-readable
@@ -1009,7 +1009,7 @@ Backlog relationships mean:
   requester's account data, recipes, plans, diary history, and targets. It must
   not include another user's private account data merely because shared content
   is viewable.
-- **Backlog relationships:** `Blocked`: DEP-07. `Constrained`: FND-09, DEP-04.
+- **Backlog relationships:** `Unblocked`: DEP-07. `Constrained`: FND-09, DEP-04.
   `Related`: DEP-09.
 - **Resolution condition:** Approve a versioned export schema and packaging
   format after reviewing representative complete data, portability, readability,
@@ -1018,10 +1018,9 @@ Backlog relationships mean:
   compares structured JSON, tabular ZIP, and documented JSON ZIP against current
   owned versions, snapshots, diary history, targets, and privacy boundaries.
   The owner approved recommended option C and then anonymous archive-local
-  recipient aliases on 2026-10-18. No owner choices remain outstanding. The
-  register status and owner remain unchanged under the task's explicit
-  preservation instruction; status-based tooling therefore still treats
-  DEP-07 as blocked. This records a format approval, not DEP-07 delivery.
+  recipient aliases on 2026-10-18. No owner choices remain outstanding;
+  DEC-008 no longer blocks DEP-07. This records a format approval, not DEP-07
+  delivery.
 - **Final decision and rationale:** Approved on 2026-10-18: a documented ZIP
   containing per-domain UTF-8 JSON, manifest, bundled schema/data dictionary,
   README and static offline navigation/counts/explanations index. The normative

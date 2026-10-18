@@ -3,8 +3,8 @@
 ## Status and scope
 
 Research and approval date: 2026-10-18. Decision: DEC-008.
-Register status **Owner input required** and owner **Product owner** are retained
-under the task's explicit instruction. The owner approved recommended option C
+Register status: **Decided**. Owner: **Product owner**.
+The owner approved recommended option C
 and anonymous archive-local recipient aliases; no owner choices remain pending.
 The approved contract below supersedes proposal language in the investigation
 that follows; alternatives and specimens are retained as review evidence.
@@ -16,7 +16,7 @@ current domain records, not literal database dumps or completed JSON Schemas.
 IDs). `./vendor/bin/sail npm run context:task -- DEP-07` successfully routed the
 decision, dependencies, acceptance criteria and privacy references.
 
-Relationships remain: **Blocked:** DEP-07; **Constrained:** FND-09, DEP-04;
+Relationships: **Unblocked:** DEP-07; **Constrained:** FND-09, DEP-04;
 **Related:** DEP-09. DEP-07 also depends on DEP-05. Approval here does not
 complete DEP-07, add import/restore support, or certify legal portability.
 
@@ -122,8 +122,8 @@ readability and compression without maintaining a parallel full report.
 Existing seven-day archive/credential retention, purge/hold rules and separate
 event retention remain unchanged. DEP-07 retains private bounded generation,
 consistency/resource/large-file tests, authorization, delivery, audit and cleanup;
-DEP-09 retains operational/privacy/legal launch evidence. Register status stays
-as instructed, so the task resolver still reports a status-based DEP-07 blocker.
+DEP-09 retains operational/privacy/legal launch evidence. DEC-008 is decided
+and no longer blocks DEP-07.
 
 ## Confirmed constraints, without a new owner choice
 
