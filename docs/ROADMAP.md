@@ -1513,6 +1513,9 @@ changes, it is deliberately split across multiple items.
 
 ### DEP-08 — P2 — Replace immediate account deletion with recovery and purge
 
+- **Planning evidence:** [Lifecycle audit and owner-approved preferred
+  implementation](DEP_08_LIFECYCLE_AUDIT.md); three additional policy questions
+  require owner answers before dependent purge behavior is implemented.
 - **Outcome:** Implement optional recovery for up to 30 days followed by
   privacy-aware purge/anonymization, with an authenticated immediate-purge path.
 - **Dependencies:** DEC-012, FND-05, FND-09, FND-14, DEP-04, DEP-05,
