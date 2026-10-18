@@ -616,12 +616,20 @@ Decision: DEC-008.
 - During that period, deletion can be reversed through an appropriately secure
   recovery mechanism.
 - After 30 days, private recipes, non-public plans, diary entries, targets,
-  personal organisation, one-off items, and pending submissions belonging to
-  the account are permanently removed.
+  personal organisation, one-off items, and pending user correction proposals
+  are permanently removed. Application-owned pending shared-catalogue identities
+  retain factual records and restricted visibility without identifying submitter
+  or private submission material, subject to DEC-013 evidence/scoped holds.
 - Public recipes remain available under anonymized former-user attribution.
 - Approved shared-catalogue contributions remain in the catalogue with the
   submitting-user reference anonymized or removed.
 - Independent remixes and plan copies owned by other users are unaffected.
+- Unreferenced superseded recipe versions are removed at final purge; source
+  version data survives only where an approved dependency requires it, minimized
+  and anonymized. Existing plan bookmarks continue qualifying during their
+  owner's unwaived recovery period and are removed on final purge.
+
+Decision: DEC-021.
 
 Decided DEC-012 requires daily paired database/private-storage recovery sets,
 seven elapsed days of recovery eligibility from original capture, and removal

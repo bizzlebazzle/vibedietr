@@ -6,7 +6,9 @@ Read-only policy/schema/code audit on 18 October 2026, followed by this
 documentation record. DEP-08 remains P2, High risk, Large size and unimplemented.
 This is planning evidence, not verification of a functioning deletion lifecycle.
 Existing decisions and the documents linked below remain authoritative; the
-unanswered questions in this record must not be implemented by inference.
+questions below were answered yes by the owner on 18 October 2026 and recorded
+in [DEC-021](DECISIONS.md#dec-021--account-purge-resource-boundaries). Descriptions
+of conflicts below document what the audit found before that reconciliation.
 
 ## Owner-approved preferred implementation
 
@@ -37,10 +39,10 @@ Relevant implementation evidence:
   without source foreign keys and stores independent recipe/nutrition snapshots.
   Plan copying recreates those snapshots under the recipient's ownership.
 
-Record the final reconciled version rule in the decision register and affected
-domain/privacy documentation before implementing the dependent purge behavior.
+DEC-021 and the affected domain/privacy documents now record this approved
+version rule. All three recommendations below were subsequently approved too.
 
-## Further owner questions
+## Further owner questions: all approved
 
 ### Q1: Bookmarks owned by an account in recovery
 
@@ -137,6 +139,7 @@ current matrix/model scope. No deletion behavior is being invented for them.
 ## Dependencies and implementation gates
 
 The required `./vendor/bin/sail npm run context:task -- DEP-08` succeeded.
+DEC-021 now resolves the four resource-boundary policy questions.
 
 - DEC-012 is Decided, with no unresolved reference-stack policy question.
 - FND-05's audit store/erasable identity foundation exists in code and tests;

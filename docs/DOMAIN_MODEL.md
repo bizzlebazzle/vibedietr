@@ -297,7 +297,10 @@ one-to-many version relationship. REC-05 creates version 1; REC-07 creates
 monotonic replacement versions while retaining earlier rows. No history browser
 is exposed. Model update and direct delete are
 rejected. Deleting the owning recipe still removes its versions through the
-database relationship; broader retained-version rules remain later work.
+database relationship. DEC-021 requires final account purge to delete
+unreferenced superseded versions and preserve independent snapshots/copies;
+source-version data survives only where an approved dependency requires it,
+minimized and anonymized. DEP-08 implements this boundary.
 
 ### Recipe draft revision
 
@@ -1800,7 +1803,9 @@ One optional unique correction-proposal foreign key links the immutable
 proposal/decision references and corrected field identifiers. Corrected
 nutrient observations retain the same references; normalized direct facts use
 corrected provenance and calculated energy counterparts remain derived.
-Proposer deletion nulls only actor attribution. Public catalogue projections
+Under DEC-021 final proposer purge removes pending user proposals; accepted
+catalogue facts and only DEC-013-permitted anonymized decision/provenance
+evidence survive. Private reasons are not retained merely for provenance. Public catalogue projections
 never serialize proposals, reasons, actor references, notes or decision
 evidence. Full invariants are in
 [Catalogue correction proposals](CATALOGUE_CORRECTIONS.md).

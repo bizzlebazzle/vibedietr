@@ -51,6 +51,7 @@ Backlog relationships mean:
 | DEC-018 | Recipe remix attribution before public profiles | Decided | Product owner |
 | DEC-019 | Diary consumption time and correction history | Decided | Product owner |
 | DEC-020 | Dated nutrition target phases and history | Decided | Product owner |
+| DEC-021 | Account purge resource boundaries | Decided | Product owner |
 
 ## DEC-001 — Food-matching confidence thresholds
 
@@ -2376,6 +2377,53 @@ Backlog relationships mean:
   remain private owner data until account purge. This preserves an accurate
   record without silently changing past comparisons or assigning unrelated
   targets to gaps.
+
+## DEC-021 — Account purge resource boundaries
+
+- **Question requiring resolution:** Which historical recipe data, recovering
+  users' bookmarks, pending catalogue identities and correction proposals
+  survive account purge?
+- **Why it matters:** These boundaries determine private-data minimization,
+  independent-copy survival and when retained public plans become unavailable.
+- **Status:** Decided.
+- **Owner:** Product owner.
+- **Alternatives:** Preserve all historical source content or minimize to actual
+  dependencies; stop bookmark qualification at request or purge; delete or
+  anonymize pending shared catalogue items; retain or remove pending corrections.
+- **Existing constraints from `PRODUCT_SPEC.md`:** Private account content is
+  removed after optional recovery, qualifying public recipes are anonymized,
+  shared catalogue facts and independently owned copies have separate lifecycles.
+- **Backlog relationships:** Resolution unblocks DEP-08 and constrains REC-07,
+  REC-11, NUT-08, NUT-10, PLAN-08 and PLAN-09. `Related`: DEP-09, DEC-013, DEC-014.
+- **Resolution condition:** Approve the four boundaries and reconcile the
+  conflicting general deletion, catalogue and version documentation.
+- **Final decision and rationale:** Approved by the product owner on
+  18 October 2026 in the DEP-08 implementation chat. Delete unreferenced
+  superseded recipe versions at final account purge. Preserve independently
+  owned snapshots, remixes and copies. Retain source-version data only where
+  an approved dependency requires it, with minimum necessary content and
+  anonymized attribution. Opaque references alone do not authorize retaining
+  private source content or exposing historical versions through a new route.
+
+  An existing plan bookmark continues qualifying throughout its owner's
+  unwaived recovery period. Explicit removal or final purge removes it and
+  applies last-bookmark cleanup to any retained plan. Waiver and confirmed
+  under-13 purge do not extend that period.
+
+  Pending manual shared-catalogue identities and factual records survive
+  submitter purge without identifying submitter/private submission material,
+  except evidence independently covered by DEC-013 or a scoped hold. Their
+  existing restricted visibility remains unchanged; purge neither publishes,
+  merges nor transfers them. They are application-owned shared records, not
+  private pending submissions belonging to the account.
+
+  Pending user catalogue correction proposals are removed at proposer purge.
+  Accepted catalogue facts and only permitted anonymized decision/provenance
+  evidence survive; private proposal reasons are not retained merely for
+  factual provenance. Rejected/decided evidence follows DEC-013's existing
+  purpose-specific schedule. This decision creates no new retention period,
+  hold power or backup exception. It supersedes earlier descriptions that
+  retained every correction proposal merely by nulling its proposer.
 
 ## Manual validation checklist
 
