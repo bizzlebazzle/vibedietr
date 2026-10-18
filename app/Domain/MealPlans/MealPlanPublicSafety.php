@@ -20,8 +20,15 @@ final class MealPlanPublicSafety
         );
     }
 
-    public function isPublicSafe(MealPlan $mealPlan): bool
+    public function isPublicSafe(MealPlan $mealPlan, bool $retention = false): bool
     {
+        if (! $retention && $mealPlan->visibility !== MealPlanVisibility::RetainedUnlisted) {
+            return ! $this->hasPrivateRecipeSnapshots($mealPlan) && $this->itemEntries($mealPlan)->get()->every(
+                fn (MealPlanItemEntry $entry): bool => $entry->kind === MealPlanItemEntryKind::Catalogue
+                    && is_array($entry->catalogue_snapshot) && $entry->catalogue_snapshot !== []
+                    && $entry->one_off_wording === null && $entry->one_off_nutrition === null,
+            );
+        }
         try {
             $minimizer = app(PublicContentMinimizer::class);
             foreach ($this->recipeEntries($mealPlan)->get() as $entry) {

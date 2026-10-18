@@ -1,5 +1,28 @@
 # Job inventory
 
+## PruneAccountRetention
+
+- **Class / owner / dependencies:** `App\Jobs\PruneAccountRetention`; DEP-08,
+  FND-09, DEP-04 and DEP-05.
+- **Purpose:** Apply the existing purpose-specific security, privileged operator,
+  moderation, anonymous receipt and public-provenance clocks.
+- **Queue / worker / retry:** Existing default worker; 60-second job,
+  70-second worker, 90-second `retry_after`; three attempts, 10/60-second
+  backoff, shared global 75-second overlap and unique dispatch locks.
+- **Bounds / idempotency:** At most 200 audit events per sweep; a cache cursor
+  resumes the next page and resets after a complete pass. Lost cursor repeats
+  safe work. Original event/supersession timestamps remain authoritative.
+  Signed provenance clocks survive source-version removal; expiry never starts
+  again at account purge or retry.
+- **Payload / telemetry:** Correlation ULID only, metadata-only failure payload,
+  existing 168-hour pruning and default worker/scheduler signals. Missing or
+  invalid clock/integrity evidence raises critical `audit_retention_evidence`
+  with only a count and leaves the affected record for operator investigation.
+- **Schedule / replay:** UTC `audit:prune-retention` every minute, one server,
+  ten-minute scheduler overlap. Replaying after partial deletion is harmless.
+  Protected legal evidence and journal-generation disposal have independent
+  operator controls and are not deleted by this ordinary audit worker.
+
 ## ProcessAccountDeletion
 
 - **Class / owner / dependencies:** `App\Jobs\ProcessAccountDeletion`; DEP-08,

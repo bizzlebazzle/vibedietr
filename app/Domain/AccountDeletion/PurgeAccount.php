@@ -9,6 +9,7 @@ use App\Audit\Enums\AuditAction;
 use App\Domain\AccountExports\CleanupAccountExport;
 use App\Domain\MealPlans\MealPlanBookmarkManager;
 use App\Domain\MealPlans\MealPlanPublicSafety;
+use App\Domain\Nutrition\RecipeNutritionSourceSelector;
 use App\Domain\RecipeImports\RecipeImportOwnerCleaner;
 use App\Domain\Recipes\RecipeVersionContent;
 use App\Models\AccountDeletion;
@@ -57,14 +58,20 @@ final class PurgeAccount
         $user = User::query()->where('account_generation', $intent['account_generation'])->first();
         if ($user) {
             app(RecipeImportOwnerCleaner::class)->cancelAndCleanup((int) $user->getKey());
-            foreach (AccountExport::query()->where('user_id', $user->getKey())->get() as $export) {
-                if ($export->state !== 'deleted') {
-                    $export->forceFill(['state' => 'expired', 'active_key' => null])->save();
-                    app(CleanupAccountExport::class)->cleanup($export->getKey());
-                }
-                if ($export->fresh()?->state !== 'deleted') {
-                    throw new RuntimeException('account_export_purge_incomplete');
-                }
+        }
+        $exports = AccountExport::query()->where(function ($query) use ($user, $resources): void {
+            $query->whereIn('id', $this->generations($resources, 'export_'));
+            if ($user) {
+                $query->orWhere('user_id', $user->getKey());
+            }
+        })->get();
+        foreach ($exports as $export) {
+            if ($export->state !== 'deleted') {
+                $export->forceFill(['state' => 'expired', 'active_key' => null])->save();
+                app(CleanupAccountExport::class)->cleanup($export->getKey());
+            }
+            if ($export->fresh()?->state !== 'deleted') {
+                throw new RuntimeException('account_export_purge_incomplete');
             }
         }
         DB::transaction(function () use ($intent, $resources): void {
@@ -73,7 +80,7 @@ final class PurgeAccount
                 || ($user && AccountDeletion::query()->where('user_id', $user->getKey())->where('reason', 'under13')->exists());
             $planGenerations = $this->generations($resources, 'plan_');
             $recipeGenerations = $this->generations($resources, 'recipe_');
-            $privateEvents = [];
+            $privateEvents = $this->generations($resources, 'audit_');
             if ($user) {
                 foreach (PrivateConsumptionArchive::query()->where('user_id', $user->getKey())->get() as $archive) {
                     foreach (['transitions', 'nutrition_snapshots'] as $collection) {
@@ -118,16 +125,23 @@ final class PurgeAccount
                 $this->minimizeRecipe($recipe);
                 $publicRecipeIds[] = (int) $recipe->getKey();
             }
+            $this->queuedResources($resources);
+            DB::table('audit_events')->whereIn('id', $privateEvents)
+                ->where('retention_class', 'private_content_until_final_purge')->delete();
             if (! $user) {
+                app(AuditErasure::class)->erase(null, $publicRecipeIds, $privateEvents, $this->generations($resources, 'identity_'));
+
                 return;
             }
             $this->catalogue($user);
             $diaryStates = DB::table('diary_consumption_states')->whereIn('diary_entry_id',
                 DB::table('diary_entries')->where('user_id', $user->getKey())->select('id'))->pluck('id');
             $privateEvents = [...$privateEvents, ...$this->deleteConsumption($diaryStates->all())];
-            app(AuditErasure::class)->erase($user, $publicRecipeIds, $privateEvents);
+            app(AuditErasure::class)->erase($user, $publicRecipeIds, $privateEvents, $this->generations($resources, 'identity_'));
             DB::table('administrator_promotion_requests')->where('target_user_id', $user->getKey())->delete();
             DB::table('account_exports')->where('user_id', $user->getKey())->delete();
+            DB::table('security_notification_intents')->where('recipient_user_id', $user->getKey())->delete();
+            DB::table('administrator_promotion_requests')->where('initiated_by_user_id', $user->getKey())->where('status', 'pending')->update(['status' => 'cancelled', 'cancelled_at' => now()->utc()]);
             DB::table('sessions')->where('user_id', $user->getKey())->delete();
             DB::table('password_reset_tokens')->where('email', $user->email)->delete();
             DB::table('account_deletions')->where('user_id', $user->getKey())->delete();
@@ -193,15 +207,27 @@ final class PurgeAccount
     private function minimizeRecipe(Recipe $recipe): void
     {
         $current = $recipe->currentVersion()->firstOrFail();
-        $snapshot = app(PublicContentMinimizer::class)->recipe($current->snapshot);
+        $selector = app(RecipeNutritionSourceSelector::class);
+        $effective = $selector->effective($current);
+        $publicNutrition = app(PublicContentMinimizer::class)->nutrition([
+            'source' => $effective['source']->value, 'values' => $effective['values'],
+            'provenance' => $effective['provenance'], 'ingredient_estimate' => $selector->estimate($current),
+        ]);
+        $currentSnapshot = $current->snapshot;
+        // Current recipe visibility authorizes its current version. Old pinned
+        // plan snapshots keep their own original visibility and are never upgraded.
+        $currentSnapshot['visibility'] = 'public';
+        $currentSnapshot['nutrition_estimate'] = $selector->estimate($current);
+        $snapshot = app(PublicContentMinimizer::class)->recipe($currentSnapshot);
         // Discard mutable active-revision content, then reconstruct only the
         // already-public immutable current version before severing ownership.
         DB::table('recipe_draft_revisions')->where('recipe_id', $recipe->getKey())->delete();
         app(RecipeVersionContent::class)->restore($recipe, $snapshot);
-        foreach ($recipe->versions()->get() as $version) {
+        foreach ($recipe->versions()->orderBy('version_number')->get() as $version) {
             if ($version->getKey() !== $current->getKey()) {
-                $required = $version->visibility->value === 'public'
-                    && DB::table('recipe_remix_lineages')->where('source_recipe_version_id', $version->getKey())->exists();
+                app(AuditProvenanceClock::class)->withdraw($version);
+                $required = DB::table('recipe_remix_lineages')->where('source_recipe_version_id', $version->getKey())
+                    ->whereIn('remix_recipe_id', DB::table('recipes')->where('user_id', '!=', $recipe->user_id)->select('id'))->exists();
                 if (! $required) {
                     DB::table('recipe_versions')->where('id', $version->getKey())->delete();
 
@@ -213,7 +239,10 @@ final class PurgeAccount
             } else {
                 $content = $snapshot;
             }
+            DB::table('recipe_nutrition_override_events')->where('recipe_version_id', $version->getKey())->delete();
+            DB::table('recipe_nutrition_recalculations')->where('recipe_version_id', $version->getKey())->delete();
             DB::table('recipe_versions')->where('id', $version->getKey())->update([
+                'retained_public_nutrition' => $version->getKey() === $current->getKey() ? json_encode($publicNutrition, JSON_THROW_ON_ERROR) : null,
                 'snapshot' => json_encode($content, JSON_THROW_ON_ERROR),
                 'public_attribution_name' => 'Former VibeDietr user',
             ]);
@@ -240,6 +269,22 @@ final class PurgeAccount
                 'legacy_user_id' => null, 'legacy_snapshot' => json_encode($snapshot, JSON_THROW_ON_ERROR),
                 'legacy_checksum' => hash('sha256', json_encode(['id' => $mapping->ingredient_id, 'user_id' => null] + $snapshot, JSON_THROW_ON_ERROR | JSON_PRESERVE_ZERO_FRACTION)),
             ]);
+        }
+    }
+
+    /** @param list<string> $resources */
+    private function queuedResources(array $resources): void
+    {
+        $ids = [...$this->generations($resources, 'import_'), ...$this->generations($resources, 'export_'), ...$this->generations($resources, 'recalculation_')];
+        foreach (array_chunk($ids, 100) as $chunk) {
+            foreach (['jobs', 'failed_jobs'] as $table) {
+                DB::table($table)->where(function ($query) use ($chunk): void {
+                    foreach ($chunk as $id) {
+                        // Known globally unique workflow IDs in metadata-only job payloads.
+                        $query->orWhere('payload', 'like', '%'.$id.'%');
+                    }
+                })->delete();
+            }
         }
     }
 

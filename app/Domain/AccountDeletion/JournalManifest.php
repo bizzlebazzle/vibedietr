@@ -10,11 +10,11 @@ final class JournalManifest
     public function append(string $operation, array $intent): ErasureCheckpoint
     {
         $resources = $intent['resources'];
-        if (count($resources) <= 1000) {
+        if (count($resources) <= 400) {
             return app(ProtectedErasureJournal::class)->append($operation, $intent);
         }
         $digest = hash('sha256', json_encode($resources, JSON_THROW_ON_ERROR));
-        $parts = array_chunk($resources, 1000);
+        $parts = array_chunk($resources, 400);
         foreach ($parts as $index => $part) {
             $partIntent = $intent;
             $partIntent['state'] = 'inventory';

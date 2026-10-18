@@ -46,3 +46,5 @@ Schedule::command('recipe-imports:cleanup-transient')
     ->onOneServer();
 
 Schedule::command('accounts:process-deletions')->everyMinute()->timezone('UTC')->name('accounts-process-deletions')->withoutOverlapping(10)->onOneServer();
+
+Schedule::command('audit:prune-retention')->everyMinute()->timezone('UTC')->name('audit-prune-retention')->withoutOverlapping(10)->onOneServer();

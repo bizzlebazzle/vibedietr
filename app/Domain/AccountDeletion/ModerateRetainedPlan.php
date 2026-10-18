@@ -33,7 +33,7 @@ final class ModerateRetainedPlan
                     'account_generation' => 'resource_'.$plan->erasure_generation,
                     'installation' => config('erasure.installation'), 'correlation_id' => $operation,
                     'deadline' => now()->utc()->format('Y-m-d\\TH:i:s\\Z'),
-                    'state' => 'plan_suppressed', 'policy' => 'DEC-012/DEC-013/DEC-014/DEC-021',
+                    'state' => 'plan_suppressed', 'policy' => 'DEC-012/DEC-013/DEC-014/DEC-021/DEC-022',
                     'resources' => ['plan_'.$plan->erasure_generation],
                 ]);
                 DB::table('retained_plan_removals')->updateOrInsert(

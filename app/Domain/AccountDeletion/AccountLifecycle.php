@@ -3,12 +3,10 @@
 namespace App\Domain\AccountDeletion;
 
 use App\Administrator\LastAdministratorGuard;
+use App\Audit\AuditEventRecorder;
 use App\Domain\MealPlans\MealPlanPublicSafety;
 use App\Domain\MealPlans\MealPlanVisibility;
 use App\Models\AccountDeletion;
-use App\Models\AccountExport;
-use App\Models\Recipe;
-use App\Models\RecipeImport;
 use App\Models\User;
 use App\Security\Notifications\ProductionSecurityReadiness;
 use Illuminate\Support\Facades\DB;
@@ -33,6 +31,7 @@ final class AccountLifecycle
 
                 return $existing->id;
             }
+            app(AuditEventRecorder::class)->ensureUserIdentity($user);
             $plans = [];
             foreach ($user->mealPlans()->lockForUpdate()->get() as $plan) {
                 $plans[(string) $plan->getKey()] = ['visibility' => $plan->visibility->value, 'generation' => $plan->erasure_generation];
@@ -43,7 +42,7 @@ final class AccountLifecycle
                 'state' => 'preparing', 'reason' => $under13 ? 'under13' : ($waive ? 'waived' : 'ordinary'),
                 'requested_at' => now()->utc(), 'deadline' => ($waive || $under13) ? now()->utc() : now()->utc()->addDays(30),
                 'correlation_id' => (string) Str::ulid(), 'operation_id' => (string) Str::ulid(),
-                'recovery_state' => ['plans' => $plans, 'resources' => $this->resources($user)],
+                'recovery_state' => ['plans' => $plans, 'resources' => app(ErasureResourceInventory::class)->forUser($user)],
             ])->save();
 
             return $record->id;
@@ -127,7 +126,7 @@ final class AccountLifecycle
             foreach ($user->mealPlans()->where('visibility', 'public')->lockForUpdate()->get() as $plan) {
                 $qualifies = $record->reason !== 'under13'
                     && $plan->bookmarks()->where('user_id', '!=', $user->getKey())->exists()
-                    && app(MealPlanPublicSafety::class)->isPublicSafe($plan);
+                    && app(MealPlanPublicSafety::class)->isPublicSafe($plan, retention: true);
                 if ($qualifies) {
                     $recovery['plans'][(string) $plan->getKey()] = ['visibility' => 'public', 'generation' => $plan->erasure_generation];
                     $plan->forceFill([
@@ -144,30 +143,6 @@ final class AccountLifecycle
         }, 3);
     }
 
-    /** @return list<string> */
-    private function resources(User $user): array
-    {
-        $resources = [];
-        foreach ($user->mealPlans()->get() as $plan) {
-            $resources[] = 'plan_'.$plan->erasure_generation;
-        }
-        foreach (Recipe::query()->where('user_id', $user->getKey())->get() as $recipe) {
-            $resources[] = 'recipe_'.$recipe->erasure_generation;
-        }
-        foreach (RecipeImport::query()->where('user_id', $user->getKey())->get() as $import) {
-            foreach (['source', 'canonical'] as $kind) {
-                if ($import->{$kind.'_key'} !== null) {
-                    $resources[] = 'object_'.hash('sha256', $import->{$kind.'_disk'}.'|'.$import->{$kind.'_key'});
-                }
-            }
-        }
-        foreach (AccountExport::query()->where('user_id', $user->getKey())->get() as $export) {
-            $resources[] = 'object_'.hash('sha256', $export->disk.'|'.$export->storageKey());
-        }
-
-        return $resources;
-    }
-
     /** @return array<string, mixed> */
     public function intent(AccountDeletion $record, string $state): array
     {
@@ -181,7 +156,7 @@ final class AccountLifecycle
             'installation' => config('erasure.installation'),
             'correlation_id' => $record->correlation_id,
             'deadline' => $record->deadline->utc()->format('Y-m-d\\TH:i:s\\Z'),
-            'state' => $state, 'policy' => 'DEC-012/DEC-013/DEC-014/DEC-021',
+            'state' => $state, 'policy' => 'DEC-012/DEC-013/DEC-014/DEC-021/DEC-022',
             'resources' => $references,
         ];
     }

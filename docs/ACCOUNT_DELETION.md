@@ -4,10 +4,11 @@
 
 DEP-08 remains P2 and incomplete. DEC-021 records the four approved resource
 boundaries; the [pre-implementation audit](DEP_08_LIFECYCLE_AUDIT.md) inventories
-owned domains and earlier conflicts. The existing account-deletion UI still
-performs immediate deletion pending the HTTP integration unit. Journal-backed
-lifecycle services and inactive-account authorization are now implemented; the
-complete purge and restore-release flow is not yet enabled.
+owned domains and earlier conflicts. Journal-backed lifecycle services,
+authenticated HTTP recovery/waiver, inactive-account authorization and scheduled
+queued purge are implemented. Owned-domain cleanup and purpose-specific audit
+expiry are being verified; protected holds, complete restore/release/disposal
+verification and final Definition of Done gates remain required.
 
 ## Independent journal foundation
 
@@ -178,3 +179,35 @@ approved reason categories are accepted. Moderation has its own minimized
 twelve-month accountability classification. Suppression is an access restriction,
 not an ownership transfer or recovery extension; no administrator restore action
 exists. Permanent removal uses the protected journal and DEC-022 private archive.
+
+## Owned-resource and audit minimization
+
+Protected intent now inventories stable account, recipe/plan, private snapshot
+audit, import/export/recalculation and ordinary audit-mapping references.
+Original plan visibility is recorded without content for original-clock restore
+replay. Large manifests use authenticated chunks bounded below the journal
+envelope byte limit. A stale/deleted account instance cannot become active
+merely because its recovery row has already been purged.
+
+Private override/recalculation history is removed at final purge. Only the
+already-public current nutrition presentation is retained separately, preserving
+its source label, exact facts and estimate. Notes, private prior values and
+historical actor linkage do not survive. Application-owned catalogue facts,
+accepted factual corrections and independent remixes retain their own lifecycle;
+private pending proposals, reasons, submitter links and legacy copied identity
+are removed. Notification delivery records and unnecessary owned workflow jobs
+are also removed.
+
+Ordinary audit identity mappings are destroyed. Privileged accountability uses
+a separate encrypted operator reference (email only) until the original
+event/decision's twelve-month deadline; ordinary audit lookup cannot resolve
+that table. Its expiry removes the mapping and expired event. Anonymous random
+purge receipts expire at twelve calendar months. Ordinary security events use
+six calendar months. Superseded public-version provenance uses its original
+supersession timestamp plus twelve months, protected by an integrity-checked
+clock before the source version is removed. Invalid/missing evidence raises a
+content-free critical alert rather than inventing a new date.
+
+`PruneAccountRetention` performs bounded, idempotent scheduled sweeps under the
+existing queue contract. The independent protected journal and scoped legal
+evidence do not inherit ordinary audit expiry.

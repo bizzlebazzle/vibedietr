@@ -73,7 +73,6 @@ final class PublicContentMinimizer
                 'recipe_import_id', 'correlation_id', 'submitted_url', 'final_url', 'override_event_id',
                 'extracted_at', 'parsed_at', 'extractor', 'extractor_version', 'parser', 'parser_version',
                 'preprocessing_version', 'quality_policy_version', 'redirect_count', 'extraction_method',
-                'catalogue_match',
             ], true)) {
                 unset($value[$key]);
             } elseif (is_array($child)) {

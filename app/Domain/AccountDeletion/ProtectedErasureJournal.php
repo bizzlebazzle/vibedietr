@@ -97,11 +97,18 @@ final class ProtectedErasureJournal
     {
         try {
             [$primary, $mirror, $generation, $key, $encrypter] = $this->configuration();
-            if ($anchor->generation !== $generation || $anchor->sequence < 1) {
+            if ($anchor->generation !== $generation || $anchor->sequence < 0) {
                 throw new JournalUnavailable;
             }
             $left = $this->validatedRows($primary, $generation, $key, $encrypter);
             $right = $this->validatedRows($mirror, $generation, $key, $encrypter);
+            if ($anchor->sequence === 0) {
+                if ($left !== [] || $right !== [] || ! hash_equals(self::GENESIS, $anchor->digest)) {
+                    throw new JournalUnavailable;
+                }
+
+                return [];
+            }
             if ($left !== $right || ! isset($left[$anchor->sequence - 1])
                 || ! hash_equals($left[$anchor->sequence - 1]['digest'], $anchor->digest)) {
                 throw new JournalUnavailable;
@@ -152,8 +159,11 @@ final class ProtectedErasureJournal
             [$primary, $mirror, $generation, $key, $encrypter] = $this->configuration();
             $left = $this->validatedRows($primary, $generation, $key, $encrypter);
             $right = $this->validatedRows($mirror, $generation, $key, $encrypter);
-            if ($left !== $right || $left === []) {
+            if ($left !== $right) {
                 throw new JournalUnavailable;
+            }
+            if ($left === []) {
+                return new ErasureCheckpoint($generation, 0, self::GENESIS);
             }
             $head = $left[array_key_last($left)];
 
@@ -273,7 +283,7 @@ final class ProtectedErasureJournal
         if (array_diff(array_keys($intent), $allowed) !== []
             || array_diff($allowed, array_keys($intent)) !== []
             || ! in_array($intent['state'], ['requested', 'recovered', 'waived', 'under13', 'purge_started', 'purged', 'inventory', 'plan_suppressed', 'plan_removed', 'hold_started', 'hold_released'], true)
-            || $intent['policy'] !== 'DEC-012/DEC-013/DEC-014/DEC-021'
+            || ! in_array($intent['policy'], ['DEC-012/DEC-013/DEC-014/DEC-021', 'DEC-012/DEC-013/DEC-014/DEC-021/DEC-022'], true)
             || ! is_string($intent['deadline'])
             || ! preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/D', $intent['deadline'])
             || ! is_array($intent['resources']) || ! array_is_list($intent['resources'])) {

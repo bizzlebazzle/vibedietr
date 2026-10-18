@@ -7,6 +7,7 @@ use App\Audit\Enums\AuditActorType;
 use App\Audit\Enums\AuditIdentityType;
 use App\Models\AuditActorIdentity;
 use App\Models\AuditEvent;
+use App\Models\User;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
@@ -101,6 +102,16 @@ class AuditEventRecorder
         return $subject->user === null
             ? null
             : $this->identityForUser((int) $subject->user->getKey());
+    }
+
+    /** Prepare the ordinary mapping so protected lifecycle intent can reference it. */
+    public function ensureUserIdentity(User $user): string
+    {
+        if (! $user->exists) {
+            throw new InvalidArgumentException('A persisted audit subject is required.');
+        }
+
+        return $this->identityForUser((int) $user->getKey());
     }
 
     private function identityForUser(int $userId): string

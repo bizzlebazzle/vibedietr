@@ -93,7 +93,7 @@ class User extends Authenticatable
 
     public function isActive(): bool
     {
-        return ! $this->accountDeletion()->exists();
+        return $this->exists && self::query()->whereKey($this->getKey())->where('account_generation', $this->account_generation)->whereDoesntHave('accountDeletion')->exists();
     }
 
     /** @return HasOne<AccountDeletion, $this> */

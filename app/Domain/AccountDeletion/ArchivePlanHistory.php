@@ -29,13 +29,13 @@ final class ArchivePlanHistory
         $items = DB::table('meal_plan_item_entries')->whereIn('meal_plan_slot_id', $slots)->pluck('id');
         $states = DB::table('diary_consumption_states')->whereIn('meal_plan_recipe_entry_id', $recipes)
             ->orWhereIn('meal_plan_item_entry_id', $items)->get();
-        if ($states->isEmpty()) {
+        $phases = DB::table('meal_plan_target_phases')->where('meal_plan_id', $plan->getKey())->get();
+        if ($states->isEmpty() && $phases->isEmpty()) {
             return;
         }
         $stateIds = $states->pluck('id');
         $recipeIds = $states->pluck('meal_plan_recipe_entry_id')->filter();
         $itemIds = $states->pluck('meal_plan_item_entry_id')->filter();
-        $phases = DB::table('meal_plan_target_phases')->where('meal_plan_id', $plan->getKey())->get();
         $rows = fn ($query): array => $query->get()->map(fn ($row): array => (array) $row)->all();
         $archive = new PrivateConsumptionArchive;
         $archive->forceFill([

@@ -16,10 +16,16 @@ final class AuditIntegrity
 
     public function verify(AuditEvent $event): bool
     {
-        $canonical = $this->canonicalJson($this->attributesFor($event));
+        return $this->verifyAttributes($this->attributesFor($event), $event->integrity_hash);
+    }
+
+    /** @param array<string, mixed> $attributes */
+    public function verifyAttributes(array $attributes, string $signature): bool
+    {
+        $canonical = $this->canonicalJson($attributes);
 
         foreach ($this->keys() as $key) {
-            if (hash_equals($event->integrity_hash, hash_hmac('sha256', $canonical, $key))) {
+            if (hash_equals($signature, hash_hmac('sha256', $canonical, $key))) {
                 return true;
             }
         }
