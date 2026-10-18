@@ -600,6 +600,16 @@ including their recipes, meal plans, diary history, targets, and account data.
 An export must not include another user's private account data merely because
 the requester can view shared content.
 
+The approved format is a ZIP containing per-domain JSON, a manifest, bundled
+versioned schema/data dictionary, README and static offline navigation index.
+Schema `1.0.0` preserves full stored decimal precision, typed string identifiers,
+owned versions and historical snapshots. Outgoing-share recipients appear only
+as anonymous aliases scoped to that archive; foreign private account fields,
+credentials, restricted operational evidence and transient input files are
+excluded. The [approved export contract](ACCOUNT_EXPORT_RESEARCH.md#approved-version-1-contract)
+defines packaging and compatibility rules for later DEP-07 implementation.
+Decision: DEC-008.
+
 ### Account deletion
 
 - The deletion flow clearly explains a 30-day recovery period.
@@ -654,8 +664,6 @@ purpose and follow the documented retention policy.
 
 The following details are intentionally not fixed by this specification:
 
-- The data-export file format.
-  Decision: DEC-008.
 - Administrator assignment, escalation, and moderation service-level rules.
   Decision: DEC-009, DEC-010.
 - Any narrowly required security or legal audit retention within the

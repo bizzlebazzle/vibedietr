@@ -38,7 +38,7 @@ Backlog relationships mean:
 | DEC-005 | Recipe-import providers and formats | Decided | Product owner |
 | DEC-006 | OCR providers and formats | Decided | Product owner |
 | DEC-007 | Import and OCR extraction-quality thresholds | Decided | Product owner |
-| DEC-008 | Account data-export format | Owner input required | Product owner |
+| DEC-008 | Account data-export format | Decided | Product owner |
 | DEC-009 | Initial administrator assignment | Decided | Product owner |
 | DEC-010 | Moderation escalation and service levels | Owner input required | Product owner |
 | DEC-011 | Manual-food de-duplication and merge rules | Decided | Product owner |
@@ -1000,7 +1000,7 @@ Backlog relationships mean:
 - **Why it matters:** The choice affects portability, readability, versioning,
   archive generation, download cleanup, and the risk of including data the
   requester does not own.
-- **Status:** Owner input required.
+- **Status:** Decided.
 - **Owner:** Product owner.
 - **Alternatives:** A structured JSON export; tabular files in an archive; a
   documented archive containing both machine-readable data and a human-readable
@@ -1009,12 +1009,42 @@ Backlog relationships mean:
   requester's account data, recipes, plans, diary history, and targets. It must
   not include another user's private account data merely because shared content
   is viewable.
-- **Backlog relationships:** `Blocked`: DEP-07. `Constrained`: FND-09, DEP-04.
+- **Backlog relationships:** `Unblocked`: DEP-07. `Constrained`: FND-09, DEP-04.
   `Related`: DEP-09.
 - **Resolution condition:** Approve a versioned export schema and packaging
   format after reviewing representative complete data, portability, readability,
   privacy boundaries, and future compatibility.
-- **Final decision and rationale:** Unresolved.
+- **Research and owner review:** [Account export format investigation](ACCOUNT_EXPORT_RESEARCH.md)
+  compares structured JSON, tabular ZIP, and documented JSON ZIP against current
+  owned versions, snapshots, diary history, targets, and privacy boundaries.
+  The owner approved recommended option C and then anonymous archive-local
+  recipient aliases on 2026-10-18. No owner choices remain outstanding;
+  DEC-008 no longer blocks DEP-07. This records a format approval, not DEP-07
+  delivery.
+- **Final decision and rationale:** Approved on 2026-10-18: a documented ZIP
+  containing per-domain UTF-8 JSON, manifest, bundled schema/data dictionary,
+  README and static offline navigation/counts/explanations index. The normative
+  [approved version 1 contract](ACCOUNT_EXPORT_RESEARCH.md#approved-version-1-contract)
+  fixes packaging and field/relationship conventions. Initial schema `1.0.0`
+  uses semantic versioning: incompatible meaning/type/privacy/layout changes
+  increment major; compatible optional additions increment minor;
+  documentation-only corrections increment patch. Manifest, file envelopes
+  and bundled Draft 2020-12 schema identify the exact edition. Exact decimals
+  and typed IDs are strings; missing, zero, empty and privacy omissions remain
+  distinct. Calendar dates and consumption-local timezone/offset/history are
+  preserved alongside UTC instants. Export requester-owned data and already-owned
+  copies/snapshots, not foreign live content or private account relationships.
+  Outgoing share recipients use anonymous aliases scoped to the archive with
+  own timestamps/acknowledgements; no recipient names, email or account IDs.
+  Minimize external recipe/catalogue provenance, preserve unavailable-source
+  tombstones and own submitted proposal fields, and exclude foreign private
+  metadata, restricted audit/operational evidence, credentials and transient
+  binaries. Existing retention rules remain authoritative. This choice fits
+  nested/versioned records and immutable history, supplies offline guidance,
+  and avoids CSV normalization/type/formula handling and parallel full reports.
+  It promises neither in-app restore nor universal third-party compatibility.
+  DEP-07 must implement and verify the exact schema, authorization, bounded
+  generation, private delivery, expiry and cleanup; DEP-09 retains launch review.
 
 ## DEC-009 — Initial administrator assignment
 

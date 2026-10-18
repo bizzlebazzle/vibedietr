@@ -1489,6 +1489,13 @@ changes, it is deliberately split across multiple items.
   leaking another user's private data from shares, bookmarks, catalogue, or
   remixes.
 - **Dependencies:** PLAN-12, REC-14, DEC-008, FND-09, DEP-04, DEP-05.
+- **Decision controls:** DEC-008 has the owner-approved
+  [version 1 export contract](ACCOUNT_EXPORT_RESEARCH.md#approved-version-1-contract):
+  documented JSON ZIP, exact stored precision, immutable owned history and
+  minimized external references, including archive-local recipient aliases.
+  DEC-008 is decided and no longer blocks this item; no format/privacy choice
+  remains pending. Implementation and production
+  verification remain this item's work.
 - **Acceptance criteria:** Export generation and scheduled file cleanup run as
   idempotent, correlated queued work under FND-09. Export includes account,
   owned recipes and versions, organisation, owned plans, diary, targets, one-
@@ -1562,6 +1569,11 @@ changes, it is deliberately split across multiple items.
   and operational evidence before publishing; distinguish owner-led risk review
   from professional legal approval. DEC-012 is no longer an open-decision
   blocker; DEC-010 and this item's other dependencies still apply.
+- **Export review:** Check DEP-07 against the owner-approved DEC-008
+  [export contract](ACCOUNT_EXPORT_RESEARCH.md#approved-version-1-contract),
+  including foreign-account exclusion, owned historical snapshots, minimized
+  provenance and outgoing-share aliases. Format approval does not establish
+  deployment capacity, complete rights handling or legal compliance.
 - **Acceptance criteria:** Privacy notice, terms, retention schedule, processor/
   provider inventory, cookie behavior, rights-request process, moderation
   policy, children's age-band and safety handling, and nutrition disclaimers
