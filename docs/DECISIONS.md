@@ -1014,6 +1014,11 @@ Backlog relationships mean:
 - **Resolution condition:** Approve a versioned export schema and packaging
   format after reviewing representative complete data, portability, readability,
   privacy boundaries, and future compatibility.
+- **Research and owner review:** [Account export format investigation](ACCOUNT_EXPORT_RESEARCH.md)
+  compares structured JSON, tabular ZIP, and documented JSON ZIP against current
+  owned versions, snapshots, diary history, targets, and privacy boundaries.
+  Packaging/schema and minimized sharing-reference choices await owner input;
+  no DEP-07 workflow is implemented or approved by the research.
 - **Final decision and rationale:** Unresolved.
 
 ## DEC-009 — Initial administrator assignment
