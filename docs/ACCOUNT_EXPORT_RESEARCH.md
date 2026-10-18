@@ -2,9 +2,13 @@
 
 ## Status and scope
 
-Research date: 2026-10-18. Decision: DEC-008. **Owner input required**;
-**Product owner**. Everything labelled proposed below awaits owner approval.
-This document supplies choices, not DEP-07 implementation or an export service.
+Research and approval date: 2026-10-18. Decision: DEC-008.
+Register status **Owner input required** and owner **Product owner** are retained
+under the task's explicit instruction. The owner approved recommended option C
+and anonymous archive-local recipient aliases; no owner choices remain pending.
+The approved contract below supersedes proposal language in the investigation
+that follows; alternatives and specimens are retained as review evidence.
+This document records the format, not DEP-07 implementation or an export service.
 No real account data was used. Examples are synthetic export projections of
 current domain records, not literal database dumps or completed JSON Schemas.
 
@@ -15,6 +19,111 @@ decision, dependencies, acceptance criteria and privacy references.
 Relationships remain: **Blocked:** DEP-07; **Constrained:** FND-09, DEP-04;
 **Related:** DEP-09. DEP-07 also depends on DEP-05. Approval here does not
 complete DEP-07, add import/restore support, or certify legal portability.
+
+## Approved version 1 contract
+
+The product owner approved the recommended option C and then its anonymous
+archive-local recipient representation on 2026-10-18. This section and DEC-008
+are the approved contract; abbreviated examples later in this document are
+illustrative rather than exhaustive schemas. DEP-07 must supply the complete
+validation schema and verify its projection against these approved rules before
+producing any account export. No executable export/schema generator is added.
+
+### Package and serialization
+
+- Download: `vibedietr-account-export-v1-<export-id>.zip`, `application/zip`.
+  Fixed ASCII relative paths and an application-generated opaque export ID;
+  never user names, email, titles or upload filenames in paths.
+- Root files: `manifest.json`, `README.txt`, `index.html`.
+- Schema files: `schema/account-export-1.0.0.schema.json` and
+  `schema/data-dictionary.md`. Bundle the schema/dictionary for the exact
+  released edition; no online service is needed to interpret the archive.
+- Data files: `data/account.json`, `recipes.json`, `organisation.json`,
+  `plans.json`, `diary.json`, `targets.json`, `imports.json`, `proposals.json`,
+  all under `data/`. Each has a `schema_version` and a `data` object or array
+  whose type and required fields are fixed by that edition's schema.
+- UTF-8 JSON without BOM, LF text, exact decimal strings with `.` and no
+  grouping/exponent. Preserve stored precision and original wording, not
+  display-rounded quantities. Typed string IDs preserve owned relationships
+  across files, scoped to the originating installation; own account references
+  use `self`. Opaque external content references are provenance, not access.
+- Missing/not-applicable null, empty text, empty collections, known zero, trace
+  and quantified limits have distinct documented meanings. Privacy omissions
+  are documented without naming foreign private subjects. Never invent absent
+  facts, truncate silently or export a partial result as complete.
+- UTC instants use RFC 3339 `Z` with stored fractional precision; calendar dates
+  remain dates. Consumption retains local wall time, IANA zone, offset, UTC
+  instant and effective diary date. Archive-entry times are not history clocks.
+
+### Data-file coverage and privacy
+
+| File | Approved contents and boundaries |
+| --- | --- |
+| `account.json` | Own portable identity/profile fields, timezone and timestamps; optional public-profile settings; no credentials or raw security stores. Browser-local theme is not persisted account data. |
+| `recipes.json` | Owned draft/current content, every retained owned version and active revision, original ordered lines/steps/sections, match provenance, imported nutrition, original estimates, effective sources and override/recalculation histories. Recipe/version references and unavailable remix-source tombstones exclude foreign private identities and inaccessible source decoration. |
+| `organisation.json` | Own collections/private tags and memberships, own recipe/plan bookmarks and minimized lineage; bookmarks do not materialize foreign content. |
+| `plans.json` | Owned dated/reusable plans, days/slots and pinned recipe/catalogue/one-off entries with their complete permitted entry-owned content/nutrition snapshots. Include independent copies; omit foreign source plan graphs. Own outgoing-share metadata contains only anonymous archive-local recipient aliases and own timestamps/acknowledgements. |
+| `diary.json` | Own ad-hoc source entries and own consumption states, complete ordered transition chains and all retained nutrition snapshots. Preserve predecessor/reversal target/snapshot references and time-only snapshot reuse. Never copy another plan owner's consumption. |
+| `targets.json` | Own profiles/targets, phases, profile-name snapshots and effective-date value history; preserve historical values when a live profile link is null. Other users' targets are excluded. |
+| `imports.json` | Owned retained pasted/extracted source text, review warnings and permitted source/processor provenance; no transient originals/canonical files, complete fetched pages, storage keys or credentials. |
+| `proposals.json` | Own submitted proposal content, reasons, changes and state, and owned submission/legacy ingredient evidence as applicable; not the shared catalogue or restricted moderation decisions/notes/actors. |
+
+The dictionary must map legacy ingredient/submission evidence to the documented
+record collections explicitly, not lose it because catalogue ownership differs.
+Nested factual source and nutrient provenance, bases/units, estimate flags,
+completeness/exclusions, source limits, derivation and calculation/match policies
+remain distinguishable. Include all ten supported nutrients in the dictionary;
+do not fabricate values absent from the stored records.
+
+Requester ownership governs the aggregate and nested projection. Materialize
+snapshots already owned through entries/copies; never fetch a foreign live
+private recipe, account, source import, other version, diary, target or share
+recipient record merely because a reference/view permission exists. Retain only
+permitted source identifiers/facts already needed for owned provenance. Aliases
+are consistent for the same recipient within one archive, have no cross-export
+identity guarantee, and expose no recipient account ID, name or email. They are
+minimized references, not a claim that the whole archive is anonymous.
+
+Unavailable/anonymized entities remain references or tombstones under existing
+rules; never reverse anonymization, recover erased data or traverse backup,
+audit-actor or recovery-only identity maps. Raw snapshot/model serialization is
+not an approved projection. Original wording remains intact; this approval
+does not create new text-rewriting or general redaction semantics.
+
+### Manifest, index and evolution
+
+- Manifest fields: `format` = `vibedietr-account-export`, `schema_version` =
+  `1.0.0`, `schema_path`, opaque `export_id`, `generated_at`, `encoding` =
+  `UTF-8`, file inventory with path/media type/counting unit/count/byte length,
+  and documented excluded categories/understood omissions. Counts describe
+  actual contained records, not the illustrative counts in the specimens.
+- Every data envelope, manifest and bundled schema agrees on the exact edition;
+  README/index state it and identify the manifest. JSON Schema Draft 2020-12
+  identifies the validation dialect separately from export schema `1.0.0`.
+- Static, accessible, escaped, script-free index supplies offline navigation,
+  counts, inclusion/exclusion and ID/unit/estimate explanations. README repeats
+  opening instructions. No remote assets/tracking, automatic source fetches,
+  duplicate full diary/recipe report, or CSV representation is required.
+- Semantic versioning: major for incompatible field/type/meaning/unit/null/ID,
+  mandatory-data, enum, privacy-representation or packaging changes; minor for
+  optional additions old consumers can ignore safely; patch for documentation
+  corrections that change neither valid data nor meaning. Preserve released
+  schemas; do not rewrite existing archives or historical domain snapshots.
+  Recipe/catalogue/policy versions remain independent. Version changes cannot
+  authorize extra disclosure or promise application restore/third-party import.
+- Content-free checksums may be added to file inventory for corruption checking;
+  they are not signatures. No archive password/encryption format is required
+  by this packaging choice. Existing authenticated delivery and encrypted
+  private-storage requirements remain in force.
+
+Rationale: JSON matches nested/versioned domain history without CSV joins and
+spreadsheet type/formula hazards. ZIP and bundled guidance provide offline
+readability and compression without maintaining a parallel full report.
+Existing seven-day archive/credential retention, purge/hold rules and separate
+event retention remain unchanged. DEP-07 retains private bounded generation,
+consistency/resource/large-file tests, authorization, delivery, audit and cleanup;
+DEP-09 retains operational/privacy/legal launch evidence. Register status stays
+as instructed, so the task resolver still reports a status-based DEP-07 blocker.
 
 ## Confirmed constraints, without a new owner choice
 
@@ -523,7 +632,7 @@ include incoming foreign plan graphs, foreign account/profile fields,
 credentials, restricted raw audit/operational evidence or transient binaries.
 This is a proposed field projection, not a new right to traverse relationships.
 
-Only these owner approvals are needed:
+The owner was presented with these two approvals, both now received:
 
 1. Choose A, B or C. For C, approve the navigation/counts/explanations index
    (rather than a complete human-readable recipe/diary report) and proposed
@@ -533,11 +642,10 @@ Only these owner approvals are needed:
    entirely while retaining own share timestamps/acknowledgements. Neither
    choice permits foreign private account fields or foreign content expansion.
 
-No format approval is inferred from silence. After answers, record the exact
-approved contract and rationale in DEC-008, retain owner/status as instructed,
-update reciprocal references, regenerate the context index as needed, run the
-applicable final documentation gates once the decision stabilizes, verify
-CURRENT_STATE remains at most 220 lines, review and commit the decision unit.
+The owner chose C with the recommended schema/packaging/index conventions and
+then explicitly selected anonymous archive-local recipient aliases. The approved
+contract above records those answers; this retained alternatives section does
+not reopen them or authorize implementation.
 
 ## External primary references
 

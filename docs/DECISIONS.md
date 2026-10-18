@@ -1017,9 +1017,35 @@ Backlog relationships mean:
 - **Research and owner review:** [Account export format investigation](ACCOUNT_EXPORT_RESEARCH.md)
   compares structured JSON, tabular ZIP, and documented JSON ZIP against current
   owned versions, snapshots, diary history, targets, and privacy boundaries.
-  Packaging/schema and minimized sharing-reference choices await owner input;
-  no DEP-07 workflow is implemented or approved by the research.
-- **Final decision and rationale:** Unresolved.
+  The owner approved recommended option C and then anonymous archive-local
+  recipient aliases on 2026-10-18. No owner choices remain outstanding. The
+  register status and owner remain unchanged under the task's explicit
+  preservation instruction; status-based tooling therefore still treats
+  DEP-07 as blocked. This records a format approval, not DEP-07 delivery.
+- **Final decision and rationale:** Approved on 2026-10-18: a documented ZIP
+  containing per-domain UTF-8 JSON, manifest, bundled schema/data dictionary,
+  README and static offline navigation/counts/explanations index. The normative
+  [approved version 1 contract](ACCOUNT_EXPORT_RESEARCH.md#approved-version-1-contract)
+  fixes packaging and field/relationship conventions. Initial schema `1.0.0`
+  uses semantic versioning: incompatible meaning/type/privacy/layout changes
+  increment major; compatible optional additions increment minor;
+  documentation-only corrections increment patch. Manifest, file envelopes
+  and bundled Draft 2020-12 schema identify the exact edition. Exact decimals
+  and typed IDs are strings; missing, zero, empty and privacy omissions remain
+  distinct. Calendar dates and consumption-local timezone/offset/history are
+  preserved alongside UTC instants. Export requester-owned data and already-owned
+  copies/snapshots, not foreign live content or private account relationships.
+  Outgoing share recipients use anonymous aliases scoped to the archive with
+  own timestamps/acknowledgements; no recipient names, email or account IDs.
+  Minimize external recipe/catalogue provenance, preserve unavailable-source
+  tombstones and own submitted proposal fields, and exclude foreign private
+  metadata, restricted audit/operational evidence, credentials and transient
+  binaries. Existing retention rules remain authoritative. This choice fits
+  nested/versioned records and immutable history, supplies offline guidance,
+  and avoids CSV normalization/type/formula handling and parallel full reports.
+  It promises neither in-app restore nor universal third-party compatibility.
+  DEP-07 must implement and verify the exact schema, authorization, bounded
+  generation, private delivery, expiry and cleanup; DEP-09 retains launch review.
 
 ## DEC-009 — Initial administrator assignment
 
