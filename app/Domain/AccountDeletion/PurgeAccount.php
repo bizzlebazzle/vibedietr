@@ -19,6 +19,7 @@ use App\Models\MealPlanBookmark;
 use App\Models\PrivateConsumptionArchive;
 use App\Models\Recipe;
 use App\Models\User;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use RuntimeException;
@@ -29,7 +30,25 @@ final class PurgeAccount
     {
         app(AccountLifecycle::class)->apply($id);
         $record = AccountDeletion::query()->find($id);
-        if (! $record || $record->deadline->isFuture()) {
+        if (! $record) {
+            $journal = app(ProtectedErasureJournal::class);
+            $state = app(ErasureJournalState::class);
+            foreach ($state->latest($state->at($journal->repair())) as $intent) {
+                if ($state->request($intent) !== strtolower($id) || $intent['state'] !== 'purge_started') {
+                    continue;
+                }
+                if (CarbonImmutable::parse($intent['deadline'])->isFuture()) {
+                    throw new JournalUnavailable;
+                }
+                $this->erase($intent, $intent['resources'], receipt: false);
+                $intent['state'] = 'purged';
+                unset($intent['under13']);
+                app(JournalManifest::class)->append($id, $intent);
+            }
+
+            return;
+        }
+        if ($record->deadline->isFuture()) {
             return;
         }
         DB::transaction(function () use ($id): void {
@@ -38,7 +57,11 @@ final class PurgeAccount
                 return;
             }
             if ($record->state !== 'purging') {
-                $record->forceFill(['state' => 'purging', 'operation_id' => (string) Str::ulid()])->save();
+                $recovery = $record->recovery_state;
+                $owner = User::query()->findOrFail($record->user_id);
+                $recovery['resources'] = array_values(array_unique([...$recovery['resources'],
+                    ...app(ErasureResourceInventory::class)->forUser($owner)]));
+                $record->forceFill(['state' => 'purging', 'operation_id' => (string) Str::ulid(), 'recovery_state' => $recovery])->save();
             }
         });
         $record->refresh();
@@ -53,7 +76,7 @@ final class PurgeAccount
      * @param  array<string, mixed>  $intent
      * @param  list<string>  $resources  Expanded, verified journal manifest.
      */
-    public function erase(array $intent, array $resources, bool $receipt = true): void
+    public function erase(array $intent, array $resources, bool $receipt = true, ?array $retainedPlanGenerations = null): void
     {
         $user = User::query()->where('account_generation', $intent['account_generation'])->first();
         if ($user) {
@@ -74,7 +97,7 @@ final class PurgeAccount
                 throw new RuntimeException('account_export_purge_incomplete');
             }
         }
-        DB::transaction(function () use ($intent, $resources, $receipt): void {
+        DB::transaction(function () use ($intent, $resources, $receipt, $retainedPlanGenerations): void {
             $user = User::query()->where('account_generation', $intent['account_generation'])->lockForUpdate()->first();
             $under13 = in_array('policy_under13_no_recovery', $resources, true)
                 || ($user && AccountDeletion::query()->where('user_id', $user->getKey())->where('reason', 'under13')->exists());
@@ -102,7 +125,8 @@ final class PurgeAccount
                     throw new RuntimeException('erasure_resource_ownership_mismatch');
                 }
                 $privateEvents = [...$privateEvents, ...$this->clearPlanPrivateState($plan)];
-                $retained = ! $under13 && $plan->visibility->value === 'retained_unlisted'
+                $retained = ($retainedPlanGenerations === null || in_array($plan->erasure_generation, $retainedPlanGenerations, true))
+                    && ! $under13 && $plan->visibility->value === 'retained_unlisted'
                     && $plan->bookmarks()->exists() && app(MealPlanPublicSafety::class)->isPublicSafe($plan)
                     && ! DB::table('retained_plan_removals')->where('resource_generation', $plan->erasure_generation)->exists();
                 if (! $retained) {
