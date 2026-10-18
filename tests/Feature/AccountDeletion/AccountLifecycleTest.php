@@ -7,6 +7,9 @@ use App\Domain\AccountDeletion\JournalUnavailable;
 use App\Models\AccountDeletion;
 use App\Models\MealPlan;
 use App\Models\MealPlanBookmark;
+use App\Models\MealPlanDay;
+use App\Models\MealPlanRecipeEntry;
+use App\Models\MealPlanSlot;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -41,6 +44,26 @@ class AccountLifecycleTest extends TestCase
         $this->assertSame($user->id, $public->fresh()->user_id);
         $this->assertSame('public', $public->fresh()->visibility->value);
         $this->assertSame('public', $unavailable->fresh()->visibility->value);
+    }
+
+    public function test_retained_snapshots_drop_private_metadata_immediately_and_recovery_restores_it(): void
+    {
+        $owner = User::factory()->create();
+        $plan = MealPlan::factory()->public()->for($owner, 'owner')->create();
+        $day = MealPlanDay::factory()->for($plan)->create();
+        $slot = MealPlanSlot::factory()->for($day, 'day')->create();
+        $entry = MealPlanRecipeEntry::factory()->for($slot, 'slot')->create([
+            'recipe_snapshot' => ['title' => 'Public dish', 'visibility' => 'public', 'servings' => '2.00',
+                'ingredients' => [], 'sections' => [], 'steps' => [], 'source_creator_user_id' => $owner->id],
+        ]);
+        MealPlanBookmark::factory()->for($plan)->create();
+        $original = $entry->fresh()->getRawOriginal('recipe_snapshot');
+        $request = app(AccountLifecycle::class)->request($owner);
+        $this->assertNull($plan->fresh()->user_id);
+        $this->assertArrayNotHasKey('source_creator_user_id', $entry->fresh()->recipe_snapshot);
+        $this->assertStringNotContainsString('source_creator_user_id', $request->getRawOriginal('recovery_state'));
+        app(AccountLifecycle::class)->recover($owner);
+        $this->assertSame($original, $entry->fresh()->getRawOriginal('recipe_snapshot'));
     }
 
     public function test_inactive_account_cannot_use_existing_session_and_unavailable_public_plan_is_denied(): void

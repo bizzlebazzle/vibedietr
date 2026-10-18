@@ -21,7 +21,17 @@ final class RetainedPlanRemoval
             'state' => 'plan_removed', 'policy' => 'DEC-012/DEC-013/DEC-014/DEC-021/DEC-022',
             'resources' => ['plan_'.$generation],
         ]);
-        app(ArchivePlanHistory::class)->preserve($plan);
+        $this->replay($plan, $intent);
+    }
+
+    /** Apply already verified protected intent without emitting a second lifecycle transition. */
+    public function replay(MealPlan $plan, array $intent): void
+    {
+        $generation = $plan->erasure_generation;
+        if ($intent['state'] !== 'plan_removed' || ! in_array('plan_'.$generation, $intent['resources'], true)) {
+            throw new JournalUnavailable;
+        }
+        app(ArchivePlanHistory::class)->preserve($plan, CarbonImmutable::parse($intent['deadline']));
         DB::table('retained_plan_removals')->updateOrInsert(
             ['resource_generation' => $generation],
             ['meal_plan_id' => $plan->getKey(), 'state' => 'removed', 'recorded_at' => CarbonImmutable::parse($intent['deadline'])],

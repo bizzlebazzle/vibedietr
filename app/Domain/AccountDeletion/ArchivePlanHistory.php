@@ -5,22 +5,44 @@ namespace App\Domain\AccountDeletion;
 use App\Models\AccountDeletion;
 use App\Models\MealPlan;
 use App\Models\PrivateConsumptionArchive;
+use App\Models\User;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 
 final class ArchivePlanHistory
 {
     /** Called with the plan locked, in the same transaction as permanent removal. */
-    public function preserve(MealPlan $plan): void
+    public function preserve(MealPlan $plan, ?CarbonImmutable $asOf = null): void
     {
         $owner = null;
-        foreach (AccountDeletion::query()->where('reason', 'ordinary')->where('deadline', '>', now()->utc())->cursor() as $request) {
+        foreach (AccountDeletion::query()->where('reason', 'ordinary')->where('deadline', '>', $asOf ?? now()->utc())->cursor() as $request) {
             $prior = $request->recovery_state['plans'][(string) $plan->getKey()] ?? null;
             if (($prior['generation'] ?? null) === $plan->erasure_generation) {
                 $owner = $request->user_id;
                 break;
             }
         }
-        if ($owner === null || PrivateConsumptionArchive::query()->where('source_plan_generation', $plan->erasure_generation)->exists()) {
+        if ($owner !== null) {
+            $this->capture($plan, (int) $owner);
+        }
+    }
+
+    /** The caller supplies a verified historical request, not a new recovery authorization. */
+    public function preserveForReplay(MealPlan $plan, User $owner, array $request, CarbonImmutable $removedAt): void
+    {
+        app(PrivacyOperator::class)->reference();
+        if ($request['state'] !== 'requested' || $request['account_generation'] !== $owner->account_generation
+            || ! in_array('plan_'.$plan->erasure_generation, $request['resources'], true)
+            || CarbonImmutable::parse($request['deadline'])->lessThanOrEqualTo($removedAt)
+            || ($plan->user_id !== null && (int) $plan->user_id !== (int) $owner->getKey())) {
+            return;
+        }
+        $this->capture($plan, (int) $owner->getKey());
+    }
+
+    private function capture(MealPlan $plan, int $owner): void
+    {
+        if (PrivateConsumptionArchive::query()->where('source_plan_generation', $plan->erasure_generation)->exists()) {
             return;
         }
         $days = DB::table('meal_plan_days')->where('meal_plan_id', $plan->getKey())->pluck('id');

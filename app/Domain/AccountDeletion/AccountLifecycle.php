@@ -7,6 +7,7 @@ use App\Audit\AuditEventRecorder;
 use App\Domain\MealPlans\MealPlanPublicSafety;
 use App\Domain\MealPlans\MealPlanVisibility;
 use App\Models\AccountDeletion;
+use App\Models\MealPlan;
 use App\Models\User;
 use App\Security\Notifications\ProductionSecurityReadiness;
 use Illuminate\Support\Facades\DB;
@@ -25,7 +26,7 @@ final class AccountLifecycle
             $existing = AccountDeletion::query()->where('user_id', $user->getKey())->first();
             if ($existing) {
                 if ($under13 && $existing->reason !== 'under13') {
-                    $existing->forceFill(['reason' => 'under13', 'deadline' => now()->utc(),
+                    $existing->forceFill(['reason' => 'under13', 'deadline' => $existing->deadline->min(now()->utc()),
                         'state' => 'preparing', 'operation_id' => (string) Str::ulid()])->save();
                 }
 
@@ -87,21 +88,31 @@ final class AccountLifecycle
         $this->apply((string) AccountDeletion::query()->where('user_id', $actor->getKey())->value('id'));
     }
 
-    public function apply(string $id): void
+    public function apply(string $id, bool $resume = true): void
     {
-        DB::transaction(function () use ($id): void {
+        DB::transaction(function () use ($id, $resume): void {
             $record = AccountDeletion::query()->lockForUpdate()->find($id);
             if (! $record || ! in_array($record->state, ['preparing', 'recovering', 'waiving'], true)) {
                 return;
             }
             $user = User::query()->lockForUpdate()->findOrFail($record->user_id);
+            if ($user->account_generation !== $record->account_generation) {
+                throw new JournalUnavailable;
+            }
             $state = $record->state === 'recovering' ? 'recovered'
                 : ($record->reason === 'ordinary' ? 'requested' : ($record->reason === 'under13' ? 'under13' : 'waived'));
+            if ($state === 'recovered' && $user->getRawOriginal('is_administrator')) {
+                app(ProductionSecurityReadiness::class)->assertReady();
+            }
             app(JournalManifest::class)->append($record->operation_id, $this->intent($record, $state));
             if ($state === 'recovered') {
                 foreach (($record->recovery_state['plans'] ?? []) as $planId => $prior) {
                     if (DB::table('retained_plan_removals')->where('resource_generation', $prior['generation'])->whereIn('state', ['removed', 'under13'])->exists()) {
                         continue;
+                    }
+                    $restoredPlan = MealPlan::query()->where('id', $planId)->where('erasure_generation', $prior['generation'])->first();
+                    if ($restoredPlan) {
+                        app(PublicPlanSnapshotProtection::class)->restore($restoredPlan, $record->recovery_state['snapshots'][$prior['generation']] ?? []);
                     }
                     DB::table('meal_plans')->where('id', $planId)->where('erasure_generation', $prior['generation'])->whereNull('user_id')->update([
                         'user_id' => $user->getKey(), 'visibility' => $prior['visibility'],
@@ -110,7 +121,9 @@ final class AccountLifecycle
                 }
                 app(LifecycleAudit::class)->record($user, 'recovered', $record->correlation_id);
                 $record->delete();
-                DB::afterCommit(fn () => app(ResumeAccountWork::class)->dispatch($user));
+                if ($resume) {
+                    DB::afterCommit(fn () => app(ResumeAccountWork::class)->dispatch($user));
+                }
 
                 return;
             }
@@ -128,6 +141,7 @@ final class AccountLifecycle
                     && $plan->bookmarks()->where('user_id', '!=', $user->getKey())->exists()
                     && app(MealPlanPublicSafety::class)->isPublicSafe($plan, retention: true);
                 if ($qualifies) {
+                    $recovery['snapshots'][$plan->erasure_generation] = app(PublicPlanSnapshotProtection::class)->protect($plan);
                     $recovery['plans'][(string) $plan->getKey()] = ['visibility' => 'public', 'generation' => $plan->erasure_generation];
                     $plan->forceFill([
                         'user_id' => null, 'visibility' => MealPlanVisibility::RetainedUnlisted,

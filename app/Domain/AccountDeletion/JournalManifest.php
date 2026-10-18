@@ -18,7 +18,7 @@ final class JournalManifest
         foreach ($parts as $index => $part) {
             $partIntent = $intent;
             $partIntent['state'] = 'inventory';
-            $partIntent['resources'] = [$resources[0], 'manifest_'.$digest, 'part_'.str_pad((string) $index, 16, '0', STR_PAD_LEFT), ...$part];
+            $partIntent['resources'] = [$resources[0], 'manifest_'.$digest, 'part_'.str_pad((string) $index, 16, '0', STR_PAD_LEFT), 'transition_'.$intent['state'], ...$part];
             $partOperation = Ulid::fromBinary(substr(hash('sha256', $operation.':'.$index, true), 0, 16))->toBase32();
             app(ProtectedErasureJournal::class)->append($partOperation, $partIntent);
         }
@@ -44,7 +44,11 @@ final class JournalManifest
                 continue;
             }
             $index = (int) substr($entry['resources'][2], 5);
-            $value = array_slice($entry['resources'], 3);
+            $offset = isset($entry['resources'][3]) && str_starts_with($entry['resources'][3], 'transition_') ? 4 : 3;
+            if ($offset === 4 && $entry['resources'][3] !== 'transition_'.$intent['state']) {
+                continue;
+            }
+            $value = array_slice($entry['resources'], $offset);
             if (isset($parts[$index]) && $parts[$index] !== $value) {
                 throw new JournalUnavailable;
             }

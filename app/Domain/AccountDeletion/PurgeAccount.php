@@ -53,7 +53,7 @@ final class PurgeAccount
      * @param  array<string, mixed>  $intent
      * @param  list<string>  $resources  Expanded, verified journal manifest.
      */
-    public function erase(array $intent, array $resources): void
+    public function erase(array $intent, array $resources, bool $receipt = true): void
     {
         $user = User::query()->where('account_generation', $intent['account_generation'])->first();
         if ($user) {
@@ -74,7 +74,7 @@ final class PurgeAccount
                 throw new RuntimeException('account_export_purge_incomplete');
             }
         }
-        DB::transaction(function () use ($intent, $resources): void {
+        DB::transaction(function () use ($intent, $resources, $receipt): void {
             $user = User::query()->where('account_generation', $intent['account_generation'])->lockForUpdate()->first();
             $under13 = in_array('policy_under13_no_recovery', $resources, true)
                 || ($user && AccountDeletion::query()->where('user_id', $user->getKey())->where('reason', 'under13')->exists());
@@ -146,6 +146,9 @@ final class PurgeAccount
             DB::table('password_reset_tokens')->where('email', $user->email)->delete();
             DB::table('account_deletions')->where('user_id', $user->getKey())->delete();
             DB::table('users')->where('id', $user->getKey())->delete();
+            if (! $receipt) {
+                return;
+            }
             DB::table('account_erasure_receipts')->insert(['id' => (string) Str::ulid(), 'completed_at' => now()->utc()]);
             app(AuditEventRecorder::class)->record(
                 AuditAction::AccountAnonymizationCompleted, AuditActor::system(), AuditSubject::system(),

@@ -2,6 +2,7 @@
 
 namespace App\Domain\AccountDeletion;
 
+use App\Domain\MealPlans\MealPlanPublicSafety;
 use App\Models\AccountExport;
 use App\Models\PrivateConsumptionArchive;
 use App\Models\Recipe;
@@ -24,9 +25,19 @@ final class ErasureResourceInventory
         foreach ($plans as $plan) {
             $resources[] = 'plan_'.$plan->erasure_generation;
             $resources[] = 'visibility_'.$plan->visibility->value.'_'.$plan->erasure_generation;
+            if ($plan->visibility->value === 'public' && app(MealPlanPublicSafety::class)->isPublicSafe($plan, retention: true)) {
+                $resources[] = 'plan_public_hash_'.$plan->erasure_generation.'_'.app(PublicPlanSnapshotProtection::class)->fingerprint($plan);
+                if ($plan->bookmarks()->where('user_id', '!=', $user->getKey())->exists()) {
+                    $resources[] = 'plan_qualifies_'.$plan->erasure_generation;
+                }
+            }
         }
         foreach (Recipe::query()->where('user_id', $user->getKey())->get() as $recipe) {
             $resources[] = 'recipe_'.$recipe->erasure_generation;
+            $resources[] = 'recipe_state_'.$recipe->erasure_generation.'_'.$recipe->visibility->value.'_'.$recipe->lifecycle->value;
+            if ($recipe->current_recipe_version_id !== null) {
+                $resources[] = 'recipe_version_'.$recipe->erasure_generation.'_'.$recipe->current_recipe_version_id;
+            }
         }
         foreach (RecipeImport::query()->where('user_id', $user->getKey())->cursor() as $import) {
             $resources[] = 'import_'.$import->getKey();
