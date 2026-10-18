@@ -9,7 +9,7 @@
 - **Queue / worker:** Explicit `default`; existing single-process default
   worker, 60-second jobs, 70-second worker, 90-second `retry_after` and enforced
   20-second margin. No new queue or larger process budget.
-- **Retries / locks:** Three attempts, 10/60-second backoff, 24-hour unique
+- **Retries / locks:** Three attempts, 10/60-second backoff, 75-second unique
   dispatch and shared per-export 75-second overlap lock. Missing resources
   complete as obsolete. Terminal-state replay is harmless.
 - **Idempotency:** Operation type plus export ULID fingerprint, durable unique

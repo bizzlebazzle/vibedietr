@@ -33,12 +33,14 @@ current effective nutrition is a separate projection of stored source/history.
 ## Generation, delivery and expiry
 
 `GenerateAccountExport` runs on the existing single-process `default` worker.
-Only export/correlation ULIDs enter queue and failed-job payloads. Unique
-dispatch and shared 75-second overlap locks coordinate duplicate generation
+Only export/correlation ULIDs enter queue and failed-job payloads. A 75-second
+unique dispatch lease and shared 75-second overlap locks coordinate generation
 and deletion. Durable row locks, terminal-state checks, deterministic object
 keys and transactional publication/audit make retry after upload safe. A
 failed generation is visible and permits a new request. Direct operator replay
-uses the same export ID only while queued/failed and before expiry.
+uses the same export ID only while queued/failed and before expiry. Repeated
+queued requests redispatch the same operation after an orphaned dispatch lease
+expires, recovering a failed post-commit queue insert without a new export.
 
 The private export resource is created at request time and expires seven UTC
 calendar days later; retries and downloads never extend that deadline. A

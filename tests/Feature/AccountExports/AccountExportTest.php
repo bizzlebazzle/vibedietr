@@ -27,6 +27,7 @@ use App\Models\MealPlanRecipeEntry;
 use App\Models\MealPlanShare;
 use App\Models\MealPlanSlot;
 use App\Models\NutritionTargetProfile;
+use App\Models\PrivateRecipeTag;
 use App\Models\Recipe;
 use App\Models\RecipeCollection;
 use App\Models\RecipeImport;
@@ -104,8 +105,10 @@ class AccountExportTest extends TestCase
         RecipeVersion::factory()->for($recipe)->create(['version_number' => 2, 'snapshot' => [...$snapshot, 'title' => 'Later immutable wording']]);
         $collection = RecipeCollection::factory()->for($owner, 'owner')->create();
         $collection->recipes()->attach($recipe);
+        $tag = PrivateRecipeTag::factory()->for($owner, 'owner')->create();
+        $tag->recipes()->attach($recipe);
         Ingredient::factory()->for($owner)->withNutrition()->create(['name' => 'Owned legacy ingredient']);
-        RecipeImport::factory()->for($owner, 'owner')->create(['source_text' => 'Owned retained import', 'recipe_id' => $recipe->id]);
+        RecipeImport::factory()->for($owner, 'owner')->create(['source_text' => 'Owned retained import', 'recipe_id' => $recipe->id, 'nutrition_source' => ['type' => 'imported_source', 'is_estimate' => false, 'per_serving' => ['protein' => ['value' => '9.123456789012345678', 'unit' => 'g', 'basis' => 'per_serving', 'status' => 'known']], 'observations' => ['protein' => ['source_field' => 'proteinContent', 'source_value' => '9.123456789012345678', 'source_unit' => 'g']]]]);
         $proposal = CatalogueCorrectionProposal::factory()->create(['proposer_user_id' => $owner->id, 'reason' => 'Own submitted reason']);
         DB::table('catalogue_correction_changes')->insert(['id' => (string) Str::ulid(), 'proposal_id' => $proposal->id, 'field_key' => 'name', 'before_value' => json_encode(['value' => 'Before']), 'proposed_value' => json_encode(['value' => 'After']), 'created_at' => now()]);
         $plan = MealPlan::factory()->for($owner, 'owner')->dated()->create(['starts_on' => '2026-10-18', 'ends_on' => '2026-10-18']);
@@ -114,6 +117,8 @@ class AccountExportTest extends TestCase
         $foreignRecipe = Recipe::factory()->for($foreign, 'owner')->create(['title' => 'FOREIGN-LIVE-PRIVATE-TITLE']);
         $foreignVersion = RecipeVersion::factory()->for($foreignRecipe)->create(['snapshot' => ['title' => 'FOREIGN-UNREFERENCED-VERSION']]);
         Bookmark::factory()->for($owner, 'owner')->create(['recipe_id' => $foreignRecipe->id]);
+        $publicSource = Recipe::factory()->for($foreign, 'owner')->finalizedPublic()->create(['title' => 'FOREIGN-PUBLIC-BODY']);
+        Bookmark::factory()->for($owner, 'owner')->create(['recipe_id' => $publicSource->id]);
         $entry = MealPlanRecipeEntry::factory()->for($slot, 'slot')->create(['recipe_id' => $foreignRecipe->id, 'recipe_version_id' => $foreignVersion->id, 'recipe_snapshot' => [...$snapshot, 'title' => 'Legitimately owned pinned snapshot', 'imported_nutrition' => ['provenance' => ['recipe_import_id' => 'FOREIGN-IMPORT-SECRET', 'submitted_url' => 'https://example.test/?token=PRIVATE'], 'per_serving' => []]]]);
         MealPlanItemEntry::factory()->for($slot, 'slot')->create(['one_off_wording' => 'Owned snack', 'planned_amount' => '1.123456789012345678']);
         MealPlanShare::factory()->for($plan)->create(['recipient_user_id' => $foreign->id]);
@@ -136,14 +141,17 @@ class AccountExportTest extends TestCase
         app(BuildAccountExport::class)->generate($export->id);
         $data = $this->archive($export);
         $serialized = json_encode($data, JSON_THROW_ON_ERROR);
-        foreach (['FOREIGN-PRIVATE-NAME', 'foreign-private@example.test', 'FOREIGN-LIVE-PRIVATE-TITLE', 'FOREIGN-UNREFERENCED-VERSION', 'FOREIGN-IMPORT-SECRET', 'FOREIGN-DIARY', 'FOREIGN-SHARED-PLAN', 'PRIVATE'] as $secret) {
+        foreach (['FOREIGN-PRIVATE-NAME', 'foreign-private@example.test', 'FOREIGN-LIVE-PRIVATE-TITLE', 'FOREIGN-UNREFERENCED-VERSION', 'FOREIGN-IMPORT-SECRET', 'FOREIGN-DIARY', 'FOREIGN-SHARED-PLAN', 'FOREIGN-PUBLIC-BODY', 'PRIVATE'] as $secret) {
             $this->assertStringNotContainsString($secret, $serialized);
         }
         $this->assertCount(2, $data['recipes'][0]['versions']);
         $this->assertSame('recipe-version:'.$first->id, $data['recipes'][0]['versions'][0]['id']);
         $this->assertSame('12.123456789012345678', $data['recipes'][0]['versions'][0]['content']['nutrition_estimate']['per_serving']['protein']['value']);
         $this->assertSame('unavailable', $data['organisation']['recipe_bookmarks'][0]['availability']);
+        $this->assertSame('available', $data['organisation']['recipe_bookmarks'][1]['availability']);
         $this->assertCount(1, $data['organisation']['collections'][0]['memberships']);
+        $this->assertCount(1, $data['organisation']['private_tags'][0]['memberships']);
+        $this->assertSame('9.123456789012345678', $data['recipes'][0]['content']['imported_nutrition']['per_serving']['protein']['value']);
         $this->assertCount(2, $data['plans']);
         $this->assertSame('recipient-1', $data['plans'][0]['outgoing_shares'][0]['recipient_alias']);
         $this->assertSame('recipient-1', $data['plans'][1]['outgoing_shares'][0]['recipient_alias']);
@@ -191,6 +199,9 @@ class AccountExportTest extends TestCase
         $first = $this->requestExport($owner);
         $this->assertSame($first->id, $this->requestExport($owner)->id);
         Queue::assertPushed(GenerateAccountExport::class, 1);
+        Date::setTestNow(now()->addSeconds(76));
+        $this->assertSame($first->id, $this->requestExport($owner)->id);
+        Queue::assertPushed(GenerateAccountExport::class, 2);
         app(BuildAccountExport::class)->generate($first->id);
         $this->assertSame($first->id, $this->requestExport($owner)->id);
         Date::setTestNow($first->expires_at);

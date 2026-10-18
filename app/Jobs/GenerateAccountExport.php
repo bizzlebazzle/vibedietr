@@ -30,7 +30,7 @@ final class GenerateAccountExport implements ShouldBeUnique, ShouldQueue
 
     public bool $failOnTimeout = true;
 
-    public int $uniqueFor = 86400;
+    public int $uniqueFor = 75;
 
     public readonly string $exportId;
 

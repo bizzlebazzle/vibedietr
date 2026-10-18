@@ -18,6 +18,10 @@ final class RequestAccountExport
             User::query()->whereKey($user->getKey())->lockForUpdate()->firstOrFail();
             $existing = AccountExport::query()->where('active_key', 'account:'.$user->getKey())->lockForUpdate()->first();
             if ($existing && $existing->expires_at->isFuture() && $existing->state !== 'failed') {
+                if ($existing->state === 'queued') {
+                    GenerateAccountExport::dispatch($existing->getKey(), $existing->correlation_id);
+                }
+
                 return $existing;
             }
             if ($existing) {
