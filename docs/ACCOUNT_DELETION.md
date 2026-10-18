@@ -73,3 +73,36 @@ original-clock restore reconciliation, independent object suppression, frozen
 release checkpoints, verified all-copy retirement, storage/key disposal and the
 DEC-012/DEP-06 synthetic restore/privacy/disposal drill. Production installation
 checks and remote CI remain separate required gates.
+
+## Journal-unit check results: 18 October 2026
+
+- Focused SQLite/MySQL protocol tests: 32 passed, 54 assertions, including
+  rejection of raw application-key reuse and impossible calendar deadlines.
+- Full backend suite: 1,091 passed, 12 failed (6,994 assertions). The run began
+  before the two final edge-case tests were added; those four additional
+  SQLite/MySQL cases passed in the focused run above. All 12 full-suite failures
+  are existing uploaded-import/transient-input tests reporting permission denied
+  on `storage/framework/testing/disks/transient/inputs`. That directory is
+  owned by `root:root` with mode 0700 and was already inaccessible during the
+  initial read-only audit. Journal tests do not use that filesystem directory.
+- Static analysis, repository Pint check, environment alignment, production
+  frontend build, documentation validation and the 20 documentation tests passed.
+- The existing isolated DEP-06 drill passed in 71 seconds: 74 tables, 117
+  foreign-key columns, three synthetic users, two recipes/versions, one shared
+  plan and two durable objects. It verified paired restore, access boundaries,
+  exclusions, negative integrity/eligibility, additive migration reconciliation
+  and actual expired blob retirement/pruning. It does not exercise the unfinished
+  DEP-08 account-purge/release/disposal workflow.
+- No UI changes were made. Browser/accessibility checks are not applicable to
+  this foundation. No application migration was added. Remote CI, actual
+  independent-host durability, full lifecycle/privacy restore scenarios and
+  storage/key-generation disposal remain unverified. CURRENT_STATE.md remains
+  219 lines including blank lines.
+
+AGENTS.md requires stopping when required tests fail for reasons outside the
+task. Implementation stopped at this foundation boundary after recording the
+unrelated test-fixture permission failure. Repair the test directory's ownership
+for the Sail runtime and rerun the full backend suite before continuing the
+remaining lifecycle/purge/release units. No permission change or fixture
+deletion was performed as part of this task. Overall DEP-08 is incomplete,
+not conditionally complete.

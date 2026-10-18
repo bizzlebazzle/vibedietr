@@ -175,6 +175,22 @@ class ProtectedErasureJournalTest extends TestCase
         $this->journal->read(new ErasureCheckpoint('another-generation-02', 1, $checkpoint->digest));
     }
 
+    public function test_raw_application_key_cannot_be_reused_for_journal_encryption(): void
+    {
+        $raw = str_repeat('k', 32);
+        config(['app.key' => $raw, 'erasure.encryption_key' => 'base64:'.base64_encode($raw)]);
+        $this->expectException(JournalUnavailable::class);
+        $this->journal->append((string) Str::ulid(), $this->intent());
+    }
+
+    public function test_nonexistent_calendar_deadline_is_rejected(): void
+    {
+        $intent = $this->intent();
+        $intent['deadline'] = '2026-02-30T12:00:00Z';
+        $this->expectException(JournalUnavailable::class);
+        $this->journal->append((string) Str::ulid(), $intent);
+    }
+
     protected function journalDriver(): string
     {
         return 'sqlite';

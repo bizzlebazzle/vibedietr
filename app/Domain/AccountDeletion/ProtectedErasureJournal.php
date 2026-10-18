@@ -129,8 +129,10 @@ final class ProtectedErasureJournal
             throw new JournalUnavailable;
         }
         $appKey = config('app.key');
-        if (is_string($appKey) && str_starts_with($appKey, 'base64:')) {
-            $decoded = base64_decode(substr($appKey, 7), true);
+        if (is_string($appKey)) {
+            $decoded = str_starts_with($appKey, 'base64:')
+                ? base64_decode(substr($appKey, 7), true)
+                : $appKey;
             if ($decoded === $encryption || $decoded === $integrity) {
                 throw new JournalUnavailable;
             }
@@ -226,6 +228,12 @@ final class ProtectedErasureJournal
             || ! is_string($intent['deadline'])
             || ! preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/D', $intent['deadline'])
             || ! is_array($intent['resources']) || ! array_is_list($intent['resources'])) {
+            throw new JournalUnavailable;
+        }
+        $deadline = \DateTimeImmutable::createFromFormat(
+            '!Y-m-d\TH:i:s\Z', $intent['deadline'], new \DateTimeZone('UTC'),
+        );
+        if ($deadline === false || $deadline->format('Y-m-d\TH:i:s\Z') !== $intent['deadline']) {
             throw new JournalUnavailable;
         }
         foreach (['account_generation', 'correlation_id', 'installation'] as $field) {

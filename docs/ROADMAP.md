@@ -1513,6 +1513,10 @@ changes, it is deliberately split across multiple items.
 
 ### DEP-08 — P2 — Replace immediate account deletion with recovery and purge
 
+- **Status:** In progress (2026-10-18): DEC-021 approved and journal foundation
+  implemented; lifecycle, purge and restore-release work remains. Full backend
+  verification stopped on existing transient-fixture filesystem permissions;
+  see [implementation evidence](ACCOUNT_DELETION.md).
 - **Planning evidence:** [Lifecycle audit and owner-approved preferred
   implementation](DEP_08_LIFECYCLE_AUDIT.md); all four resource-boundary
   questions are approved under DEC-021.
