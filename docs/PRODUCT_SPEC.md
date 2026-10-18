@@ -631,6 +631,12 @@ Decision: DEC-008.
 
 Decision: DEC-021.
 
+When a retained plan is permanently removed during recovery, preserve its
+private consumption history in an owner-only archive until final account purge.
+Successful recovery keeps that private history but cannot restore the removed
+public plan. Original transitions and snapshots remain unchanged; account exports
+include the requester's archived history. Decision: DEC-022.
+
 Decided DEC-012 requires daily paired database/private-storage recovery sets,
 seven elapsed days of recovery eligibility from original capture, and removal
 within a further 24 hours. Backup copies do not extend the 30-day account

@@ -1524,7 +1524,7 @@ changes, it is deliberately split across multiple items.
   records the journal foundation and remaining lifecycle/restore work.
 - **Outcome:** Implement optional recovery for up to 30 days followed by
   privacy-aware purge/anonymization, with an authenticated immediate-purge path.
-- **Dependencies:** DEC-012, DEC-021, FND-05, FND-09, FND-14, DEP-04, DEP-05,
+- **Dependencies:** DEC-012, DEC-021, DEC-022, FND-05, FND-09, FND-14, DEP-04, DEP-05,
   DEP-06, DEP-07, all owned domain models.
 - **Decision controls:** Decided DEC-012 requires protected, independently
   durable journal intent before lifecycle acknowledgement; its minimized

@@ -52,6 +52,7 @@ Backlog relationships mean:
 | DEC-019 | Diary consumption time and correction history | Decided | Product owner |
 | DEC-020 | Dated nutrition target phases and history | Decided | Product owner |
 | DEC-021 | Account purge resource boundaries | Decided | Product owner |
+| DEC-022 | Private history after retained-plan removal | Decided | Product owner |
 
 ## DEC-001 — Food-matching confidence thresholds
 
@@ -2424,6 +2425,41 @@ Backlog relationships mean:
   purpose-specific schedule. This decision creates no new retention period,
   hold power or backup exception. It supersedes earlier descriptions that
   retained every correction proposal merely by nulling its proposer.
+
+## DEC-022 — Private history after retained-plan removal
+
+- **Question requiring resolution:** What happens to private consumption
+  history when a retained public plan loses its final bookmark during its
+  original owner's recovery period?
+- **Why it matters:** DEC-014 permanently removes the retained plan, while
+  DEC-019 and DEC-013 preserve recoverable private diary history until final
+  account purge. Existing foreign-key cascades would remove both together.
+- **Status:** Decided.
+- **Owner:** Product owner.
+- **Alternatives:** Preserve private history in a separately protected archive;
+  explicitly authorize early destruction of private history with the plan.
+- **Existing constraints from `PRODUCT_SPEC.md`:** Diary and target history is
+  private, independent copies survive, and a permanently removed public plan
+  cannot be reclaimed through recovery or administrator action.
+- **Backlog relationships:** Resolution unblocks DEP-08 and constrains PLAN-08,
+  PLAN-09 and DEP-07. `Related`: DEC-013, DEC-014, DEC-019, DEC-020, DEC-021.
+- **Resolution condition:** Choose the private-history lifecycle without
+  changing public-plan removal, recovery deadlines or administrator powers.
+- **Final decision and rationale:** The owner approved the private-archive
+  recommendation in the DEP-08 implementation chat on 18 October 2026.
+  Preserve private consumption history in an owner-only archive until final
+  account purge. Successful account recovery keeps that private history, but
+  cannot restore the permanently removed public plan.
+
+  Preserve the original immutable transition chains, consumption snapshots,
+  precision and source facts rather than rebuilding history from current data.
+  The archive grants no public access, bookmark, share, source-plan restoration,
+  reattribution or transfer capability. Related private historical target data
+  remains subject to its existing DEC-020 owner-only history and account-purge
+  rule. No new recovery or retention period is introduced. Account exports
+  include the requester's archived private history under the owned-data rule.
+  Implementation must separate the private archive from the removed public
+  resource before executing its database cascades.
 
 ## Manual validation checklist
 

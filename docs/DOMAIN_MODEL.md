@@ -1405,6 +1405,13 @@ the current projection. Once a planned entry has consumption history it cannot
 be moved or removed. Each successful transition records the minimized
 `diary.consumption_transitioned` event in the same transaction.
 
+DEC-022 requires private consumption history to be archived before a retained
+public plan is permanently removed during account recovery. The owner-only
+archive preserves original transition chains, snapshots, precision and source
+facts until final account purge; successful recovery retains that private
+history without restoring the removed public plan. Private historical target
+data keeps its existing DEC-020 lifecycle. The archive is not a shareable plan.
+
 PLAN-06 creates one immutable nutrition snapshot in the same transaction as
 each consume and re-consume transition. The snapshot copies only the locked
 entry's pinned nutrition source and values, provenance, estimate status, actual
