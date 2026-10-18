@@ -1,5 +1,30 @@
 # Job inventory
 
+## ProcessAccountDeletion
+
+- **Class / owner / dependencies:** `App\Jobs\ProcessAccountDeletion`; DEP-08,
+  FND-09, DEP-04 and DEP-05.
+- **Purpose:** Reconcile prepared/recovering/waiving lifecycle intent and perform
+  due final purges using their original UTC deadlines.
+- **Queue / worker:** Existing `default` worker; 60-second job, 70-second worker,
+  90-second `retry_after`; enforced 20-second worker margin.
+- **Retries / concurrency:** Three attempts, 10/60-second backoff; 75-second
+  unique dispatch lease and shared per-request overlap lock. Independent journal
+  operation uniqueness and locked SQL states are the durable idempotency boundary.
+  Missing requests complete harmlessly. A partial purge remains replayable.
+- **Payload / pruning:** Request and correlation ULIDs only, metadata-only failed
+  payloads, existing 168-hour pruning. Exceptions are converted to bounded safe
+  codes; no account content, credentials or object coordinates enter telemetry.
+- **Schedule:** UTC `accounts:process-deletions` every minute, one server and
+  ten-minute scheduler overlap lock; 100-row chunks. Repeated sweeps retry
+  missed dispatch without creating a new request or extending recovery.
+- **Monitoring / replay:** Existing worker and scheduler heartbeats, default
+  queue 25/100 depth and 300/900-second age, retries/final failures; critical
+  `account_erasure_retention` reports only a count after five overdue minutes.
+  Repair the journal/storage failure before replaying the same request ID.
+  A live SQL completion flag cannot authorize restore release; DEC-012 replay
+  and independent object filtering remain separate operator gates.
+
 ## GenerateAccountExport and DeleteAccountExport
 
 - **Classes / owner / dependencies:** `App\Jobs\GenerateAccountExport` and

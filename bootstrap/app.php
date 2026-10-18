@@ -71,7 +71,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->dontFlash([
             'password', 'password_confirmation', 'token', 'api_key', 'secret',
-            'authorization', 'cookie', 'session', 'recovery_code', 'totp', 'otp',
+            'authorization', 'cookie', 'session', 'recovery_code', 'totp', 'otp', 'code',
             'original_text', 'instruction_text', 'diary_entry', 'target_data',
             'import_source', 'ocr_text',
             'source_text',

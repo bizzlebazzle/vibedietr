@@ -4,6 +4,7 @@ use App\Jobs\CreateMealPlanRecipeVersionReviews;
 use App\Jobs\DeleteAccountExport;
 use App\Jobs\DeliverSecurityNotification;
 use App\Jobs\GenerateAccountExport;
+use App\Jobs\ProcessAccountDeletion;
 use App\Jobs\ProcessPastedRecipeImport;
 use App\Jobs\ProcessReferenceTask;
 use App\Jobs\ProcessUploadedRecipeImport;
@@ -46,6 +47,7 @@ return [
         'default' => [
             'queues' => [QueueName::DEFAULT],
             'schedules' => [
+                'accounts:process-deletions' => ['frequency' => 'every-minute', 'overlap_lock_minutes' => 10, 'one_server' => true],
                 'account-exports:cleanup' => ['frequency' => 'every-minute', 'overlap_lock_minutes' => 10, 'one_server' => true],
             ],
             'processes' => 1,
@@ -58,6 +60,7 @@ return [
         ],
     ],
     'jobs' => [
+        ProcessAccountDeletion::class => ['queue' => QueueName::DEFAULT, 'worker' => 'default', 'timeout' => 60, 'failed_payload' => 'metadata-only'],
         GenerateAccountExport::class => ['queue' => QueueName::DEFAULT, 'worker' => 'default', 'timeout' => 60, 'failed_payload' => 'metadata-only'],
         DeleteAccountExport::class => ['queue' => QueueName::DEFAULT, 'worker' => 'default', 'timeout' => 60, 'failed_payload' => 'metadata-only'],
         CreateMealPlanRecipeVersionReviews::class => [

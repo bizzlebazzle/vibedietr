@@ -4,6 +4,7 @@ namespace App\Audit\Enums;
 
 enum AuditAction: string
 {
+    case RetainedPlanModerated = 'plan.retained_moderated';
     case AccountLifecycleEvent = 'account.lifecycle_event';
     case AccountExportEvent = 'account.export_event';
     case CatalogueCandidateCreated = 'catalogue.candidate_created';
@@ -48,6 +49,7 @@ enum AuditAction: string
     public function purpose(): AuditPurpose
     {
         return match ($this) {
+            self::RetainedPlanModerated => AuditPurpose::ModerationAccountability,
             self::AdministratorBootstrapCompleted,
             self::AdministratorBootstrapRefused,
             self::AdministratorLifecycleEvent => AuditPurpose::PrivilegedAccessAccountability,
@@ -94,6 +96,7 @@ enum AuditAction: string
     public function retentionClass(): AuditRetentionClass
     {
         return match ($this) {
+            self::RetainedPlanModerated => AuditRetentionClass::ModerationDecisionTwelveMonths,
             self::AdministratorBootstrapCompleted,
             self::AdministratorBootstrapRefused,
             self::AdministratorLifecycleEvent => AuditRetentionClass::PrivilegedIdentityTwelveMonths,
@@ -143,6 +146,7 @@ enum AuditAction: string
     public function allowedActorTypes(): array
     {
         return match ($this) {
+            self::RetainedPlanModerated => [AuditActorType::Administrator],
             self::AdministratorBootstrapCompleted,
             self::AdministratorBootstrapRefused => [
                 AuditActorType::ExternalOperator,
@@ -208,6 +212,7 @@ enum AuditAction: string
     public function allowedSubjectTypes(): array
     {
         return match ($this) {
+            self::RetainedPlanModerated => [AuditSubjectType::MealPlan],
             self::AdministratorBootstrapCompleted => [AuditSubjectType::UserAccount],
             self::AccountAnonymizationCompleted => [AuditSubjectType::UserAccount, AuditSubjectType::SystemOperation],
             self::AdministratorBootstrapRefused,

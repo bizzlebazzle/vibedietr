@@ -43,6 +43,7 @@ class Recipe extends Model
         ];
     }
 
+    /** @return BelongsTo<User, $this> */
     public function owner(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');

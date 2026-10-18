@@ -26,6 +26,11 @@ final class AccountLifecycle
             $user = User::query()->lockForUpdate()->findOrFail($actor->getKey());
             $existing = AccountDeletion::query()->where('user_id', $user->getKey())->first();
             if ($existing) {
+                if ($under13 && $existing->reason !== 'under13') {
+                    $existing->forceFill(['reason' => 'under13', 'deadline' => now()->utc(),
+                        'state' => 'preparing', 'operation_id' => (string) Str::ulid()])->save();
+                }
+
                 return $existing->id;
             }
             $plans = [];
@@ -75,7 +80,7 @@ final class AccountLifecycle
             }
             if ($record->state !== 'waiving' && $record->reason === 'ordinary') {
                 $record->forceFill([
-                    'state' => 'waiving', 'reason' => 'waived', 'deadline' => now()->utc(),
+                    'state' => 'waiving', 'reason' => 'waived', 'deadline' => $record->deadline->min(now()->utc()),
                     'operation_id' => (string) Str::ulid(),
                 ])->save();
             }
@@ -96,7 +101,7 @@ final class AccountLifecycle
             app(JournalManifest::class)->append($record->operation_id, $this->intent($record, $state));
             if ($state === 'recovered') {
                 foreach (($record->recovery_state['plans'] ?? []) as $planId => $prior) {
-                    if (DB::table('retained_plan_removals')->where('resource_generation', $prior['generation'])->exists()) {
+                    if (DB::table('retained_plan_removals')->where('resource_generation', $prior['generation'])->whereIn('state', ['removed', 'under13'])->exists()) {
                         continue;
                     }
                     DB::table('meal_plans')->where('id', $planId)->where('erasure_generation', $prior['generation'])->whereNull('user_id')->update([
@@ -106,10 +111,19 @@ final class AccountLifecycle
                 }
                 app(LifecycleAudit::class)->record($user, 'recovered', $record->correlation_id);
                 $record->delete();
+                DB::afterCommit(fn () => app(ResumeAccountWork::class)->dispatch($user));
 
                 return;
             }
             $recovery = $record->recovery_state ?? ['plans' => []];
+            if ($record->reason === 'under13') {
+                foreach ($recovery['plans'] as $planId => $prior) {
+                    DB::table('retained_plan_removals')->updateOrInsert(
+                        ['resource_generation' => $prior['generation']],
+                        ['meal_plan_id' => $planId, 'state' => 'under13', 'recorded_at' => now()->utc()],
+                    );
+                }
+            }
             foreach ($user->mealPlans()->where('visibility', 'public')->lockForUpdate()->get() as $plan) {
                 $qualifies = $record->reason !== 'under13'
                     && $plan->bookmarks()->where('user_id', '!=', $user->getKey())->exists()

@@ -19,6 +19,7 @@ final class MealPlanRecipeVersionReviewNotifier
 
         $created = 0;
         MealPlanRecipeEntry::query()
+            ->whereHas('slot.day.mealPlan.owner', fn ($owner) => $owner->whereDoesntHave('accountDeletion'))
             ->where('recipe_id', $version->recipe_id)
             ->where('recipe_version_number', '<', $version->version_number)
             ->whereDoesntHave('consumptionState')
@@ -35,7 +36,8 @@ final class MealPlanRecipeVersionReviewNotifier
                         $locked = MealPlanRecipeEntry::query()->lockForUpdate()->find($entry->getKey());
                         if (! $locked instanceof MealPlanRecipeEntry
                             || $locked->recipe_version_number >= $version->version_number
-                            || $locked->consumptionState()->exists()) {
+                            || $locked->consumptionState()->exists()
+                            || ! $locked->slot->day->mealPlan->owner?->isActive()) {
                             return 0;
                         }
 

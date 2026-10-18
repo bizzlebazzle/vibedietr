@@ -30,6 +30,7 @@ new #[Layout('layouts.guest')] class extends Component
     <!-- Session Status -->
     <x-auth-session-status class="mb-4" :status="session('status')" />
 
+    <p class="mb-4 text-sm"><a href="{{ route('account-recovery') }}" class="underline dark:text-slate-200">Recover an inactive account or waive recovery</a></p>
     <form wire:submit="login">
         <!-- Email Address -->
         <div>

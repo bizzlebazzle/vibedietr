@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -111,7 +112,8 @@ class MealPlan extends Model
 
     public function isBookmarkableBy(User $user): bool
     {
-        return $user->isActive() && $this->visibility === MealPlanVisibility::Public
+        return ! DB::table('retained_plan_removals')->where('resource_generation', $this->erasure_generation)->exists()
+            && $user->isActive() && $this->visibility === MealPlanVisibility::Public
             && $this->user_id !== null && $this->owner?->isActive()
             && (int) $this->user_id !== (int) $user->getKey();
     }

@@ -96,6 +96,7 @@ class User extends Authenticatable
         return ! $this->accountDeletion()->exists();
     }
 
+    /** @return HasOne<AccountDeletion, $this> */
     public function accountDeletion(): HasOne
     {
         return $this->hasOne(AccountDeletion::class);

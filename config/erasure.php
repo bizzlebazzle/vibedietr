@@ -3,6 +3,8 @@
 return [
     // These connections, keys and storage generation are outside application restores.
     // No application-database fallback is permitted.
+    'privacy_operator' => env('ERASURE_PRIVACY_OPERATOR_REFERENCE'),
+    'operator_environment' => env('ERASURE_OPERATOR_ENVIRONMENT'),
     'installation' => env('ERASURE_INSTALLATION'),
     'journal_connections' => ['erasure_primary', 'erasure_mirror'],
     'journal_generation' => env('ERASURE_JOURNAL_GENERATION'),

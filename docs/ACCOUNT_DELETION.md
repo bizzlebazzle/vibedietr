@@ -148,3 +148,33 @@ copies exclude schema-omitted private/recovery attribution.
 This is service-level implementation, not production enablement. HTTP flows,
 scheduler/queue integration, complete purpose-retention execution and the
 DEC-012 restore/release/disposal gates remain required.
+
+## HTTP, queue and operator integration
+
+The profile action now requests recoverable deletion and offers an explicit
+irreversible recovery waiver. It verifies the current password and an enrolled
+factor, explains retained public content/copies, and logs out after durable
+journal acknowledgement. The guest account-recovery form authenticates the
+same credentials for recovery or waiver; it cannot create an ordinary session
+until recovery succeeds. Sensitive codes are excluded from flashed input.
+Expiry includes the exact deadline; a later waiver cannot move it forward.
+
+The UTC scheduler dispatches original-clock lifecycle reconciliation and due
+purges through the inventoried default worker. Prepared, recovering and waiving
+states remain retryable after replication failure. Five-minute overdue counts
+raise a privacy-safe critical alert.
+
+A configured privacy operator can invoke `accounts:purge-under13 GENERATION
+--confirmed` only after independently confirming the age finding. Set
+`ERASURE_PRIVACY_OPERATOR_REFERENCE` and `ERASURE_OPERATOR_ENVIRONMENT` in the
+protected operator environment. The command neither determines age nor bypasses
+the replacement-first administrator safeguard. It also converts a previous
+ordinary recovery request to no-recovery status and immediately hides already
+retained source plans. Never put personal evidence in command arguments.
+
+Administrators may use the retained-plan exceptional-action form with their
+password and a fresh authenticator factor. Only suppression/removal and the
+approved reason categories are accepted. Moderation has its own minimized
+twelve-month accountability classification. Suppression is an access restriction,
+not an ownership transfer or recovery extension; no administrator restore action
+exists. Permanent removal uses the protected journal and DEC-022 private archive.

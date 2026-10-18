@@ -244,3 +244,9 @@ stale scheduler lock after its 10-minute expiry, use
 `php artisan schedule:clear-cache` only after proving no matching task is
 running. For a stopped scheduler, restart its container and run the missed
 idempotent maintenance command once under the same locks.
+
+## Account lifecycle work
+
+DEP-08 uses `accounts:process-deletions` and `ProcessAccountDeletion` on the existing default
+worker. See the [job inventory](JOB_INVENTORY.md#processaccountdeletion) for original-clock replay,
+locks, safe alerts and retry limits. An overdue purge is an incident, never a recovery extension.
