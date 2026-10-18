@@ -107,6 +107,7 @@ final class AuditPayloadValidator
             AuditAction::PlanBookmarkChanged => $this->validatePlanBookmarkChanged($payload),
             AuditAction::PlanCopied => $this->validatePlanCopied($payload),
             AuditAction::DiaryConsumptionTransitioned => $this->validateDiaryConsumptionTransition($payload),
+            AuditAction::AccountLifecycleEvent => $this->validateAccountLifecycle($payload),
             AuditAction::AccountExportEvent => $this->validateAccountExport($payload),
             AuditAction::AccountAnonymizationCompleted => $this->validateAnonymization($payload),
             AuditAction::SecuritySecondFactorEvent,
@@ -116,6 +117,19 @@ final class AuditPayloadValidator
         ksort($validated);
 
         return $validated;
+    }
+
+    /** @param array<string, mixed> $payload */
+    private function validateAccountLifecycle(array $payload): array
+    {
+        $this->assertShape($payload, ['event', 'outcome'], ['event', 'outcome']);
+        $this->assertEnum($payload, 'event', [
+            'requested', 'recovered', 'waived', 'under13', 'purge_started',
+            'plan_suppressed', 'plan_removed', 'hold_started', 'hold_released',
+        ]);
+        $this->assertEnum($payload, 'outcome', ['completed']);
+
+        return $payload;
     }
 
     /** @param array<string, mixed> $payload */

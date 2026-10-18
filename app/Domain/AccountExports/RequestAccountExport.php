@@ -15,7 +15,8 @@ final class RequestAccountExport
         $correlationId = CorrelationId::resolve($correlationId);
 
         return DB::transaction(function () use ($user, $correlationId) {
-            User::query()->whereKey($user->getKey())->lockForUpdate()->firstOrFail();
+            $lockedUser = User::query()->whereKey($user->getKey())->lockForUpdate()->firstOrFail();
+            abort_unless($lockedUser->isActive(), 403);
             $existing = AccountExport::query()->where('active_key', 'account:'.$user->getKey())->lockForUpdate()->first();
             if ($existing && $existing->expires_at->isFuture() && $existing->state !== 'failed') {
                 if ($existing->state === 'queued') {

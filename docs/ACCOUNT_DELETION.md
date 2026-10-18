@@ -5,8 +5,9 @@
 DEP-08 remains P2 and incomplete. DEC-021 records the four approved resource
 boundaries; the [pre-implementation audit](DEP_08_LIFECYCLE_AUDIT.md) inventories
 owned domains and earlier conflicts. The existing account-deletion UI still
-performs immediate deletion. No recovery or new purge flow is enabled by the
-journal foundation described here.
+performs immediate deletion pending the HTTP integration unit. Journal-backed
+lifecycle services and inactive-account authorization are now implemented; the
+complete purge and restore-release flow is not yet enabled.
 
 ## Independent journal foundation
 
@@ -65,8 +66,8 @@ mirror-ahead history, invalid configuration and private-field rejection.
 
 These tests establish protocol behavior, not independently durable hosts,
 power-loss recovery, target release, generation/key retirement or completed
-account deletion. DEP-08 still needs lifecycle schema/services, authenticated
-request/recovery/waiver and confirmation flows, inactive-account authorization,
+account deletion. DEP-08 still needs authenticated HTTP
+request/recovery/waiver and confirmation flows,
 retained-plan projection and recovery, every-domain purge and audit minimization,
 idempotent scheduled queued work and operational coverage, scoped evidence/holds,
 original-clock restore reconciliation, independent object suppression, frozen
@@ -106,3 +107,22 @@ for the Sail runtime and rerun the full backend suite before continuing the
 remaining lifecycle/purge/release units. No permission change or fixture
 deletion was performed as part of this task. Overall DEP-08 is incomplete,
 not conditionally complete.
+
+## Lifecycle services
+
+The additive lifecycle migration gives accounts non-reusable generation ULIDs,
+makes retained public recipe ownership nullable and adds protected deletion,
+receipt, evidence-hold and retained-plan-removal state. Existing account data is
+preserved. Rollback refuses populated lifecycle history.
+
+A prepared deletion record fixes the original deadline and resource inventory
+before independent journal acknowledgement. It denies ordinary processing
+throughout preparation/recovery, including existing sessions, login, gates,
+private plan sharing, exports and import materialization. Retrying a partial
+transition uses its stored operation identity. Account recovery is permitted
+strictly before the original deadline and restores detached public-plan
+ownership/visibility; waiver shortens the deadline and under-13 state has no
+recovery. Administrator counts exclude inactive accounts under the existing
+FND-14 locking service, so a replacement must be active first. Public attribution
+profiles are unavailable during recovery; ordinary public recipe retention is
+unchanged until final purge, while confirmed under-13 public recipes are hidden.

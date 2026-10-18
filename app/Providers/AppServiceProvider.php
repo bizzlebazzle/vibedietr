@@ -112,6 +112,7 @@ class AppServiceProvider extends ServiceProvider
         Queue::exceptionOccurred($listener->exception(...));
         Queue::failing($listener->failed(...));
 
+        Gate::before(fn (?User $user): ?bool => $user !== null && ! $user->isActive() ? false : null);
         Gate::policy(AuditEvent::class, AuditEventPolicy::class);
         Gate::policy(Bookmark::class, BookmarkPolicy::class);
         Gate::policy(CatalogueItem::class, CatalogueItemPolicy::class);

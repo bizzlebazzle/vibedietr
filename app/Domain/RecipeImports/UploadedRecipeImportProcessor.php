@@ -38,6 +38,9 @@ final class UploadedRecipeImportProcessor
     {
         $import = DB::transaction(function () use ($importId): ?RecipeImport {
             $import = RecipeImport::query()->lockForUpdate()->find($importId);
+            if ($import !== null && ! $import->owner?->isActive()) {
+                return null;
+            }
             if ($import === null || $import->status->terminal()) {
                 return $import;
             }

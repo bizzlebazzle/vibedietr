@@ -14,7 +14,7 @@ final class LastAdministratorGuard
         User::query()->where('is_administrator', true)->orderBy('id')->lockForUpdate()->get();
         $locked = User::query()->lockForUpdate()->findOrFail($user->getKey());
 
-        if ($locked->isAdministrator() && User::query()->where('is_administrator', true)->count() <= 1) {
+        if ($locked->isAdministrator() && User::query()->where('is_administrator', true)->whereDoesntHave('accountDeletion')->count() <= 1) {
             throw new RuntimeException('The sole administrator cannot delete their account until a replacement is active.');
         }
     }

@@ -72,6 +72,7 @@ class MealPlan extends Model
         ];
     }
 
+    /** @return BelongsTo<User, $this> */
     public function owner(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
@@ -105,8 +106,8 @@ class MealPlan extends Model
 
     public function isBookmarkableBy(User $user): bool
     {
-        return $this->visibility === MealPlanVisibility::Public
-            && $this->user_id !== null
+        return $user->isActive() && $this->visibility === MealPlanVisibility::Public
+            && $this->user_id !== null && $this->owner?->isActive()
             && (int) $this->user_id !== (int) $user->getKey();
     }
 

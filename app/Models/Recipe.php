@@ -115,7 +115,8 @@ class Recipe extends Model
     public function isPubliclyViewable(): bool
     {
         return $this->isFinalized()
-            && $this->getRawOriginal('visibility') === RecipeVisibility::Public->value;
+            && $this->getRawOriginal('visibility') === RecipeVisibility::Public->value
+            && ! AccountDeletion::query()->where('user_id', $this->user_id)->where('reason', 'under13')->exists();
     }
 
     public function canBeUsedInPlansFor(?User $user): bool
@@ -139,7 +140,8 @@ class Recipe extends Model
     public function scopePubliclyViewable(Builder $query): void
     {
         $query->finalized()
-            ->where('visibility', RecipeVisibility::Public->value);
+            ->where('visibility', RecipeVisibility::Public->value)
+            ->whereDoesntHave('owner.accountDeletion', fn ($deletion) => $deletion->where('reason', 'under13'));
     }
 
     /** @param Builder<Recipe> $query */

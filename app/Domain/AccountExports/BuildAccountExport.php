@@ -3,6 +3,7 @@
 namespace App\Domain\AccountExports;
 
 use App\Models\AccountExport;
+use App\Models\User;
 use App\Queue\Exceptions\NonRetryableJobException;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -20,6 +21,12 @@ class BuildAccountExport
         // retain a consistent committed content view without locking the user's domain graphs.
         DB::transaction(function () use ($id): void {
             $export = AccountExport::query()->lockForUpdate()->find($id);
+            if ($export && $export->user_id !== null) {
+                $owner = User::query()->lockForUpdate()->find($export->user_id);
+                if (! $owner?->isActive()) {
+                    return;
+                }
+            }
             if (! $export || in_array($export->state, ['ready', 'expired', 'deleted'], true) || now()->utc()->greaterThanOrEqualTo($export->expires_at) || $export->user_id === null) {
                 return;
             }

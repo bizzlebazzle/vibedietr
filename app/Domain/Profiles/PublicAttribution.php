@@ -23,6 +23,7 @@ final readonly class PublicAttribution
         $profileId = PublicProfile::query()
             ->where('user_id', $recipe->user_id)
             ->where('profile_enabled', true)
+            ->whereHas('user', fn ($query) => $query->whereDoesntHave('accountDeletion'))
             ->value('id');
 
         return new self(

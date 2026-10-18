@@ -12,6 +12,7 @@ use App\Console\Commands\RecordSchedulerHeartbeat;
 use App\Http\Controllers\HealthController;
 use App\Http\Middleware\AddSecurityHeaders;
 use App\Http\Middleware\AttachCorrelationId;
+use App\Http\Middleware\EnsureActiveAccount;
 use App\Http\Middleware\RejectOversizedRequest;
 use App\Observability\CorrelationContext;
 use App\Observability\OperationalTelemetry;
@@ -48,6 +49,7 @@ return Application::configure(basePath: dirname(__DIR__))
         RecordSchedulerHeartbeat::class,
     ])
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->appendToGroup('web', EnsureActiveAccount::class);
         $middleware->append(AttachCorrelationId::class);
         $middleware->append(AddSecurityHeaders::class);
         $middleware->append(RejectOversizedRequest::class);

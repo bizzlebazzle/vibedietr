@@ -15,6 +15,7 @@ final class PublicProfileReader
         $profile = PublicProfile::query()
             ->whereKey($profileId)
             ->where('profile_enabled', true)
+            ->whereHas('user', fn ($query) => $query->whereDoesntHave('accountDeletion'))
             ->firstOrFail();
         $attributionName = $profile->attribution_name;
 
