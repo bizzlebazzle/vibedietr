@@ -1485,9 +1485,9 @@ changes, it is deliberately split across multiple items.
 
 ### DEP-07 — P2 — Add self-service account data export
 
-- **Status:** Implemented; verification incomplete (2026-10-18). The full
-  backend gate hit Composer's existing 300-second process timeout; final
-  regressions, browser automation and installation checks remain. See
+- **Status:** Conditionally complete (2026-10-18). Implementation, full backend
+  tests and local browser/quality gates pass; installation-specific production
+  checks remain under DEP-09 before activation. See
   [verification evidence](DEP_07_VERIFICATION.md).
 - **Outcome:** Produce a secure export of data owned by the requester without
   leaking another user's private data from shares, bookmarks, catalogue, or
@@ -1498,8 +1498,8 @@ changes, it is deliberately split across multiple items.
   documented JSON ZIP, exact stored precision, immutable owned history and
   minimized external references, including archive-local recipient aliases.
   DEC-008 is decided and no longer blocks this item; no format/privacy choice
-  remains pending. Implementation is present; the remaining verification gates
-  are recorded above.
+  remains pending. Implementation and local verification are complete; release
+  constraints are recorded above.
 - **Acceptance criteria:** Export generation and scheduled file cleanup run as
   idempotent, correlated queued work under FND-09. Export includes account,
   owned recipes and versions, organisation, owned plans, diary, targets, one-
