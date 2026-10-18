@@ -154,8 +154,9 @@ work.
   UX-05 adds responsive planning/consumption ([verification](UX_05_VERIFICATION.md)); UX-06 adds empty/recovery guidance.
   UX-07 adds shared accessibility fixes and full-page/pixel regressions ([verification](UX_07_VERIFICATION.md)).
 - [Recovery tooling and drill](DEP_06_VERIFICATION.md) exist; production release needs DEP-08 and installation gates.
-- Export, delayed deletion/recovery, privacy/legal and release readiness remain
-  incomplete (DEP-07–DEP-10). DEC-008/010 remain unresolved; DEC-012 is decided.
+- DEP-07 adds owned JSON ZIP exports, authenticated expiry and queued cleanup ([operations](ACCOUNT_EXPORTS.md)).
+- Delayed deletion/recovery and release readiness remain DEP-08–DEP-10 work;
+  DEC-008/012 are decided; DEC-010 remains unresolved.
 - Account deletion is still immediate. Legacy ingredient rows cascade with the
   account; shared catalogue submitter references are nullable provenance and
   survive account deletion.
@@ -188,7 +189,7 @@ Done gate before completion.
 
 | Area | Focused test location or command |
 | --- | --- |
-| Accounts and administrator security | `tests/Feature/Auth`, `tests/Feature/Administrator*` |
+| Accounts, exports and administrator security | `tests/Feature/Auth`, `tests/Feature/AccountExports`, `tests/Feature/Administrator*` |
 | Audit | `tests/Feature/AuditEvent*` |
 | Ingredients and OpenFoodFacts | `tests/Feature/Ingredients`, `tests/Feature/Integrations` |
 | Recipes, organization, profiles, and imports | `tests/Feature/Recipes`, `tests/Feature/Recipes/RecipeImport*`, `tests/Feature/Profiles` |

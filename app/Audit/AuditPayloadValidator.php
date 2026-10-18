@@ -4,6 +4,7 @@ namespace App\Audit;
 
 use App\Audit\Enums\AuditAction;
 use App\Domain\Nutrition\NutrientRegistry;
+use Illuminate\Support\Str;
 use InvalidArgumentException;
 
 final class AuditPayloadValidator
@@ -106,6 +107,7 @@ final class AuditPayloadValidator
             AuditAction::PlanBookmarkChanged => $this->validatePlanBookmarkChanged($payload),
             AuditAction::PlanCopied => $this->validatePlanCopied($payload),
             AuditAction::DiaryConsumptionTransitioned => $this->validateDiaryConsumptionTransition($payload),
+            AuditAction::AccountExportEvent => $this->validateAccountExport($payload),
             AuditAction::AccountAnonymizationCompleted => $this->validateAnonymization($payload),
             AuditAction::SecuritySecondFactorEvent,
             AuditAction::SecurityNotificationEvent => $this->validateSecurityEvent($payload),
@@ -114,6 +116,19 @@ final class AuditPayloadValidator
         ksort($validated);
 
         return $validated;
+    }
+
+    /** @param array<string, mixed> $payload */
+    private function validateAccountExport(array $payload): array
+    {
+        $this->assertShape($payload, ['event', 'outcome', 'export_id'], ['event', 'outcome', 'export_id']);
+        $this->assertEnum($payload, 'event', ['requested', 'generated', 'downloaded', 'expired', 'deleted']);
+        $this->assertEnum($payload, 'outcome', ['completed']);
+        if (! is_string($payload['export_id']) || ! Str::isUlid($payload['export_id'])) {
+            throw new InvalidArgumentException('Invalid export audit reference.');
+        }
+
+        return $payload;
     }
 
     /** @param array<string, mixed> $payload */

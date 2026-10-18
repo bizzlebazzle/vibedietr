@@ -41,6 +41,13 @@ many ingredients. The code exposes only the inverse
 
 ### Account identity
 
+DEP-07 adds owner-bound `AccountExport` resources with an opaque ULID, nullable
+owner for post-deletion cleanup, unique active-account key, correlation, private
+disk, fixed expiry and generated/deleted timestamps. Durable states are queued,
+ready, failed, expired and deleted. Immutable generated content follows the
+[approved DEC-008 contract](ACCOUNT_EXPORT_RESEARCH.md#approved-version-1-contract);
+[export operations](ACCOUNT_EXPORTS.md) describe publication, download and cleanup.
+
 The `User` row is private authentication and ownership state. Its name and
 email may be edited through the authenticated private profile, but neither is
 public merely because the account owns a public recipe or enables a public

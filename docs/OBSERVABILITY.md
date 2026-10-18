@@ -78,6 +78,13 @@ outcome and content-validation-result dimensions.
 
 ## Queue, scheduler, providers, and workflows
 
+DEP-07 generation and deletion inherit default-worker/backend, depth/age,
+execution/retry/final-failure and scheduler monitoring. The monitor raises
+critical `account_export_retention` with only an aggregate count when a
+non-deleted export is five minutes overdue or its owner has been removed.
+[Export recovery](ACCOUNT_EXPORTS.md#cleanup-and-recovery) covers replay and
+retention incidents; archive contents and storage keys never enter alerts.
+
 Queue events record worker heartbeat, dispatch-to-start when bounded `pushedAt`
 exists, execution duration, retry, and final-failure counters. `QueueMonitor`
 reads only queue/timestamps/counts and never deserializes payloads. It reports

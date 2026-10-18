@@ -184,6 +184,12 @@ graceful restart, recovery, health and privacy procedures and
 
 ## Tests and quality checks
 
+Self-service exports are available from Profile. See
+[account-export operation and production checks](docs/ACCOUNT_EXPORTS.md).
+The focused backend command is
+`./vendor/bin/sail artisan test tests/Feature/AccountExports`;
+`./vendor/bin/sail artisan account-exports:cleanup` queues due file cleanup.
+
 Backup capture/expiry, quarantined restore and migration rollout procedures are
 in [the backup/restore runbook](docs/BACKUP_RESTORE_RUNBOOK.md) and
 [the migration runbook](docs/MIGRATION_RUNBOOK.md). Run the disposable synthetic

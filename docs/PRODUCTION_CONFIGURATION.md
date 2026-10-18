@@ -42,6 +42,11 @@ The application never derives trusted hosts from request headers.
 
 ## Database, cache, queue, and private storage
 
+DEP-07 additionally requires PHP ZIP support and InnoDB repeatable-read
+isolation (generation fails closed otherwise). Exports use the existing
+private durable disk; verify encrypted S3/staging and seven-day disposal of
+objects, versions and backup copies using [export release checks](ACCOUNT_EXPORTS.md#capacity-and-production-verification).
+
 | Variable | Classification | Purpose/example | Requirement and failure |
 | --- | --- | --- | --- |
 | `DB_CONNECTION` | Required non-secret | `mysql` | SQLite and unapproved connections fail. |

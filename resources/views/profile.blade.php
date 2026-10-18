@@ -7,6 +7,9 @@
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+            <div class="rounded-lg border border-gray-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900/80">
+                <a class="underline text-gray-900 dark:text-slate-100" href="{{ route('account-exports.index') }}">Export your account data</a>
+            </div>
             <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:rounded-lg sm:p-8 dark:border-slate-800 dark:bg-slate-900/80">
                 <div class="max-w-xl">
                     <livewire:profile.update-profile-information-form />

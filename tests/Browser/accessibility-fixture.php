@@ -1,5 +1,7 @@
 <?php
 
+use App\Domain\AccountExports\CleanupAccountExport;
+use App\Models\AccountExport;
 use App\Models\CatalogueItem;
 use App\Models\CatalogueItemVersion;
 use App\Models\MealPlan;
@@ -27,6 +29,10 @@ if (($argv[1] ?? '') === 'cleanup') {
             $user = User::query()->whereKey($identity['id'])->where('email', $identity['email'])
                 ->where('email', 'like', 'ux07-%@example.test')->first();
             if ($user) {
+                foreach (AccountExport::query()->where('user_id', $user->id)->get() as $export) {
+                    $export->forceFill(['expires_at' => now()->subSecond()])->save();
+                    app(CleanupAccountExport::class)->cleanup($export->id);
+                }
                 // Delete only this run's synthetic shared catalogue contributions.
                 CatalogueItem::query()->where('submitted_by_user_id', $user->id)->delete();
                 $user->delete();
