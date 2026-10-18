@@ -408,7 +408,8 @@ class AccountExportTest extends TestCase
 
     private function expectCall(MockInterface $mock, string $method): Expectation
     {
-        $expectation = $mock->shouldReceive($method);
+        $mock->shouldReceive($method);
+        $expectation = $mock->mockery_getExpectationsFor($method)->getExpectations()[0];
         $this->assertInstanceOf(Expectation::class, $expectation);
 
         return $expectation;

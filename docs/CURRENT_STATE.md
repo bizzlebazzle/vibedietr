@@ -155,8 +155,7 @@ work.
   UX-07 adds shared accessibility fixes and full-page/pixel regressions ([verification](UX_07_VERIFICATION.md)).
 - [Recovery tooling and drill](DEP_06_VERIFICATION.md) exist; production release needs DEP-08 and installation gates.
 - DEP-07 implements owned JSON ZIP exports and queued cleanup; verification is incomplete ([evidence](DEP_07_VERIFICATION.md)).
-- Delayed deletion/recovery and release readiness remain DEP-08–DEP-10 work;
-  DEC-008/012 are decided; DEC-010 remains unresolved.
+- Delayed deletion/recovery and release readiness remain DEP-08–DEP-10 work; DEC-008/012 are decided; DEC-010 remains unresolved.
 - Account deletion is still immediate. Legacy ingredient rows cascade with the
   account; shared catalogue submitter references are nullable provenance and
   survive account deletion.
