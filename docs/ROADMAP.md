@@ -1516,6 +1516,8 @@ changes, it is deliberately split across multiple items.
 - **Planning evidence:** [Lifecycle audit and owner-approved preferred
   implementation](DEP_08_LIFECYCLE_AUDIT.md); all four resource-boundary
   questions are approved under DEC-021.
+- **Implementation:** [Account deletion implementation](ACCOUNT_DELETION.md)
+  records the journal foundation and remaining lifecycle/restore work.
 - **Outcome:** Implement optional recovery for up to 30 days followed by
   privacy-aware purge/anonymization, with an authenticated immediate-purge path.
 - **Dependencies:** DEC-012, DEC-021, FND-05, FND-09, FND-14, DEP-04, DEP-05,

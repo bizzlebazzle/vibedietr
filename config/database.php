@@ -31,6 +31,24 @@ return [
 
     'connections' => [
 
+        // Dedicated DEC-012 stores; absent URLs deliberately have no app fallback.
+        'erasure_primary' => [
+            'driver' => 'mysql',
+            'url' => env('ERASURE_JOURNAL_PRIMARY_URL'),
+            'host' => null, 'database' => null, 'username' => null, 'password' => null,
+            'port' => 3306, 'charset' => 'utf8mb4', 'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => '', 'strict' => true, 'engine' => 'InnoDB',
+            'options' => extension_loaded('pdo_mysql') ? [PDO::ATTR_TIMEOUT => 3] : [],
+        ],
+        'erasure_mirror' => [
+            'driver' => 'mysql',
+            'url' => env('ERASURE_JOURNAL_MIRROR_URL'),
+            'host' => null, 'database' => null, 'username' => null, 'password' => null,
+            'port' => 3306, 'charset' => 'utf8mb4', 'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => '', 'strict' => true, 'engine' => 'InnoDB',
+            'options' => extension_loaded('pdo_mysql') ? [PDO::ATTR_TIMEOUT => 3] : [],
+        ],
+
         'sqlite' => [
             'driver' => 'sqlite',
             'url' => env('DB_URL'),
