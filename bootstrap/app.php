@@ -14,6 +14,7 @@ use App\Http\Middleware\AddSecurityHeaders;
 use App\Http\Middleware\AttachCorrelationId;
 use App\Http\Middleware\EnsureActiveAccount;
 use App\Http\Middleware\RejectOversizedRequest;
+use App\Http\Middleware\RequireSanitizedRestore;
 use App\Observability\CorrelationContext;
 use App\Observability\OperationalTelemetry;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -50,6 +51,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ])
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->appendToGroup('web', EnsureActiveAccount::class);
+        $middleware->prepend(RequireSanitizedRestore::class);
         $middleware->append(AttachCorrelationId::class);
         $middleware->append(AddSecurityHeaders::class);
         $middleware->append(RejectOversizedRequest::class);

@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Configuration\ProductionConfigurationValidator;
+use App\Domain\AccountDeletion\RestoreReleaseCertificate;
 use App\Domain\Catalogue\CatalogueImportCreator;
 use App\Domain\Catalogue\TransactionalCatalogueImportCreator;
 use App\Domain\MealPlans\DispatchMealPlanRecipeVersionReviews;
@@ -53,8 +54,10 @@ use App\Queue\FailedJobPruner;
 use App\Queue\PrivacyAwareFailedJobProvider;
 use App\Queue\Reference\CacheReferenceTaskResultRecorder;
 use App\Queue\Reference\ReferenceTaskResultRecorder;
+use Illuminate\Console\Events\ScheduledTaskStarting;
 use Illuminate\Http\Middleware\TrustProxies;
 use Illuminate\Queue\Failed\FailedJobProviderInterface;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\ServiceProvider;
@@ -107,6 +110,10 @@ class AppServiceProvider extends ServiceProvider
         }
 
         $listener = $this->app->make(QueueTelemetryListener::class);
+        Queue::looping(fn () => app(RestoreReleaseCertificate::class)->assertReleased());
+        Event::listen(ScheduledTaskStarting::class,
+            fn () => app(RestoreReleaseCertificate::class)->assertReleased());
+        Queue::before(fn () => app(RestoreReleaseCertificate::class)->assertReleased());
         Queue::before($listener->processing(...));
         Queue::after($listener->processed(...));
         Queue::exceptionOccurred($listener->exception(...));

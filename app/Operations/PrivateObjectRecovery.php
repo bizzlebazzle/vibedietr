@@ -2,6 +2,8 @@
 
 namespace App\Operations;
 
+use App\Domain\AccountDeletion\ErasureCheckpoint;
+use App\Domain\AccountDeletion\ErasureObjectFilter;
 use Aws\S3\S3Client;
 use RuntimeException;
 
@@ -39,7 +41,7 @@ final class PrivateObjectRecovery
             throw new RuntimeException('recovery_required_object_missing');
         }
         ksort($objects, SORT_STRING);
-        $manifest = ['format' => 1, 'excluded_prefixes' => $excludedPrefixes, 'objects' => $objects];
+        $manifest = ['format' => 1, 'source_scope' => $this->scope($client, $bucket), 'excluded_prefixes' => $excludedPrefixes, 'objects' => $objects];
         $bytes = json_encode($manifest, JSON_THROW_ON_ERROR);
         if (file_put_contents($directory.'/inventory.json', $bytes) !== strlen($bytes)) {
             throw new RuntimeException('recovery_manifest_write_failed');
@@ -71,10 +73,54 @@ final class PrivateObjectRecovery
         $this->verify($client, $bucket, $directory);
     }
 
-    public function verify(S3Client $client, string $bucket, string $directory): void
+    /** Erased bytes stay in quarantine; only the filtered survivors enter this empty target. */
+    public function restoreFiltered(S3Client $client, string $bucket, string $directory, ErasureCheckpoint $anchor): array
     {
         $this->assertUnversioned($client, $bucket);
-        $manifest = $this->localManifest($directory);
+        if ($this->keys($client, $bucket) !== []) {
+            throw new RuntimeException('recovery_target_not_empty');
+        }
+        $source = $this->localManifest($directory);
+        if (! is_string($source['source_scope'] ?? null) || hash_equals($source['source_scope'], $this->scope($client, $bucket))) {
+            throw new RuntimeException('recovery_target_not_independent');
+        }
+        $manifest = app(ErasureObjectFilter::class)->filter($source, $anchor);
+        foreach ($manifest['objects'] as $key => $object) {
+            $stream = fopen($directory.'/'.$object['file'], 'rb');
+            if ($stream === false) {
+                throw new RuntimeException('recovery_object_read_failed');
+            }
+            try {
+                $client->putObject(['Bucket' => $bucket, 'Key' => $key, 'Body' => $stream]);
+            } finally {
+                fclose($stream);
+            }
+        }
+        $this->verifyManifest($client, $bucket, $manifest);
+
+        return $manifest;
+    }
+
+    public function verifyFiltered(S3Client $client, string $bucket, string $directory, ErasureCheckpoint $anchor): array
+    {
+        $source = $this->localManifest($directory);
+        if (! is_string($source['source_scope'] ?? null) || hash_equals($source['source_scope'], $this->scope($client, $bucket))) {
+            throw new RuntimeException('recovery_target_not_independent');
+        }
+        $manifest = app(ErasureObjectFilter::class)->filter($source, $anchor);
+        $this->verifyManifest($client, $bucket, $manifest);
+
+        return $manifest;
+    }
+
+    public function verify(S3Client $client, string $bucket, string $directory): void
+    {
+        $this->verifyManifest($client, $bucket, $this->localManifest($directory));
+    }
+
+    private function verifyManifest(S3Client $client, string $bucket, array $manifest): void
+    {
+        $this->assertUnversioned($client, $bucket);
         $keys = $this->keys($client, $bucket);
         sort($keys, SORT_STRING);
         if ($keys !== array_map(strval(...), array_keys($manifest['objects']))) {
@@ -109,6 +155,11 @@ final class PrivateObjectRecovery
         }
 
         return $manifest;
+    }
+
+    private function scope(S3Client $client, string $bucket): string
+    {
+        return hash('sha256', (string) $client->getEndpoint().'|'.$bucket);
     }
 
     private function assertUnversioned(S3Client $client, string $bucket): void

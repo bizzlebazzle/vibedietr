@@ -2,13 +2,13 @@
 
 ## Status
 
-DEP-08 remains P2 and incomplete. DEC-021 records the four approved resource
+DEP-08 remains P2 and incomplete pending disposal verification and final
+Definition of Done gates. DEC-021 and DEC-022 record approved resource
 boundaries; the [pre-implementation audit](DEP_08_LIFECYCLE_AUDIT.md) inventories
-owned domains and earlier conflicts. Journal-backed lifecycle services,
-authenticated HTTP recovery/waiver, inactive-account authorization and scheduled
-queued purge are implemented. Owned-domain cleanup and purpose-specific audit
-expiry are being verified; protected holds, complete restore/release/disposal
-verification and final Definition of Done gates remain required.
+every owned domain and dependency. Lifecycle services, authenticated recovery
+and waiver, scheduled queued purge, protected scoped evidence, purpose-specific
+audit expiry, original-clock restore replay and the quarantined release protocol
+are implemented. Installation verification is separate from repository tests.
 
 ## Independent journal foundation
 
@@ -46,8 +46,8 @@ Configuration has no application-database fallback:
   verification must cover actual hosts, disks, DNS aliases, disk flush behavior,
   TLS, access separation and key custody.
 - `ErasureJournalSchema` provisions a dedicated store. It is not an application
-  migration and no automatic provisioning or production lifecycle command is
-  installed by this foundation.
+  migration and provisioning is restricted to the
+  configured privacy operator.
 
 These are secret deployment settings; do not copy connection URLs, keys, raw
 journal content or linkable references into logs or ordinary audit payloads.
@@ -55,59 +55,28 @@ The independent stores are excluded from ordinary application recovery sets.
 No row deletion/compaction API exists: deleting rows would break replay truth
 without proving InnoDB page, redo/undo, host-copy or key disposal.
 
-## Verification and remaining work
+## Verification scope
 
-The focused journal protocol suite runs through Sail at
-`tests/Feature/AccountDeletion`. It exercises separate SQLite stores and two
-prefixed InnoDB stores in the disposable MySQL `testing` database. Fault
-injection denies mirror insertion after primary commit, then verifies retry
-repair. It covers encryption, immutable operation identity, original deadline
-preservation, stale/truncated checkpoint evidence, tampering, missing replicas,
-mirror-ahead history, invalid configuration and private-field rejection.
+Focused tests in `tests/Feature/AccountDeletion` exercise replicated journal
+durability and repair, authentication and administrator safeguards, retained
+plans and private archives, every-domain purge, audit minimization, protected
+evidence, original-clock replay, independent-object filtering and signed target
+release. SQLite protocol tests are complemented by prefixed InnoDB journal
+stores in the disposable MySQL testing database.
 
-These tests establish protocol behavior, not independently durable hosts,
-power-loss recovery, target release, generation/key retirement or completed
-account deletion. DEP-08 still needs authenticated HTTP
-request/recovery/waiver and confirmation flows,
-retained-plan projection and recovery, every-domain purge and audit minimization,
-idempotent scheduled queued work and operational coverage, scoped evidence/holds,
-original-clock restore reconciliation, independent object suppression, frozen
-release checkpoints, verified all-copy retirement, storage/key disposal and the
-DEC-012/DEP-06 synthetic restore/privacy/disposal drill. Production installation
-checks and remote CI remain separate required gates.
+The isolated `scripts/recovery/drill.sh` extends DEP-06 with separately running
+journal hosts, real MySQL/Garage/restic restoration and synthetic lifecycle
+scenarios. Its PHP fixture failures propagate nonzero exit status. Final results
+must distinguish actual restore/prune operations, simulated clock boundaries,
+and production-only evidence. No test establishes physical overwrite, actual
+seven-day aging, independent production failure domains or installation key
+custody.
 
-## Journal-unit check results: 18 October 2026
-
-- Focused SQLite/MySQL protocol tests: 32 passed, 54 assertions, including
-  rejection of raw application-key reuse and impossible calendar deadlines.
-- Full backend suite: 1,091 passed, 12 failed (6,994 assertions). The run began
-  before the two final edge-case tests were added; those four additional
-  SQLite/MySQL cases passed in the focused run above. All 12 full-suite failures
-  are existing uploaded-import/transient-input tests reporting permission denied
-  on `storage/framework/testing/disks/transient/inputs`. That directory is
-  owned by `root:root` with mode 0700 and was already inaccessible during the
-  initial read-only audit. Journal tests do not use that filesystem directory.
-- Static analysis, repository Pint check, environment alignment, production
-  frontend build, documentation validation and the 20 documentation tests passed.
-- The existing isolated DEP-06 drill passed in 71 seconds: 74 tables, 117
-  foreign-key columns, three synthetic users, two recipes/versions, one shared
-  plan and two durable objects. It verified paired restore, access boundaries,
-  exclusions, negative integrity/eligibility, additive migration reconciliation
-  and actual expired blob retirement/pruning. It does not exercise the unfinished
-  DEP-08 account-purge/release/disposal workflow.
-- No UI changes were made. Browser/accessibility checks are not applicable to
-  this foundation. No application migration was added. Remote CI, actual
-  independent-host durability, full lifecycle/privacy restore scenarios and
-  storage/key-generation disposal remain unverified. CURRENT_STATE.md remains
-  219 lines including blank lines.
-
-AGENTS.md requires stopping when required tests fail for reasons outside the
-task. Implementation stopped at this foundation boundary after recording the
-unrelated test-fixture permission failure. Repair the test directory's ownership
-for the Sail runtime and rerun the full backend suite before continuing the
-remaining lifecycle/purge/release units. No permission change or fixture
-deletion was performed as part of this task. Overall DEP-08 is incomplete,
-not conditionally complete.
+Storage-generation/key retirement, verification of every affected copy,
+production deployment checks, applicable browser checks and final repository
+quality gates remain required before DEP-08 completion. The earlier unrelated
+uploaded-input fixture permission failure was resolved by the owner; its
+affected focused tests passed when implementation resumed.
 
 ## Lifecycle services
 
@@ -146,9 +115,8 @@ explicit owner-scoped projections; released 1.0.0 files remain unchanged.
 Retained-plan safety rejects unclassified fields across the entire plan, and
 copies exclude schema-omitted private/recovery attribution.
 
-This is service-level implementation, not production enablement. HTTP flows,
-scheduler/queue integration, complete purpose-retention execution and the
-DEC-012 restore/release/disposal gates remain required.
+Production enablement still requires the complete DEC-012 restore/release/
+disposal drill and installation verification.
 
 ## HTTP, queue and operator integration
 
@@ -275,3 +243,82 @@ backups merely because selected evidence is held. Statutory reporting,
 controller case records, recipient/provider propagation and installation legal
 review remain the separate DEP-09 operator duties; this implementation claims
 no legal compliance or automatic adjudication.
+
+## Quarantined restore and release
+
+Every restore starts with a fresh non-reusable `ERASURE_RESTORE_TARGET` ULID,
+an empty isolated database/bucket and externally fenced source and target
+writers, HTTP ingress, scheduler, workers, mail and public object access.
+`ERASURE_RESTORE_SET` identifies the complete restic snapshot;
+`ERASURE_RESTORE_MANIFEST_SHA256` is its independently authenticated capture
+manifest digest. The selected set retains its original seven-day eligibility.
+Keep independent journal/evidence stores outside every application restore.
+An old checkpoint copied with the set is not current evidence.
+
+Set the target's `ERASURE_RELEASE_CERTIFICATE` to a new restricted path outside
+the app tree. Serving processes receive only `ERASURE_RELEASE_PUBLIC_KEY`;
+the separate privacy operator receives the corresponding base64 Ed25519
+`ERASURE_RELEASE_SIGNING_KEY`. Until a matching release certificate exists,
+HTTP, queue reservation/processing and scheduled task execution fail closed.
+Network and object-storage isolation remain mandatory; middleware does not
+configure ingress, storage ACLs or process supervision.
+
+The operator first verifies the restic set and imports its SQL into the fresh
+target. The restricted commands are:
+
+1. `accounts:verify-restore checkpoint --fenced --write=/protected/head.json`
+   repairs an authenticated primary suffix, reconciles prepared SQL lifecycle
+   transitions without resuming work, and writes the current independent head.
+   Obtain this from the live independent stores, never the old backup.
+2. `accounts:verify-restore prepare --fenced --directory=/protected/set
+   --checkpoint=/protected/head.json --write=/protected/prepared.json`
+   checks capture identity/age and exact raw SQL reconciliation, filters objects
+   before copying into the separate empty target bucket, replays original-clock
+   lifecycle/removal intent including completed purges, invalidates restored
+   login/download/queue state, reapplies audit clocks and checks protected holds.
+   It signs content-free preparation evidence; the target is still unavailable.
+3. `accounts:verify-restore release --fenced --approve
+   --directory=/protected/set --prepared=/protected/prepared.json
+   --write=/protected/release.json` verifies the frozen database, objects,
+   original deadlines, protected evidence and final independent head again.
+   Only this signed certificate authorizes the named sanitized target.
+
+New journal intent, changed data/schema/objects, target SQL write counters
+(including writes reverted to the same data), elapsed pending deadlines or
+missing verification material deny release. Failed preparation requires a
+fresh raw target and identity; never reuse old approval after another import,
+replay, object write or cutover change. Keep all writers fenced through final
+verification and atomic ingress/worker cutover. Replacing environment settings
+or bypassing the restricted path is not an approved restore.
+
+Snapshots predating stable account/resource generations or missing required
+current public version/recovery context fail closed. An older plan body is
+never assumed to be safe merely because its source was once public.
+Completed purge replay creates no new per-account anonymous receipt or
+retention clock. Independently owned copies retain their own generations.
+
+Retire raw/quarantined sets, staging workspaces, rejected target databases,
+object buckets and their replicas/backups through the protected copy inventory.
+A release certificate does not establish their disposal or authorize journal
+reference/key retirement. The installation must separately prove actual
+failure-domain separation, key custody, storage-layer retirement and fenced
+cutover. The synthetic drill exercises reference infrastructure; it cannot
+establish production durability or physical-media guarantees.
+
+## Restore-release unit verification: 18 October 2026
+
+The focused lifecycle suite passed 87 tests with 316 assertions. Static analysis,
+development-environment alignment and documentation validation passed. The
+isolated DEP-06/DEP-08 drill passed in 112 seconds with actual MySQL, Garage and
+restic. It verified full paired restoration, due/incomplete and completed
+purges, cancellation recovery, under-13 deletion, preserved private archives,
+independent plan copies/recipe remixes, object filtering without SQL ownership
+lookup, journal mirror loss/repair, repeated replay and signed target release.
+Missing credentials/certificates, elapsed pending deadlines and SQL writes
+reverted to identical data denied release. Its DEP-06 stages also performed
+actual expired-blob pruning and failed restoration after retirement.
+
+Lifecycle time boundaries were simulated with synthetic fixtures. Actual
+production aging, all-layer copy retirement, journal storage-generation/key
+disposal, partial-restoration installation procedures and final Definition of
+Done gates are not established by this unit.

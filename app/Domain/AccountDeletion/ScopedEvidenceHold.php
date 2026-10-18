@@ -174,6 +174,40 @@ final class ScopedEvidenceHold
             ->where('operator_reference', $operator)->where('review_at', '<=', now()->utc())->count()];
     }
 
+    /** Content-free verification; this never exposes evidence or changes its owner. */
+    public function verificationFingerprint(array $entries): string
+    {
+        $this->operator();
+        $latest = [];
+        foreach ($entries as $entry) {
+            if (! in_array($entry['state'], ['hold_started', 'hold_released'], true)) {
+                continue;
+            }
+            foreach ($entry['resources'] as $ref) {
+                if (str_starts_with($ref, 'hold_')) {
+                    $latest[substr($ref, 5)] = $entry['state'];
+                }
+            }
+        }
+        $rows = $this->store()->table('erasure_evidence_holds')->orderBy('id')->get();
+        $present = [];
+        foreach ($rows as $row) {
+            if (($latest[$row->id] ?? null) !== 'hold_started' || $row->state !== 'active'
+                || ($row->expires_at !== null && CarbonImmutable::parse($row->expires_at)->lessThanOrEqualTo(now()->utc()))) {
+                throw new RuntimeException('evidence_restore_reconciliation_required');
+            }
+            $this->payload($row);
+            $present[$row->id] = true;
+        }
+        foreach ($latest as $id => $state) {
+            if ($state === 'hold_started' && ! isset($present[$id])) {
+                throw new RuntimeException('evidence_restore_reconciliation_required');
+            }
+        }
+
+        return hash('sha256', json_encode($rows->toArray(), JSON_THROW_ON_ERROR));
+    }
+
     private function latest(string $id): ?string
     {
         $latest = null;
