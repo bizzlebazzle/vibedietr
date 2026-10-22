@@ -20,7 +20,8 @@ final class RecipeImportInputCleaner
     {
         return DB::transaction(function () use ($importId): bool {
             $import = RecipeImport::query()->lockForUpdate()->find($importId);
-            if ($import === null || $import->cleanup_completed_at !== null) {
+            if ($import === null || ($import->cleanup_completed_at !== null
+                && $import->source_key === null && $import->canonical_key === null && $import->source_text === null)) {
                 return true;
             }
             if ($import->processing_lease_until?->isFuture()) {
@@ -46,7 +47,7 @@ final class RecipeImportInputCleaner
                 return false;
             }
             $import->forceFill([
-                'source_disk' => null, 'source_key' => null,
+                'source_disk' => null, 'source_key' => null, 'source_text' => null,
                 'canonical_disk' => null, 'canonical_key' => null,
                 'processing_lease_until' => null,
                 'cleanup_completed_at' => now()->utc(),

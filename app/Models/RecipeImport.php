@@ -17,6 +17,9 @@ use Illuminate\Support\Str;
  * @property list<string>|null $warnings
  * @property RecipeImportType $type
  * @property RecipeImportStatus $status
+ * @property CarbonImmutable|null $completed_at
+ * @property CarbonImmutable|null $failed_at
+ * @property CarbonImmutable|null $source_stored_at
  * @property CarbonImmutable|null $processing_lease_until
  */
 class RecipeImport extends Model

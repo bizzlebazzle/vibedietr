@@ -402,3 +402,9 @@ files. It verifies journal-byte encryption, current-slot erasure and the
 old-header recovery limitation, then retires a separate header-custody image.
 It does not prove installation-wide disposal, host snapshot absence, encrypted
 swap policy, independently durable live MySQL mounts or physical overwrite.
+
+Import source cleanup uses the original completed/failed outcome, never the last
+row update. Abandoned input expires at its original storage time plus seven days;
+late cleanup does not restart that clock. Processing metadata expires thirty
+days after the terminal outcome. Durable recipe drafts survive metadata removal.
+Missing terminal clocks fail closed and emit only an invalid-clock count.
