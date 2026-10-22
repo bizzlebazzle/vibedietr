@@ -1687,6 +1687,14 @@ public as an import side effect. Source text, child text, and raw parser data
 are excluded from queue payloads, failure logs, audit payloads, and public
 recipe projections.
 
+DEP-08 preserves this private review record and approved provenance through
+recovery and in encrypted database recovery sets; accepted/extracted source
+text is distinct from transient original/canonical files. Terminal file cleanup
+uses the original outcome clock. At thirty days only processing-only file
+size/extension, canonical MIME, lease, cleanup-marker bookkeeping is
+minimized. The private review resource itself follows owner/import deletion and
+final account purge, rather than being reclassified as operational telemetry.
+
 For `webpage_url`, the private import separately retains the original submitted
 URL and final validated redirect target plus extraction method, extractor
 identifier/version, extraction time, redirect count, and correlation. The

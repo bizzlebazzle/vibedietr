@@ -90,7 +90,7 @@ if ($mode === 'mirror-repair') {
         $ownership['durable/'.$name]['owner_generation'] = User::query()->where('email', $name.'@drill.example.test')->value('account_generation');
     }
     RecipeImport::factory()->withDraft()->create([
-        'user_id' => $other->id, 'source_text' => 'DEP08_TRANSIENT_SQL_MUST_NEVER_ENTER_BACKUP',
+        'user_id' => $other->id, 'source_text' => 'SYNTHETIC_DURABLE_IMPORT_REVIEW_TEXT',
     ]);
     $cases = [];
     foreach (['expired', 'waived', 'under13', 'cancelled', 'removed', 'pending', 'interrupted', 'boundary'] as $name) {
@@ -177,6 +177,7 @@ if ($mode === 'mirror-repair') {
         $assert(! User::query()->findOrFail($cases['pending']['owner'])->isActive());
         $assert(Storage::disk('s3')->exists('durable/privacy-cancelled'));
         $assert(DB::table('sessions')->count() === 0 && DB::table('jobs')->count() === 0);
+        $assert(RecipeImport::query()->where('source_text', 'SYNTHETIC_DURABLE_IMPORT_REVIEW_TEXT')->exists());
         $prepared = json_decode(file_get_contents('/drill/privacy-prepared.json'), true, flags: JSON_THROW_ON_ERROR);
         if ($mode === 'write-negative') {
             $id = $cases['cancelled']['owner'];

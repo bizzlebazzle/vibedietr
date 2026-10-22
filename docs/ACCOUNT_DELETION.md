@@ -403,8 +403,13 @@ old-header recovery limitation, then retires a separate header-custody image.
 It does not prove installation-wide disposal, host snapshot absence, encrypted
 swap policy, independently durable live MySQL mounts or physical overwrite.
 
-Import source cleanup uses the original completed/failed outcome, never the last
-row update. Abandoned input expires at its original storage time plus seven days;
-late cleanup does not restart that clock. Processing metadata expires thirty
-days after the terminal outcome. Durable recipe drafts survive metadata removal.
+Transient file cleanup uses the original completed/failed outcome, never the
+last row update. Abandoned input processing expires at its original storage
+time plus seven days; late cleanup does not restart that clock. Processing-only
+file size/extension, canonical MIME, lease, cleanup marker bookkeeping
+is minimized thirty days after the terminal outcome. DEC-005/006 accepted or
+extracted review text, approved private provenance, import identity and durable
+drafts and bounded-retry controls remain owner-private domain data until their own deletion/account purge.
+They remain in ordinary encrypted recovery sets; they are not transient source
+files. Restores cancel expired processing without deleting that private content.
 Missing terminal clocks fail closed and emit only an invalid-clock count.

@@ -147,20 +147,10 @@ not newly dispatched Laravel product jobs.
    record, execute (secret client file must already exist inside MySQL):
 
    ```bash
-   docker exec "$APP_CONTAINER" php artisan operations:reconcile-database --quiesced --exclude-transient-input --write=/recovery/set/database.json
-   docker exec "$APP_CONTAINER" php artisan operations:recovery-input-projection --quiesced --write=/recovery/set/imports.sql
-   docker exec "$DB_CONTAINER" mysqldump --defaults-extra-file=/run/secrets/backup.cnf --no-data --no-tablespaces --set-gtid-purged=OFF --routines --events --triggers "$SOURCE_DATABASE" > "$RECOVERY_WORKSPACE/set/database.sql"
-   docker exec "$DB_CONTAINER" mysqldump --defaults-extra-file=/run/secrets/backup.cnf --single-transaction --quick --hex-blob --no-tablespaces --set-gtid-purged=OFF --no-create-info --skip-triggers --ignore-table="$SOURCE_DATABASE.recipe_imports" "$SOURCE_DATABASE" >> "$RECOVERY_WORKSPACE/set/database.sql"
-   cat "$RECOVERY_WORKSPACE/set/imports.sql" >> "$RECOVERY_WORKSPACE/set/database.sql"
-   rm "$RECOVERY_WORKSPACE/set/imports.sql"
+   docker exec "$APP_CONTAINER" php artisan operations:reconcile-database --quiesced --write=/recovery/set/database.json
+   docker exec "$DB_CONTAINER" mysqldump --defaults-extra-file=/run/secrets/backup.cnf --single-transaction --quick --hex-blob --no-tablespaces --set-gtid-purged=OFF --routines --events --triggers "$SOURCE_DATABASE" > "$RECOVERY_WORKSPACE/set/database.sql"
    docker exec "$APP_CONTAINER" php artisan operations:recovery-objects capture /recovery/set/objects --quiesced --ownership=/recovery/ownership.json
    ```
-
-   This preserves every table and durable draft while projecting only transient
-   `recipe_imports.source_text` to NULL. The source database is unchanged. The
-   projection flag is for frozen source baselines/comparison only; restored-target
-   comparisons must remain raw, without that flag. Keep the freeze across both
-   dump passes; a single-transaction flag cannot replace the external writer fence.
 
    Add reviewed `--exclude=prefix/` arguments where applicable. The operator
    inventory JSON maps each durable key to `owner_generation` and `resource`;
@@ -170,6 +160,8 @@ not newly dispatched Laravel product jobs.
    durable-object inventory before such production data is enabled. Empty durable scope
    must be demonstrated, never assumed from a missing table. Unknown or missing
    durable objects fail capture. No raw Garage-volume tar is a normal recovery set.
+   DEC-005/006 normalized review text and private provenance are durable domain
+   data and remain in the full SQL dump; only transient source files are excluded.
 4. Reconcile the database again against `database.json`, review the final journal
    checkpoint and source/bucket identities, and seal using Node 22 in the deployment
    image (the `/scripts` and `/work` mounts are shown in the wrapper):

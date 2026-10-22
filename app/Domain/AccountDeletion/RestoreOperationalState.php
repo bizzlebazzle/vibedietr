@@ -29,7 +29,7 @@ final class RestoreOperationalState
             }
         }
         foreach (RecipeImport::query()->cursor() as $import) {
-            $import->forceFill(['source_text' => null, 'processing_lease_until' => null])->save();
+            $import->forceFill(['processing_lease_until' => null])->save();
             if (! $import->status->terminal()) {
                 $expiry = ($import->source_stored_at ?? $import->created_at)->copy()->addDays(7);
                 $expired = $expiry->lessThanOrEqualTo(now()->utc());

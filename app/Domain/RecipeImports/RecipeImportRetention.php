@@ -14,7 +14,7 @@ final class RecipeImportRetention
     ) {}
 
     /** @return array{sources: int, metadata: int, invalid_clocks: int, cleanup_failures: int} */
-    public function run(): array
+    public function run(?int $ownerId = null): array
     {
         $cleaner = $this->cleaner;
         $telemetry = $this->telemetry;
@@ -23,7 +23,7 @@ final class RecipeImportRetention
         $metadata = 0;
         $invalid = 0;
         $failures = 0;
-        RecipeImport::query()->orderBy('id')->chunkById(100, function ($imports) use ($cleaner, $now, &$count, &$metadata, &$invalid, &$failures): void {
+        RecipeImport::query()->when($ownerId !== null, fn ($query) => $query->where('user_id', $ownerId))->orderBy('id')->chunkById(100, function ($imports) use ($cleaner, $now, &$count, &$metadata, &$invalid, &$failures): void {
             foreach ($imports as $candidate) {
                 DB::transaction(function () use ($candidate, $cleaner, $now, &$count, &$metadata, &$invalid, &$failures): void {
                     $import = RecipeImport::query()->lockForUpdate()->find($candidate->id);
@@ -55,16 +55,27 @@ final class RecipeImportRetention
                     if ($terminal && $outcome->copy()->addHours(24)->greaterThan($now)) {
                         return;
                     }
-                    if (! $cleaner->cleanup($import->id)) {
-                        $failures++;
+                    if ($import->source_key !== null || $import->canonical_key !== null) {
+                        if (! $cleaner->cleanup($import->id)) {
+                            $failures++;
 
-                        return;
+                            return;
+                        }
+                        $count++;
+                        $import->refresh();
                     }
-                    $count++;
                     if ($outcome->copy()->addDays(30)->lessThanOrEqualTo($now)) {
-                        // The draft is independently durable; this FK points from metadata to draft.
-                        $import->delete();
-                        $metadata++;
+                        // DEC-005/006 private review text/provenance is domain data.
+                        // Only file-processing/lease bookkeeping expires here.
+                        $import->forceFill([
+                            'source_bytes' => null, 'source_extension' => null,
+                            'canonical_mime' => null, 'processing_lease_until' => null,
+                            'cleanup_completed_at' => null,
+                        ]);
+                        if ($import->isDirty()) {
+                            $import->save();
+                            $metadata++;
+                        }
                     }
                 });
             }

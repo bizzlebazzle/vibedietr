@@ -2,6 +2,7 @@
 
 namespace App\Domain\AccountDeletion;
 
+use App\Domain\RecipeImports\RecipeImportRetention;
 use App\Domain\RecipeImports\RecipeImportStatus;
 use App\Domain\RecipeImports\RecipeImportType;
 use App\Jobs\GenerateAccountExport;
@@ -21,7 +22,9 @@ final class ResumeAccountWork
         if (! $user->isActive()) {
             return;
         }
+        $retention = app(RecipeImportRetention::class)->run((int) $user->getKey());
         foreach (RecipeImport::query()->where('user_id', $user->getKey())
+            ->when($retention['invalid_clocks'] !== 0 || $retention['cleanup_failures'] !== 0, fn ($query) => $query->whereRaw('1 = 0'))
             ->whereNotIn('status', [RecipeImportStatus::ReviewReady, RecipeImportStatus::Failed, RecipeImportStatus::Cancelled])->cursor() as $import) {
             match ($import->type) {
                 RecipeImportType::PastedText => ProcessPastedRecipeImport::dispatch($import->id, $import->correlation_id),

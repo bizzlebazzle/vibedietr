@@ -19,6 +19,26 @@ class AccountRecoveryHttpTest extends TestCase
 {
     use RefreshDatabase, UsesErasureJournal;
 
+    public function test_recovery_does_not_restart_expired_imports_or_discard_private_review_source(): void
+    {
+        $this->freezeSecond();
+        Queue::fake();
+        $owner = User::factory()->create();
+        $import = RecipeImport::factory()->for($owner, 'owner')->create(['created_at' => now()->subDays(8)]);
+        $unrelated = RecipeImport::factory()->create(['created_at' => now()->subDays(8)]);
+        $text = $import->source_text;
+        $lifecycle = app(AccountLifecycle::class);
+        $lifecycle->request($owner);
+        $lifecycle->recover($owner);
+        $this->assertTrue($owner->isActive());
+        $this->assertEquals(now()->subDay(), $import->fresh()->failed_at);
+        $this->assertSame($text, $import->fresh()->source_text);
+        $this->assertSame('pending', $unrelated->fresh()->status->value);
+        Queue::assertNotPushed(ProcessPastedRecipeImport::class);
+        $this->assertNull(app(RecipeImportProcessor::class)->process($import->id));
+        $this->assertDatabaseMissing('recipes', ['user_id' => $owner->id]);
+    }
+
     public function test_recovery_requires_credentials_and_explicit_confirmation_and_restores_a_session(): void
     {
         $owner = User::factory()->create();

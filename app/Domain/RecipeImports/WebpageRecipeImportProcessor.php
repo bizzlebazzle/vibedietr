@@ -26,7 +26,7 @@ final class WebpageRecipeImportProcessor
             if ($import !== null && ! $import->owner?->isActive()) {
                 return null;
             }
-            if ($import === null || $import->status === RecipeImportStatus::ReviewReady) {
+            if ($import === null || $import->status->terminal()) {
                 return $import;
             }
             if ($import->type !== RecipeImportType::WebpageUrl || $import->submitted_url === null) {
@@ -44,7 +44,7 @@ final class WebpageRecipeImportProcessor
         if ($import === null) {
             return null;
         }
-        if ($import->status === RecipeImportStatus::ReviewReady) {
+        if ($import->status->terminal()) {
             return $import->recipe_id === null ? null : Recipe::query()->find($import->recipe_id);
         }
 
