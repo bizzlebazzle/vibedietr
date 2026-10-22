@@ -77,6 +77,18 @@ for privacy_round in 1 2; do
         app_run "$drill_target" scripts/recovery/erasure-drill.php repeat > "$drill_workspace/privacy-repeat.log"
     fi
 done
+drill_step=privacy-database-only
+drill_restore_target=$(app_run "$drill_source" scripts/recovery/erasure-drill.php target-id)
+docker exec -i "$drill_target" sh -c 'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql -uroot testing' < "$drill_workspace/privacy-restored/work/privacy-set/database.sql"
+app_run "$drill_target" scripts/recovery/erasure-drill.php database-only > "$drill_workspace/privacy-database-only.log"
+drill_step=privacy-selective
+app_run "$drill_target" scripts/recovery/erasure-drill.php selective > "$drill_workspace/privacy-selective.log"
+drill_step=privacy-object-only
+drill_target_bucket=privacy-object-only
+docker exec "$drill_garage" /garage bucket create "$drill_target_bucket" >/dev/null
+docker exec "$drill_garage" /garage bucket allow --read --write "$drill_target_bucket" --key "$garage_key" >/dev/null
+drill_restore_target=$(app_run "$drill_source" scripts/recovery/erasure-drill.php target-id)
+app_run "$drill_target" scripts/recovery/erasure-drill.php object-only > "$drill_workspace/privacy-object-only.log"
 drill_step=privacy-luks2-disposal-primitive
 docker exec "$drill_primary" sh -c 'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysqldump -uroot --single-transaction --quick --hex-blob --no-tablespaces --set-gtid-purged=OFF testing erasure_journal_entries' > "$drill_workspace/journal-disposal-probe.sql"
 docker build -f scripts/recovery/cryptsetup.Dockerfile -t vibedietr-erasure-cryptsetup:synthetic scripts/recovery > "$drill_workspace/cryptsetup-build.log" 2>&1

@@ -8,6 +8,7 @@ use App\Domain\AccountDeletion\ErasureRestoreReplay;
 use App\Domain\AccountDeletion\JournalManifest;
 use App\Domain\AccountDeletion\ProtectedErasureJournal;
 use App\Domain\AccountDeletion\PurgeAccount;
+use App\Domain\AccountDeletion\RestoreOperationalState;
 use App\Domain\AccountDeletion\RestoreRelease;
 use App\Domain\AccountDeletion\RestoreReleaseCertificate;
 use App\Domain\Diary\DiaryConsumptionManager;
@@ -23,6 +24,8 @@ use App\Models\PrivateConsumptionArchive;
 use App\Models\Recipe;
 use App\Models\RecipeImport;
 use App\Models\User;
+use App\Operations\DatabaseReconciliation;
+use App\Operations\PrivateObjectRecovery;
 use Aws\S3\S3Client;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Console\Kernel;
@@ -92,6 +95,7 @@ if ($mode === 'mirror-repair') {
     RecipeImport::factory()->withDraft()->create([
         'user_id' => $other->id, 'source_text' => 'SYNTHETIC_DURABLE_IMPORT_REVIEW_TEXT',
     ]);
+    $partial = [];
     $cases = [];
     foreach (['expired', 'waived', 'under13', 'cancelled', 'removed', 'pending', 'interrupted', 'boundary'] as $name) {
         Date::setTestNow($name === 'expired' ? $clock->subDays(29) : ($name === 'boundary' ? $clock->subDays(28)->addSecond() : $clock));
@@ -112,6 +116,12 @@ if ($mode === 'mirror-repair') {
         $bookmark = MealPlanBookmark::factory()->for($plan)->for($other, 'owner')->create();
         $copy = app(MealPlanCopier::class)->copy($plan->id, $other);
         $remix = app(RecipeRemixCreator::class)->create($public->id, $public->current_recipe_version_id, (string) Str::ulid(), $other);
+        if ($name === 'waived') {
+            $partial = [
+                'user' => (array) DB::table('users')->where('id', $owner->id)->first(),
+                'recipe' => (array) DB::table('recipes')->where('id', $private->id)->first(),
+            ];
+        }
         $request = in_array($name, ['expired', 'cancelled', 'removed', 'boundary'], true)
             ? app(AccountLifecycle::class)->request($owner) : null;
         $cases[$name] = ['owner' => $owner->id, 'generation' => $owner->account_generation, 'private' => $private->id,
@@ -122,12 +132,29 @@ if ($mode === 'mirror-repair') {
         $ownership[$key] = ['owner_generation' => $owner->account_generation, 'resource' => 'synthetic-private-object'];
     }
     Date::setTestNow();
-    file_put_contents($path, json_encode(['clock' => $clock->format('Y-m-d\\TH:i:s\\Z'), 'cases' => $cases], JSON_THROW_ON_ERROR));
+    file_put_contents($path, json_encode(['clock' => $clock->format('Y-m-d\\TH:i:s\\Z'), 'cases' => $cases, 'partial' => $partial], JSON_THROW_ON_ERROR));
     file_put_contents('/drill/ownership.json', json_encode($ownership, JSON_THROW_ON_ERROR));
 } else {
     $fixture = json_decode(file_get_contents($path), true, flags: JSON_THROW_ON_ERROR);
     Date::setTestNow(CarbonImmutable::parse($fixture['clock'])->addDays(2));
     $cases = $fixture['cases'];
+    if ($mode === 'database-only') {
+        $negative(fn () => app(RestoreReleaseCertificate::class)->assertReleased());
+        app(ErasureRestoreReplay::class)->replay(app(ProtectedErasureJournal::class)->checkpoint());
+        app(RestoreOperationalState::class)->invalidate();
+        $mode = 'verify';
+    } elseif ($mode === 'object-only') {
+        $negative(fn () => app(RestoreReleaseCertificate::class)->assertReleased());
+        $assert(! User::query()->whereKey($cases['waived']['owner'])->exists());
+        $before = app(DatabaseReconciliation::class)->capture(DB::connection());
+        $head = app(ProtectedErasureJournal::class)->checkpoint();
+        app(PrivateObjectRecovery::class)->restoreFiltered($client(), config('filesystems.disks.s3.bucket'),
+            '/drill/privacy-restored/work/privacy-set/objects', $head);
+        app(PrivateObjectRecovery::class)->verifyFiltered($client(), config('filesystems.disks.s3.bucket'),
+            '/drill/privacy-restored/work/privacy-set/objects', $head);
+        $assert(json_encode($before, JSON_THROW_ON_ERROR) === json_encode(app(DatabaseReconciliation::class)->capture(DB::connection()), JSON_THROW_ON_ERROR));
+        $mode = 'verify';
+    }
     if ($mode === 'advance') {
         foreach (['waived', 'under13', 'interrupted'] as $name) {
             $owner = User::query()->findOrFail($cases[$name]['owner']);
@@ -206,6 +233,21 @@ if ($mode === 'mirror-repair') {
         $journal = app(ProtectedErasureJournal::class);
         app(ErasureRestoreReplay::class)->replay($journal->checkpoint());
         app(ErasureRestoreReplay::class)->replay($journal->checkpoint());
+    } elseif ($mode === 'selective') {
+        $negative(fn () => app(RestoreReleaseCertificate::class)->assertReleased());
+        $assert(! User::query()->whereKey($cases['waived']['owner'])->exists());
+        $receipts = DB::table('account_erasure_receipts')->count();
+        DB::transaction(function () use ($fixture): void {
+            DB::table('users')->insert($fixture['partial']['user']);
+            DB::table('recipes')->insert($fixture['partial']['recipe']);
+        });
+        $assert(Recipe::query()->whereKey($cases['waived']['private'])->exists());
+        app(ErasureRestoreReplay::class)->replay(app(ProtectedErasureJournal::class)->checkpoint());
+        $assert(! User::query()->whereKey($cases['waived']['owner'])->exists());
+        $assert(! Recipe::query()->whereKey($cases['waived']['private'])->exists());
+        $assert(Recipe::query()->whereKey($cases['waived']['remix'])->exists());
+        $assert(MealPlan::query()->whereKey($cases['waived']['copy'])->exists());
+        $assert($receipts === DB::table('account_erasure_receipts')->count());
     } else {
         throw new RuntimeException('synthetic_privacy_mode_invalid');
     }
