@@ -70,6 +70,7 @@
             "@php tests/StaticAnalysis/verify-failure.php"
         ],
         "test": [
+            "Composer\\Config::disableProcessTimeout",
             "@php artisan config:clear --ansi",
             "@php artisan test"
         ]
