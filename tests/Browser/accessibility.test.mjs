@@ -1,15 +1,29 @@
 import { before, after, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync, spawn } from 'node:child_process';
-import { mkdirSync, writeFileSync, readFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync, readFileSync, mkdtempSync, rmSync } from 'node:fs';
 import { setTimeout as delay } from 'node:timers/promises';
 import { Builder, By, Key, until } from 'selenium-webdriver';
 import chrome from 'selenium-webdriver/chrome.js';
 import axe from 'axe-core';
+import { tmpdir } from 'node:os';
+import { randomBytes } from 'node:crypto';
 
 const base = process.env.ACCESSIBILITY_BROWSER_URL || 'http://laravel.test:8015';
 const artifacts = process.env.ACCESSIBILITY_BROWSER_ARTIFACTS || 'storage/app/testing/ux07';
 const env = { ...process.env, APP_ENV: 'testing', APP_URL: base, DB_CONNECTION: 'mysql', DB_DATABASE: 'testing', SESSION_DRIVER: 'file', CACHE_STORE: 'array', QUEUE_CONNECTION: 'sync', MAIL_MAILER: 'array', APP_DEBUG: 'false', TRUSTED_HOSTS: new URL(base).hostname, PULSE_ENABLED: 'false', TELESCOPE_ENABLED: 'false', NIGHTWATCH_ENABLED: 'false' };
+const journalWorkspace = mkdtempSync(`${tmpdir()}/dep08-browser-journal-`);
+for (const name of ['primary', 'mirror']) writeFileSync(`${journalWorkspace}/${name}.sqlite`, '', {mode: 0o600});
+Object.assign(env, {
+    ERASURE_INSTALLATION: 'synthetic-accessibility-installation',
+    ERASURE_JOURNAL_GENERATION: 'synthetic-accessibility-generation',
+    ERASURE_JOURNAL_PRIMARY_URL: `sqlite://localhost/${journalWorkspace}/primary.sqlite`,
+    ERASURE_JOURNAL_MIRROR_URL: `sqlite://localhost/${journalWorkspace}/mirror.sqlite`,
+    ERASURE_JOURNAL_ENCRYPTION_KEY: `base64:${randomBytes(32).toString('base64')}`,
+    ERASURE_JOURNAL_INTEGRITY_KEY: `base64:${randomBytes(32).toString('base64')}`,
+    ERASURE_PRIVACY_OPERATOR_REFERENCE: 'synthetic-browser-operator',
+    ERASURE_OPERATOR_ENVIRONMENT: 'testing',
+});
 let browser, server, fixture;
 const find = selector => browser.findElement(By.css(selector));
 const reports = [];
@@ -17,6 +31,7 @@ const reports = [];
 before(async () => {
     mkdirSync(artifacts, { recursive: true });
     execFileSync('php', ['artisan', 'migrate', '--force', '--no-interaction'], { env });
+    execFileSync('php', ['artisan', 'erasure:provision', 'journal'], { env });
     fixture = JSON.parse(execFileSync('php', ['tests/Browser/accessibility-fixture.php'], { env, encoding: 'utf8' }));
     server = spawn('php', ['-S', '0.0.0.0:8015', '-t', 'public', 'tests/Browser/router.php'], { env, stdio: ['ignore', 'ignore', 'pipe'] });
     let log = '';
@@ -40,6 +55,7 @@ after(async () => {
     } finally {
         if (server) server.kill();
         if (fixture) execFileSync('php', ['tests/Browser/accessibility-fixture.php', 'cleanup', JSON.stringify(fixture)], { env });
+        rmSync(journalWorkspace, { recursive: true });
     }
 });
 async function open(path) { await browser.get(`${base}${path}`); }
@@ -103,7 +119,7 @@ async function visual(name, selector) {
     const clip = await browser.executeScript(`const el=document.querySelector(arguments[0]);
         el.scrollIntoView({block:'center'}); const r=el.getBoundingClientRect();
         return {x:r.x+scrollX,y:r.y+scrollY,width:r.width,height:r.height,scale:1};`, selector);
-    const png = (await browser.sendAndGetDevToolsCommand('Page.captureScreenshot',{clip,captureBeyondViewport:true})).data;
+    const png = (await browser.sendAndGetDevToolsCommand('Page.captureScreenshot',{clip,captureBeyondViewport:false})).data;
     writeFileSync(`${artifacts}/${name}.png`,Buffer.from(png,'base64'));
     const baseline = new URL(`./snapshots/${name}.png`,import.meta.url);
     if (process.env.UPDATE_ACCESSIBILITY_SNAPSHOTS === '1') {
@@ -403,7 +419,7 @@ test('profile validation, theme selection and deletion dialog trap focus, isolat
         await browser.actions().sendKeys('browser-').pause(500).perform();
         assert.ok(await browser.executeScript('return document.activeElement.matches(\'[role="dialog"] input[name="password"]\')'), 'Delayed modal autofocus must preserve keyboard input focus');
         await browser.actions().sendKeys('fixture-password',Key.ENTER).perform();
-        await browser.wait(until.urlIs(`${base}/`),15000).catch(async error => {
+        await browser.wait(until.urlIs(`${base}/account-recovery`),15000).catch(async error => {
             const state = await browser.executeScript(`return {
                 url: location.href,
                 active: document.activeElement.tagName + '#' + document.activeElement.id,
@@ -413,13 +429,35 @@ test('profile validation, theme selection and deletion dialog trap focus, isolat
             }`);
             throw new Error(`Account deletion failed: ${JSON.stringify(state)}`, { cause: error });
         });
+        await scan('account-recovery');
+        for (const theme of ['light', 'dark']) {
+            await browser.executeScript('localStorage.setItem("theme",arguments[0])',theme);
+            await browser.manage().window().setRect({width:390,height:844});
+            await open('/account-recovery');
+            await reflow(); await scan(`account-recovery-mobile-${theme}`); await screenshot(`account-recovery-mobile-${theme}`);
+        }
+        await browser.manage().window().setRect({width:1280,height:900});
+        await open('/account-recovery');
+        await tabTo('#recovery-email');
+        await browser.actions().sendKeys(fixture.users.deletion.email,Key.TAB,'incorrect-password').perform();
+        await tabTo('input[name="confirmed"]'); await press(Key.SPACE);
+        await tabTo('button[type="submit"]'); await press();
+        await browser.wait(until.elementLocated(By.css('[data-validation-summary]')),10000);
+        await scan('account-recovery-invalid');
+        await tabTo('#recovery-password');
+        await browser.actions().sendKeys('browser-fixture-password').perform();
+        await tabTo('input[name="confirmed"]'); await press(Key.SPACE);
+        await tabTo('button[type="submit"]'); await press();
+        await browser.wait(until.urlContains('/dashboard'),15000);
+        await scan('account-recovered');
     } finally {
         await browser.executeScript(`if (window.ux07NativeFrame) {
             window.requestAnimationFrame = window.ux07NativeFrame;
             delete window.ux07NativeFrame;
         }`);
     }
-    await open('/profile'); await browser.wait(until.urlContains('/login'),10000);
+    await open('/profile'); await browser.wait(until.urlIs(`${base}/profile`),10000);
+    assert.match(await (await find('main')).getText(), /Delete Account/i);
 });
 
 test('catalogue pagination preserves names, disabled states and keyboard operation in both themes and mobile', async () => {
@@ -473,7 +511,8 @@ test('reviewed visual baselines preserve primary-button contrast, theme state an
         await visual(`theme-controls-${theme}`,'div.flex.flex-wrap.gap-2');
         await tabTo('button[x-on\\:click\\.prevent]'); await press();
         await browser.wait(until.elementIsVisible(await find('[role="dialog"]')),10000);
-        await delay(350); // Wait for the existing enter transition before comparing pixels.
+        await browser.wait(() => browser.executeScript(`const style=getComputedStyle(document.querySelector('[role="dialog"]'));
+            return style.opacity==='1' && (style.transform==='none' || style.transform==='matrix(1, 0, 0, 1, 0, 0)');`),5000);
         await visual(`dialog-header-${theme}`,'[role="dialog"] > div:first-child');
         await press(Key.ESCAPE);
     }

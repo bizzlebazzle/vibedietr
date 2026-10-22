@@ -35,6 +35,7 @@ if (($argv[1] ?? '') === 'cleanup') {
                 }
                 // Delete only this run's synthetic shared catalogue contributions.
                 CatalogueItem::query()->where('submitted_by_user_id', $user->id)->delete();
+                DB::table('account_deletions')->where('user_id', $user->id)->delete();
                 $user->delete();
             }
         }

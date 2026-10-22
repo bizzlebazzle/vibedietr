@@ -68,8 +68,6 @@ new class extends Component
             </h2>
 
             <x-account-deletion-notice />
-            <div><x-input-label for="deletion-code" value="Authenticator code (if enabled)" /><x-text-input wire:model="code" id="deletion-code" autocomplete="one-time-code" inputmode="numeric" class="block w-full" /><x-input-error :messages="$errors->get('code')" /></div>
-            <label class="flex gap-2 text-sm text-gray-700 dark:text-slate-200"><input type="checkbox" wire:model="waiveRecovery"><span>Waive recovery and request immediate final purge. This cannot be undone.</span></label>
 
             <div class="mt-6">
                 <x-input-label for="password" value="{{ __('Password') }}" class="sr-only" />
@@ -85,6 +83,9 @@ new class extends Component
 
                 <x-input-error :messages="$errors->get('password')" class="mt-2" />
             </div>
+
+            <div><x-input-label for="deletion-code" value="Authenticator code (if enabled)" /><x-text-input wire:model="code" id="deletion-code" autocomplete="one-time-code" inputmode="numeric" class="block w-full" /><x-input-error :messages="$errors->get('code')" /></div>
+            <label class="flex gap-2 text-sm text-gray-700 dark:text-slate-200"><input type="checkbox" wire:model="waiveRecovery"><span>Waive recovery and request immediate final purge. This cannot be undone.</span></label>
 
             <div class="mt-6 flex flex-wrap justify-end gap-3">
                 <x-secondary-button x-on:click="$dispatch('close')">
