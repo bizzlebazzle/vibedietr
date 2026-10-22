@@ -1,39 +1,44 @@
 <?php
 
-use App\Administrator\LastAdministratorGuard;
+use App\Domain\AccountDeletion\AccountLifecycle;
+use App\Domain\AccountDeletion\AuthenticateLifecycle;
+use App\Domain\AccountDeletion\JournalUnavailable;
+use App\Jobs\ProcessAccountDeletion;
 use App\Livewire\Actions\Logout;
-use App\Domain\RecipeImports\RecipeImportOwnerCleaner;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Validation\ValidationException;
 use Livewire\Volt\Component;
 
 new class extends Component
 {
     public string $password = '';
 
-    /**
-     * Delete the currently authenticated user.
-     */
-    public function deleteUser(Logout $logout, LastAdministratorGuard $guard, RecipeImportOwnerCleaner $importCleaner): void
+    public string $code = '';
+
+    public bool $waiveRecovery = false;
+
+    public function deleteUser(Logout $logout, AccountLifecycle $lifecycle, AuthenticateLifecycle $authentication): void
     {
-        $this->validate([
-            'password' => ['required', 'string', 'current_password'],
-        ]);
-
+        $this->validate(['password' => ['required', 'string', 'max:1024'], 'code' => ['string', 'max:12'], 'waiveRecovery' => ['boolean']]);
         $user = Auth::user();
-        try {
-            $importCleaner->cancelAndCleanup((int) $user->getKey());
-            DB::transaction(function () use ($guard, $user): void {
-                $guard->assertAccountDeletionAllowed($user);
-                $user->newQuery()->whereKey($user->getKey())->delete();
-            }, 3);
-        } catch (RuntimeException $exception) {
-            throw ValidationException::withMessages(['password' => $exception->getMessage()]);
+        abort_unless($user instanceof \App\Models\User && $user->isActive(), 403);
+        $key = 'account-deletion:'.hash_hmac('sha256', (string) $user->getKey(), (string) config('app.key'));
+        if (RateLimiter::tooManyAttempts($key, 10)) {
+            throw ValidationException::withMessages(['password' => 'Too many attempts. Please retry later.']);
         }
+        RateLimiter::hit($key, 60);
+        $authentication->verify($user, $this->password, $this->code, 'account.delete', (string) request()->ip());
+        try {
+            $record = $lifecycle->request($user, waive: $this->waiveRecovery);
+        } catch (JournalUnavailable) {
+            throw ValidationException::withMessages(['password' => 'Lifecycle confirmation is unavailable. Your account is inactive and the original deadline is preserved. Use account recovery to retry.']);
+        } catch (RuntimeException) {
+            throw ValidationException::withMessages(['password' => 'The sole administrator needs an active replacement before account deletion.']);
+        }
+        ProcessAccountDeletion::dispatch($record->id, $record->correlation_id);
         $logout();
-
-        $this->redirect('/', navigate: true);
+        $this->redirect(route('account-recovery', absolute: false), navigate: true);
     }
 }; ?>
 
@@ -44,7 +49,7 @@ new class extends Component
         </h2>
 
         <p class="mt-1 text-sm text-gray-600 dark:text-slate-400">
-            {{ __('Once your account is deleted, all of its resources and data will be permanently deleted. Before deleting your account, please download any data or information that you wish to retain.') }}
+            {{ __('Request account deletion with up to 30 days to recover, or waive recovery and request final purge.') }}
         </p>
     </header>
 
@@ -62,9 +67,7 @@ new class extends Component
                 {{ __('Are you sure you want to delete your account?') }}
             </h2>
 
-            <p class="mt-1 text-sm text-gray-600 dark:text-slate-400">
-                {{ __('Once your account is deleted, all of its resources and data will be permanently deleted. Please enter your password to confirm you would like to permanently delete your account.') }}
-            </p>
+            <x-account-deletion-notice />
 
             <div class="mt-6">
                 <x-input-label for="password" value="{{ __('Password') }}" class="sr-only" />
@@ -80,6 +83,9 @@ new class extends Component
 
                 <x-input-error :messages="$errors->get('password')" class="mt-2" />
             </div>
+
+            <div><x-input-label for="deletion-code" value="Authenticator code (if enabled)" /><x-text-input wire:model="code" id="deletion-code" autocomplete="one-time-code" inputmode="numeric" class="block w-full" /><x-input-error :messages="$errors->get('code')" /></div>
+            <label class="flex gap-2 text-sm text-gray-700 dark:text-slate-200"><input type="checkbox" wire:model="waiveRecovery"><span>Waive recovery and request immediate final purge. This cannot be undone.</span></label>
 
             <div class="mt-6 flex flex-wrap justify-end gap-3">
                 <x-secondary-button x-on:click="$dispatch('close')">

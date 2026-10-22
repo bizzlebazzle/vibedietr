@@ -12,8 +12,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Str;
 
 /**
+ * @property string $erasure_generation
  * @property RecipeLifecycle $lifecycle
  * @property RecipeVisibility $visibility
  */
@@ -23,6 +25,13 @@ class Recipe extends Model
     use HasFactory;
 
     protected $fillable = ['title', 'servings', 'visibility'];
+
+    protected static function booted(): void
+    {
+        static::creating(function (Recipe $model): void {
+            $model->erasure_generation ??= (string) Str::ulid();
+        });
+    }
 
     protected function casts(): array
     {
@@ -34,6 +43,7 @@ class Recipe extends Model
         ];
     }
 
+    /** @return BelongsTo<User, $this> */
     public function owner(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
@@ -115,7 +125,8 @@ class Recipe extends Model
     public function isPubliclyViewable(): bool
     {
         return $this->isFinalized()
-            && $this->getRawOriginal('visibility') === RecipeVisibility::Public->value;
+            && $this->getRawOriginal('visibility') === RecipeVisibility::Public->value
+            && ! AccountDeletion::query()->where('user_id', $this->user_id)->where('reason', 'under13')->exists();
     }
 
     public function canBeUsedInPlansFor(?User $user): bool
@@ -139,7 +150,8 @@ class Recipe extends Model
     public function scopePubliclyViewable(Builder $query): void
     {
         $query->finalized()
-            ->where('visibility', RecipeVisibility::Public->value);
+            ->where('visibility', RecipeVisibility::Public->value)
+            ->whereDoesntHave('owner.accountDeletion', fn ($deletion) => $deletion->where('reason', 'under13'));
     }
 
     /** @param Builder<Recipe> $query */

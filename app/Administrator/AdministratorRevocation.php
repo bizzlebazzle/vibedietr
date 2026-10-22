@@ -44,7 +44,7 @@ final class AdministratorRevocation
             if (! $lockedActor->isAdministrator() || ! $lockedTarget->isAdministrator()) {
                 throw new RuntimeException('Both accounts must be active administrators.');
             }
-            if (User::query()->where('is_administrator', true)->count() <= 1) {
+            if (User::query()->where('is_administrator', true)->whereDoesntHave('accountDeletion')->count() <= 1) {
                 throw new RuntimeException('The final administrator cannot be revoked.');
             }
 

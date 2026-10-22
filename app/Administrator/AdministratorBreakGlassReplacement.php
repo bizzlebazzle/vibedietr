@@ -89,7 +89,7 @@ final class AdministratorBreakGlassReplacement
             $lockedReplacement = User::query()->lockForUpdate()->findOrFail($replacement->getKey());
             $lockedCompromised = $compromised === null ? null : User::query()->lockForUpdate()->findOrFail($compromised->getKey());
 
-            if ($lockedReplacement->isAdministrator() || $lockedReplacement->email_verified_at === null || ! $lockedReplacement->hasConfirmedSecondFactor()) {
+            if (! $lockedReplacement->isActive() || $lockedReplacement->isAdministrator() || $lockedReplacement->email_verified_at === null || ! $lockedReplacement->hasConfirmedSecondFactor()) {
                 throw new RuntimeException('The configured break-glass replacement is not eligible.');
             }
             if ($lockedCompromised !== null && ! $lockedCompromised->isAdministrator()) {
@@ -100,7 +100,7 @@ final class AdministratorBreakGlassReplacement
                     return false;
                 }
 
-                return $administrator->email_verified_at !== null
+                return $administrator->isActive() && $administrator->email_verified_at !== null
                     && $administrator->hasConfirmedSecondFactor()
                     && ! SecondFactorRecoveryAuthorization::query()->where('target_user_id', $administrator->getKey())->whereNull('consumed_at')->whereNull('cancelled_at')->where('expires_at', '>=', now())->exists();
             });

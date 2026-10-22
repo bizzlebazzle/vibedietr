@@ -26,7 +26,7 @@ final class CleanupAccountExport
                 return;
             }
             $disk = app(ExportStorage::class)->disk($export->disk);
-            if ($disk->exists($export->storageKey()) && ! $disk->delete($export->storageKey())) {
+            if ($disk->exists($export->storageKey()) && (! $disk->delete($export->storageKey()) || app(ExportStorage::class)->disk($export->disk)->exists($export->storageKey()))) {
                 throw new RuntimeException('export_cleanup_failed');
             }
             if (is_file($export->stagingPath()) && ! unlink($export->stagingPath())) {

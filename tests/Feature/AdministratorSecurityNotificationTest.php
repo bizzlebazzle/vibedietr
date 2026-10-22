@@ -81,6 +81,20 @@ class AdministratorSecurityNotificationTest extends TestCase
     {
         app()->detectEnvironment(fn () => 'production');
         config([
+            'erasure.installation' => 'synthetic-production-installation',
+            'erasure.journal_generation' => 'synthetic-production-generation',
+            'erasure.encryption_key' => 'base64:'.base64_encode(str_repeat('e', 32)),
+            'erasure.integrity_key' => 'base64:'.base64_encode(str_repeat('i', 32)),
+            'erasure.evidence_key' => null,
+            'erasure.privacy_operator' => null,
+            'erasure.operator_environment' => null,
+            'erasure.release_signing_key' => null,
+            'erasure.retirement_signing_key' => null,
+            'erasure.release_public_key' => 'base64:'.base64_encode(str_repeat('p', 32)),
+            'erasure.retirement_public_key' => 'base64:'.base64_encode(str_repeat('r', 32)),
+            'database.connections.erasure_primary.url' => 'mysql://synthetic:synthetic-secret@journal-primary.internal/erasure',
+            'database.connections.erasure_mirror.url' => 'mysql://synthetic:synthetic-secret@journal-mirror.internal/erasure',
+            'database.connections.erasure_evidence.url' => null,
             'app.env' => 'production',
             'app.url' => 'http://example.test',
             'session.secure' => false,
@@ -99,6 +113,20 @@ class AdministratorSecurityNotificationTest extends TestCase
     {
         app()->detectEnvironment(fn () => 'production');
         config([
+            'erasure.installation' => 'synthetic-production-installation',
+            'erasure.journal_generation' => 'synthetic-production-generation',
+            'erasure.encryption_key' => 'base64:'.base64_encode(str_repeat('e', 32)),
+            'erasure.integrity_key' => 'base64:'.base64_encode(str_repeat('i', 32)),
+            'erasure.evidence_key' => null,
+            'erasure.privacy_operator' => null,
+            'erasure.operator_environment' => null,
+            'erasure.release_signing_key' => null,
+            'erasure.retirement_signing_key' => null,
+            'erasure.release_public_key' => 'base64:'.base64_encode(str_repeat('p', 32)),
+            'erasure.retirement_public_key' => 'base64:'.base64_encode(str_repeat('r', 32)),
+            'database.connections.erasure_primary.url' => 'mysql://synthetic:synthetic-secret@journal-primary.internal/erasure',
+            'database.connections.erasure_mirror.url' => 'mysql://synthetic:synthetic-secret@journal-mirror.internal/erasure',
+            'database.connections.erasure_evidence.url' => null,
             'app.env' => 'production',
             'app.debug' => false,
             'session.driver' => 'database',

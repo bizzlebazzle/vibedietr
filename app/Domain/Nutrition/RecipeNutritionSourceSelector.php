@@ -12,6 +12,11 @@ final class RecipeNutritionSourceSelector
     /** @return array{source: RecipeNutritionSource, values: array<string, mixed>, provenance: array<string, mixed>|null} */
     public function effective(RecipeVersion $version): array
     {
+        if ($version->retained_public_nutrition !== null) {
+            $public = $version->retained_public_nutrition;
+
+            return ['source' => RecipeNutritionSource::from($public['source']), 'values' => $public['source'] === RecipeNutritionSource::IngredientEstimate->value ? $this->estimateValues($version) : $public['values'], 'provenance' => $public['provenance'] ?? null];
+        }
         $override = $this->currentOverride($version);
         if ($override?->resulting_values !== null) {
             return [

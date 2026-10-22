@@ -2,6 +2,8 @@
 
 namespace App\Domain\MealPlans;
 
+use App\Domain\AccountDeletion\PublicContentMinimizer;
+use App\Domain\AccountExports\ExportContract;
 use App\Domain\Recipes\RecipeVisibility;
 use App\Models\MealPlan;
 use App\Models\MealPlanItemEntry;
@@ -18,19 +20,35 @@ final class MealPlanPublicSafety
         );
     }
 
-    public function isPublicSafe(MealPlan $mealPlan): bool
+    public function isPublicSafe(MealPlan $mealPlan, bool $retention = false): bool
     {
-        if ($this->hasPrivateRecipeSnapshots($mealPlan)) {
+        if (! $retention && $mealPlan->visibility !== MealPlanVisibility::RetainedUnlisted) {
+            return ! $this->hasPrivateRecipeSnapshots($mealPlan) && $this->itemEntries($mealPlan)->get()->every(
+                fn (MealPlanItemEntry $entry): bool => $entry->kind === MealPlanItemEntryKind::Catalogue
+                    && is_array($entry->catalogue_snapshot) && $entry->catalogue_snapshot !== []
+                    && $entry->one_off_wording === null && $entry->one_off_nutrition === null,
+            );
+        }
+        try {
+            $minimizer = app(PublicContentMinimizer::class);
+            foreach ($this->recipeEntries($mealPlan)->get() as $entry) {
+                $minimizer->recipe($entry->recipe_snapshot);
+                $minimizer->nutrition($entry->nutrition_snapshot);
+            }
+            foreach ($this->itemEntries($mealPlan)->get() as $entry) {
+                if ($entry->kind !== MealPlanItemEntryKind::Catalogue || $entry->one_off_wording !== null || $entry->one_off_nutrition !== null) {
+                    return false;
+                }
+                $minimizer->catalogue($entry->catalogue_snapshot ?? []);
+                foreach ($entry->catalogue_nutrition_snapshot ?? [] as $fact) {
+                    app(ExportContract::class)->project('fact', $fact);
+                }
+            }
+
+            return true;
+        } catch (\RuntimeException) {
             return false;
         }
-
-        return $this->itemEntries($mealPlan)->get()->every(
-            fn (MealPlanItemEntry $entry): bool => $entry->kind === MealPlanItemEntryKind::Catalogue
-                && is_array($entry->catalogue_snapshot)
-                && $entry->catalogue_snapshot !== []
-                && $entry->one_off_wording === null
-                && $entry->one_off_nutrition === null,
-        );
     }
 
     public function assertPublicSafe(MealPlan $mealPlan): void

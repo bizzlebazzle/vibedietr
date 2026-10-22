@@ -39,7 +39,7 @@ final class RecoverPrivateObjects extends Command
             $directory = (string) $this->argument('directory');
             if ($mode === 'capture') {
                 $ownership = json_decode(file_get_contents((string) $this->option('ownership')), true, flags: JSON_THROW_ON_ERROR);
-                $excluded = array_unique([trim((string) config('security.uploads.prefix'), '/').'/', 'canonical/', ...$this->option('exclude')]);
+                $excluded = array_unique([trim((string) config('security.uploads.prefix'), '/').'/', 'canonical/', 'account-exports/', ...$this->option('exclude')]);
                 $recovery->capture($client, $disk['bucket'], $directory, $ownership, array_values($excluded));
             } elseif ($mode === 'restore') {
                 $recovery->restore($client, $disk['bucket'], $directory);

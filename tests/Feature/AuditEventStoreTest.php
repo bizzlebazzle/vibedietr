@@ -17,6 +17,7 @@ use App\Models\Ingredient;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -344,24 +345,36 @@ class AuditEventStoreTest extends TestCase
     public function test_migration_is_additive_and_has_a_safe_development_rollback(): void
     {
         $user = User::factory()->create();
-        Ingredient::factory()->for($user)->create([
-            'name' => 'Existing ingredient',
-        ]);
-        $migration = require database_path(
-            'migrations/2026_07_31_000001_create_audit_event_store.php'
-        );
+        Ingredient::factory()->for($user)->create(['name' => 'Existing ingredient']);
+        $migration = require database_path('migrations/2026_07_31_000001_create_audit_event_store.php');
+        $clocks = require database_path('migrations/2026_10_18_050000_create_audit_provenance_clocks.php');
+        $definitions = [];
+        foreach (['audit_actor_identities', 'audit_events'] as $table) {
+            $definitions[$table] = (array) DB::selectOne('SHOW CREATE TABLE '.$table);
+        }
 
-        $migration->down();
-
-        $this->assertFalse(Schema::hasTable('audit_events'));
-        $this->assertFalse(Schema::hasTable('audit_actor_identities'));
-        $this->assertDatabaseHas('users', ['id' => $user->id]);
-        $this->assertDatabaseHas('ingredients', ['name' => 'Existing ingredient']);
-
-        $migration->up();
-
-        $this->assertTrue(Schema::hasTable('audit_events'));
-        $this->assertTrue(Schema::hasTable('audit_actor_identities'));
+        try {
+            // Roll dependencies back first; never disable the new retention FK.
+            $clocks->down();
+            $migration->down();
+            $this->assertFalse(Schema::hasTable('audit_events'));
+            $this->assertFalse(Schema::hasTable('audit_actor_identities'));
+            $this->assertDatabaseHas('users', ['id' => $user->id]);
+            $this->assertDatabaseHas('ingredients', ['name' => 'Existing ingredient']);
+            $migration->up();
+            $this->assertTrue(Schema::hasTable('audit_events'));
+            $this->assertTrue(Schema::hasTable('audit_actor_identities'));
+        } finally {
+            // Restore the exact current schema, including later audit enum changes.
+            Schema::dropIfExists('audit_events');
+            Schema::dropIfExists('audit_actor_identities');
+            foreach ($definitions as $definition) {
+                DB::statement($definition['Create Table']);
+            }
+            $clocks->up();
+            // MySQL DDL commits the surrounding fixture transaction implicitly.
+            RefreshDatabaseState::$migrated = false;
+        }
     }
 
     private function recordPlanSnapshot(

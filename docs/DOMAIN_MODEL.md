@@ -297,7 +297,10 @@ one-to-many version relationship. REC-05 creates version 1; REC-07 creates
 monotonic replacement versions while retaining earlier rows. No history browser
 is exposed. Model update and direct delete are
 rejected. Deleting the owning recipe still removes its versions through the
-database relationship; broader retained-version rules remain later work.
+database relationship. DEC-021 requires final account purge to delete
+unreferenced superseded versions and preserve independent snapshots/copies;
+source-version data survives only where an approved dependency requires it,
+minimized and anonymized. DEP-08 implements this boundary.
 
 ### Recipe draft revision
 
@@ -1402,6 +1405,13 @@ the current projection. Once a planned entry has consumption history it cannot
 be moved or removed. Each successful transition records the minimized
 `diary.consumption_transitioned` event in the same transaction.
 
+DEC-022 requires private consumption history to be archived before a retained
+public plan is permanently removed during account recovery. The owner-only
+archive preserves original transition chains, snapshots, precision and source
+facts until final account purge; successful recovery retains that private
+history without restoring the removed public plan. Private historical target
+data keeps its existing DEC-020 lifecycle. The archive is not a shareable plan.
+
 PLAN-06 creates one immutable nutrition snapshot in the same transaction as
 each consume and re-consume transition. The snapshot copies only the locked
 entry's pinned nutrition source and values, provenance, estimate status, actual
@@ -1677,6 +1687,14 @@ public as an import side effect. Source text, child text, and raw parser data
 are excluded from queue payloads, failure logs, audit payloads, and public
 recipe projections.
 
+DEP-08 preserves this private review record and approved provenance through
+recovery and in encrypted database recovery sets; accepted/extracted source
+text is distinct from transient original/canonical files. Terminal file cleanup
+uses the original outcome clock. At thirty days only processing-only file
+size/extension, canonical MIME, lease, cleanup-marker bookkeeping is
+minimized. The private review resource itself follows owner/import deletion and
+final account purge, rather than being reclassified as operational telemetry.
+
 For `webpage_url`, the private import separately retains the original submitted
 URL and final validated redirect target plus extraction method, extractor
 identifier/version, extraction time, redirect count, and correlation. The
@@ -1800,7 +1818,9 @@ One optional unique correction-proposal foreign key links the immutable
 proposal/decision references and corrected field identifiers. Corrected
 nutrient observations retain the same references; normalized direct facts use
 corrected provenance and calculated energy counterparts remain derived.
-Proposer deletion nulls only actor attribution. Public catalogue projections
+Under DEC-021 final proposer purge removes pending user proposals; accepted
+catalogue facts and only DEC-013-permitted anonymized decision/provenance
+evidence survive. Private reasons are not retained merely for provenance. Public catalogue projections
 never serialize proposals, reasons, actor references, notes or decision
 evidence. Full invariants are in
 [Catalogue correction proposals](CATALOGUE_CORRECTIONS.md).

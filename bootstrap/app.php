@@ -12,7 +12,9 @@ use App\Console\Commands\RecordSchedulerHeartbeat;
 use App\Http\Controllers\HealthController;
 use App\Http\Middleware\AddSecurityHeaders;
 use App\Http\Middleware\AttachCorrelationId;
+use App\Http\Middleware\EnsureActiveAccount;
 use App\Http\Middleware\RejectOversizedRequest;
+use App\Http\Middleware\RequireSanitizedRestore;
 use App\Observability\CorrelationContext;
 use App\Observability\OperationalTelemetry;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -48,6 +50,8 @@ return Application::configure(basePath: dirname(__DIR__))
         RecordSchedulerHeartbeat::class,
     ])
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->appendToGroup('web', EnsureActiveAccount::class);
+        $middleware->prepend(RequireSanitizedRestore::class);
         $middleware->append(AttachCorrelationId::class);
         $middleware->append(AddSecurityHeaders::class);
         $middleware->append(RejectOversizedRequest::class);
@@ -69,7 +73,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->dontFlash([
             'password', 'password_confirmation', 'token', 'api_key', 'secret',
-            'authorization', 'cookie', 'session', 'recovery_code', 'totp', 'otp',
+            'authorization', 'cookie', 'session', 'recovery_code', 'totp', 'otp', 'code',
             'original_text', 'instruction_text', 'diary_entry', 'target_data',
             'import_source', 'ocr_text',
             'source_text',

@@ -10,6 +10,9 @@ final class AdministratorPrivilegeMutation
 
     public function set(User $user, bool $administrator): void
     {
+        if ($administrator && ! $user->isActive()) {
+            throw new \RuntimeException('An inactive account cannot become an administrator.');
+        }
         self::$depth++;
         try {
             $user->forceFill(['is_administrator' => $administrator])->save();

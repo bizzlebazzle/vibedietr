@@ -11,6 +11,8 @@ use App\Models\RecipeImport;
 use App\Models\RecipeIngredientLine;
 use App\Models\RecipeInstructionSection;
 use App\Models\RecipeInstructionStep;
+use App\Models\User;
+use App\Queue\Exceptions\NonRetryableJobException;
 use Illuminate\Support\Facades\DB;
 use LogicException;
 
@@ -24,6 +26,10 @@ final class RecipeImportMaterializer
 
         return DB::transaction(function () use ($hook, $importId, $result): Recipe {
             $import = RecipeImport::query()->lockForUpdate()->findOrFail($importId);
+            $owner = User::query()->lockForUpdate()->find($import->user_id);
+            if (! $owner?->isActive()) {
+                throw new NonRetryableJobException('import_owner_inactive');
+            }
 
             if ($import->status === RecipeImportStatus::ReviewReady && $import->recipe_id !== null) {
                 return Recipe::query()->findOrFail($import->recipe_id);

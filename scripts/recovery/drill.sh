@@ -18,9 +18,10 @@ restic_image=restic/restic:0.19.1@sha256:136600b6ff6843d61d355f7f71f460a166429f3
 server_image=restic/rest-server:0.14.0@sha256:d2aff06f47eb38637dff580c3e6bce4af98f386c396a25d32eb6727ec96214a5
 drill_started=$(date +%s)
 drill_step=setup
+drill_erasure_containers=()
 cleanup() {
     status=$?
-    docker rm -fv "$drill_source" "$drill_target" "$drill_garage" "$drill_server" >/dev/null 2>&1 || true
+    docker rm -fv "$drill_source" "$drill_target" "$drill_garage" "$drill_server" "${drill_erasure_containers[@]}" >/dev/null 2>&1 || true
     docker network rm "$drill_network" >/dev/null 2>&1 || true
     if [[ $status -ne 0 ]]; then
         echo "Synthetic recovery drill failed during $drill_step." >&2
@@ -93,9 +94,9 @@ drill_migration_mount=()
 app_run() {
     local target=$1; shift
     local bucket=source
-    [[ $target != "$drill_target" ]] || bucket=quarantine
+    [[ $target != "$drill_target" ]] || bucket=${drill_target_bucket:-quarantine}
     docker run --rm --network "$drill_network" --user "$(id -u):$(id -g)" --env-file "$drill_workspace/app.env" \
-        -e "DB_HOST=$target" -e "AWS_BUCKET=$bucket" -v "$drill_root:/var/www/html:ro" -v "$drill_workspace:/drill" -v "$drill_workspace/storage:/var/www/html/storage" \
+        -e "DB_HOST=$target" -e "AWS_BUCKET=$bucket" -e "ERASURE_RESTORE_TARGET=${drill_restore_target:-}" -e "ERASURE_RESTORE_SET=${drill_restore_set:-}" -e "ERASURE_RESTORE_MANIFEST_SHA256=${drill_restore_manifest:-}" -e "ERASURE_RELEASE_CERTIFICATE=${drill_release_certificate:-}" -v "$drill_root:/var/www/html:ro" -v "$drill_workspace:/drill" -v "$drill_workspace/storage:/var/www/html/storage" \
         "${drill_migration_mount[@]}" -w /var/www/html --entrypoint php "$drill_app_image" -d memory_limit=1G "$@"
 }
 node_run() {
@@ -200,6 +201,8 @@ app_run "$drill_target" artisan migrate:rollback --step=1 --force >> "$drill_wor
 app_run "$drill_target" artisan operations:reconcile-database --quiesced --compare=/drill/preflight.json >> "$drill_workspace/reconcile.log"
 drill_migration_mount=()
 app_run "$drill_source" artisan operations:reconcile-database --quiesced --compare=/drill/set/database.json >> "$drill_workspace/reconcile.log"
+
+source scripts/recovery/erasure-drill.sh
 
 drill_step=expiry-pruning-integrity
 export RECOVERY_MAINTENANCE=yes RECOVERY_REPOSITORY_PATH="$drill_workspace/repository/repo"

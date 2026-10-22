@@ -2,6 +2,8 @@
 
 namespace App\Console\Commands;
 
+use App\Domain\AccountDeletion\RecoveryRetentionHealth;
+use App\Models\AccountDeletion;
 use App\Models\AccountExport;
 use App\Observability\Alerts\AlertSink;
 use App\Observability\Health\HealthService;
@@ -28,6 +30,21 @@ final class MonitorOperations extends Command
             $alerts->send('application_readiness', 'critical');
         }
 
+        $overduePurges = AccountDeletion::query()->where('deadline', '<=', now()->utc()->subMinutes(5))->count();
+        if ($overduePurges > 0) {
+            $alerts->send('account_erasure_retention', 'critical', ['count' => $overduePurges]);
+        }
+        if (is_string(config('erasure.installation')) && config('erasure.installation') !== '') {
+            try {
+                foreach (app(RecoveryRetentionHealth::class)->counts() as $purpose => $count) {
+                    if ($count > 0) {
+                        $alerts->send('erasure_'.$purpose, 'critical', ['count' => $count]);
+                    }
+                }
+            } catch (\Throwable) {
+                $alerts->send('account_erasure_journal_unavailable', 'critical');
+            }
+        }
         $overdueExports = AccountExport::query()->where('state', '!=', 'deleted')
             ->where(fn ($query) => $query->where('expires_at', '<=', now()->utc()->subMinutes(5))->orWhereNull('user_id'))->count();
         if ($overdueExports > 0) {

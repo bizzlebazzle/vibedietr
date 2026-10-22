@@ -33,6 +33,10 @@ final readonly class ProcessRecipeNutritionRecalculation
                 return;
             }
 
+            $source = $recalculation->recipeVersion()->with('recipe.owner')->first();
+            if ($source?->recipe?->owner !== null && ! $source->recipe->owner->isActive()) {
+                return;
+            }
             $recalculation->forceFill([
                 'state' => RecipeNutritionRecalculationState::Processing,
                 'failure_code' => null,

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AccountExportController;
+use App\Http\Controllers\AccountRecoveryController;
 use App\Http\Controllers\BookmarkController;
 use App\Http\Controllers\CatalogueController;
 use App\Http\Controllers\CatalogueCorrectionProposalController;
@@ -30,15 +31,20 @@ use App\Http\Controllers\RecipeDiscoveryController;
 use App\Http\Controllers\RecipeImportController;
 use App\Http\Controllers\RecipeNutritionOverrideController;
 use App\Http\Controllers\RecipeRemixController;
+use App\Http\Controllers\RetainedPlanModerationController;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome');
+Route::get('account-recovery', [AccountRecoveryController::class, 'show'])->middleware('guest')->name('account-recovery');
+Route::post('account-recovery', [AccountRecoveryController::class, 'store'])->middleware(['guest', 'throttle:security-sensitive'])->name('account-recovery.store');
 
 Route::middleware('auth')->prefix('account-exports')->name('account-exports.')->group(function () {
     Route::get('/', [AccountExportController::class, 'index'])->name('index');
     Route::post('/', [AccountExportController::class, 'store'])->middleware('throttle:security-sensitive')->name('store');
     Route::get('/{export}/download', [AccountExportController::class, 'download'])->whereUlid('export')->name('download');
 });
+
+Route::post('admin/retained-plans/{mealPlan}', RetainedPlanModerationController::class)->middleware(['auth', 'verified', 'throttle:security-sensitive'])->whereNumber('mealPlan')->name('admin.retained-plans.moderate');
 
 Route::get('dashboard', DashboardController::class)
     ->middleware(['auth', 'verified'])

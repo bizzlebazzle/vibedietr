@@ -22,8 +22,10 @@ acceptance workflows are intentionally outside NUT-10.
 A `CatalogueCorrectionProposal` identifies the target item, the exact base
 version, a nullable proposer account reference, a required trimmed private
 reason of at most 500 characters, submission/decision times, and one of
-`pending|accepted|rejected`. Account deletion nulls the proposer reference
-without deleting the proposal or making it unreviewable.
+`pending|accepted|rejected`. DEC-021 final account purge removes pending user proposals. Accepted catalogue
+facts and only DEC-013-permitted anonymized decision/provenance evidence survive;
+private proposal reasons are not retained merely for factual provenance.
+Rejected/decided evidence follows the existing purpose-specific schedule.
 
 Each immutable `CatalogueCorrectionChange` is one allowlisted typed field.
 It stores bounded JSON for that field's base value and proposed value, not an

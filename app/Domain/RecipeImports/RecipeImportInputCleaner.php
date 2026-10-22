@@ -20,7 +20,8 @@ final class RecipeImportInputCleaner
     {
         return DB::transaction(function () use ($importId): bool {
             $import = RecipeImport::query()->lockForUpdate()->find($importId);
-            if ($import === null || $import->cleanup_completed_at !== null) {
+            if ($import === null || ($import->cleanup_completed_at !== null
+                && $import->source_key === null && $import->canonical_key === null)) {
                 return true;
             }
             if ($import->processing_lease_until?->isFuture()) {

@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use LogicException;
 
 /**
+ * @property array<string, mixed>|null $retained_public_nutrition
  * @property string $id
  * @property int $recipe_id
  * @property int $version_number
@@ -42,6 +43,7 @@ class RecipeVersion extends Model
             'version_number' => 'integer',
             'visibility' => RecipeVisibility::class,
             'snapshot' => 'array',
+            'retained_public_nutrition' => 'array',
             'finalized_at' => 'immutable_datetime',
         ];
     }

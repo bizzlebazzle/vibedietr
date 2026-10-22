@@ -61,7 +61,8 @@ final class TransientInputStore
                 return CleanupOutcome::Missing;
             }
 
-            return $storage->delete($handle->key) ? CleanupOutcome::Deleted : $this->cleanupFailed();
+            return $storage->delete($handle->key) && ! Storage::disk($handle->disk)->exists($handle->key)
+                ? CleanupOutcome::Deleted : $this->cleanupFailed();
         } catch (Throwable) {
             return $this->cleanupFailed();
         }

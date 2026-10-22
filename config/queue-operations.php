@@ -4,10 +4,12 @@ use App\Jobs\CreateMealPlanRecipeVersionReviews;
 use App\Jobs\DeleteAccountExport;
 use App\Jobs\DeliverSecurityNotification;
 use App\Jobs\GenerateAccountExport;
+use App\Jobs\ProcessAccountDeletion;
 use App\Jobs\ProcessPastedRecipeImport;
 use App\Jobs\ProcessReferenceTask;
 use App\Jobs\ProcessUploadedRecipeImport;
 use App\Jobs\ProcessWebpageRecipeImport;
+use App\Jobs\PruneAccountRetention;
 use App\Jobs\RecalculateRecipeNutrition;
 use App\Jobs\RefreshOpenFoodFactsCatalogueItem;
 use App\Queue\QueueName;
@@ -46,6 +48,8 @@ return [
         'default' => [
             'queues' => [QueueName::DEFAULT],
             'schedules' => [
+                'audit:prune-retention' => ['frequency' => 'every-minute', 'overlap_lock_minutes' => 10, 'one_server' => true],
+                'accounts:process-deletions' => ['frequency' => 'every-minute', 'overlap_lock_minutes' => 10, 'one_server' => true],
                 'account-exports:cleanup' => ['frequency' => 'every-minute', 'overlap_lock_minutes' => 10, 'one_server' => true],
             ],
             'processes' => 1,
@@ -58,6 +62,8 @@ return [
         ],
     ],
     'jobs' => [
+        PruneAccountRetention::class => ['queue' => QueueName::DEFAULT, 'worker' => 'default', 'timeout' => 60, 'failed_payload' => 'metadata-only'],
+        ProcessAccountDeletion::class => ['queue' => QueueName::DEFAULT, 'worker' => 'default', 'timeout' => 60, 'failed_payload' => 'metadata-only'],
         GenerateAccountExport::class => ['queue' => QueueName::DEFAULT, 'worker' => 'default', 'timeout' => 60, 'failed_payload' => 'metadata-only'],
         DeleteAccountExport::class => ['queue' => QueueName::DEFAULT, 'worker' => 'default', 'timeout' => 60, 'failed_payload' => 'metadata-only'],
         CreateMealPlanRecipeVersionReviews::class => [

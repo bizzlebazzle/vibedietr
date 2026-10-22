@@ -1,5 +1,53 @@
 # Job inventory
 
+## PruneAccountRetention
+
+- **Class / owner / dependencies:** `App\Jobs\PruneAccountRetention`; DEP-08,
+  FND-09, DEP-04 and DEP-05.
+- **Purpose:** Apply the existing purpose-specific security, privileged operator,
+  moderation, anonymous receipt and public-provenance clocks.
+- **Queue / worker / retry:** Existing default worker; 60-second job,
+  70-second worker, 90-second `retry_after`; three attempts, 10/60-second
+  backoff, shared global 75-second overlap and unique dispatch locks.
+- **Bounds / idempotency:** At most 200 audit events per sweep; a cache cursor
+  resumes the next page and resets after a complete pass. Lost cursor repeats
+  safe work. Original event/supersession timestamps remain authoritative.
+  Signed provenance clocks survive source-version removal; expiry never starts
+  again at account purge or retry.
+- **Payload / telemetry:** Correlation ULID only, metadata-only failure payload,
+  existing 168-hour pruning and default worker/scheduler signals. Missing or
+  invalid clock/integrity evidence raises critical `audit_retention_evidence`
+  with only a count and leaves the affected record for operator investigation.
+- **Schedule / replay:** UTC `audit:prune-retention` every minute, one server,
+  ten-minute scheduler overlap. Replaying after partial deletion is harmless.
+  Protected legal evidence and journal-generation disposal have independent
+  operator controls and are not deleted by this ordinary audit worker.
+
+## ProcessAccountDeletion
+
+- **Class / owner / dependencies:** `App\Jobs\ProcessAccountDeletion`; DEP-08,
+  FND-09, DEP-04 and DEP-05.
+- **Purpose:** Reconcile prepared/recovering/waiving lifecycle intent and perform
+  due final purges using their original UTC deadlines.
+- **Queue / worker:** Existing `default` worker; 60-second job, 70-second worker,
+  90-second `retry_after`; enforced 20-second worker margin.
+- **Retries / concurrency:** Three attempts, 10/60-second backoff; 75-second
+  unique dispatch lease and shared per-request overlap lock. Independent journal
+  operation uniqueness and locked SQL states are the durable idempotency boundary.
+  Missing requests complete harmlessly. A partial purge remains replayable.
+- **Payload / pruning:** Request and correlation ULIDs only, metadata-only failed
+  payloads, existing 168-hour pruning. Exceptions are converted to bounded safe
+  codes; no account content, credentials or object coordinates enter telemetry.
+- **Schedule:** UTC `accounts:process-deletions` every minute, one server and
+  ten-minute scheduler overlap lock; 100-row chunks. Repeated sweeps retry
+  missed dispatch without creating a new request or extending recovery.
+- **Monitoring / replay:** Existing worker and scheduler heartbeats, default
+  queue 25/100 depth and 300/900-second age, retries/final failures; critical
+  `account_erasure_retention` reports only a count after five overdue minutes.
+  Repair the journal/storage failure before replaying the same request ID.
+  A live SQL completion flag cannot authorize restore release; DEC-012 replay
+  and independent object filtering remain separate operator gates.
+
 ## GenerateAccountExport and DeleteAccountExport
 
 - **Classes / owner / dependencies:** `App\Jobs\GenerateAccountExport` and

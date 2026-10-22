@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
 use LogicException;
 
 class User extends Authenticatable
@@ -50,6 +51,9 @@ class User extends Authenticatable
             }
         };
 
+        static::creating(function (User $user): void {
+            $user->account_generation ??= (string) Str::ulid();
+        });
         static::creating($protectPrivilege);
         static::updating($protectPrivilege);
         static::created(function (User $user): void {
@@ -84,7 +88,18 @@ class User extends Authenticatable
      */
     public function isAdministrator(): bool
     {
-        return (bool) $this->is_administrator;
+        return (bool) $this->is_administrator && $this->isActive();
+    }
+
+    public function isActive(): bool
+    {
+        return $this->exists && self::query()->whereKey($this->getKey())->where('account_generation', $this->account_generation)->whereDoesntHave('accountDeletion')->exists();
+    }
+
+    /** @return HasOne<AccountDeletion, $this> */
+    public function accountDeletion(): HasOne
+    {
+        return $this->hasOne(AccountDeletion::class);
     }
 
     public function secondFactor(): HasOne

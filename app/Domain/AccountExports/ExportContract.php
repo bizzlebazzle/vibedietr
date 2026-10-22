@@ -13,7 +13,7 @@ final class ExportContract
 
     public function __construct()
     {
-        $this->schema = json_decode(file_get_contents(resource_path('account-export/1.0.0/account-export-1.0.0.schema.json')), true, flags: JSON_THROW_ON_ERROR);
+        $this->schema = json_decode(file_get_contents(resource_path('account-export/1.1.0/account-export-1.1.0.schema.json')), true, flags: JSON_THROW_ON_ERROR);
     }
 
     public function project(string $definition, mixed $value, bool $databaseRow = false): mixed

@@ -6,6 +6,7 @@ use App\Domain\MealPlans\MealPlanPublicSafety;
 use App\Models\MealPlan;
 use App\Models\User;
 use Illuminate\Auth\Access\Response;
+use Illuminate\Support\Facades\DB;
 
 class MealPlanPolicy
 {
@@ -23,6 +24,10 @@ class MealPlanPolicy
 
     public function view(?User $user, MealPlan $mealPlan): Response
     {
+        if (DB::table('retained_plan_removals')->where('resource_generation', $mealPlan->erasure_generation)->exists()
+            || ($mealPlan->user_id !== null && ! $mealPlan->owner?->isActive())) {
+            return Response::denyAsNotFound();
+        }
         if ($user !== null && (int) $user->getKey() === (int) $mealPlan->user_id) {
             return Response::allow();
         }

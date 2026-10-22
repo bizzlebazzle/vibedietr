@@ -18,7 +18,7 @@ use Tests\TestCase;
 
 class MealPlanSharingTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, \Tests\Concerns\UsesErasureJournal;
 
     public function test_selected_user_has_read_only_access_while_every_other_viewer_and_editor_boundary_is_denied(): void
     {

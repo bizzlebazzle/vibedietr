@@ -7,6 +7,7 @@ use App\Audit\AuditEventRecorder;
 use App\Audit\AuditSubject;
 use App\Audit\Enums\AuditAction;
 use App\Audit\Enums\AuditSubjectType;
+use App\Domain\AccountDeletion\RetainedPlanRemoval;
 use App\Models\MealPlan;
 use App\Models\MealPlanBookmark;
 use App\Models\User;
@@ -63,7 +64,7 @@ final class MealPlanBookmarkManager
             $this->record($mealPlan, $actor, 'removed', $removeRetainedPlan);
 
             if ($removeRetainedPlan) {
-                $mealPlan->delete();
+                app(RetainedPlanRemoval::class)->remove($mealPlan);
             }
         }, 3);
     }

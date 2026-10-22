@@ -68,7 +68,9 @@ class AccessibleFeedbackTest extends TestCase
         $this->actingAs($user)->get(route('profile'))
             ->assertOk()
             ->assertSee('Delete account')
-            ->assertSee('all of its resources and data will be permanently deleted')
+            ->assertSee('Your account will become inactive immediately.')
+            ->assertSee('You may recover it for up to 30 days unless you waive recovery.')
+            ->assertSee('Independently owned remixes and copies are unaffected.')
             ->assertSee('aria-labelledby="confirm-user-deletion-title"', false);
     }
 }

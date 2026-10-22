@@ -155,11 +155,13 @@ not newly dispatched Laravel product jobs.
    Add reviewed `--exclude=prefix/` arguments where applicable. The operator
    inventory JSON maps each durable key to `owner_generation` and `resource`;
    generation is non-reusable and linked to the installation's independent journal,
-   never merely a rolled-back integer user ID. The current app has no persistent
-   durable-object workflow/account-generation protocol: DEP-08 must supply the
-   live inventory before such production data is enabled. Empty durable scope
+   never merely a rolled-back integer user ID. DEP-08 supplies non-reusable account/resource generations and independent
+   lifecycle filtering. The installation must still supply the complete live
+   durable-object inventory before such production data is enabled. Empty durable scope
    must be demonstrated, never assumed from a missing table. Unknown or missing
    durable objects fail capture. No raw Garage-volume tar is a normal recovery set.
+   DEC-005/006 normalized review text and private provenance are durable domain
+   data and remain in the full SQL dump; only transient source files are excluded.
 4. Reconcile the database again against `database.json`, review the final journal
    checkpoint and source/bucket identities, and seal using Node 22 in the deployment
    image (the `/scripts` and `/work` mounts are shown in the wrapper):

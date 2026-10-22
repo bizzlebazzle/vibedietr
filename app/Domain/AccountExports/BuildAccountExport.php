@@ -3,6 +3,7 @@
 namespace App\Domain\AccountExports;
 
 use App\Models\AccountExport;
+use App\Models\User;
 use App\Queue\Exceptions\NonRetryableJobException;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -20,6 +21,12 @@ class BuildAccountExport
         // retain a consistent committed content view without locking the user's domain graphs.
         DB::transaction(function () use ($id): void {
             $export = AccountExport::query()->lockForUpdate()->find($id);
+            if ($export && $export->user_id !== null) {
+                $owner = User::query()->lockForUpdate()->find($export->user_id);
+                if (! $owner?->isActive()) {
+                    return;
+                }
+            }
             if (! $export || in_array($export->state, ['ready', 'expired', 'deleted'], true) || now()->utc()->greaterThanOrEqualTo($export->expires_at) || $export->user_id === null) {
                 return;
             }
@@ -46,7 +53,7 @@ class BuildAccountExport
                 $bytes = 0;
                 foreach (app(AccountExportProjection::class)->domains((int) $export->user_id) as $domain => $produce) {
                     $data = $produce();
-                    $envelope = app(ExportContract::class)->project($domain.'_envelope', ['schema_version' => '1.0.0', 'data' => $data]);
+                    $envelope = app(ExportContract::class)->project($domain.'_envelope', ['schema_version' => '1.1.0', 'data' => $data]);
                     $json = json_encode($envelope, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)."\n";
                     $bytes += strlen($json);
                     if ($bytes > 64 * 1024 * 1024 || memory_get_usage(true) > 192 * 1024 * 1024 || (hrtime(true) - $started) / 1e9 > 40) {
@@ -65,23 +72,23 @@ class BuildAccountExport
                 }
                 $generated = now()->utc();
                 $manifest = [
-                    'format' => 'vibedietr-account-export', 'schema_version' => '1.0.0',
-                    'schema_path' => 'schema/account-export-1.0.0.schema.json', 'export_id' => $export->getKey(),
+                    'format' => 'vibedietr-account-export', 'schema_version' => '1.1.0',
+                    'schema_path' => 'schema/account-export-1.1.0.schema.json', 'export_id' => $export->getKey(),
                     'generated_at' => $generated->format('Y-m-d\TH:i:s\Z'), 'encoding' => 'UTF-8', 'files' => $inventory,
                     'excluded_categories' => ['credentials', 'foreign_account_data', 'transient_input_files', 'restricted_operational_evidence', 'source_url_and_internal_import_references', 'raw_provider_payloads'],
                     'understood_omissions' => [],
                 ];
                 $extraFiles = [];
-                foreach (['account-export-1.0.0.schema.json', 'data-dictionary.md'] as $file) {
-                    $extraFiles['schema/'.$file] = file_get_contents(resource_path('account-export/1.0.0/'.$file));
+                foreach (['account-export-1.1.0.schema.json', 'data-dictionary.md'] as $file) {
+                    $extraFiles['schema/'.$file] = file_get_contents(resource_path('account-export/1.1.0/'.$file));
                 }
-                $readme = file_get_contents(resource_path('account-export/1.0.0/README.txt'));
+                $readme = file_get_contents(resource_path('account-export/1.1.0/README.txt'));
                 $extraFiles['README.txt'] = $readme;
                 $links = '';
                 foreach ($inventory as $file) {
                     $links .= '<li><a href="'.htmlspecialchars($file['path'], ENT_QUOTES, 'UTF-8').'">'.htmlspecialchars($file['counting_unit'], ENT_QUOTES, 'UTF-8').'</a>: '.$file['count'].'</li>';
                 }
-                $extraFiles['index.html'] = '<!doctype html><html lang="en"><meta charset="UTF-8"><meta name="viewport" content="width=device-width"><title>Your VibeDietr export</title><main><h1>Your VibeDietr export — schema 1.0.0</h1><p>Start with <a href="manifest.json">the manifest</a> and <a href="schema/data-dictionary.md">data dictionary</a>.</p><ul>'.$links.'</ul><pre>'.htmlspecialchars($readme, ENT_QUOTES, 'UTF-8').'</pre></main></html>';
+                $extraFiles['index.html'] = '<!doctype html><html lang="en"><meta charset="UTF-8"><meta name="viewport" content="width=device-width"><title>Your VibeDietr export</title><main><h1>Your VibeDietr export — schema 1.1.0</h1><p>Start with <a href="manifest.json">the manifest</a> and <a href="schema/data-dictionary.md">data dictionary</a>.</p><ul>'.$links.'</ul><pre>'.htmlspecialchars($readme, ENT_QUOTES, 'UTF-8').'</pre></main></html>';
                 foreach ($extraFiles as $name => $content) {
                     $this->add($zip, $name, $content);
                     $inventory[] = ['path' => $name, 'media_type' => match (pathinfo($name, PATHINFO_EXTENSION)) {

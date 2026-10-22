@@ -153,12 +153,12 @@ work.
   responsive recipe editing/resizing; UX-04 adds optional match review ([verification](UX_04_VERIFICATION.md)).
   UX-05 adds responsive planning/consumption ([verification](UX_05_VERIFICATION.md)); UX-06 adds empty/recovery guidance.
   UX-07 adds shared accessibility fixes and full-page/pixel regressions ([verification](UX_07_VERIFICATION.md)).
-- [Recovery tooling and drill](DEP_06_VERIFICATION.md) exist; production release needs DEP-08 and installation gates.
+- [Recovery tooling and drill](DEP_06_VERIFICATION.md) include DEP-08 replay/release; production installation gates remain.
 - DEP-07 implements verified owned JSON ZIP exports and queued cleanup; installation release checks remain ([evidence](DEP_07_VERIFICATION.md)).
-- Delayed deletion/recovery and release readiness remain DEP-08–DEP-10 work; DEC-008/012 are decided; DEC-010 remains unresolved.
-- Account deletion is still immediate. Legacy ingredient rows cascade with the
-  account; shared catalogue submitter references are nullable provenance and
-  survive account deletion.
+- DEP-08 lifecycle is implemented ([verification](DEP_08_VERIFICATION.md)); DEP-09/10 and DEC-010 still gate launch.
+- Accounts become inactive with up to 30 days of recovery; under-13/waived accounts purge without recovery.
+  Safe bookmarked public plans become anonymous/unlisted; private history follows DEC-022.
+  Owned-domain purge preserves approved public/catalogue facts and independent copies.
 - Production administrator workflows exist but remain unavailable until the
   documented notification/provider, worker, clock, audit, destination, and
   monitoring readiness checks pass.
@@ -188,7 +188,7 @@ Done gate before completion.
 
 | Area | Focused test location or command |
 | --- | --- |
-| Accounts, exports and administrator security | `tests/Feature/Auth`, `tests/Feature/AccountExports`, `tests/Feature/Administrator*` |
+| Accounts, exports and administrator security | `tests/Feature/Auth`, `tests/Feature/AccountExports`, `tests/Feature/AccountDeletion`, `tests/Feature/Administrator*` |
 | Audit | `tests/Feature/AuditEvent*` |
 | Ingredients and OpenFoodFacts | `tests/Feature/Ingredients`, `tests/Feature/Integrations` |
 | Recipes, organization, profiles, and imports | `tests/Feature/Recipes`, `tests/Feature/Recipes/RecipeImport*`, `tests/Feature/Profiles` |

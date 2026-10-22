@@ -10,9 +10,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 /**
+ * @property string $erasure_generation
  * @property Carbon|null $starts_on
  * @property Carbon|null $ends_on
  * @property MealPlanType $type
@@ -29,6 +32,9 @@ class MealPlan extends Model
 
     protected static function booted(): void
     {
+        static::creating(function (MealPlan $model): void {
+            $model->erasure_generation ??= (string) Str::ulid();
+        });
         static::updating(function (MealPlan $mealPlan): void {
             if (! $mealPlan->isDirty(['type', 'starts_on', 'ends_on'])) {
                 return;
@@ -72,6 +78,7 @@ class MealPlan extends Model
         ];
     }
 
+    /** @return BelongsTo<User, $this> */
     public function owner(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
@@ -105,8 +112,9 @@ class MealPlan extends Model
 
     public function isBookmarkableBy(User $user): bool
     {
-        return $this->visibility === MealPlanVisibility::Public
-            && $this->user_id !== null
+        return ! DB::table('retained_plan_removals')->where('resource_generation', $this->erasure_generation)->exists()
+            && $user->isActive() && $this->visibility === MealPlanVisibility::Public
+            && $this->user_id !== null && $this->owner?->isActive()
             && (int) $this->user_id !== (int) $user->getKey();
     }
 

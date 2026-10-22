@@ -254,7 +254,7 @@ class AccountExportTest extends TestCase
         file_put_contents($export->stagingPath(), 'synthetic crashed staging');
         Date::setTestNow($export->expires_at);
         $disk = \Mockery::mock(Filesystem::class);
-        $this->expectCall($disk, 'exists')->twice()->andReturn(true);
+        $this->expectCall($disk, 'exists')->times(3)->andReturn(true, true, false);
         $this->expectCall($disk, 'delete')->twice()->andReturn(false, true);
         Storage::shouldReceive('disk')->with('local')->andReturn($disk);
         try {
@@ -426,7 +426,7 @@ class AccountExportTest extends TestCase
         $this->assertTrue($zip->open(Storage::disk('local')->path($export->storageKey())));
         $this->assertSame(13, $zip->numFiles);
         $manifest = json_decode($zip->getFromName('manifest.json'), true, flags: JSON_THROW_ON_ERROR);
-        $this->assertSame('1.0.0', $manifest['schema_version']);
+        $this->assertSame('1.1.0', $manifest['schema_version']);
         $schema = json_decode($zip->getFromName($manifest['schema_path']), true, flags: JSON_THROW_ON_ERROR);
         $this->assertSame('https://json-schema.org/draft/2020-12/schema', $schema['$schema']);
         $this->assertStringNotContainsString('<script', $zip->getFromName('index.html'));

@@ -4,6 +4,9 @@ namespace App\Audit\Enums;
 
 enum AuditAction: string
 {
+    case ErasureOperatorEvent = 'account.erasure_operator_event';
+    case RetainedPlanModerated = 'plan.retained_moderated';
+    case AccountLifecycleEvent = 'account.lifecycle_event';
     case AccountExportEvent = 'account.export_event';
     case CatalogueCandidateCreated = 'catalogue.candidate_created';
     case CataloguePendingApproved = 'catalogue.pending_approved';
@@ -47,6 +50,8 @@ enum AuditAction: string
     public function purpose(): AuditPurpose
     {
         return match ($this) {
+            self::ErasureOperatorEvent => AuditPurpose::PrivilegedAccessAccountability,
+            self::RetainedPlanModerated => AuditPurpose::ModerationAccountability,
             self::AdministratorBootstrapCompleted,
             self::AdministratorBootstrapRefused,
             self::AdministratorLifecycleEvent => AuditPurpose::PrivilegedAccessAccountability,
@@ -83,6 +88,7 @@ enum AuditAction: string
             self::PlanCopied,
             self::DiaryConsumptionTransitioned => AuditPurpose::ProductHistory,
             self::AccountAnonymizationCompleted => AuditPurpose::AccountErasureEvidence,
+            self::AccountLifecycleEvent,
             self::AccountExportEvent,
             self::SecuritySecondFactorEvent,
             self::SecurityNotificationEvent => AuditPurpose::AccountSecurity,
@@ -92,6 +98,8 @@ enum AuditAction: string
     public function retentionClass(): AuditRetentionClass
     {
         return match ($this) {
+            self::ErasureOperatorEvent => AuditRetentionClass::PrivilegedIdentityTwelveMonths,
+            self::RetainedPlanModerated => AuditRetentionClass::ModerationDecisionTwelveMonths,
             self::AdministratorBootstrapCompleted,
             self::AdministratorBootstrapRefused,
             self::AdministratorLifecycleEvent => AuditRetentionClass::PrivilegedIdentityTwelveMonths,
@@ -128,6 +136,7 @@ enum AuditAction: string
             self::PlanCopied,
             self::DiaryConsumptionTransitioned => AuditRetentionClass::PrivateContentUntilFinalPurge,
             self::AccountAnonymizationCompleted => AuditRetentionClass::PurgeReceiptTwelveMonths,
+            self::AccountLifecycleEvent,
             self::AccountExportEvent,
             self::SecuritySecondFactorEvent,
             self::SecurityNotificationEvent => AuditRetentionClass::SecurityEventSixMonths,
@@ -140,6 +149,8 @@ enum AuditAction: string
     public function allowedActorTypes(): array
     {
         return match ($this) {
+            self::ErasureOperatorEvent => [AuditActorType::ExternalOperator],
+            self::RetainedPlanModerated => [AuditActorType::Administrator],
             self::AdministratorBootstrapCompleted,
             self::AdministratorBootstrapRefused => [
                 AuditActorType::ExternalOperator,
@@ -188,6 +199,7 @@ enum AuditAction: string
             self::RecipeNutritionRecalculated,
             self::PlanSnapshotRecorded,
             self::AccountAnonymizationCompleted => [AuditActorType::System],
+            self::AccountLifecycleEvent,
             self::AccountExportEvent,
             self::SecuritySecondFactorEvent,
             self::SecurityNotificationEvent => [
@@ -204,8 +216,10 @@ enum AuditAction: string
     public function allowedSubjectTypes(): array
     {
         return match ($this) {
-            self::AdministratorBootstrapCompleted,
-            self::AccountAnonymizationCompleted => [AuditSubjectType::UserAccount],
+            self::ErasureOperatorEvent => [AuditSubjectType::UserAccount, AuditSubjectType::SystemOperation],
+            self::RetainedPlanModerated => [AuditSubjectType::MealPlan],
+            self::AdministratorBootstrapCompleted => [AuditSubjectType::UserAccount],
+            self::AccountAnonymizationCompleted => [AuditSubjectType::UserAccount, AuditSubjectType::SystemOperation],
             self::AdministratorBootstrapRefused,
             self::AdministratorLifecycleEvent => [AuditSubjectType::UserAccount, AuditSubjectType::SystemOperation],
             self::CatalogueProposalApproved,
@@ -243,6 +257,7 @@ enum AuditAction: string
             self::PlanBookmarkChanged,
             self::PlanCopied => [AuditSubjectType::MealPlan],
             self::DiaryConsumptionTransitioned => [AuditSubjectType::DiaryConsumptionTransition],
+            self::AccountLifecycleEvent,
             self::AccountExportEvent => [AuditSubjectType::UserAccount, AuditSubjectType::SystemOperation],
             self::SecuritySecondFactorEvent,
             self::SecurityNotificationEvent => [AuditSubjectType::UserAccount],

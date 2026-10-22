@@ -2,6 +2,7 @@
 
 namespace App\Domain\AccountExports;
 
+use App\Models\PrivateConsumptionArchive;
 use App\Models\Recipe;
 use App\Models\User;
 use Illuminate\Database\Query\Builder;
@@ -39,6 +40,7 @@ final class AccountExportProjection
             'organisation' => fn () => $this->organisation($userId, $recipes),
             'plans' => fn () => $this->rows('meal_plans', 'plan', 'user_id', $userId, fn ($row) => $this->plan($row)),
             'diary' => fn () => (object) [
+                'archived_history' => $this->archivedHistory($userId),
                 'entries' => $this->queryRows(DB::table('diary_entries')->whereIn('id', $diaryEntries), 'diary_entry', fn ($r) => $this->sourceRefs($r, $r->kind)),
                 'states' => $this->queryRows(DB::table('diary_consumption_states')->whereIn('id', $states), 'state'),
                 'transitions' => $this->queryRows(DB::table('diary_consumption_transitions')->whereIn('diary_consumption_state_id', $states)->orderBy('diary_consumption_state_id')->orderBy('sequence'), 'transition'),
@@ -94,6 +96,50 @@ final class AccountExportProjection
                 'term_suggestions' => $this->rows('managed_recipe_term_suggestions', 'suggestion', 'suggested_by_user_id', $userId),
             ],
         ];
+    }
+
+    private function archivedHistory(int $userId): array
+    {
+        $result = [];
+        foreach (PrivateConsumptionArchive::query()->where('user_id', $userId)->orderBy('id')->cursor() as $archive) {
+            $history = $archive->history;
+            $record = ['id' => $archive->getKey(), 'name' => $history['name']];
+            foreach (['recipe_entries' => 'recipe_entry', 'item_entries' => 'item_entry', 'states' => 'state',
+                'transitions' => 'transition', 'nutrition_snapshots' => 'consumption_snapshot'] as $field => $definition) {
+                $record[$field] = array_map(function ($row) use ($definition) {
+                    $row = (object) $row;
+                    if ($definition === 'consumption_snapshot') {
+                        $row = $this->sourceRefs($row, $row->item_kind);
+                        $row->source_entry_id = ($row->source_entry_type === 'meal_plan_recipe_entry' ? 'recipe-entry:' : 'item-entry:').$row->source_entry_id;
+                    }
+
+                    return $this->record($definition, $row);
+                }, $history[$field]);
+            }
+            $record['phases'] = array_map(function ($phase) use ($history) {
+                $phase['values'] = array_map(fn ($value) => $this->record('phase_value', (object) $value),
+                    array_values(array_filter($history['phase_values'], fn ($value) => $value['meal_plan_target_phase_id'] === $phase['id'])));
+
+                return $this->record('phase', (object) $phase);
+            }, $history['phases']);
+            $record['slots'] = array_map(function ($slot) use ($record, $history) {
+                $recipeIds = array_column(array_filter($history['recipe_entries'], fn ($entry) => $entry['meal_plan_slot_id'] === $slot['id']), 'id');
+                $slot['recipe_entries'] = array_values(array_filter($record['recipe_entries'], fn ($entry) => in_array(substr($entry->id, 13), array_map('strval', $recipeIds), true)));
+                $itemIds = array_column(array_filter($history['item_entries'], fn ($entry) => $entry['meal_plan_slot_id'] === $slot['id']), 'id');
+                $slot['item_entries'] = array_values(array_filter($record['item_entries'], fn ($entry) => in_array(substr($entry->id, 11), array_map('strval', $itemIds), true)));
+
+                return $this->record('slot', (object) $slot);
+            }, $history['slots']);
+            $record['days'] = array_map(function ($day) use ($history, $record) {
+                $ids = array_column(array_filter($history['slots'], fn ($slot) => $slot['meal_plan_day_id'] === $day['id']), 'id');
+                $day['slots'] = array_values(array_filter($record['slots'], fn ($slot) => in_array(substr($slot->id, 5), array_map('strval', $ids), true)));
+
+                return $this->record('day', (object) $day);
+            }, $history['days']);
+            $result[] = $this->contract->project('archived_history', $record);
+        }
+
+        return $result;
     }
 
     private function account(int $id): object
