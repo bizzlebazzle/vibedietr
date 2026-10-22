@@ -3,8 +3,9 @@
 ## Scope and status
 
 Read-only policy/schema/code audit on 18 October 2026, followed by this
-documentation record. DEP-08 remains P2, High risk, Large size and unimplemented.
-This is planning evidence, not verification of a functioning deletion lifecycle.
+documentation record. At that audit DEP-08 was P2, High risk, Large size and
+unimplemented. This historical planning evidence is complemented by the current
+[implementation record](ACCOUNT_DELETION.md); it is not lifecycle verification.
 Existing decisions and the documents linked below remain authoritative; the
 questions below were answered yes by the owner on 18 October 2026 and recorded
 in [DEC-021](DECISIONS.md#dec-021--account-purge-resource-boundaries). Descriptions

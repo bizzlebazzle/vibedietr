@@ -1513,15 +1513,16 @@ changes, it is deliberately split across multiple items.
 
 ### DEP-08 — P2 — Replace immediate account deletion with recovery and purge
 
-- **Status:** In progress (2026-10-18): DEC-021 approved and journal foundation
-  implemented; lifecycle, purge and restore-release work remains. Full backend
-  verification stopped on existing transient-fixture filesystem permissions;
-  see [implementation evidence](ACCOUNT_DELETION.md).
+- **Status:** Conditionally complete (2026-10-22): repository implementation and
+  local gates pass, including 1,185 backend tests, browser verification and real
+  full/partial restore-purge/disposal probes. Production installation, remote CI
+  and manual verification gates remain; see [verification](DEP_08_VERIFICATION.md)
+  and [implementation evidence](ACCOUNT_DELETION.md).
 - **Planning evidence:** [Lifecycle audit and owner-approved preferred
   implementation](DEP_08_LIFECYCLE_AUDIT.md); all four resource-boundary
   questions are approved under DEC-021.
 - **Implementation:** [Account deletion implementation](ACCOUNT_DELETION.md)
-  records the journal foundation and remaining lifecycle/restore work.
+  records the implemented lifecycle, domain coverage, restore protocol and installation gates.
 - **Outcome:** Implement optional recovery for up to 30 days followed by
   privacy-aware purge/anonymization, with an authenticated immediate-purge path.
 - **Dependencies:** DEC-012, DEC-021, DEC-022, FND-05, FND-09, FND-14, DEP-04, DEP-05,

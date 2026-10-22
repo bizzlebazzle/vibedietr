@@ -2,8 +2,9 @@
 
 ## Status
 
-DEP-08 remains P2 and incomplete pending disposal verification and final
-Definition of Done gates. DEC-021 and DEC-022 record approved resource
+DEP-08 remains P2. Repository implementation and local verification are complete;
+production release is conditional on the installation/manual gates in the
+[verification report](DEP_08_VERIFICATION.md). DEC-021 and DEC-022 record approved resource
 boundaries; the [pre-implementation audit](DEP_08_LIFECYCLE_AUDIT.md) inventories
 every owned domain and dependency. Lifecycle services, authenticated recovery
 and waiver, scheduled queued purge, protected scoped evidence, purpose-specific
@@ -72,11 +73,13 @@ and production-only evidence. No test establishes physical overwrite, actual
 seven-day aging, independent production failure domains or installation key
 custody.
 
-Storage-generation/key retirement, verification of every affected copy,
-production deployment checks, applicable browser checks and final repository
-quality gates remain required before DEP-08 completion. The earlier unrelated
-uploaded-input fixture permission failure was resolved by the owner; its
-affected focused tests passed when implementation resumed.
+The final canonical backend suite passed 1,185 tests with 7,509 assertions.
+Formatting, static analysis, build, tooling and both browser gates passed.
+The real full/database-only/object-only/selective restore and disposal drill
+passed in 140 seconds. Production all-layer retirement, actual aging, key
+custody, live readiness, remote CI and manual assistive-technology checks remain
+installation gates; local probes cannot attest them. The original upload and
+security tests remain unchanged.
 
 ## Lifecycle services
 

@@ -184,11 +184,22 @@ graceful restart, recovery, health and privacy procedures and
 
 ## Tests and quality checks
 
+The full backend script disables Composer's process-wrapper timeout so the
+complete suite can finish. PHPUnit checks, application/job timeouts and CI job
+limits are unchanged.
+
 Self-service exports are available from Profile. See
 [account-export operation and production checks](docs/ACCOUNT_EXPORTS.md).
 The focused backend command is
 `./vendor/bin/sail artisan test tests/Feature/AccountExports`;
 `./vendor/bin/sail artisan account-exports:cleanup` queues due file cleanup.
+
+Account deletion, authenticated recovery/waiver and scheduled final purge are
+documented in [the account-deletion runbook](docs/ACCOUNT_DELETION.md).
+The lifecycle requires separately provisioned journal stores and keys; ordinary
+Sail startup does not provision them. Use
+`./vendor/bin/sail artisan test tests/Feature/AccountDeletion` for focused checks
+and the isolated drill below for recovery-system verification.
 
 Backup capture/expiry, quarantined restore and migration rollout procedures are
 in [the backup/restore runbook](docs/BACKUP_RESTORE_RUNBOOK.md) and
