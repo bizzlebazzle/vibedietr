@@ -272,3 +272,16 @@ values. Correct the named setting, clear stale cache with `config:clear`, cache
 again, and rerun. After a static pass, investigate secret-free FND-13 provider,
 capacity, destination, clock, audit, worker, and failure-monitor health rather
 than bypassing the control.
+
+## Account erasure readiness
+
+DEP-08 requires explicit installation/journal generations, separate journal
+encryption/integrity and scoped-evidence keys, and release/retirement public
+verification keys. The two journal MySQL hosts must differ from each other and
+the application host; the evidence connection must also be external.
+
+Static `app:production-check` rejects missing or aliased settings without
+printing URLs or secrets. Operator signing keys remain in the protected operator
+environment. Static validation does not establish live TLS, fsync durability,
+independent failure domains, complete copy inventory, or key/header retirement;
+verify those under [the deletion runbook](ACCOUNT_DELETION.md).

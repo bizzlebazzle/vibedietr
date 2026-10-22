@@ -24,6 +24,7 @@ final class ProductionConfigurationValidator
         $this->notifications($failures);
         $this->administratorControls($failures);
         $this->providers($failures);
+        $failures = [...$failures, ...app(ErasureConfigurationValidator::class)->failures()];
 
         return array_values(array_unique($failures));
     }
