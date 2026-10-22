@@ -9,7 +9,7 @@ use RuntimeException;
 final class DatabaseReconciliation
 {
     /** @return array<string, mixed> */
-    public function capture(Connection $db): array
+    public function capture(Connection $db, bool $excludeTransientInput = false): array
     {
         if ($db->getDriverName() !== 'mysql') {
             throw new RuntimeException('recovery_mysql_required');
@@ -38,7 +38,7 @@ final class DatabaseReconciliation
             $columns = $columnGroups[$table->name];
             $tables[$table->name] = [
                 'columns' => $columns,
-                'data' => $this->digest($db, $table->name, array_keys($columns)),
+                'data' => $this->digest($db, $table->name, array_keys($columns), $excludeTransientInput),
                 'indexes' => $indexGroups[$table->name] ?? [],
             ];
         }
@@ -75,9 +75,9 @@ final class DatabaseReconciliation
     }
 
     /** @param array<string, mixed> $baseline */
-    public function verify(Connection $db, array $baseline, bool $additive = false): void
+    public function verify(Connection $db, array $baseline, bool $additive = false, bool $excludeTransientInput = false): void
     {
-        $current = json_decode($this->json($this->capture($db)), true, flags: JSON_THROW_ON_ERROR);
+        $current = json_decode($this->json($this->capture($db, $excludeTransientInput)), true, flags: JSON_THROW_ON_ERROR);
         $baseline = json_decode($this->json($baseline), true, flags: JSON_THROW_ON_ERROR);
         if (($baseline['format'] ?? null) !== 1 || ! isset($baseline['tables'], $baseline['applied'], $baseline['migration_files'], $baseline['foreign_keys'])) {
             throw new RuntimeException('recovery_invalid_manifest');
@@ -105,7 +105,7 @@ final class DatabaseReconciliation
                         throw new RuntimeException('recovery_existing_index_changed');
                     }
                 }
-                if ($name !== 'migrations' && $this->digest($db, $name, array_keys($table['columns'])) !== $table['data']) {
+                if ($name !== 'migrations' && $this->digest($db, $name, array_keys($table['columns']), $excludeTransientInput) !== $table['data']) {
                     throw new RuntimeException('recovery_existing_data_changed');
                 }
             }
@@ -123,11 +123,14 @@ final class DatabaseReconciliation
     /** @param list<string> $columns
      * @return array{count: int, sha256: string}
      */
-    private function digest(Connection $db, string $table, array $columns): array
+    private function digest(Connection $db, string $table, array $columns, bool $excludeTransientInput = false): array
     {
         // Sort row digests, not private row contents. Order-independent and duplicate-sensitive.
         $hashes = [];
         foreach ($db->table($table)->select($columns)->cursor() as $row) {
+            if ($excludeTransientInput && $table === 'recipe_imports') {
+                $row->source_text = null;
+            }
             $values = array_map(fn (mixed $value): ?string => $value === null ? null : base64_encode((string) $value), (array) $row);
             $hashes[] = hash('sha256', $this->json($values));
         }

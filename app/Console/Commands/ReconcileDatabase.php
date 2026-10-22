@@ -13,6 +13,7 @@ final class ReconcileDatabase extends Command
         {--write= : Create a new restricted baseline file}
         {--compare= : Compare with a restricted baseline file}
         {--additive : Permit additive schema and migration-ledger changes only}
+        {--exclude-transient-input : Compare approved source projection; never use on restored targets}
         {--quiesced : Assert all writers and DDL are stopped}';
 
     protected $description = 'Check MySQL integrity and reconcile frozen database counts, digests and migration history';
@@ -26,7 +27,7 @@ final class ReconcileDatabase extends Command
         }
         try {
             if ($this->option('write')) {
-                $manifest = $reconciliation->capture(DB::connection());
+                $manifest = $reconciliation->capture(DB::connection(), (bool) $this->option('exclude-transient-input'));
                 $oldMask = umask(0077);
                 try {
                     $file = fopen((string) $this->option('write'), 'x');
@@ -46,7 +47,7 @@ final class ReconcileDatabase extends Command
                 }
             } else {
                 $manifest = json_decode(file_get_contents((string) $this->option('compare')), true, flags: JSON_THROW_ON_ERROR);
-                $reconciliation->verify(DB::connection(), $manifest, (bool) $this->option('additive'));
+                $reconciliation->verify(DB::connection(), $manifest, (bool) $this->option('additive'), (bool) $this->option('exclude-transient-input'));
             }
         } catch (Throwable) {
             // SQL/driver exceptions may contain private values or connection credentials.

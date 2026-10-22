@@ -34,9 +34,17 @@ unset drill_password
 app_run "$drill_source" scripts/recovery/erasure-drill.php seed > "$drill_workspace/privacy-seed.log"
 cat "$drill_workspace/signing.env" >> "$drill_workspace/app.env"
 mkdir "$drill_workspace/privacy-set"
-app_run "$drill_source" artisan operations:reconcile-database --quiesced --write=/drill/privacy-set/database.json > "$drill_workspace/privacy-reconcile.log"
-docker exec "$drill_source" sh -c 'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysqldump -uroot --single-transaction --quick --hex-blob --no-tablespaces --set-gtid-purged=OFF --routines --events --triggers testing' > "$drill_workspace/privacy-set/database.sql"
+app_run "$drill_source" artisan operations:reconcile-database --quiesced --exclude-transient-input --write=/drill/privacy-set/database.json > "$drill_workspace/privacy-reconcile.log"
+app_run "$drill_source" artisan operations:recovery-input-projection --quiesced --write=/drill/privacy-set/imports.sql > "$drill_workspace/input-projection.log"
+docker exec "$drill_source" sh -c 'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysqldump -uroot --no-data --no-tablespaces --set-gtid-purged=OFF --routines --events --triggers testing' > "$drill_workspace/privacy-set/database.sql"
+docker exec "$drill_source" sh -c 'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysqldump -uroot --single-transaction --quick --hex-blob --no-tablespaces --set-gtid-purged=OFF --no-create-info --skip-triggers --ignore-table=testing.recipe_imports testing' >> "$drill_workspace/privacy-set/database.sql"
+cat "$drill_workspace/privacy-set/imports.sql" >> "$drill_workspace/privacy-set/database.sql"
+rm "$drill_workspace/privacy-set/imports.sql"
 app_run "$drill_source" artisan operations:recovery-objects capture /drill/privacy-set/objects --quiesced --ownership=/drill/ownership.json --exclude=exports/ > "$drill_workspace/privacy-objects.log"
+if grep -q DEP08_TRANSIENT_SQL_MUST_NEVER_ENTER_BACKUP "$drill_workspace/privacy-set/database.sql"; then
+    echo 'Transient SQL source leaked into recovery capture.' >&2
+    exit 1
+fi
 privacy_cutoff=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 node_run /scripts/recovery-set.mjs seal /work/privacy-set synthetic-dep06-privacy synthetic-drill "$privacy_cutoff"
 restic_run backup --json --tag synthetic-dep08-privacy /work/privacy-set > "$drill_workspace/privacy-capture.json"

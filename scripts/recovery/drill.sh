@@ -142,8 +142,12 @@ drill_step=paired-capture
 app_run "$drill_source" artisan migrate --force > "$drill_workspace/migrate.log"
 app_run "$drill_source" scripts/recovery/drill-fixtures.php > "$drill_workspace/fixtures.log"
 cutoff=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-app_run "$drill_source" artisan operations:reconcile-database --quiesced --write=/drill/set/database.json > "$drill_workspace/reconcile.log"
-docker exec "$drill_source" sh -c 'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysqldump -uroot --single-transaction --quick --hex-blob --no-tablespaces --set-gtid-purged=OFF --routines --events --triggers testing' > "$drill_workspace/set/database.sql"
+app_run "$drill_source" artisan operations:reconcile-database --quiesced --exclude-transient-input --write=/drill/set/database.json > "$drill_workspace/reconcile.log"
+app_run "$drill_source" artisan operations:recovery-input-projection --quiesced --write=/drill/set/imports.sql > "$drill_workspace/input-projection.log"
+docker exec "$drill_source" sh -c 'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysqldump -uroot --no-data --no-tablespaces --set-gtid-purged=OFF --routines --events --triggers testing' > "$drill_workspace/set/database.sql"
+docker exec "$drill_source" sh -c 'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysqldump -uroot --single-transaction --quick --hex-blob --no-tablespaces --set-gtid-purged=OFF --no-create-info --skip-triggers --ignore-table=testing.recipe_imports testing' >> "$drill_workspace/set/database.sql"
+cat "$drill_workspace/set/imports.sql" >> "$drill_workspace/set/database.sql"
+rm "$drill_workspace/set/imports.sql"
 app_run "$drill_source" artisan operations:recovery-objects capture /drill/set/objects --quiesced --ownership=/drill/ownership.json --exclude=exports/ > "$drill_workspace/objects.log"
 
 # Inject a historical synthetic snapshot; ordinary capture refuses expired sets.
@@ -193,14 +197,14 @@ return new class extends Migration {
 };
 PHP
 drill_migration_mount=(-v "$drill_workspace/migrations:/var/www/html/database/migrations:ro")
-app_run "$drill_target" artisan operations:reconcile-database --quiesced --write=/drill/preflight.json >> "$drill_workspace/reconcile.log"
+app_run "$drill_target" artisan operations:reconcile-database --quiesced --exclude-transient-input --write=/drill/preflight.json >> "$drill_workspace/reconcile.log"
 expect_failure app_run "$drill_target" artisan operations:reconcile-database --quiesced --compare=/drill/preflight.json --additive
 app_run "$drill_target" artisan migrate --force >> "$drill_workspace/migrate.log"
 app_run "$drill_target" artisan operations:reconcile-database --quiesced --compare=/drill/preflight.json --additive >> "$drill_workspace/reconcile.log"
 app_run "$drill_target" artisan migrate:rollback --step=1 --force >> "$drill_workspace/migrate.log"
 app_run "$drill_target" artisan operations:reconcile-database --quiesced --compare=/drill/preflight.json >> "$drill_workspace/reconcile.log"
 drill_migration_mount=()
-app_run "$drill_source" artisan operations:reconcile-database --quiesced --compare=/drill/set/database.json >> "$drill_workspace/reconcile.log"
+app_run "$drill_source" artisan operations:reconcile-database --quiesced --exclude-transient-input --compare=/drill/set/database.json >> "$drill_workspace/reconcile.log"
 
 source scripts/recovery/erasure-drill.sh
 

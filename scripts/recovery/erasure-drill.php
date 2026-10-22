@@ -21,6 +21,7 @@ use App\Models\MealPlanRecipeEntry;
 use App\Models\MealPlanSlot;
 use App\Models\PrivateConsumptionArchive;
 use App\Models\Recipe;
+use App\Models\RecipeImport;
 use App\Models\User;
 use Aws\S3\S3Client;
 use Carbon\CarbonImmutable;
@@ -88,6 +89,9 @@ if ($mode === 'mirror-repair') {
     foreach (['owner', 'other'] as $name) {
         $ownership['durable/'.$name]['owner_generation'] = User::query()->where('email', $name.'@drill.example.test')->value('account_generation');
     }
+    RecipeImport::factory()->withDraft()->create([
+        'user_id' => $other->id, 'source_text' => 'DEP08_TRANSIENT_SQL_MUST_NEVER_ENTER_BACKUP',
+    ]);
     $cases = [];
     foreach (['expired', 'waived', 'under13', 'cancelled', 'removed', 'pending', 'interrupted', 'boundary'] as $name) {
         Date::setTestNow($name === 'expired' ? $clock->subDays(29) : ($name === 'boundary' ? $clock->subDays(28)->addSecond() : $clock));
