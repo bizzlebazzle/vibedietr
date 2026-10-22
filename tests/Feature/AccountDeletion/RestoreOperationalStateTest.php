@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\AccountDeletion;
 
+use App\Domain\AccountDeletion\JournalUnavailable;
 use App\Domain\AccountDeletion\RestoreOperationalState;
 use App\Models\AccountExport;
 use App\Models\RecipeImport;
@@ -15,6 +16,33 @@ use Tests\TestCase;
 class RestoreOperationalStateTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_restore_reaps_expired_import_metadata_without_restarting_original_clocks(): void
+    {
+        $this->freezeSecond();
+        config(['erasure.privacy_operator' => 'synthetic-restore-operator', 'erasure.operator_environment' => 'testing']);
+        $finished = RecipeImport::factory()->withDraft()->create(['completed_at' => now()->subDays(30)]);
+        $draft = $finished->recipe;
+        $abandoned = RecipeImport::factory()->create(['created_at' => now()->subDays(38)]);
+        $recent = RecipeImport::factory()->create(['created_at' => now()->subDays(8),
+            'processing_lease_until' => now()->addHour()]);
+        app(RestoreOperationalState::class)->invalidate();
+        $this->assertModelMissing($finished);
+        $this->assertModelExists($draft);
+        $this->assertModelMissing($abandoned);
+        $this->assertEquals(now()->subDay(), $recent->fresh()->failed_at);
+        $this->assertNull($recent->fresh()->processing_lease_until);
+        app(RestoreOperationalState::class)->invalidate();
+        $this->assertEquals(now()->subDay(), $recent->fresh()->failed_at);
+    }
+
+    public function test_restore_cannot_release_metadata_without_a_proven_terminal_clock(): void
+    {
+        config(['erasure.privacy_operator' => 'synthetic-restore-operator', 'erasure.operator_environment' => 'testing']);
+        RecipeImport::factory()->failed()->create(['failed_at' => null]);
+        $this->expectException(JournalUnavailable::class);
+        app(RestoreOperationalState::class)->invalidate();
+    }
 
     public function test_old_sessions_downloads_jobs_and_transient_text_are_not_reactivated(): void
     {

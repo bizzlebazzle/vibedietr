@@ -4,6 +4,7 @@ namespace App\Domain\AccountDeletion;
 
 use App\Domain\AccountExports\CleanupAccountExport;
 use App\Domain\RecipeImports\RecipeImportInputCleaner;
+use App\Domain\RecipeImports\RecipeImportRetention;
 use App\Domain\RecipeImports\RecipeImportStatus;
 use App\Models\AccountExport;
 use App\Models\RecipeImport;
@@ -28,9 +29,14 @@ final class RestoreOperationalState
             }
         }
         foreach (RecipeImport::query()->cursor() as $import) {
-            $import->forceFill(['source_text' => null])->save();
+            $import->forceFill(['source_text' => null, 'processing_lease_until' => null])->save();
             if (! $import->status->terminal()) {
-                $import->forceFill(['status' => RecipeImportStatus::Cancelled, 'completed_at' => $import->created_at])->save();
+                $expiry = ($import->source_stored_at ?? $import->created_at)->copy()->addDays(7);
+                $expired = $expiry->lessThanOrEqualTo(now()->utc());
+                $import->forceFill($expired
+                    ? ['status' => RecipeImportStatus::Failed, 'failed_at' => $expiry,
+                        'failure_category' => 'permanent', 'failure_code' => 'abandoned_input_expired']
+                    : ['status' => RecipeImportStatus::Cancelled, 'completed_at' => now()->utc()])->save();
             }
             if ($import->source_key !== null || $import->canonical_key !== null) {
                 // A restored completion marker cannot bypass physical verification.
@@ -39,6 +45,10 @@ final class RestoreOperationalState
                     throw new JournalUnavailable;
                 }
             }
+        }
+        $retention = app(RecipeImportRetention::class)->run();
+        if ($retention['invalid_clocks'] !== 0 || $retention['cleanup_failures'] !== 0) {
+            throw new JournalUnavailable;
         }
         DB::transaction(function (): void {
             foreach (['sessions', 'password_reset_tokens', 'jobs', 'failed_jobs', 'job_batches', 'cache', 'cache_locks'] as $table) {
