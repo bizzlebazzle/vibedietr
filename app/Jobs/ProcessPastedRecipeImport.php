@@ -84,6 +84,9 @@ final class ProcessPastedRecipeImport implements ShouldBeUnique, ShouldQueue
             $this->markFailed($exception);
             $this->fail($exception);
         } catch (NonRetryableJobException $exception) {
+            if ($exception->safeErrorCode === 'import_owner_inactive') {
+                return;
+            }
             $this->markFailed($exception);
             $this->fail($exception);
         } catch (RetryableJobException $exception) {

@@ -6,7 +6,7 @@ use App\Queue\Exceptions\NonRetryableJobException;
 use Imagick;
 use ImagickException;
 
-final class ImageCanonicalizer
+final class ImageCanonicalizer implements ImageCanonicalizerContract
 {
     private const MIMES = [
         'jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'png' => 'image/png',

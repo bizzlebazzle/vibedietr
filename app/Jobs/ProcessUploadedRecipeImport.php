@@ -85,6 +85,9 @@ final class ProcessUploadedRecipeImport implements ShouldBeUnique, ShouldQueue
             $cleaner->cleanup($this->importId);
             $this->fail($exception);
         } catch (NonRetryableJobException $exception) {
+            if ($exception->safeErrorCode === 'import_owner_inactive') {
+                return;
+            }
             $this->markFailed($exception);
             $cleaner->cleanup($this->importId);
             $this->fail($exception);

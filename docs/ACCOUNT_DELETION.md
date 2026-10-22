@@ -180,6 +180,22 @@ content-free critical alert rather than inventing a new date.
 existing queue contract. The independent protected journal and scoped legal
 evidence do not inherit ordinary audit expiry.
 
+## In-flight private-object boundaries
+
+Final account purge waits for an existing import processing lease to drain;
+it never clears a live lease to bypass a worker. This does not extend recovery
+or change the original erasure clock. Canonical-image keys are reserved durably
+before object writes, reused on retry, and written only while account/import
+ownership locks still authorize the operation. A preprocessing result arriving
+after purge cannot create an orphan canonical object. Inactive-owner job aborts
+do not replace original terminal outcome clocks or erase recovery content.
+
+Import and export cleanup verify object absence after a successful delete API
+response. A surviving object leaves purge incomplete and retryable, without a
+final purge acknowledgement. Focused tests interleave final purge with image
+preprocessing, exercise live-lease draining and failed reservation writes, and
+simulate delete APIs reporting success while an object remains.
+
 ## Separately protected scoped evidence
 
 `erasure:provision journal` adds the two dedicated journal schemas and verifies

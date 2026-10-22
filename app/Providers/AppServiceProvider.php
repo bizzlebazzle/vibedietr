@@ -7,6 +7,8 @@ use App\Domain\AccountDeletion\RestoreReleaseCertificate;
 use App\Domain\Catalogue\CatalogueImportCreator;
 use App\Domain\Catalogue\TransactionalCatalogueImportCreator;
 use App\Domain\MealPlans\DispatchMealPlanRecipeVersionReviews;
+use App\Domain\RecipeImports\Images\ImageCanonicalizer;
+use App\Domain\RecipeImports\Images\ImageCanonicalizerContract;
 use App\Domain\RecipeImports\NullRecipeImportMaterializationHook;
 use App\Domain\RecipeImports\Ocr\DisabledManagedOcrExtractor;
 use App\Domain\RecipeImports\Ocr\GoogleDocumentAiOcrExtractor;
@@ -73,6 +75,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(CatalogueImportCreator::class, TransactionalCatalogueImportCreator::class);
         $this->app->bind(RecipeFinalizationHook::class, DispatchMealPlanRecipeVersionReviews::class);
         $this->app->bind(RecipeRemixCreationHook::class, NullRecipeRemixCreationHook::class);
+        $this->app->bind(ImageCanonicalizerContract::class, ImageCanonicalizer::class);
         $this->app->bind(RecipeImportMaterializationHook::class, NullRecipeImportMaterializationHook::class);
         $this->app->bind(RecipeTextParser::class, DeterministicRecipeTextParser::class);
         $this->app->bind(OcrExtractor::class, TesseractOcrExtractor::class);

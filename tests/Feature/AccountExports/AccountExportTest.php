@@ -254,7 +254,7 @@ class AccountExportTest extends TestCase
         file_put_contents($export->stagingPath(), 'synthetic crashed staging');
         Date::setTestNow($export->expires_at);
         $disk = \Mockery::mock(Filesystem::class);
-        $this->expectCall($disk, 'exists')->twice()->andReturn(true);
+        $this->expectCall($disk, 'exists')->times(3)->andReturn(true, true, false);
         $this->expectCall($disk, 'delete')->twice()->andReturn(false, true);
         Storage::shouldReceive('disk')->with('local')->andReturn($disk);
         try {

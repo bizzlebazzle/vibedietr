@@ -4,7 +4,7 @@ namespace App\Domain\RecipeImports;
 
 use App\Domain\RecipeImports\Extraction\DocumentTextExtractor;
 use App\Domain\RecipeImports\Images\CanonicalImage;
-use App\Domain\RecipeImports\Images\ImageCanonicalizer;
+use App\Domain\RecipeImports\Images\ImageCanonicalizerContract;
 use App\Domain\RecipeImports\Ocr\ManagedOcrExtractor;
 use App\Domain\RecipeImports\Ocr\OcrExtractor;
 use App\Domain\RecipeImports\Ocr\OcrQualityApplicator;
@@ -12,6 +12,7 @@ use App\Domain\RecipeImports\Ocr\OcrResult;
 use App\Domain\RecipeImports\Parsing\RecipeTextParser;
 use App\Models\Recipe;
 use App\Models\RecipeImport;
+use App\Models\User;
 use App\Observability\OperationalTelemetry;
 use App\Queue\Exceptions\NonRetryableJobException;
 use App\Queue\Exceptions\RetryableJobException;
@@ -24,7 +25,7 @@ final class UploadedRecipeImportProcessor
 {
     public function __construct(
         private readonly DocumentTextExtractor $documents,
-        private readonly ImageCanonicalizer $images,
+        private readonly ImageCanonicalizerContract $images,
         private readonly OcrExtractor $ocr,
         private readonly ManagedOcrExtractor $managedOcr,
         private readonly RecipeTextParser $parser,
@@ -148,18 +149,40 @@ final class UploadedRecipeImportProcessor
         $canonical = $this->images->canonicalize($source, $import->source_extension, (string) $import->source_mime);
         $disk = $import->source_disk;
         $key = 'canonical/'.strtolower((string) Str::ulid());
-        if (! Storage::disk($disk)->put($key, $canonical->bytes, ['visibility' => 'private'])) {
-            throw new RetryableJobException('canonical_storage_failed');
-        }
-        DB::transaction(function () use ($import, $disk, $key, $canonical): void {
-            RecipeImport::query()->lockForUpdate()->findOrFail($import->id)->forceFill([
-                'canonical_disk' => $disk,
-                'canonical_key' => $key,
+        // Reserve the key durably before the cross-system write. A crash or
+        // failed write leaves a discoverable cleanup obligation.
+        DB::transaction(function () use ($import, &$disk, &$key, $canonical): void {
+            $owner = User::query()->lockForUpdate()->find($import->user_id);
+            $current = RecipeImport::query()->lockForUpdate()->find($import->id);
+            if (! $owner?->isActive() || ! $current || $current->status->terminal()) {
+                throw new NonRetryableJobException('import_owner_inactive');
+            }
+            if ($current->canonical_key !== null) {
+                if ($current->canonical_disk === null) {
+                    throw new RetryableJobException('canonical_reference_unavailable');
+                }
+                $disk = $current->canonical_disk;
+                $key = $current->canonical_key;
+            }
+            $current->forceFill([
+                'canonical_disk' => $disk, 'canonical_key' => $key,
                 'canonical_mime' => $canonical->mime,
-                'image_width' => $canonical->width,
-                'image_height' => $canonical->height,
+                'image_width' => $canonical->width, 'image_height' => $canonical->height,
                 'status' => RecipeImportStatus::Extracting,
             ])->save();
+        });
+        DB::transaction(function () use ($import, $disk, $key, $canonical): void {
+            $owner = User::query()->lockForUpdate()->find($import->user_id);
+            $current = RecipeImport::query()->lockForUpdate()->find($import->id);
+            if (! $owner?->isActive() || ! $current || $current->status->terminal()
+                || $current->canonical_key !== $key || $current->canonical_disk !== $disk) {
+                throw new NonRetryableJobException('import_owner_inactive');
+            }
+            // Serialize the object write with purge's row locks. The earlier
+            // reservation survives failure of this transaction.
+            if (! Storage::disk($disk)->put($key, $canonical->bytes, ['visibility' => 'private'])) {
+                throw new RetryableJobException('canonical_storage_failed');
+            }
         });
         $this->telemetry->timing('recipe_import.canonicalization', (microtime(true) - $started) * 1000, [
             'provider' => 'imagick', 'operation' => 'image.canonicalize',
@@ -172,7 +195,11 @@ final class UploadedRecipeImportProcessor
     private function persistExtraction(string $id, string $text, string $extractor, string $method, array $warnings): void
     {
         DB::transaction(function () use ($id, $text, $extractor, $method, $warnings): void {
-            $import = RecipeImport::query()->lockForUpdate()->findOrFail($id);
+            $import = RecipeImport::query()->lockForUpdate()->find($id);
+            $owner = $import ? User::query()->lockForUpdate()->find($import->user_id) : null;
+            if (! $owner?->isActive()) {
+                throw new NonRetryableJobException('import_owner_inactive');
+            }
             $import->forceFill([
                 'status' => RecipeImportStatus::Extracting,
                 'source_text' => $text,
