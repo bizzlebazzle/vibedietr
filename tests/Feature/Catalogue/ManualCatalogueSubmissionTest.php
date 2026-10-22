@@ -183,6 +183,7 @@ class ManualCatalogueSubmissionTest extends TestCase
         ]));
         $item = CatalogueItem::query()->sole();
         $submitter->delete();
+        auth()->logout();
 
         $this->assertNull($item->fresh()->submitted_by_user_id);
         $this->get(route('catalogue.show', $item))->assertNotFound();

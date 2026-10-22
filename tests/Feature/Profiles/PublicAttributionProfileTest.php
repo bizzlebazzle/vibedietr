@@ -319,6 +319,7 @@ class PublicAttributionProfileTest extends TestCase
         }
 
         $owner->delete();
+        auth()->logout();
         $this->assertDatabaseMissing('public_profiles', ['id' => $id]);
         $this->get(route('public-profiles.show', $id))->assertNotFound();
     }
