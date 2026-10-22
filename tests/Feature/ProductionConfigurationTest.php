@@ -46,6 +46,24 @@ class ProductionConfigurationTest extends TestCase
         }
     }
 
+    public function test_evidence_credentials_and_signing_keys_are_confined_to_the_operator_environment(): void
+    {
+        config(['erasure.release_signing_key' => 'synthetic-private-signing-value']);
+        $this->assertStringContainsString('protected operator environment', implode(' ', $this->validator()->failures()));
+        $this->useValidProductionConfiguration();
+        config([
+            'erasure.privacy_operator' => 'synthetic-privacy-operator',
+            'erasure.operator_environment' => 'production',
+            'erasure.evidence_key' => 'base64:'.base64_encode(str_repeat('h', 32)),
+            'database.connections.erasure_evidence.url' => 'mysql://synthetic:synthetic-secret@evidence.internal/erasure',
+        ]);
+        $this->assertSame([], $this->validator()->failures());
+        config(['erasure.evidence_key' => config('erasure.encryption_key')]);
+        $this->assertStringContainsString('distinct', implode(' ', $this->validator()->failures()));
+        config(['erasure.evidence_key' => null]);
+        $this->assertStringContainsString('32 bytes', implode(' ', $this->validator()->failures()));
+    }
+
     public function test_required_production_controls_fail_independently(): void
     {
         $cases = [
@@ -317,12 +335,16 @@ class ProductionConfigurationTest extends TestCase
             'erasure.journal_generation' => 'synthetic-production-generation',
             'erasure.encryption_key' => 'base64:'.base64_encode(str_repeat('e', 32)),
             'erasure.integrity_key' => 'base64:'.base64_encode(str_repeat('i', 32)),
-            'erasure.evidence_key' => 'base64:'.base64_encode(str_repeat('h', 32)),
+            'erasure.evidence_key' => null,
+            'erasure.privacy_operator' => null,
+            'erasure.operator_environment' => null,
+            'erasure.release_signing_key' => null,
+            'erasure.retirement_signing_key' => null,
             'erasure.release_public_key' => 'base64:'.base64_encode(str_repeat('p', 32)),
             'erasure.retirement_public_key' => 'base64:'.base64_encode(str_repeat('r', 32)),
             'database.connections.erasure_primary.url' => 'mysql://synthetic:synthetic-secret@journal-primary.internal/erasure',
             'database.connections.erasure_mirror.url' => 'mysql://synthetic:synthetic-secret@journal-mirror.internal/erasure',
-            'database.connections.erasure_evidence.url' => 'mysql://synthetic:synthetic-secret@evidence.internal/erasure',
+            'database.connections.erasure_evidence.url' => null,
             'app.env' => 'production',
             'app.debug' => false,
             'app.key' => 'base64:'.base64_encode(str_repeat('k', 32)),

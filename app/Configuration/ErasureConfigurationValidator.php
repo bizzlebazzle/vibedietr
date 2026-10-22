@@ -17,11 +17,25 @@ final class ErasureConfigurationValidator
                 $failures[] = 'ERASURE installation and journal generation must be explicit non-reusable references.';
             }
         }
+        $operator = $this->present(config('erasure.privacy_operator')) || $this->present(config('erasure.operator_environment'));
+        if ($operator) {
+            if (config('erasure.operator_environment') !== app()->environment()
+                || ! is_string(config('erasure.privacy_operator'))
+                || ! preg_match('/^[A-Za-z0-9:_-]{8,64}$/D', config('erasure.privacy_operator'))
+                || ! app()->runningInConsole()) {
+                $failures[] = 'ERASURE protected operator configuration requires the matching console-only operator environment.';
+            }
+        } elseif ($this->present(config('erasure.evidence_key'))
+            || $this->present(config('database.connections.erasure_evidence.url'))
+            || $this->present(config('erasure.release_signing_key'))
+            || $this->present(config('erasure.retirement_signing_key'))) {
+            $failures[] = 'ERASURE case-evidence credentials and signing secrets belong only in the protected operator environment.';
+        }
         $keys = [];
-        foreach (['encryption_key', 'integrity_key', 'evidence_key'] as $name) {
+        foreach ($operator ? ['encryption_key', 'integrity_key', 'evidence_key'] : ['encryption_key', 'integrity_key'] as $name) {
             $key = $this->key(config('erasure.'.$name), 32);
             if ($key === null) {
-                $failures[] = 'ERASURE journal encryption, integrity and evidence keys must each contain 32 bytes.';
+                $failures[] = 'ERASURE required journal/operator keys must each contain 32 bytes.';
             } else {
                 $keys[] = $key;
             }
@@ -46,7 +60,7 @@ final class ErasureConfigurationValidator
             $parser = new ConfigurationUrlParser;
             $application = $parser->parseConfiguration(config('database.connections.'.config('database.default')));
             $hosts = [];
-            foreach ([...$names, 'erasure_evidence'] as $name) {
+            foreach ($operator ? [...$names, 'erasure_evidence'] : $names as $name) {
                 $settings = config('database.connections.'.$name);
                 if (! is_array($settings) || empty($settings['url'])) {
                     throw new \RuntimeException;
@@ -70,6 +84,11 @@ final class ErasureConfigurationValidator
         }
 
         return array_values(array_unique($failures));
+    }
+
+    private function present(mixed $value): bool
+    {
+        return $value !== null && $value !== '';
     }
 
     private function key(mixed $value, int $length): ?string

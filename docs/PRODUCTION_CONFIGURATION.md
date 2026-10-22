@@ -276,9 +276,12 @@ than bypassing the control.
 ## Account erasure readiness
 
 DEP-08 requires explicit installation/journal generations, separate journal
-encryption/integrity and scoped-evidence keys, and release/retirement public
-verification keys. The two journal MySQL hosts must differ from each other and
-the application host; the evidence connection must also be external.
+encryption/integrity keys, and release/retirement public verification keys.
+The two journal MySQL hosts must differ from each other and the application
+host. Case-evidence credentials/key and private signing keys belong only in the
+separate protected console-operator environment; ordinary serving processes
+must not receive them. Operator readiness additionally requires a distinct
+evidence key and an external evidence connection.
 
 Static `app:production-check` rejects missing or aliased settings without
 printing URLs or secrets. Operator signing keys remain in the protected operator

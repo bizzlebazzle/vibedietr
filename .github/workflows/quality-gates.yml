@@ -176,10 +176,8 @@ jobs:
           ERASURE_JOURNAL_GENERATION: synthetic-ci-journal-generation
           ERASURE_JOURNAL_PRIMARY_URL: mysql://synthetic:synthetic-secret@journal-primary.internal/erasure
           ERASURE_JOURNAL_MIRROR_URL: mysql://synthetic:synthetic-secret@journal-mirror.internal/erasure
-          ERASURE_EVIDENCE_URL: mysql://synthetic:synthetic-secret@evidence.internal/erasure
           ERASURE_JOURNAL_ENCRYPTION_KEY: base64:ZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWU=
           ERASURE_JOURNAL_INTEGRITY_KEY: base64:aWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWk=
-          ERASURE_EVIDENCE_ENCRYPTION_KEY: base64:aGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGg=
           ERASURE_RELEASE_PUBLIC_KEY: base64:cHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHA=
           ERASURE_RETIREMENT_PUBLIC_KEY: base64:cnJycnJycnJycnJycnJycnJycnJycnJycnJycnJycnI=
           APP_INSTANCE: ci-production-smoke
