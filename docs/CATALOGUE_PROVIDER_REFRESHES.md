@@ -2,6 +2,13 @@
 
 ## Purpose and boundaries
 
+Decided DEC-010 supplies the approved
+[moderation response policy](MODERATION_RESPONSE_POLICY.md). Manual ageing review
+must consider staged refreshes despite newest-first queue display. Human-review
+delay is distinct from the fetch failure/replay procedures below; reconsideration
+does not bypass active-run, terminal-state or stale-review safeguards. The
+private webapp contact and manual response workflow remain future work.
+
 NUT-11 refreshes an approved OpenFoodFacts-backed catalogue item without
 silently changing its current facts. An administrator starts a refresh from the
 catalogue detail page. The queued worker fetches through the application-owned

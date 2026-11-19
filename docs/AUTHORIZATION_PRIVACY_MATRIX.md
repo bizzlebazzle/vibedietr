@@ -366,8 +366,11 @@ pending/rejected identities do not create a user-owned fallback copy.
    submitter and administrator. User corrections and provider refreshes are
    staged. An authorized administrator accepts or rejects; acceptance creates
    a new current version, rejection retains the current catalogue data, and
-   every decision is auditable. DEC-010 still governs escalation/service
-   levels; decided DEC-011 governs duplicate candidates, rejection, approved
+   every decision is auditable. Decided DEC-010 governs response expectations
+   and reconsideration within existing safeguards; its private webapp contact
+   and manual response workflow remain future implementation. See the
+   [moderation response policy](MODERATION_RESPONSE_POLICY.md).
+   Decided DEC-011 governs duplicate candidates, rejection, approved
    merges, canonical redirects, references, and correction.
 7. **Bookmarks after source changes:** A bookmark points to the live finalized
    public recipe. When that recipe is deleted or made private, the bookmark
@@ -464,9 +467,6 @@ The matrix does not select an answer for any of these items:
 
 - **DEC-011:** Define manual catalogue duplicate/merge handling and dependent
   reference behavior. No row authorizes silent merging.
-- **DEC-010:** Define moderation escalation, appeal, stale-item handling, and
-  service levels. Basic administrator accept/reject authority is already
-  confirmed.
 - Confirm whether administrators ever receive narrowly scoped access to
   private user content for support/security, and if so define purpose,
   approval, audit, notification, and field minimization.

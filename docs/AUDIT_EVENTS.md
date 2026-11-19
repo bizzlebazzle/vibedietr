@@ -2,6 +2,12 @@
 
 ## Scope and policy status
 
+Decided DEC-010 records the approved
+[moderation response policy](MODERATION_RESPONSE_POLICY.md). Existing minimized
+decision audit remains authoritative; future reconsideration/contact records
+require purpose-appropriate private storage and retention, not arbitrary text
+in the ordinary audit store. No new audit event or retention clock is introduced.
+
 FND-05 provides the ordinary application audit-event store. It implements the
 technical model approved by DEC-013 and `AUDIT_RETENTION_SCHEDULE.md`. That
 policy was security reviewed and received an owner-led legal-risk review; it

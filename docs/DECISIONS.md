@@ -40,7 +40,7 @@ Backlog relationships mean:
 | DEC-007 | Import and OCR extraction-quality thresholds | Decided | Product owner |
 | DEC-008 | Account data-export format | Decided | Product owner |
 | DEC-009 | Initial administrator assignment | Decided | Product owner |
-| DEC-010 | Moderation escalation and service levels | Owner input required | Product owner |
+| DEC-010 | Moderation escalation and service levels | Decided | Product owner |
 | DEC-011 | Manual-food de-duplication and merge rules | Decided | Product owner |
 | DEC-012 | Backup erasure timing | Decided | Technical investigation |
 | DEC-013 | Security and legal audit retention | Decided | Product owner |
@@ -1063,8 +1063,9 @@ Backlog relationships mean:
 - **Existing constraints from `PRODUCT_SPEC.md`:** Administrators moderate
   manual-food submissions, corrections, and OpenFoodFacts refreshes. Ordinary
   users cannot directly edit or delete barcode-imported shared records. The
-  specification intentionally leaves administrator assignment, escalation,
-  and moderation service-level rules undefined.
+  specification originally left administrator assignment, escalation,
+  and moderation service-level rules undefined; the latter are now decided
+  by DEC-010.
 - **Backlog relationships:** Resolution unblocks FND-04 and removes DEC-009 as
   its open-decision blocker. The recorded behavior constrains FND-05, FND-13,
   FND-14, NUT-09, NUT-10, NUT-11, REC-13, DEP-02, and DEP-08. `Related`:
@@ -1173,7 +1174,7 @@ Backlog relationships mean:
 - **Why it matters:** These rules affect user expectations, operational load,
   stale pending data, and production policy wording, but are not necessary to
   model the basic moderation states.
-- **Status:** Owner input required.
+- **Status:** Decided.
 - **Owner:** Product owner.
 - **Alternatives:** No published response target initially; target response
   times by proposal type; priority tiers with an escalation or appeal route.
@@ -1181,12 +1182,56 @@ Backlog relationships mean:
   reject staged changes, decisions are auditable, pending manual foods remain
   private to their submitter, rejected changes do not silently replace recipe
   matches, and moderation behavior must be reviewed before launch.
-- **Backlog relationships:** `Blocked`: DEP-09. `Constrained`: NUT-09, NUT-10,
+- **Backlog relationships:** `Unblocked`: DEP-09. `Constrained`: NUT-09, NUT-10,
   NUT-11. `Related`: FND-05.
 - **Resolution condition:** Approve and document response expectations,
   prioritization, escalation or appeal behavior, stale-item handling, and the
   user-facing wording for unmet targets.
-- **Final decision and rationale:** Unresolved.
+- **Final decision and rationale:** The product owner explicitly approved the
+  consolidated policy on 2026-11-19 after interactive review. The approved
+  [moderation response policy and research](MODERATION_RESPONSE_POLICY.md)
+  records the operational rules, exact public wording, evidence and downstream
+  implementation requirements. Approval resolves this policy decision; it does
+  not implement DEP-09 or certify operational launch readiness.
+
+  Launch without published response-time targets or numerical internal targets.
+  Review evidenced potential harm or materially incorrect shared data first,
+  otherwise oldest pending work across proposal types, checking against
+  starvation. There is no evidence of workload, reviewer effort or coverage to
+  justify numerical commitments; revisit targets when that evidence exists.
+
+  An affected submitter, proposer or user may request one reasoned
+  reconsideration of a disputed decision on factual or procedural grounds.
+  Further review requires material new evidence or an identified review error;
+  repetition or administrator disagreement alone does not reopen the matter.
+  Prefer a different administrator, permitting the original when no alternative
+  is available and disclosing that limitation. The latest valid recorded
+  administrator decision settles the matter, including a supported override.
+  There is no owner arbitration or new moderation hierarchy. Discretion remains
+  subject to existing authorization, audit, privacy, versioning and safe-reversal
+  safeguards. Unsupported reversals require separately scoped work.
+
+  During each moderation review session, check the oldest pending items across
+  all proposal types, record why unresolved items remain pending and carry them
+  forward. Age never causes automatic approval, rejection or deletion. Existing
+  retention/account-deletion rules continue; technical base-version staleness
+  still requires explicit review. DEP-09 must confirm an accountable operator
+  and workable review schedule before launch.
+
+  A dedicated private webapp page must provide reconsideration intake, with
+  manual responses initially, short outcome/reason or delay explanations and
+  next steps, without private administrator notes. This page, restricted request
+  records, access controls and response mechanism remain future implementation.
+  No response date is guaranteed. Delays are not missed numerical service
+  commitments; the approved notice says review times vary and delay means
+  neither acceptance nor rejection. Do not promise a replacement date unless
+  supportable. See the linked policy for exact wording.
+
+  This approach avoids unsupported promises while establishing fair review and
+  bounded reconsideration. It preserves staged acceptance/rejection, auditable
+  history, submitter privacy and explicit owner choice for rejected matches.
+  Resolution removes DEC-010's open-decision block on DEP-09; the launch review,
+  other dependencies and the documented downstream requirements still apply.
 
 ## DEC-011 — Manual-food de-duplication and merge rules
 

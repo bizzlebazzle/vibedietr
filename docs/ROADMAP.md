@@ -829,6 +829,10 @@ changes, it is deliberately split across multiple items.
 - **Status:** Complete (2026-09-09).
 - **Implementation:** See [Catalogue moderation](CATALOGUE_MODERATION.md) for
   reference classification, security, concurrency and correction boundaries.
+- **Policy constraint:** Decided DEC-010 supplies the
+  [moderation response policy](MODERATION_RESPONSE_POLICY.md): risk/age review,
+  bounded reconsideration and latest-valid-decision finality within safeguards.
+  The private contact/response workflow remains future implementation.
 - **Outcome:** Allow administrators to approve or reject manual submissions
   with an auditable decision.
 - **Dependencies:** NUT-08, FND-04, FND-05, FND-14, DEC-011.
@@ -851,6 +855,10 @@ changes, it is deliberately split across multiple items.
 
 - **Status:** Complete (2026-09-09).
 - **Implementation:** See [Catalogue correction proposals](CATALOGUE_CORRECTIONS.md).
+- **Policy constraint:** Decided DEC-010 governs response expectations and
+  reconsideration; a fresh eligible proposal may address a disputed factual
+  outcome without reopening the terminal proposal. See the
+  [moderation response policy](MODERATION_RESPONSE_POLICY.md).
 
 - **Outcome:** Let users propose changes without directly mutating shared
   catalogue data.
@@ -868,6 +876,10 @@ changes, it is deliberately split across multiple items.
 
 - **Status:** Complete (2026-09-10).
 - **Implementation:** See [OpenFoodFacts provider refreshes](CATALOGUE_PROVIDER_REFRESHES.md).
+- **Policy constraint:** Decided DEC-010 requires age-aware review of staged
+  refreshes despite newest-first display; human-review delay is distinct from
+  fetch failure recovery. See the
+  [moderation response policy](MODERATION_RESPONSE_POLICY.md).
 
 - **Outcome:** Fetch newer provider data without silently changing current
   catalogue values.
@@ -1582,7 +1594,11 @@ changes, it is deliberately split across multiple items.
   Confirm actual installation periods, all processors/copies, rights handling
   and operational evidence before publishing; distinguish owner-led risk review
   from professional legal approval. DEC-012 is no longer an open-decision
-  blocker; DEC-010 and this item's other dependencies still apply.
+  blocker. Decided DEC-010 also removes its open-decision block; verify the
+  [moderation response policy](MODERATION_RESPONSE_POLICY.md), accountable
+  operator, workable review schedule and monitored private webapp contact/manual
+  response workflow before launch. That workflow remains future implementation;
+  this item's other dependencies and launch review still apply.
 - **Export review:** Check DEP-07 against the owner-approved DEC-008
   [export contract](ACCOUNT_EXPORT_RESEARCH.md#approved-version-1-contract),
   including foreign-account exclusion, owned historical snapshots, minimized
