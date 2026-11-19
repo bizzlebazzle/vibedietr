@@ -1585,6 +1585,9 @@ changes, it is deliberately split across multiple items.
 
 ### DEP-09 — P2 — Complete privacy, retention, and legal launch review
 
+- **Status:** Incomplete (2026-11-19); [launch review](DEP_09_LAUNCH_REVIEW.md)
+  records repository findings, missing safeguards/workflows, installation evidence
+  and owner approvals required before launch. No launch approval is recorded.
 - **Outcome:** Align product wording and operational policy with the system's
   actual privacy, retention, erasure, moderation, and nutrition-advice
   behavior without claiming automatic legal compliance.

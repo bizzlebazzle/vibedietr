@@ -59,6 +59,51 @@ after(async () => {
     }
 });
 async function open(path) { await browser.get(`${base}${path}`); }
+
+test('service information is reachable and guest storage is limited across navigation and themes', async () => {
+    await browser.manage().deleteAllCookies();
+    await open('/');
+    await browser.executeScript('localStorage.clear(); sessionStorage.clear();');
+    for (const path of ['/', '/register', '/login', '/service-information']) {
+        await open(path);
+        const cookies = await browser.manage().getCookies();
+        assert.equal(cookies.length, 2, path);
+        assert.ok(cookies.some(cookie => cookie.name === 'XSRF-TOKEN'), path);
+        assert.ok(cookies.some(cookie => cookie.name !== 'XSRF-TOKEN' && cookie.httpOnly), path);
+        assert.deepEqual(await browser.executeScript('return Object.keys(localStorage)'), [], path);
+        assert.deepEqual(await browser.executeScript('return Object.keys(sessionStorage)'), [], path);
+        assert.equal(await browser.executeScript(`return [...document.scripts].filter(script => script.src && new URL(script.src).origin !== location.origin).length`), 0, path);
+    }
+    for (const theme of ['light', 'dark']) {
+        await browser.manage().window().setRect({ width: 390, height: 844 });
+        await browser.executeScript('localStorage.setItem("theme", arguments[0]); window.applyThemePreference();', theme);
+        await structure();
+        await reflow();
+        await scan(`service-information-${theme}`);
+        await screenshot(`service-information-${theme}`);
+    }
+    await browser.manage().window().setRect({ width: 1280, height: 900 });
+    await browser.executeScript('localStorage.clear(); window.applyThemePreference();');
+    await open('/register');
+    await tabTo('a[href$="/service-information"]');
+    await press();
+    await browser.wait(until.urlContains('/service-information'), 10000);
+    await structure();
+    await scan('service-information-desktop');
+    await open('/login');
+    await (await find('#email')).sendKeys(fixture.users.owner.email);
+    await (await find('#password')).sendKeys('browser-fixture-password');
+    await (await find('#remember')).click();
+    await (await find('button[type="submit"]')).click();
+    await browser.wait(until.urlContains('/dashboard'), 15000);
+    const rememberedCookies = await browser.manage().getCookies();
+    assert.equal(rememberedCookies.length, 3);
+    const remembered = rememberedCookies.find(cookie => cookie.name.startsWith('remember_web_'));
+    assert.ok(remembered?.httpOnly);
+    assert.ok(remembered.expiry > Date.now() / 1000);
+    await browser.manage().deleteAllCookies();
+});
+
 async function login(role = 'owner') {
     await browser.manage().deleteAllCookies();
     await open('/login');

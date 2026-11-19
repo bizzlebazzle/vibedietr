@@ -50,6 +50,7 @@
                 <div><h2 class="text-xl font-semibold">Understand nutrition</h2><p class="mt-2 text-slate-700 dark:text-slate-300">View source nutrition and labelled estimates where ingredient data is available.</p></div>
             </section>
         </main>
+        <x-service-information-link />
     </div>
 </body>
 </html>

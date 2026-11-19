@@ -155,7 +155,7 @@ work.
   UX-07 adds shared accessibility fixes and full-page/pixel regressions ([verification](UX_07_VERIFICATION.md)).
 - [Recovery tooling and drill](DEP_06_VERIFICATION.md) include DEP-08 replay/release; production installation gates remain.
 - DEP-07 implements verified owned JSON ZIP exports and queued cleanup; installation release checks remain ([evidence](DEP_07_VERIFICATION.md)).
-- DEP-08 is implemented; DEP-09/10 still gate launch. DEC-010 is decided; contact workflow remains future work.
+- DEP-08 is implemented; [DEP-09 review](DEP_09_LAUNCH_REVIEW.md) records launch blockers and pending owner approval.
 - Accounts become inactive with up to 30 days of recovery; under-13/waived accounts purge without recovery.
   Safe bookmarked public plans become anonymous/unlisted; private history follows DEC-022.
   Owned-domain purge preserves approved public/catalogue facts and independent copies.

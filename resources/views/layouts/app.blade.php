@@ -84,6 +84,7 @@
             <main id="main-content" tabindex="-1" class="text-gray-900 dark:text-slate-100">
                 {{ $slot }}
             </main>
+            <x-service-information-link />
         </div>
         @livewireScripts(['nonce' => Vite::cspNonce()])
         @stack('scripts')
