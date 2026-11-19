@@ -12,8 +12,9 @@ completed before implementation using the documented task-context command.
 FND-09, FND-14, DEP-04 and DEP-05 are recorded complete. FND-05's audit
 foundation exists and is reused, although its roadmap has no formal completion
 status. DEP-06 and DEP-07 remain conditional on their installation checks;
-their implemented recovery/export boundaries are integrated here. DEC-010's
-remaining legal-launch decision does not authorize additional DEP-08 behavior.
+their implemented recovery/export boundaries are integrated here. Decided
+DEC-010's [moderation policy](MODERATION_RESPONSE_POLICY.md) does not authorize
+additional DEP-08 behavior; DEP-09's launch review remains separate.
 
 ## Lifecycle and domain coverage
 

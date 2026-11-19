@@ -2,6 +2,12 @@
 
 ## Scope and eligibility
 
+Decided DEC-010 supplies the approved
+[moderation response policy](MODERATION_RESPONSE_POLICY.md). Its reconsideration
+process does not reopen terminal correction proposals or guarantee reversal;
+fresh eligible factual proposals preserve earlier decisions and versions.
+The private webapp contact and manual response workflow remain future work.
+
 NUT-10 lets any authenticated user propose factual changes to an active,
 approved shared catalogue item. Approved manual and OpenFoodFacts-backed items
 are eligible. Pending, rejected, merged/redirected, and versionless records are

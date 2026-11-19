@@ -674,12 +674,28 @@ The system needs an auditable history for:
 Audit data must contain only the personal data necessary for its stated
 purpose and follow the documented retention policy.
 
+## Moderation response policy
+
+DEC-010 approves launch without published response-time targets or numerical
+internal targets. Prioritize evidenced potential harm or materially incorrect
+shared data, otherwise oldest pending work across proposal types, checking
+against starvation. Each review session checks ageing pending items; age alone
+never approves, rejects or deletes them.
+
+An affected user may request one reasoned reconsideration on factual or
+procedural grounds; further review needs material new evidence or an identified
+review error. Prefer another administrator, permitting the original when no
+alternative is available and disclosing that limitation. The latest valid
+recorded administrator decision settles the matter within existing safeguards;
+there is no owner arbitration. A dedicated private webapp contact page and manual
+response process are required future implementation. See the approved
+[moderation response policy](MODERATION_RESPONSE_POLICY.md) for exact wording,
+operational rules and launch requirements. Decision: DEC-010.
+
 ## Deferred design and policy decisions
 
 The following details are intentionally not fixed by this specification:
 
-- Administrator assignment, escalation, and moderation service-level rules.
-  Decision: DEC-009, DEC-010.
 - Any narrowly required security or legal audit retention within the
   GDPR-aligned deletion policy.
   Decision: DEC-013.

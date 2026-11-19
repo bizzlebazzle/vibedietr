@@ -118,7 +118,9 @@ async function visual(name, selector) {
     await delay(200); // Capture the settled state after the existing 150ms color transitions.
     const clip = await browser.executeScript(`const el=document.querySelector(arguments[0]);
         el.scrollIntoView({block:'center'}); const r=el.getBoundingClientRect();
-        return {x:r.x+scrollX,y:r.y+scrollY,width:r.width,height:r.height,scale:1};`, selector);
+        // Explicit pixel bounds avoid browser-dependent rounding of fractional CDP clips.
+        return {x:Math.round(r.x+scrollX),y:Math.round(r.y+scrollY),
+            width:Math.floor(r.width),height:Math.floor(r.height),scale:1};`, selector);
     const png = (await browser.sendAndGetDevToolsCommand('Page.captureScreenshot',{clip,captureBeyondViewport:false})).data;
     writeFileSync(`${artifacts}/${name}.png`,Buffer.from(png,'base64'));
     const baseline = new URL(`./snapshots/${name}.png`,import.meta.url);

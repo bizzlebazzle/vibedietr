@@ -156,6 +156,20 @@ timeout while several schema resets each took about 44 seconds; the disposable
 run retained that timeout. Pint, PHPStan, build, 24 frontend tests, documentation
 checks and CI's cached production-configuration smoke check also passed locally.
 
+### DEC-010 PR quality-gate follow-up (2026-11-19)
+
+PR 97's Backend job passed PHPUnit and planning checks, then failed the
+primary-button visual comparison: the reviewed baseline was 83 by 34 pixels,
+while the CI artifact was 84 by 34. The measured element width is 83.53125 CSS
+pixels. Local Chromium 138 captured the fractional clip as 83 pixels, so the
+unchanged suite passed locally. A pixel-aligned probe with rounded origins and
+floored dimensions matched the original baseline exactly. Visual captures now
+request those explicit integer bounds instead of relying on browser-specific
+fractional CDP rounding. All six baselines and the 2%/30-channel-difference
+tolerance remain unchanged. The separate Frontend job failed the current-state
+documentation test's trailing-empty-line count; its source was shortened rather
+than weakening the limit or changing the test.
+
 ## Manual inspection and outstanding verification
 
 On 2026-10-04 the agent inspected source/markup and generated PNGs using the

@@ -2,6 +2,14 @@
 
 ## Scope and entry point
 
+Decided DEC-010 supplies the approved
+[moderation response policy](MODERATION_RESPONSE_POLICY.md), including no
+published time targets, risk/age prioritization, bounded reconsideration and
+latest-valid-decision finality within existing safeguards. Cross-type ageing
+review is a manual procedure; the private webapp contact and response workflow
+remain future implementation. Policy approval does not change queue states or
+extend the correction operation below to every decision type.
+
 NUT-09 implements DEC-011 for manual non-barcode catalogue identities at
 `/admin/catalogue`. It does not merge barcode identities, adopt source nutrition
 facts, refresh providers, or implement NUT-10 factual correction proposals.
