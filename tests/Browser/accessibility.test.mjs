@@ -613,6 +613,37 @@ test('account export request, ready download, keyboard and responsive themes rem
     }
 });
 
+test('secondary bars keep the same dimensions and typography across primary pages', async () => {
+    await login();
+    for (const width of [1280, 320]) {
+        await browser.sendDevToolsCommand('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: width === 320 });
+        for (const theme of ['light', 'dark']) {
+            let expected;
+            for (const path of ['/recipes', '/dashboard', '/meal-plans', '/catalogue']) {
+                await open(path);
+                await browser.executeScript('document.documentElement.classList.toggle("dark",arguments[0])', theme === 'dark');
+                const metrics = await browser.executeScript(`
+                    const bar = document.querySelector('.secondary-bar');
+                    const text = bar.querySelector('h1,h2,[aria-current="page"]');
+                    const style = getComputedStyle(text), container = getComputedStyle(bar.firstElementChild);
+                    return { height: bar.getBoundingClientRect().height,
+                        fontSize: style.fontSize, lineHeight: style.lineHeight, fontWeight: style.fontWeight,
+                        paddingLeft: container.paddingLeft, paddingRight: container.paddingRight,
+                        top: bar.getBoundingClientRect().top,
+                        primaryBottom: document.querySelector('nav[aria-label="Primary navigation"]').getBoundingClientRect().bottom };
+                `);
+                expected ??= metrics;
+                assert.deepEqual(metrics, expected, `${width}px ${theme} ${path}`);
+                assert.equal(metrics.fontSize, '14px');
+                assert.equal(metrics.top, metrics.primaryBottom);
+                await structure(); await reflow(); await scan(`secondary-bar-${width}-${theme}-${path}`);
+                await screenshot(`secondary-bar-${width}-${theme}-${path.slice(1)}`);
+            }
+        }
+        await browser.sendDevToolsCommand('Emulation.clearDeviceMetricsOverride');
+    }
+});
+
 test('recipe library tabs expose owned drafts and bookmarks with responsive keyboard navigation', async () => {
     await login();
     await open('/dashboard');

@@ -6,6 +6,10 @@ html {
     scroll-padding-block: 6rem;
 }
 
+.secondary-bar :is(h1, h2) {
+    @apply text-sm font-medium leading-5;
+}
+
 .recipe-content :is(input, textarea, select, button, a[href], summary) {
     scroll-margin-block: 6rem;
 }

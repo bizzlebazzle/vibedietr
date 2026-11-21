@@ -1331,7 +1331,7 @@ changes, it is deliberately split across multiple items.
 
 ### UX-08 — P1 — Recover recipe drafts and match ingredients by barcode
 
-- **Status:** Implemented (2026-11-21); incomplete at the full accessibility gate; manual checks pending.
+- **Status:** Implemented (2026-11-21); automated accessibility/planning gates pass; manual checks pending.
 - **Verification:** [UX-08 recipe navigation and barcode matching](UX_08_VERIFICATION.md).
 - **Outcome:** Make owned recipes and unfinished drafts reachable from the
   dashboard and recipe library, and look up/scan ingredient barcodes inline.

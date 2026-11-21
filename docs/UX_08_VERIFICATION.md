@@ -1,10 +1,9 @@
 # UX-08 recipe navigation and barcode matching
 
-Implemented on branch `recipe-ux-fixes`; **incomplete** at the required full
-accessibility gate. The recipe-specific checks pass. The full run found an
-out-of-scope contrast failure while the existing account-deletion dialog was
-fading out. Work stopped under the repository's unrelated-test-failure rule;
-that flow was not changed.
+Implemented on branch `recipe-ux-fixes`. The latest full accessibility and
+planning browser suites pass after the shared secondary-bar refinement. The
+earlier deletion-dialog transition finding did not recur; that flow was not
+changed. Physical-device and assistive-technology release checks remain pending.
 
 ## Behavior and boundaries
 
@@ -40,19 +39,16 @@ that flow was not changed.
 - The focused library/barcode browser run passed all three cases, with no
   axe violations. It covers active-page document titles, empty-code validation,
   explicit selection, row removal, navigation cleanup and both themes.
-- The latest full `npm run test:accessibility` run passed its 18 product
-  journeys, including both new recipe journeys. Its final axe aggregation
-  failed on `deletion-cancelled`: fading deletion-dialog text was still visible
-  during the scan. This timing-sensitive finding is outside recipe UX; the
-  earlier full attempt passed that existing journey.
-- The full run also exposed synthetic-fixture teardown errors. Teardown now
+- The latest full `npm run test:accessibility` run passed all 20 checks,
+  including shared secondary-bar dimensions and all recipe journeys, with no
+  axe violations. An earlier run caught fading deletion-dialog text during
+  `deletion-cancelled`; this timing-sensitive finding did not recur.
+- An earlier full run also exposed synthetic-fixture teardown errors. Teardown now
   removes this run's recipe matches and catalogue versions before catalogue
   identities, removes only its guarded synthetic users (including its final
   test administrator), and asserts that cleanup emits no error. Previous
   fixture cohorts from this task were cleaned from the testing database.
-- `npm run test:planning` was not run: the sequential browser command stopped
-  at the accessibility failure, and the repository stop rule applies. Rerun
-  full accessibility and planning after resolving that unrelated blocker.
+- The latest full `npm run test:planning` run passed all six checks.
 - No schema, queue, deployment, dependency, baseline, or validator changes;
   migration/recovery drills and documentation-validator tests are not
   applicable. No remote CI result is claimed.
@@ -87,5 +83,23 @@ themes; the resulting mobile screenshots were visually reviewed. Documentation c
 also passed. This presentation-only follow-up changes no PHP application code,
 queries, authorization, schema, dependencies or configuration, so backend,
 static-analysis, environment and migration checks were not repeated. The
-existing full-accessibility blocker and outstanding release checks above remain;
-the full accessibility and planning suites were not rerun for this refinement.
+full accessibility and planning suites were subsequently rerun successfully as
+part of the shared-dimensions refinement below. Manual release checks remain.
+
+## Shared secondary-bar dimensions
+
+All authenticated page-heading bars and recipe tabs use one shared component
+for the surface, container width, side padding and minimum height. Titles use
+the same 14px size, 20px line height and medium weight as the navigation links.
+Bars have a 48px content height on wider screens and 96px on narrow screens,
+where the four recipe tabs occupy two rows; their shared border adds one pixel.
+Long titles can wrap and grow rather than being clipped.
+
+Rendered geometry checks compare Recipes, Dashboard, Meal plans and Food
+catalogue at 1280px and 320px in both themes. Height, typography, padding and
+alignment beneath primary navigation match across all four pages. Focused
+browser checks, the production build, and visual screenshot review passed;
+the full accessibility suite passed 20 checks and planning passed six.
+The full backend regression gate also passed again: 1,204 tests and 7,715
+assertions. Formatting, static analysis, scanner, environment, Compose and
+documentation checks passed. No migration or dependency changes were needed.
