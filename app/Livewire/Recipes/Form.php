@@ -2,8 +2,11 @@
 
 namespace App\Livewire\Recipes;
 
+use App\Domain\Catalogue\Barcode;
 use App\Domain\Catalogue\CatalogueItemStatus;
+use App\Domain\Catalogue\CatalogueMatchCandidate;
 use App\Domain\Catalogue\CatalogueReadQuery;
+use App\Domain\Catalogue\ImportBarcodeIntoCatalogue;
 use App\Domain\Measurements\MeasurementUnitRegistry;
 use App\Domain\Measurements\StandardUnit;
 use App\Domain\Nutrition\RecipeNutritionEstimatePresenter;
@@ -11,17 +14,22 @@ use App\Domain\Recipes\RecipeDraftEditor;
 use App\Domain\Recipes\RecipeDraftFingerprint;
 use App\Domain\Recipes\RecipeFinalizer;
 use App\Domain\Recipes\RecipeIngredientMatchManager;
+use App\Domain\Recipes\RecipeQuantityFormatter;
 use App\Domain\Recipes\RecipeRevisionPublisher;
 use App\Domain\Recipes\RecipeVersionContent;
 use App\Domain\Recipes\RecipeVisibility;
 use App\Domain\Recipes\StaleRecipeDraft;
 use App\Domain\Recipes\StaleRecipeRevision;
 use App\Domain\Shared\Decimal;
+use App\Integrations\OpenFoodFacts\OpenFoodFactsClient;
+use App\Integrations\OpenFoodFacts\OpenFoodFactsLookupStatus;
 use App\Models\Recipe;
 use App\Models\RecipeIngredientLine;
 use App\Models\RecipeIngredientLineMatch;
 use App\Models\User;
 use App\Rules\ValidMeasurementUnit;
+use App\Security\Limits\AbuseRateLimiter;
+use App\Security\Limits\LimiterIdentity;
 use Closure;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\Gate;
@@ -31,6 +39,7 @@ use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
+use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Throwable;
 
 class Form extends Component
@@ -52,6 +61,13 @@ class Form extends Component
     /** @var list<array{key: string, id: int|null, original_text: string, quantity: mixed, unit: string, generic_wording: string, notes: string}> */
     public array $ingredients = [];
 
+    /** @var array<int, array{original: string|null, display: string|null}> */
+    #[Locked]
+    public array $ingredientQuantityBaselines = [];
+
+    /** @var array<int, bool> */
+    public array $editedIngredientQuantities = [];
+
     /** @var list<array{key: string, id: int|null, name: string}> */
     public array $sections = [];
 
@@ -72,6 +88,9 @@ class Form extends Component
     /** @var array<int, array{item_id: int, version_id: string, name: string, review_state: string}> */
     public array $catalogueMatches = [];
 
+    /** @var array<int, string> */
+    public array $barcodeNotices = [];
+
     private bool $loading = false;
 
     public function mount(?Recipe $recipe = null): void
@@ -88,6 +107,12 @@ class Form extends Component
 
     public function updated(string $property): void
     {
+        if (preg_match('/^ingredients\.(\d+)\.quantity$/', $property, $matches)) {
+            $lineId = $this->ingredients[(int) $matches[1]]['id'] ?? null;
+            if (is_int($lineId) && isset($this->ingredientQuantityBaselines[$lineId])) {
+                $this->editedIngredientQuantities[$lineId] = true;
+            }
+        }
         if (! $this->loading && $property !== 'unsaved' && ! str_starts_with($property, 'catalogueSearches.')) {
             $this->unsaved = true;
         }
@@ -203,7 +228,7 @@ class Form extends Component
         $this->title = trim($this->title);
 
         try {
-            $validated = $this->validate();
+            $validated = $this->validateWithOriginalQuantities();
             $this->assertUniqueKeys();
         } catch (ValidationException $exception) {
             $this->title = $enteredTitle;
@@ -269,7 +294,7 @@ class Form extends Component
             $rules['servings'] = ['required', 'decimal:0,2', 'gt:0'];
             $rules['ingredients'] = ['required', 'array', 'min:1'];
             $rules['steps'] = ['required', 'array', 'min:1'];
-            $validated = $this->validate($rules);
+            $validated = $this->validateWithOriginalQuantities($rules);
             $this->assertUniqueKeys();
         } catch (ValidationException $exception) {
             $this->title = $enteredTitle;
@@ -326,6 +351,86 @@ class Form extends Component
         $this->redirectRoute('recipes.show', ['recipe' => $this->recipeId], navigate: true);
     }
 
+    public function lookupIngredientBarcode(int $lineId, string $barcode): void
+    {
+        $user = auth()->user();
+        abort_unless($user instanceof User, 403);
+        $index = collect($this->ingredients)->search(fn (array $line): bool => ($line['id'] ?? null) === $lineId);
+        abort_if($index === false, 404);
+        $this->persistedIngredientLine($index);
+        $errorKey = 'barcodeLookups.'.$lineId;
+        $this->resetErrorBag($errorKey);
+        unset($this->barcodeNotices[$lineId], $this->catalogueResults[$lineId], $this->catalogueResultPages[$lineId]);
+
+        try {
+            $barcode = Barcode::normalize($barcode);
+            if (preg_match('/[\x00-\x1f\x7f]/', $barcode)) {
+                throw new InvalidArgumentException;
+            }
+        } catch (InvalidArgumentException) {
+            $this->addError($errorKey, 'Enter a barcode of up to 64 characters without control characters.');
+
+            return;
+        }
+
+        $importer = app(ImportBarcodeIntoCatalogue::class);
+        $item = $importer->findExisting($barcode);
+        if ($item === null) {
+            try {
+                $limiter = app(AbuseRateLimiter::class);
+                $limiter->consume('barcode_user', app(LimiterIdentity::class)->request(request()),
+                    (int) config('security.throttles.barcode_user.attempts'),
+                    (int) config('security.throttles.barcode_user.decay_seconds'));
+                $limiter->consume('barcode_global', 'global',
+                    (int) config('security.throttles.barcode_global.attempts'),
+                    (int) config('security.throttles.barcode_global.decay_seconds'));
+            } catch (TooManyRequestsHttpException) {
+                $this->addError($errorKey, 'Too many lookups. Please try again shortly.');
+
+                return;
+            }
+
+            $result = app(OpenFoodFactsClient::class)->lookup($barcode);
+            if ($result->status !== OpenFoodFactsLookupStatus::Success || $result->product === null) {
+                $this->addError($errorKey, match ($result->status) {
+                    OpenFoodFactsLookupStatus::NotFound => 'No product found for that barcode.',
+                    OpenFoodFactsLookupStatus::RateLimited => 'Too many lookups. Please try again shortly.',
+                    OpenFoodFactsLookupStatus::InvalidResponse => 'Product data could not be read.',
+                    OpenFoodFactsLookupStatus::Unavailable => 'Food database temporarily unavailable. Please try again.',
+                    default => 'Food database could not complete the lookup.',
+                });
+
+                return;
+            }
+
+            try {
+                $item = $importer->import($user, $barcode, $result)->item;
+            } catch (InvalidArgumentException) {
+                $this->addError($errorKey, 'Product data did not match the requested barcode.');
+
+                return;
+            }
+        }
+
+        if ($item === null || $item->status !== CatalogueItemStatus::Approved || $item->current_catalogue_item_version_id === null) {
+            $this->addError($errorKey, 'That barcode is not currently available for selection.');
+
+            return;
+        }
+
+        $version = app(CatalogueReadQuery::class)->findSelectableCurrentVersion(
+            $user, (int) $item->getKey(), (string) $item->current_catalogue_item_version_id,
+        );
+        if ($version === null) {
+            $this->addError($errorKey, 'That barcode is not currently available for selection.');
+
+            return;
+        }
+        $this->catalogueResults[$lineId] = [CatalogueMatchCandidate::fromCatalogueItem($item)->toArray()];
+        $this->catalogueResultPages[$lineId] = ['page' => 1, 'last_page' => 1, 'total' => 1];
+        $this->barcodeNotices[$lineId] = 'Product found. Select the food below to use it for this ingredient.';
+    }
+
     public function searchCatalogue(int $index, CatalogueReadQuery $catalogue): void
     {
         $this->loadCatalogueResults($index, 1, $catalogue);
@@ -351,7 +456,7 @@ class Form extends Component
         $line = $this->persistedIngredientLine($index);
         $match = $matches->select($this->recipeId, (int) $line->getKey(), $catalogueItemId, $catalogueVersionId, $user);
         $this->catalogueMatches[$line->getKey()] = $this->matchState($match);
-        $this->catalogueResults[$line->getKey()] = [];
+        unset($this->catalogueResults[$line->getKey()], $this->catalogueResultPages[$line->getKey()], $this->barcodeNotices[$line->getKey()]);
         $this->refreshFingerprint($fingerprint);
         $this->announceMatchOutcome($index, 'Catalogue match saved. Selected by you.');
     }
@@ -481,12 +586,21 @@ class Form extends Component
         $this->title = $recipe->title;
         $this->servings = $recipe->servings;
         $this->visibility = (string) $recipe->getRawOriginal('visibility');
+        $formatter = app(RecipeQuantityFormatter::class);
+        $this->ingredientQuantityBaselines = $recipe->ingredientLines->mapWithKeys(fn ($line): array => [
+            $line->getKey() => [
+                'original' => $line->quantity,
+                'display' => $line->quantity === null ? null : $formatter->format($line->quantity),
+            ],
+        ])->all();
+        $this->editedIngredientQuantities = [];
         $this->ingredients = $recipe->ingredientLines->map(fn ($line): array => [
             'key' => 'ingredient-'.$line->getKey(), 'id' => $line->getKey(), 'original_text' => $line->original_text,
-            'quantity' => $line->quantity,
+            'quantity' => $this->ingredientQuantityBaselines[$line->getKey()]['display'],
             'unit' => $line->standard_unit instanceof StandardUnit ? MeasurementUnitRegistry::definition($line->standard_unit)->symbol : ($line->custom_unit ?? ''),
             'generic_wording' => $line->generic_wording ?? '', 'notes' => $line->notes ?? '',
         ])->values()->all();
+        $this->barcodeNotices = [];
         $this->catalogueSearches = [];
         $this->catalogueResults = [];
         $this->catalogueResultPages = [];
@@ -514,6 +628,8 @@ class Form extends Component
 
         $line = $this->persistedIngredientLine($index);
         $lineId = (int) $line->getKey();
+        unset($this->barcodeNotices[$lineId]);
+        $this->resetErrorBag('barcodeLookups.'.$lineId);
         $search = $this->catalogueSearches[$lineId] ?? '';
         validator(['search' => $search], ['search' => ['nullable', 'string', 'max:100']])->validate();
         $results = $catalogue->paginateSelectable($user, $search, max(1, $page));
@@ -585,6 +701,32 @@ class Form extends Component
                 $fail($message);
             }
         };
+    }
+
+    /** @param array<string, mixed>|null $rules @return array<string, mixed> */
+    private function validateWithOriginalQuantities(?array $rules = null): array
+    {
+        $enteredIngredients = $this->ingredients;
+
+        try {
+            foreach ($this->ingredients as $index => $line) {
+                $lineId = $line['id'] ?? null;
+                if (! is_int($lineId)) {
+                    continue;
+                }
+                $baseline = $this->ingredientQuantityBaselines[$lineId] ?? null;
+                if ($baseline !== null
+                    && ! ($this->editedIngredientQuantities[$lineId] ?? false)
+                    && ($line['quantity'] ?? null) === $baseline['display']) {
+                    $this->ingredients[$index]['quantity'] = $baseline['original'];
+                }
+            }
+
+            return $this->validate($rules);
+        } finally {
+            // Validation and writes use exact untouched amounts; the editor keeps its display state.
+            $this->ingredients = $enteredIngredients;
+        }
     }
 
     private function validQuantity(): Closure

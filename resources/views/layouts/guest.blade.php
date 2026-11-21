@@ -58,6 +58,7 @@
             <main id="main-content" tabindex="-1" class="mt-6 w-full overflow-hidden rounded-lg border border-gray-200 bg-white px-6 py-4 shadow-sm sm:max-w-md sm:rounded-lg dark:border-slate-800 dark:bg-slate-900/80">
                 {{ $slot }}
             </main>
+            <x-service-information-link />
         </div>
         @livewireScripts(['nonce' => Vite::cspNonce()])
     </body>

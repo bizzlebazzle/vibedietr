@@ -35,6 +35,7 @@ use App\Http\Controllers\RetainedPlanModerationController;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome');
+Route::view('service-information', 'service-information')->name('service-information');
 Route::get('account-recovery', [AccountRecoveryController::class, 'show'])->middleware('guest')->name('account-recovery');
 Route::post('account-recovery', [AccountRecoveryController::class, 'store'])->middleware(['guest', 'throttle:security-sensitive'])->name('account-recovery.store');
 

@@ -114,6 +114,20 @@ mandatory security notifications.
 - Published versions and their relevant food matches and nutrition provenance
   must be identifiable so dependent meal-plan snapshots can remain stable.
 
+### Recipe library and draft recovery
+
+- Public discovery remains the default recipe view. Signed-in users can also
+  open My bookmarks, My recipes, and My draft recipes.
+- My recipes includes all owned finalized recipes, whether public or private,
+  using current finalized content and marking unfinished revisions.
+- My draft recipes includes initial drafts and unfinished revisions, with
+  direct links to continue editing. A finalized recipe with a revision appears
+  in both personal lists.
+- The dashboard separately counts finalized recipes and distinct recipes with
+  drafts or unfinished revisions; it explains that these counts can overlap.
+- Personal recipe lists and draft counts are owner-only. Bookmarks retain
+  unavailable-source tombstones and their existing privacy rules.
+
 ### Required and optional recipe content
 
 A finalized recipe has at least:
@@ -151,6 +165,12 @@ saved.
 - Recognized recipe units include controlled mass, volume, and count units.
 - The quantity and unit originally entered remain the stored and displayed
   recipe quantity. For example, `1 tbsp` is not rewritten and stored as grams.
+- Ingredient quantities, including recipe-editor fields, display with at most
+  three decimal places using half-up rounding and no unnecessary trailing
+  zeros. Positive amounts below that resolution display as `<0.001`.
+  Unchanged quantities retain their exact stored precision when saving,
+  reordering, finalizing or publishing a revision. Editing a quantity explicitly
+  replaces that amount through the normal decimal validation.
 - Custom units such as `bunch` may be structured and proportionally resized.
 - Teaspoons and tablespoons use the modern UK recipe convention: exactly
   `5 ml` and `15 ml` respectively. Fluid ounces, cups, liquid pints, liquid
@@ -249,6 +269,14 @@ collapsed into one ambiguous `quantity` or `recommended servings` value.
 - A candidate below the minimum threshold is not selected, leaving the line
   unmatched.
 - The recipe creator can easily replace any automatic match.
+- Saved ingredient lines offer catalogue name search, typed barcode lookup,
+  and optional camera scanning without leaving the editor. Lookup may reuse
+  an approved shared food or import a successfully confirmed provider product.
+  The creator explicitly selects the result before the recipe match changes.
+- Lookup failures preserve pending edits and offer retry, name search, and
+  manual non-barcode submission. Unsaved ingredient rows must be saved first.
+  Only one recipe scanner is active at a time; closing it, removing its row,
+  or navigating away releases the camera.
 - DEC-001 sets the minimum selectable score at `0.9500` and high-confidence
   score at `0.9900`, both inclusive, under threshold-policy version `1`.
   DEC-002 records the owner-approved combined summary and inline warning
@@ -522,6 +550,13 @@ and nutrition before publishing. Drafts cannot be placed in meal plans.
 Imported recipes retain source provenance. When available, the finalized
 recipe displays the original source and a link to it. A remix continues to
 link back through its recipe lineage.
+
+Parsed recipe text decodes standard HTML character references, including named,
+decimal and hexadecimal references, into their original characters across
+import formats. This applies to titles, ingredient wording, instructions and
+section headings even when the text contains no HTML tags. The preserved
+import source remains exact; decoded characters stay inert text and are escaped
+when rendered. Existing saved recipes and versions are not rewritten by parsing.
 
 Documents and photographs uploaded for extraction are transient inputs and
 are deleted after processing. They are not kept as recipe attachments.

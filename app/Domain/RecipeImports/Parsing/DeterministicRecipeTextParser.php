@@ -118,7 +118,7 @@ final class DeterministicRecipeTextParser implements RecipeTextParser
             steps: $steps,
             warnings: array_values(array_unique($warnings)),
             parserIdentifier: self::IDENTIFIER,
-            parserVersion: (string) (config('production.imports.parser_version') ?: 'rec15-v1'),
+            parserVersion: (string) (config('production.imports.parser_version') ?: 'rec15-v2'),
             completionClassification: ($ingredients === [] || $steps === [] || in_array('extraction_incomplete', $warnings, true)) ? 'reviewable_with_strong_warnings' : 'reviewable',
         );
     }
@@ -131,8 +131,11 @@ final class DeterministicRecipeTextParser implements RecipeTextParser
             $working = preg_replace('/<\s*br\s*\/?\s*>/iu', "\n", $working) ?? $working;
             $working = preg_replace('/<\/(?:p|div|li|h[1-6]|section|article)>/iu', "\n", $working) ?? $working;
             $working = strip_tags($working);
-            $working = html_entity_decode($working, ENT_QUOTES | ENT_HTML5, 'UTF-8');
         }
+
+        // Structured webpage data and plain text can contain entities without HTML tags.
+        // Decode after stripping markup so decoded characters remain inert recipe text.
+        $working = html_entity_decode($working, ENT_QUOTES | ENT_HTML5, 'UTF-8');
 
         return preg_split('/\R/u', $working) ?: [];
     }

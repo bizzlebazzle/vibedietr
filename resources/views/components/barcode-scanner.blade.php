@@ -5,15 +5,17 @@
     'autostart' => false,
     // browser event name to dispatch when code is detected
     'event' => 'barcode-scanned',
+    'cameraLabel' => 'Choose camera',
 ])
 
 <div
+  data-barcode-scanner
   x-data="barcodeScanner({
       facing: @js($facing),
       autostart: @js($autostart),
       eventName: @js($event),
   })"
-  x-init="init()"
+  x-on:barcode-scanner-stop.capture="stop()"
   x-on:visibilitychange.window="document.hidden ? stop() : maybeStart()"
   class="space-y-3"
   wire:ignore
@@ -36,7 +38,7 @@
     </button>
     <button type="button" class="rounded border px-3 py-2" x-show="running" x-on:click="stop()">Stop</button>
 
-    <select class="ml-auto border rounded px-2 py-1 text-sm disabled:opacity-50" x-model="selectedDeviceId" x-bind:disabled="starting || devices.length === 0" x-on:change="restartWithDevice()">
+    <select aria-label="{{ $cameraLabel }}" class="ml-auto border rounded px-2 py-1 text-sm disabled:opacity-50" x-model="selectedDeviceId" x-bind:disabled="starting || devices.length === 0" x-on:change="restartWithDevice()">
       <template x-for="d in devices" :key="d.deviceId">
         <option :value="d.deviceId" x-text="d.label || 'Camera'"></option>
       </template>

@@ -10,7 +10,12 @@
             'password.reset' => 'Choose a new password',
             'password.confirm' => 'Confirm your password',
             'verification.notice' => 'Verify your email',
-            'recipes.index' => 'Discover recipes',
+            'recipes.index' => match (request()->query('view')) {
+                'mine' => 'My recipes',
+                'drafts' => 'My draft recipes',
+                'bookmarks' => 'My bookmarks',
+                default => 'Discover recipes',
+            },
             'catalogue.index' => 'Food catalogue',
             'admin.catalogue.submission' => 'Review manual submission',
             'admin.catalogue.candidate' => 'Review duplicate candidate',

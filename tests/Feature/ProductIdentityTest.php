@@ -41,7 +41,7 @@ class ProductIdentityTest extends TestCase
 
         $this->get(route('dashboard'))
             ->assertOk()
-            ->assertSee('You have no recipes yet.')
+            ->assertSee('You have 0 recipes and 0 drafts.')
             ->assertSee('You have no meal plans yet.')
             ->assertSee('Create a recipe')
             ->assertSee('Import a recipe')
@@ -64,7 +64,7 @@ class ProductIdentityTest extends TestCase
 
         $this->actingAs($owner)->get(route('dashboard'))
             ->assertOk()
-            ->assertSee('You have 1 recipe.')
+            ->assertSee('You have 0 recipes and 1 draft.')
             ->assertSee('You have 1 meal plan.')
             ->assertDontSee('Someone else private draft')
             ->assertDontSee('Someone else private plan');

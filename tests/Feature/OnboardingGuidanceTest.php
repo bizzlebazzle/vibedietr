@@ -84,7 +84,7 @@ class OnboardingGuidanceTest extends TestCase
     public function test_empty_private_lists_give_supported_next_steps(string $route, string $guidance): void
     {
         $this->get(route($route))->assertRedirect(route('login'));
-        $this->actingAs(User::factory()->create())->get(route($route))->assertOk()->assertSee($guidance);
+        $this->actingAs(User::factory()->create())->followingRedirects()->get(route($route))->assertOk()->assertSee($guidance);
     }
 
     public function test_empty_organizations_distinguish_missing_library_from_unassigned_members(): void

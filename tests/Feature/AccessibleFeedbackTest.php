@@ -68,8 +68,10 @@ class AccessibleFeedbackTest extends TestCase
         $this->actingAs($user)->get(route('profile'))
             ->assertOk()
             ->assertSee('Delete account')
-            ->assertSee('Your account will become inactive immediately.')
-            ->assertSee('You may recover it for up to 30 days unless you waive recovery.')
+            ->assertSee('Your account becomes inactive when deletion is accepted.')
+            ->assertSee('You may recover it for up to 30 days unless you waive recovery or a documented exception applies.')
+            ->assertSee('At the deadline, final purge becomes due:')
+            ->assertSee('the deadline is not proof that removal has finished.')
             ->assertSee('Independently owned remixes and copies are unaffected.')
             ->assertSee('aria-labelledby="confirm-user-deletion-title"', false);
     }

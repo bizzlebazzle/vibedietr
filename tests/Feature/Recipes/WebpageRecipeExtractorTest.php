@@ -4,6 +4,7 @@ namespace Tests\Feature\Recipes;
 
 use App\Domain\RecipeImports\Extraction\WebpageRecipeExtractor;
 use App\Integrations\RecipeWebpages\WebpageFetchException;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class WebpageRecipeExtractorTest extends TestCase
@@ -78,5 +79,43 @@ class WebpageRecipeExtractorTest extends TestCase
     private function fixture(string $name): string
     {
         return file_get_contents(base_path('tests/Fixtures/RecipeImports/Webpages/'.$name)) ?: '';
+    }
+
+    /** @return iterable<string, array{bool}> */
+    public static function webpageFormats(): iterable
+    {
+        yield 'JSON-LD' => [true];
+        yield 'visible HTML' => [false];
+    }
+
+    #[DataProvider('webpageFormats')]
+    public function test_webpage_recipe_fields_reconcile_entity_codes_to_characters(bool $structured): void
+    {
+        if ($structured) {
+            $html = '<html><head><script type="application/ld+json">'.json_encode([
+                '@type' => 'Recipe', 'name' => 'Terry&#39;s &amp; orange cake', 'recipeYield' => '2',
+                'recipeIngredient' => ['300 g Terry&#39;s chocolate orange'],
+                'recipeInstructions' => [
+                    '@type' => 'HowToSection', 'name' => 'Finish &amp; serve',
+                    'itemListElement' => [['@type' => 'HowToStep', 'text' => 'Mix &quot;gently&quot; &#x2014; serve.']],
+                ],
+            ], JSON_THROW_ON_ERROR).'</script></head><body></body></html>';
+        } else {
+            $html = '<html><body><h1>Terry&#39;s &amp; orange cake</h1><p>Serves: 2</p>'
+                .'<h2>Ingredients</h2><p>300 g Terry&#39;s chocolate orange</p><h2>Instructions</h2>'
+                .'<h3>Finish &amp; serve:</h3><p>Mix &quot;gently&quot; &#x2014; serve.</p></body></html>';
+        }
+
+        $result = app(WebpageRecipeExtractor::class)->extract($html);
+
+        $this->assertSame($structured ? 'schema_jsonld' : 'visible_text_fallback', $result->method);
+        $this->assertSame("Terry's & orange cake", $result->recipe->title);
+        $this->assertSame("300 g Terry's chocolate orange", $result->recipe->ingredients[0]->originalText);
+        $this->assertSame("Terry's chocolate orange", $result->recipe->ingredients[0]->genericWording);
+        $this->assertSame('Finish & serve', $result->recipe->sections[0]->name);
+        $this->assertSame('Mix "gently" — serve.', $result->recipe->steps[0]->text);
+        if ($structured) {
+            $this->assertStringContainsString('Terry&#39;s', $result->sourceText);
+        }
     }
 }

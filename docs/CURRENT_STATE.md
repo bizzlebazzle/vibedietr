@@ -7,9 +7,8 @@ repository. It is not a product specification or a delivery history.
 
 - **Application baseline:** `bab994f90b8532603d13514459da6f00b4972025`
   (NUT-11 merge, 2026-09-10).
-- **Last reviewed:** 2026-09-10.
-- This documentation restructure changes no application behavior after that
-  baseline.
+- **Last reviewed:** 2026-11-21 (UX-08 recipe navigation and matching).
+- Later capability entries record changes after that baseline.
 - Use [Product specification](PRODUCT_SPEC.md) for intended behavior,
   [Decisions](DECISIONS.md) for owner choices and unresolved blockers, and
   [Roadmap](ROADMAP.md) for task status and acceptance criteria.
@@ -54,7 +53,7 @@ not after every internal refactor.
 | Audit events | Append-only application API, minimized allowlisted payloads, erasable actor identity mapping, integrity hashes, and scoped reads | `app/Audit`, `app/Models/AuditEvent.php` | [Audit events](AUDIT_EVENTS.md), [retention schedule](AUDIT_RETENTION_SCHEDULE.md) |
 | Legacy ingredients | Owner-scoped CRUD compatibility path, shared validation/normalization, explicit-zero preservation, and machine-owned barcode provenance | `app/Domain/Ingredients`, `app/Livewire/Ingredients`, `IngredientController` | STB-01 through STB-09; retained migration behavior in [domain migration plan](DOMAIN_MIGRATION_PLAN.md) |
 | Recipes | Owned drafts, ordered ingredients/instructions, finalization, immutable versions, revisions, visibility, resizing, discovery, bookmarks, remixes, collections, private/public tags, managed classifications, and attribution | `app/Domain/Recipes`, `RecipeController`, recipe routes and Livewire forms | REC-01 through REC-14; concepts in [domain model](DOMAIN_MODEL.md) |
-| Recipe imports | Pasted text, validated webpage imports, and supported text-document/still-image uploads materialize into drafts through queued workflows | `app/Domain/RecipeImports`, `app/Integrations/RecipeWebpages`, `RecipeImportController` | REC-15 through REC-17; [security controls](SECURITY_CONTROLS.md) and queue documentation |
+| Recipe imports | Pasted text, webpage imports and supported document/image uploads produce drafts through queued workflows; parsed text decodes HTML entities while retaining exact source evidence | `app/Domain/RecipeImports`, `app/Integrations/RecipeWebpages`, `RecipeImportController` | REC-15 through REC-17; [security controls](SECURITY_CONTROLS.md) and queue documentation |
 | Shared catalogue | Stable identities and immutable versions, package/serving structure, normalized nutrient observations/facts, legacy backfill evidence, public read cut-over, and verified barcode import | `app/Domain/Catalogue`, catalogue models, `CatalogueController` | NUT-01 through NUT-06; [domain model](DOMAIN_MODEL.md) and [OpenFoodFacts integration](OPENFOODFACTS_INTEGRATION.md) |
 | Matching and submissions | Recipe-line manual catalogue matches and private pending manual-food submissions with deterministic reuse/duplicate evidence | `RecipeIngredientMatchManager`, `ManualCatalogueSubmissionCreator` | NUT-07 and NUT-08; catalogue sections of [domain model](DOMAIN_MODEL.md) |
 | Catalogue moderation | Administrator queues, explicit duplicate decisions and bounded merges, immutable correction proposals, and moderated OpenFoodFacts refresh proposals | moderation controllers and `app/Domain/Catalogue` services | NUT-09 through NUT-11; [moderation](CATALOGUE_MODERATION.md), [corrections](CATALOGUE_CORRECTIONS.md), [provider refreshes](CATALOGUE_PROVIDER_REFRESHES.md) |
@@ -152,10 +151,11 @@ work.
 - UX-01 adds identity/navigation; UX-02 adds accessible feedback; UX-03 adds
   responsive recipe editing/resizing; UX-04 adds optional match review ([verification](UX_04_VERIFICATION.md)).
   UX-05 adds responsive planning/consumption ([verification](UX_05_VERIFICATION.md)); UX-06 adds empty/recovery guidance.
-  UX-07 adds shared accessibility fixes and full-page/pixel regressions ([verification](UX_07_VERIFICATION.md)).
+  UX-07 adds accessibility regressions ([verification](UX_07_VERIFICATION.md)).
+  UX-08 adds recipe/draft lists, counts, barcode lookup and quantity display ([verification](UX_08_VERIFICATION.md)).
 - [Recovery tooling and drill](DEP_06_VERIFICATION.md) include DEP-08 replay/release; production installation gates remain.
 - DEP-07 implements verified owned JSON ZIP exports and queued cleanup; installation release checks remain ([evidence](DEP_07_VERIFICATION.md)).
-- DEP-08 is implemented; DEP-09/10 still gate launch. DEC-010 is decided; contact workflow remains future work.
+- DEP-08 is implemented; [DEP-09 review](DEP_09_LAUNCH_REVIEW.md) records launch blockers and pending owner approval.
 - Accounts become inactive with up to 30 days of recovery; under-13/waived accounts purge without recovery.
   Safe bookmarked public plans become anonymous/unlisted; private history follows DEC-022.
   Owned-domain purge preserves approved public/catalogue facts and independent copies.

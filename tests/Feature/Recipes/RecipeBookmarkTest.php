@@ -167,7 +167,7 @@ class RecipeBookmarkTest extends TestCase
         $second = Bookmark::factory()->for($user, 'owner')->forRecipe($secondRecipe)->create();
         Bookmark::factory()->for($other, 'owner')->forRecipe($otherRecipe)->create();
 
-        $response = $this->actingAs($user)->get(route('bookmarks.index'));
+        $response = $this->actingAs($user)->get(route('recipes.index', ['view' => 'bookmarks']));
 
         $response->assertOk()
             ->assertSeeInOrder(['Second public saved title', 'First public saved title'])
@@ -190,7 +190,7 @@ class RecipeBookmarkTest extends TestCase
         app(RecipeRevisionManager::class)->startOrResume($recipe->id, $creator);
         $recipe->forceFill(['title' => 'Secret draft replacement'])->save();
 
-        $this->actingAs($user)->get(route('bookmarks.index'))
+        $this->actingAs($user)->get(route('recipes.index', ['view' => 'bookmarks']))
             ->assertOk()
             ->assertSee('Stable public title')
             ->assertDontSee('Secret draft replacement');
@@ -205,7 +205,7 @@ class RecipeBookmarkTest extends TestCase
         $this->assertSame(2, $recipe->currentVersion()->sole()->version_number);
         $this->assertEquals($bookmarkSnapshot, $bookmark->fresh()->getRawOriginal());
 
-        $this->actingAs($user)->get(route('bookmarks.index'))
+        $this->actingAs($user)->get(route('recipes.index', ['view' => 'bookmarks']))
             ->assertOk()
             ->assertSee('Newly published public title')
             ->assertDontSee('Stable public title')
@@ -219,7 +219,7 @@ class RecipeBookmarkTest extends TestCase
         $recipe = $this->finalizedRecipe($creator, title: 'Initially public title');
         $bookmark = Bookmark::factory()->for($user, 'owner')->forRecipe($recipe)->create();
 
-        $this->actingAs($user)->get(route('bookmarks.index'))
+        $this->actingAs($user)->get(route('recipes.index', ['view' => 'bookmarks']))
             ->assertSee('Initially public title')
             ->assertDontSee('Recipe unavailable');
 
@@ -228,7 +228,7 @@ class RecipeBookmarkTest extends TestCase
         $secretSnapshot = [...$version->snapshot, 'title' => 'Now private secret title'];
         RecipeVersion::withoutEvents(fn () => $version->forceFill(['snapshot' => $secretSnapshot])->save());
 
-        $this->get(route('bookmarks.index'))
+        $this->get(route('recipes.index', ['view' => 'bookmarks']))
             ->assertOk()
             ->assertSee('Recipe unavailable')
             ->assertSee('This recipe is no longer publicly available.')
@@ -238,7 +238,7 @@ class RecipeBookmarkTest extends TestCase
         $this->assertDatabaseHas('bookmarks', ['id' => $bookmark->id]);
 
         $recipe->forceFill(['visibility' => RecipeVisibility::Public])->save();
-        $this->get(route('bookmarks.index'))
+        $this->get(route('recipes.index', ['view' => 'bookmarks']))
             ->assertOk()
             ->assertSee('Now private secret title')
             ->assertDontSee('Recipe unavailable');
@@ -260,7 +260,7 @@ class RecipeBookmarkTest extends TestCase
             'id' => $bookmark->id,
             'recipe_id' => $recipeId,
         ]);
-        $this->actingAs($user)->get(route('bookmarks.index'))
+        $this->actingAs($user)->get(route('recipes.index', ['view' => 'bookmarks']))
             ->assertOk()
             ->assertSee('Recipe unavailable')
             ->assertDontSee('Deleted source secret')

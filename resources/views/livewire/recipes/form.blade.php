@@ -75,6 +75,7 @@
                 <button type="button" wire:click="addIngredient" class="inline-flex min-h-11 items-center rounded border px-3 py-2 text-sm dark:border-slate-600">Add ingredient line</button>
             </div>
             <p class="text-sm text-gray-600 dark:text-gray-400">Attention details use saved ingredient quantities and units. Save edits to update conversion limitations. Review is optional and does not prevent saving or publishing.</p>
+            <p id="ingredient-quantity-help" class="text-sm text-gray-600 dark:text-slate-300">Quantities show up to three decimal places. Unchanged amounts keep their original precision.</p>
             <x-recipe-attention :issues="$ingredientAttention['issues']" id="editor-attention" edit-url="" />
             @forelse ($ingredients as $index => $line)
                 @php
@@ -88,7 +89,7 @@
                         <x-input-error :messages="$errors->get('ingredients.'.$index.'.original_text')" class="mt-2" />
                     </div>
                     <div class="grid gap-4 sm:grid-cols-2">
-                        <div><x-input-label for="ingredient-{{ $line['key'] }}-quantity" value="Quantity (optional)" /><x-text-input id="ingredient-{{ $line['key'] }}-quantity" wire:model="ingredients.{{ $index }}.quantity" type="text" inputmode="decimal" :aria-describedby="$lineIssue ? 'ingredient-limitations-'.($index + 1) : null" class="mt-1 block w-full" /><x-input-error :messages="$errors->get('ingredients.'.$index.'.quantity')" class="mt-2" /></div>
+                        <div><x-input-label for="ingredient-{{ $line['key'] }}-quantity" value="Quantity (optional)" /><x-text-input id="ingredient-{{ $line['key'] }}-quantity" wire:model="ingredients.{{ $index }}.quantity" data-ingredient-id="{{ $line['id'] }}" x-on:input="if ($el.dataset.ingredientId) $wire.set('editedIngredientQuantities.' + $el.dataset.ingredientId, true, false)" type="text" inputmode="decimal" :aria-describedby="'ingredient-quantity-help'.($lineIssue ? ' ingredient-limitations-'.($index + 1) : '')" class="mt-1 block w-full" /><x-input-error :messages="$errors->get('ingredients.'.$index.'.quantity')" class="mt-2" /></div>
                         <div><x-input-label for="ingredient-{{ $line['key'] }}-unit" value="Unit (optional)" /><x-text-input id="ingredient-{{ $line['key'] }}-unit" wire:model="ingredients.{{ $index }}.unit" type="text" list="recipe-unit-options" maxlength="32" :aria-describedby="$lineIssue ? 'ingredient-limitations-'.($index + 1) : null" class="mt-1 block w-full" /><x-input-error :messages="$errors->get('ingredients.'.$index.'.unit')" class="mt-2" /></div>
                     </div>
                     <div><x-input-label for="ingredient-{{ $line['key'] }}-wording" value="Generic ingredient wording (optional)" /><x-text-input id="ingredient-{{ $line['key'] }}-wording" wire:model="ingredients.{{ $index }}.generic_wording" type="text" maxlength="255" class="mt-1 block w-full" /><x-input-error :messages="$errors->get('ingredients.'.$index.'.generic_wording')" class="mt-2" /></div>
@@ -136,6 +137,7 @@
                                     <button type="button" wire:click="clearCatalogueMatch({{ $index }})" aria-label="Clear catalogue match for ingredient {{ $index + 1 }}" aria-describedby="ingredient-review-{{ $index + 1 }}" wire:confirm="Clear this match? Original ingredient text stays intact. The selection is removed and this line will be excluded from the estimate." class="inline-flex min-h-11 items-center rounded border border-red-300 px-3 py-2 text-sm text-red-700 dark:border-red-800 dark:text-red-300">Clear match</button>
                                 @endif
                             </div>
+                            @include('recipes.partials.barcode-lookup')
                             <x-input-error :messages="$errors->get('catalogue_match')" />
                             @if (array_key_exists($lineId, $catalogueResults))
                                 <p class="text-xs text-gray-600 dark:text-gray-400">{{ $resultPage['total'] ?? 0 }} selectable result(s). Pending manual foods appear only to their submitter.</p>

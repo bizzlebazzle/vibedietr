@@ -73,10 +73,10 @@
 
             <!-- Page Heading -->
             @if (isset($header))
-                <header class="border-b border-gray-200 bg-white/95 shadow-sm dark:border-slate-800 dark:bg-slate-900/95">
-                    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+                <header>
+                    <x-secondary-bar>
                         {{ $header }}
-                    </div>
+                    </x-secondary-bar>
                 </header>
             @endif
 
@@ -84,6 +84,7 @@
             <main id="main-content" tabindex="-1" class="text-gray-900 dark:text-slate-100">
                 {{ $slot }}
             </main>
+            <x-service-information-link />
         </div>
         @livewireScripts(['nonce' => Vite::cspNonce()])
         @stack('scripts')

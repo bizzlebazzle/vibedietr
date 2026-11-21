@@ -5,7 +5,7 @@
 
     <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <p class="max-w-2xl text-slate-700 dark:text-slate-300">Pick up where you left off, or start something new.</p>
-        @if ($recipeCount === 0 && $planCount === 0)
+        @if ($recipeCount === 0 && $draftCount === 0 && $planCount === 0)
             <section aria-labelledby="getting-started-heading" class="mt-6 rounded-lg border border-blue-200 bg-blue-50 p-6 dark:border-blue-900 dark:bg-blue-950/30">
                 <h2 id="getting-started-heading" class="text-xl font-semibold">Get started with VibeDietr</h2>
                 <ol class="mt-3 list-decimal space-y-3 pl-5 text-sm">
@@ -19,13 +19,16 @@
         <div class="mt-8 grid gap-5 md:grid-cols-2">
             <section class="rounded-lg border border-gray-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
                 <h2 class="text-xl font-semibold">Your recipes</h2>
-                <p class="mt-2 text-slate-700 dark:text-slate-300">{{ $recipeCount === 0 ? 'You have no recipes yet.' : 'You have '.$recipeCount.' '.Str::plural('recipe', $recipeCount).'.' }}</p>
-                @if ($recipeCount === 0)<p class="mt-2 text-sm">Start with a title and save a private draft, then add ingredients and instructions. Review imports before finalizing.</p>@endif
+                <p class="mt-2 text-slate-700 dark:text-slate-300">{{ 'You have '.$recipeCount.' '.Str::plural('recipe', $recipeCount).' and '.$draftCount.' '.Str::plural('draft', $draftCount).'.' }}</p>
+                @if ($recipeCount === 0 && $draftCount === 0)<p class="mt-2 text-sm">Start with a title and save a private draft, then add ingredients and instructions. Review imports before finalizing.</p>@endif
+                <p class="mt-2 text-sm">Drafts include unfinished revisions of recipes also counted above.</p>
                 <div class="mt-5 flex flex-wrap gap-4 font-medium text-sky-700 dark:text-sky-300">
+                    <a class="underline" href="{{ route('recipes.index', ['view' => 'mine']) }}">My recipes</a>
+                    <a class="underline" href="{{ route('recipes.index', ['view' => 'drafts']) }}">My drafts</a>
                     <a class="underline" href="{{ route('recipes.create') }}">Create a recipe</a>
                     <a class="underline" href="{{ route('recipe-imports.create') }}">Import a recipe</a>
                     <a class="underline" href="{{ route('recipes.index') }}">Discover recipes</a>
-                    <a class="underline" href="{{ route('bookmarks.index') }}">Bookmarks</a>
+                    <a class="underline" href="{{ route('recipes.index', ['view' => 'bookmarks']) }}">Bookmarks</a>
                     <a class="underline" href="{{ route('recipe-collections.index') }}">Collections</a>
                     <a class="underline" href="{{ route('private-recipe-tags.index') }}">Private tags</a>
                 </div>

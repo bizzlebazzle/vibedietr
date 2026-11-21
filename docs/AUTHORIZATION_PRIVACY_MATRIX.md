@@ -193,6 +193,13 @@ finalization time plus accepted free-form tag wording and managed term
 category/name. It does not load or serialize owners, account/security fields,
 mutable draft state, suggestions, private tags, active-revision or historical-
 version identifiers, or private recipes.
+UX-08 adds authenticated personal views under the recipe library. Owned
+finalized lists and draft/revision lists derive ownership from the authenticated
+user, never a supplied user identifier; dashboard counts follow the same scope.
+Finalized cards read current immutable titles; working titles and revision
+badges appear only to the owner. Bookmark lists still use their existing
+public-only projection and non-disclosing unavailable-source tombstones.
+
 These current behaviors remain facts until later implementation work changes
 them. This document does not change them.
 
@@ -335,6 +342,12 @@ Later scanners reuse the same identity without replacing submitter provenance.
 Deleting the first scanner nulls the submitter reference while the approved
 item, its version, and public visibility remain. Provider failure and hidden
 pending/rejected identities do not create a user-owned fallback copy.
+UX-08 exposes the same import boundary within saved recipe ingredient matching.
+Every lookup verifies the authenticated recipe owner and ingredient membership
+before catalogue/provider access. Unknown-barcode provider calls consume the
+existing hashed user/IP and global limits. Only approved selectable current
+versions are offered; lookup alone never changes a recipe match. Explicit
+selection reuses the existing version and ownership checks.
 
 ## 6. Required scenario rulings
 
