@@ -73,3 +73,19 @@ Physical-camera decoding, real permission prompts, camera switching on target
 devices, and real screen-reader announcements are not established by simulated
 browser scans or Node API doubles. These remain manual release checks; no
 physical-device or assistive-technology pass is claimed.
+
+## Secondary navigation refinement
+
+The four recipe views now form a separate navigation bar directly below the
+primary navigation. They reuse the primary navigation link component, including
+its active underline, text, hover and focus treatments. Links use two columns
+on narrow screens and a horizontal row when space permits.
+
+The production build and focused recipe-library browser run passed. Keyboard
+navigation, all four active states, axe, and 320px reflow were checked in both
+themes; the resulting mobile screenshots were visually reviewed. Documentation checks
+also passed. This presentation-only follow-up changes no PHP application code,
+queries, authorization, schema, dependencies or configuration, so backend,
+static-analysis, environment and migration checks were not repeated. The
+existing full-accessibility blocker and outstanding release checks above remain;
+the full accessibility and planning suites were not rerun for this refinement.

@@ -624,14 +624,14 @@ test('recipe library tabs expose owned drafts and bookmarks with responsive keyb
     await browser.wait(until.urlContains('/edit'), 10000);
     assert.equal(await (await find('#title')).getAttribute('value'), 'Barcode matching draft');
     for (const theme of ['light', 'dark']) {
-        for (const view of ['mine', 'drafts', 'bookmarks']) {
+        for (const view of ['discover', 'mine', 'drafts', 'bookmarks']) {
             await open('/recipes?view=' + view);
             await browser.executeScript('document.documentElement.classList.toggle("dark",arguments[0])', theme === 'dark');
             await browser.sendDevToolsCommand('Emulation.setDeviceMetricsOverride', { width: 320, height: 800, deviceScaleFactor: 1, mobile: true });
             await structure(); await reflow(); await scan(`recipe-library-${view}-${theme}`);
             assert.equal(await (await find('nav[aria-label="Recipe views"] [aria-current="page"]')).getText(),
-                { mine: 'My recipes', drafts: 'My draft recipes', bookmarks: 'My bookmarks' }[view]);
-            assert.equal(await browser.getTitle(), { mine: 'My recipes', drafts: 'My draft recipes', bookmarks: 'My bookmarks' }[view] + ' — VibeDietr');
+                { discover: 'Discover recipes', mine: 'My recipes', drafts: 'My draft recipes', bookmarks: 'My bookmarks' }[view]);
+            assert.equal(await browser.getTitle(), { discover: 'Discover recipes', mine: 'My recipes', drafts: 'My draft recipes', bookmarks: 'My bookmarks' }[view] + ' — VibeDietr');
             await screenshot(`recipe-library-${view}-${theme}`);
             await browser.sendDevToolsCommand('Emulation.clearDeviceMetricsOverride');
         }

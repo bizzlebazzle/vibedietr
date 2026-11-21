@@ -1,8 +1,8 @@
 @auth
     <x-app-layout>
+        @include('recipes.partials.navigation')
         <div class="py-12">
             <div class="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-                @include('recipes.partials.navigation')
                 @include('recipes.partials.'.($view === 'discover' ? 'discovery' : ($view === 'bookmarks' ? 'bookmarks' : 'owned')))
             </div>
         </div>
