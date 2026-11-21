@@ -165,6 +165,12 @@ saved.
 - Recognized recipe units include controlled mass, volume, and count units.
 - The quantity and unit originally entered remain the stored and displayed
   recipe quantity. For example, `1 tbsp` is not rewritten and stored as grams.
+- Ingredient quantities, including recipe-editor fields, display with at most
+  three decimal places using half-up rounding and no unnecessary trailing
+  zeros. Positive amounts below that resolution display as `<0.001`.
+  Unchanged quantities retain their exact stored precision when saving,
+  reordering, finalizing or publishing a revision. Editing a quantity explicitly
+  replaces that amount through the normal decimal validation.
 - Custom units such as `bunch` may be structured and proportionally resized.
 - Teaspoons and tablespoons use the modern UK recipe convention: exactly
   `5 ml` and `15 ml` respectively. Fluid ounces, cups, liquid pints, liquid

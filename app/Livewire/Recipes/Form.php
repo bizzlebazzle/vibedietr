@@ -14,6 +14,7 @@ use App\Domain\Recipes\RecipeDraftEditor;
 use App\Domain\Recipes\RecipeDraftFingerprint;
 use App\Domain\Recipes\RecipeFinalizer;
 use App\Domain\Recipes\RecipeIngredientMatchManager;
+use App\Domain\Recipes\RecipeQuantityFormatter;
 use App\Domain\Recipes\RecipeRevisionPublisher;
 use App\Domain\Recipes\RecipeVersionContent;
 use App\Domain\Recipes\RecipeVisibility;
@@ -60,6 +61,13 @@ class Form extends Component
     /** @var list<array{key: string, id: int|null, original_text: string, quantity: mixed, unit: string, generic_wording: string, notes: string}> */
     public array $ingredients = [];
 
+    /** @var array<int, array{original: string|null, display: string|null}> */
+    #[Locked]
+    public array $ingredientQuantityBaselines = [];
+
+    /** @var array<int, bool> */
+    public array $editedIngredientQuantities = [];
+
     /** @var list<array{key: string, id: int|null, name: string}> */
     public array $sections = [];
 
@@ -99,6 +107,12 @@ class Form extends Component
 
     public function updated(string $property): void
     {
+        if (preg_match('/^ingredients\.(\d+)\.quantity$/', $property, $matches)) {
+            $lineId = $this->ingredients[(int) $matches[1]]['id'] ?? null;
+            if (is_int($lineId) && isset($this->ingredientQuantityBaselines[$lineId])) {
+                $this->editedIngredientQuantities[$lineId] = true;
+            }
+        }
         if (! $this->loading && $property !== 'unsaved' && ! str_starts_with($property, 'catalogueSearches.')) {
             $this->unsaved = true;
         }
@@ -214,7 +228,7 @@ class Form extends Component
         $this->title = trim($this->title);
 
         try {
-            $validated = $this->validate();
+            $validated = $this->validateWithOriginalQuantities();
             $this->assertUniqueKeys();
         } catch (ValidationException $exception) {
             $this->title = $enteredTitle;
@@ -280,7 +294,7 @@ class Form extends Component
             $rules['servings'] = ['required', 'decimal:0,2', 'gt:0'];
             $rules['ingredients'] = ['required', 'array', 'min:1'];
             $rules['steps'] = ['required', 'array', 'min:1'];
-            $validated = $this->validate($rules);
+            $validated = $this->validateWithOriginalQuantities($rules);
             $this->assertUniqueKeys();
         } catch (ValidationException $exception) {
             $this->title = $enteredTitle;
@@ -572,9 +586,17 @@ class Form extends Component
         $this->title = $recipe->title;
         $this->servings = $recipe->servings;
         $this->visibility = (string) $recipe->getRawOriginal('visibility');
+        $formatter = app(RecipeQuantityFormatter::class);
+        $this->ingredientQuantityBaselines = $recipe->ingredientLines->mapWithKeys(fn ($line): array => [
+            $line->getKey() => [
+                'original' => $line->quantity,
+                'display' => $line->quantity === null ? null : $formatter->format($line->quantity),
+            ],
+        ])->all();
+        $this->editedIngredientQuantities = [];
         $this->ingredients = $recipe->ingredientLines->map(fn ($line): array => [
             'key' => 'ingredient-'.$line->getKey(), 'id' => $line->getKey(), 'original_text' => $line->original_text,
-            'quantity' => $line->quantity,
+            'quantity' => $this->ingredientQuantityBaselines[$line->getKey()]['display'],
             'unit' => $line->standard_unit instanceof StandardUnit ? MeasurementUnitRegistry::definition($line->standard_unit)->symbol : ($line->custom_unit ?? ''),
             'generic_wording' => $line->generic_wording ?? '', 'notes' => $line->notes ?? '',
         ])->values()->all();
@@ -679,6 +701,32 @@ class Form extends Component
                 $fail($message);
             }
         };
+    }
+
+    /** @param array<string, mixed>|null $rules @return array<string, mixed> */
+    private function validateWithOriginalQuantities(?array $rules = null): array
+    {
+        $enteredIngredients = $this->ingredients;
+
+        try {
+            foreach ($this->ingredients as $index => $line) {
+                $lineId = $line['id'] ?? null;
+                if (! is_int($lineId)) {
+                    continue;
+                }
+                $baseline = $this->ingredientQuantityBaselines[$lineId] ?? null;
+                if ($baseline !== null
+                    && ! ($this->editedIngredientQuantities[$lineId] ?? false)
+                    && ($line['quantity'] ?? null) === $baseline['display']) {
+                    $this->ingredients[$index]['quantity'] = $baseline['original'];
+                }
+            }
+
+            return $this->validate($rules);
+        } finally {
+            // Validation and writes use exact untouched amounts; the editor keeps its display state.
+            $this->ingredients = $enteredIngredients;
+        }
     }
 
     private function validQuantity(): Closure

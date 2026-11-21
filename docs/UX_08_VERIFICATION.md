@@ -1,7 +1,7 @@
 # UX-08 recipe navigation and barcode matching
 
 Implemented on branch `recipe-ux-fixes`. The latest full accessibility and
-planning browser suites pass after the shared secondary-bar refinement. The
+planning browser suites pass after the recipe-editor quantity precision fix. The
 earlier deletion-dialog transition finding did not recur; that flow was not
 changed. Physical-device and assistive-technology release checks remain pending.
 
@@ -31,7 +31,7 @@ changed. Physical-device and assistive-technology release checks remain pending.
   with 361 assertions. Provider requests use HTTP fakes.
 - `npm run test:scanner`: 27 tests passed, including scoped event delivery,
   duplicate suppression, retry state and scanner teardown.
-- `./vendor/bin/sail composer test`: 1,204 tests passed, 7,715 assertions.
+- `./vendor/bin/sail composer test`: 1,217 tests passed, 7,795 assertions.
 - `./vendor/bin/sail pint --test`, `composer analyse`, `npm run build`,
   `npm run env:check`, and `npm run docs:check` passed through Sail.
   Example Compose configuration also passed `docker compose --env-file
@@ -39,8 +39,8 @@ changed. Physical-device and assistive-technology release checks remain pending.
 - The focused library/barcode browser run passed all three cases, with no
   axe violations. It covers active-page document titles, empty-code validation,
   explicit selection, row removal, navigation cleanup and both themes.
-- The latest full `npm run test:accessibility` run passed all 20 checks,
-  including shared secondary-bar dimensions and all recipe journeys, with no
+- The latest full `npm run test:accessibility` run passed all 21 checks,
+  including shared secondary-bar dimensions and recipe quantity editing, with no
   axe violations. An earlier run caught fading deletion-dialog text during
   `deletion-cancelled`; this timing-sensitive finding did not recur.
 - An earlier full run also exposed synthetic-fixture teardown errors. Teardown now
@@ -103,3 +103,34 @@ the full accessibility suite passed 20 checks and planning passed six.
 The full backend regression gate also passed again: 1,204 tests and 7,715
 assertions. Formatting, static analysis, scanner, environment, Compose and
 documentation checks passed. No migration or dependency changes were needed.
+
+## Recipe-editor quantity precision
+
+REC-08 already supplies the ingredient quantity formatter: exact decimal
+half-up rounding to at most three places, trailing-zero removal, and
+`<0.001` for positive amounts below display resolution. DEC-003 and DEC-004
+govern nutrient storage and nutrient-specific displays; those policies are
+unchanged. The recipe editor previously bypassed the ingredient formatter and
+loaded scale-18 database strings directly into its quantity fields.
+
+The editor now uses that existing formatter. A locked, line-ID-keyed baseline
+retains each exact amount separately from its display. Untouched quantities
+use the original amount for validation and persistence, including after row
+reordering, failed validation, finalization and revision publication. Actual
+quantity-input events mark deliberate edits, including replacing a rounded
+value with the same visible number. Explicit edits use the existing numeric
+validation and storage boundary; missing and zero remain distinct. No migration
+or stored-data rewrite is needed.
+
+`RecipeQuantityEditorDisplayTest` covers whole/fractional amounts, half-up
+ties, full precision, tiny positives, zero, missing values, large exact values,
+intentional edits, clear/zero actions, validation recovery, ordering, stale
+saves, immutable version snapshots and protected-baseline tampering. The
+focused Chromium quantity journey passed and verifies visible field values,
+save behavior and real input-event tracking in both themes, with no axe
+violations. Final verification passed: 1,217 backend tests (7,795 assertions),
+all 13 dedicated quantity regressions (80 assertions), 21 full accessibility
+checks and six planning checks. Formatting, static analysis, the production
+build, scanner, documentation and environment checks passed. Quantity-editor
+screenshots were visually reviewed in both themes. The existing physical-camera
+and assistive-technology release checks remain separate from this correction.

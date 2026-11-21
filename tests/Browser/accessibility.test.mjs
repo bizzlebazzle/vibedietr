@@ -671,6 +671,36 @@ test('recipe library tabs expose owned drafts and bookmarks with responsive keyb
     assert.match(await browser.getCurrentUrl(), /view=bookmarks.*page=2/);
 });
 
+test('recipe edit quantities use readable precision through saves and explicit edits', async () => {
+    await login();
+    await open(`/recipes/${fixture.quantityDraft}/edit`);
+    const first = '#ingredient-line-1 input[wire\\:model$=".quantity"]';
+    const second = '#ingredient-line-2 input[wire\\:model$=".quantity"]';
+    assert.equal(await (await find(first)).getAttribute('value'), '300');
+    assert.equal(await (await find(second)).getAttribute('value'), '1.235');
+    await tabTo('#title');
+    await browser.actions().keyDown(Key.CONTROL).sendKeys('a').keyUp(Key.CONTROL).sendKeys('Quantity title updated').perform();
+    await tabTo('button[type="submit"][wire\\:target="save"]'); await press();
+    await waitText('main', 'All changes saved');
+    assert.equal(await (await find(first)).getAttribute('value'), '300');
+    assert.equal(await (await find(second)).getAttribute('value'), '1.235');
+    // An actual input event must mark an intentional edit even when the final text is unchanged.
+    await tabTo(second);
+    await browser.actions().keyDown(Key.CONTROL).sendKeys('a').keyUp(Key.CONTROL).sendKeys('1.235').perform();
+    assert.ok(await browser.executeScript(`
+        const input = document.querySelector(arguments[0]);
+        return Livewire.find(input.closest('form').getAttribute('wire:id')).editedIngredientQuantities[input.dataset.ingredientId];
+    `, second));
+    await tabTo('button[type="submit"][wire\\:target="save"]'); await press();
+    await waitText('main', 'All changes saved');
+    for (const theme of ['light', 'dark']) {
+        await browser.executeScript('document.documentElement.classList.toggle("dark",arguments[0])', theme === 'dark');
+        await structure(); await scan(`recipe-quantity-editor-${theme}`);
+        await browser.executeScript('document.querySelector(arguments[0]).scrollIntoView({block:"center"})', first);
+        await screenshot(`recipe-quantity-editor-${theme}`);
+    }
+});
+
 test('inline typed and scanned barcodes stay on their ingredient and preserve unsaved edits', async () => {
     await login();
     await open(`/recipes/${fixture.barcodeDraft}/edit`);

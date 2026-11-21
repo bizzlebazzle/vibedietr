@@ -67,6 +67,11 @@ $fixture = DB::transaction(function (): array {
     }
     $owner = User::findOrFail($users['owner']['id']);
     $draft = Recipe::factory()->for($owner, 'owner')->validDraft()->create(['title' => 'Accessible draft']);
+    $quantityDraft = Recipe::factory()->for($owner, 'owner')->validDraft()->create(['title' => 'Quantity display draft']);
+    $quantityDraft->ingredientLines()->sole()->update(['quantity' => '300.000000000000000000']);
+    RecipeIngredientLine::factory()->for($quantityDraft)->create([
+        'position' => 1, 'quantity' => '1.234567890123456789', 'original_text' => 'Fractional amount',
+    ]);
     $barcodeDraft = Recipe::factory()->for($owner, 'owner')->validDraft()->create(['title' => 'Barcode matching draft']);
     RecipeIngredientLine::factory()->for($barcodeDraft)->create(['position' => 1, 'original_text' => 'Second barcode ingredient']);
     $barcodeItem = CatalogueItem::factory()->barcodeBacked()->submittedBy($owner)->create();
@@ -102,7 +107,7 @@ $fixture = DB::transaction(function (): array {
     MealPlanItemEntry::factory()->for($slot, 'slot')->create(['one_off_wording' => 'Accessibility snack']);
 
     return ['users' => $users, 'draft' => $draft->id, 'publicRecipe' => $public->id,
-        'barcode' => $barcodeItem->barcode, 'barcodeDraft' => $barcodeDraft->id, 'barcodeLines' => $barcodeDraft->ingredientLines()->pluck('id')->all(),
+        'quantityDraft' => $quantityDraft->id, 'barcode' => $barcodeItem->barcode, 'barcodeDraft' => $barcodeDraft->id, 'barcodeLines' => $barcodeDraft->ingredientLines()->pluck('id')->all(),
         'items' => $items, 'plan' => $plan->id, 'profile' => $owner->publicProfile->id,
         'failedImport' => $failedImport->id, 'reviewImport' => $reviewImport->id];
 });
