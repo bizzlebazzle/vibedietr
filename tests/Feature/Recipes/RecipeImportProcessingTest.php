@@ -21,6 +21,29 @@ class RecipeImportProcessingTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_entity_decoding_preserves_exact_import_source_and_renders_decoded_content_as_inert_text(): void
+    {
+        config(['production.imports.parser_version' => null]);
+        $owner = User::factory()->create();
+        $source = "Terry&#39;s &amp; cake\nServes: 2\nIngredients\n300 g Terry&#39;s chocolate orange\nInstructions\nMix &lt;img src=x onerror=alert(1)&gt; &amp; serve.";
+        $import = RecipeImport::factory()->for($owner, 'owner')->create(['source_text' => $source]);
+
+        app()->call([(new ProcessPastedRecipeImport($import->id, $import->correlation_id)), 'handle']);
+
+        $import->refresh();
+        $recipe = $import->recipe()->firstOrFail();
+        $this->assertSame($source, $import->source_text);
+        $this->assertSame('rec15-v2', $import->parser_version);
+        $this->assertSame("Terry's & cake", $recipe->title);
+        $this->assertSame("300 g Terry's chocolate orange", $recipe->ingredientLines()->sole()->original_text);
+        $this->assertSame('Mix <img src=x onerror=alert(1)> & serve.', $recipe->instructionSteps()->sole()->text);
+        $this->assertSame(RecipeVisibility::Private, $recipe->visibility);
+        $this->actingAs($owner)->get(route('recipes.edit', $recipe))->assertOk()
+            ->assertSee("300 g Terry's chocolate orange")
+            ->assertSee('&lt;img src=x onerror=alert(1)&gt;', false)
+            ->assertDontSee('<img src=x onerror=alert(1)>', false);
+    }
+
     public function test_structured_source_creates_one_private_editable_unfinalized_draft_with_exact_order_and_wording(): void
     {
         $owner = User::factory()->create();

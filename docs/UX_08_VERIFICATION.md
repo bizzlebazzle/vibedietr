@@ -31,7 +31,7 @@ changed. Physical-device and assistive-technology release checks remain pending.
   with 361 assertions. Provider requests use HTTP fakes.
 - `npm run test:scanner`: 27 tests passed, including scoped event delivery,
   duplicate suppression, retry state and scanner teardown.
-- `./vendor/bin/sail composer test`: 1,217 tests passed, 7,795 assertions.
+- `./vendor/bin/sail composer test`: 1,225 tests passed, 7,850 assertions.
 - `./vendor/bin/sail pint --test`, `composer analyse`, `npm run build`,
   `npm run env:check`, and `npm run docs:check` passed through Sail.
   Example Compose configuration also passed `docker compose --env-file
@@ -134,3 +134,33 @@ checks and six planning checks. Formatting, static analysis, the production
 build, scanner, documentation and environment checks passed. Quantity-editor
 screenshots were visually reviewed in both themes. The existing physical-camera
 and assistive-technology release checks remain separate from this correction.
+
+## Imported HTML character references
+
+The shared deterministic parser decoded entities only inside its HTML-markup
+branch. Plain strings from JSON-LD, pasted text, Markdown, extracted documents
+and OCR could consequently retain codes such as `Terry&#39;s` in draft fields.
+The existing HTML5 decoder now runs on every working text copy, after any
+markup stripping and before line/field parsing. Named, decimal and hexadecimal
+references decode in titles, ingredients, generic wording, sections and steps.
+Unknown references and ordinary Unicode remain intact. Decoding is one pass
+at this shared stage; decoded markup-like characters are not reparsed as HTML.
+
+The default parser provenance advances to `rec15-v2`. Deployments with an
+explicit `RECIPE_IMPORT_PARSER_VERSION` pin should advance that release value
+when deploying this correction. Preserved import source text stays byte-for-byte
+unchanged, and decoded content continues to use escaped Blade rendering.
+Existing saved drafts and immutable versions are not backfilled; a new import
+uses the corrected parser. No queue, job payload, provider, schema or input-limit
+changes are required.
+
+The 36 focused import checks passed, including text/Markdown/HTML, uploaded
+documents, JSON-LD and visible-page extraction, source preservation, private
+draft materialization, retry idempotency and inert encoded-markup rendering.
+Final verification passed: 1,225 backend tests (7,850 assertions), formatting,
+static analysis, production build, scanner, documentation, environment and
+example Compose checks. The full browser and planning suites were not repeated
+for this parser-only correction: no views, Livewire components, JavaScript,
+CSS, or planning behavior changed. Queued-processing and escaped-rendering
+feature tests cover the changed output boundary. Existing manual release
+checks remain separate.

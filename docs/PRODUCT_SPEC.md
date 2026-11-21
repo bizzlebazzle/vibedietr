@@ -551,6 +551,13 @@ Imported recipes retain source provenance. When available, the finalized
 recipe displays the original source and a link to it. A remix continues to
 link back through its recipe lineage.
 
+Parsed recipe text decodes standard HTML character references, including named,
+decimal and hexadecimal references, into their original characters across
+import formats. This applies to titles, ingredient wording, instructions and
+section headings even when the text contains no HTML tags. The preserved
+import source remains exact; decoded characters stay inert text and are escaped
+when rendered. Existing saved recipes and versions are not rewritten by parsing.
+
 Documents and photographs uploaded for extraction are transient inputs and
 are deleted after processing. They are not kept as recipe attachments.
 
