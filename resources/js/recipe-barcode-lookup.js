@@ -14,7 +14,7 @@ export function recipeBarcodeLookup({ lineId }) {
                 if (!this.scanning || this.pending) return;
                 this.code = event.detail?.text || '';
                 this.closeScanner();
-                this.$refs.barcodeInput?.focus();
+                this.$refs.scanButton?.focus();
                 void this.lookup();
             };
             this.openingHandler = event => {

@@ -57,7 +57,7 @@ changed. Physical-device and assistive-technology release checks remain pending.
 
 The Selenium suite uses isolated synthetic recipes and an approved barcode,
 never a live food provider. New journeys cover personal-list navigation,
-continuing a draft, typed lookup, simulated decoded delivery, explicit
+continuing a draft, name-search navigation, simulated decoded delivery, explicit
 selection, preserved unsaved text, one active scanner and closed scanner
 removal. Theme/mobile screenshots and axe reports are written to the existing
 ignored `storage/app/testing/ux07` artifact directory. Mobile library and barcode
