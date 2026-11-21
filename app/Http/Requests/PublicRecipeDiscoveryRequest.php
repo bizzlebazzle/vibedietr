@@ -15,6 +15,7 @@ class PublicRecipeDiscoveryRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'view' => ['sometimes', 'string', 'in:discover,bookmarks,mine,drafts'],
             'q' => ['sometimes', 'nullable', 'string', 'max:100'],
         ];
     }

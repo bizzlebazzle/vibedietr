@@ -3,20 +3,19 @@
 namespace App\Http\Controllers;
 
 use App\Domain\Bookmarks\BookmarkCreator;
-use App\Domain\Bookmarks\BookmarkListing;
 use App\Models\Bookmark;
 use App\Models\User;
-use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class BookmarkController extends Controller
 {
-    public function index(Request $request, BookmarkListing $listing): View
+    public function index(Request $request): RedirectResponse
     {
-        $user = $this->user($request);
+        $this->user($request);
+        $validated = $request->validate(['page' => ['sometimes', 'integer', 'min:1']]);
 
-        return view('bookmarks.index', ['bookmarks' => $listing->paginate($user)]);
+        return redirect()->route('recipes.index', ['view' => 'bookmarks', ...$validated]);
     }
 
     public function store(Request $request, int $recipe, BookmarkCreator $creator): RedirectResponse

@@ -147,6 +147,14 @@ class Recipe extends Model
     }
 
     /** @param Builder<Recipe> $query */
+    public function scopeWithDraft(Builder $query): void
+    {
+        $query->where(fn (Builder $draft) => $draft
+            ->where('lifecycle', RecipeLifecycle::Draft->value)
+            ->orWhereHas('activeRevision'));
+    }
+
+    /** @param Builder<Recipe> $query */
     public function scopePubliclyViewable(Builder $query): void
     {
         $query->finalized()
