@@ -1,5 +1,6 @@
 import './bootstrap';
 import './scanner.js';
+import './recipe-barcode-lookup.js';
 import './feedback.js';
 import './planning.js';
 

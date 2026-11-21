@@ -136,6 +136,7 @@
                                     <button type="button" wire:click="clearCatalogueMatch({{ $index }})" aria-label="Clear catalogue match for ingredient {{ $index + 1 }}" aria-describedby="ingredient-review-{{ $index + 1 }}" wire:confirm="Clear this match? Original ingredient text stays intact. The selection is removed and this line will be excluded from the estimate." class="inline-flex min-h-11 items-center rounded border border-red-300 px-3 py-2 text-sm text-red-700 dark:border-red-800 dark:text-red-300">Clear match</button>
                                 @endif
                             </div>
+                            @include('recipes.partials.barcode-lookup')
                             <x-input-error :messages="$errors->get('catalogue_match')" />
                             @if (array_key_exists($lineId, $catalogueResults))
                                 <p class="text-xs text-gray-600 dark:text-gray-400">{{ $resultPage['total'] ?? 0 }} selectable result(s). Pending manual foods appear only to their submitter.</p>
