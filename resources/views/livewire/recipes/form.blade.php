@@ -80,6 +80,13 @@
             @forelse ($ingredients as $index => $line)
                 @php
                     $lineIssue = collect($ingredientAttention['issues'])->firstWhere('position', $index);
+                    if ($lineIssue && ! ($catalogueMatches[$line['id']] ?? null)) {
+                        $lineIssue['reasons'] = array_diff($lineIssue['reasons'], ['No food selected — excluded from estimate.']);
+                        $lineIssue['remedies'] = array_diff($lineIssue['remedies'], ['Search the catalogue to select a food for this ingredient.']);
+                        if ($lineIssue['reasons'] === [] && $lineIssue['remedies'] === []) {
+                            $lineIssue = null;
+                        }
+                    }
                 @endphp
                 <fieldset id="ingredient-line-{{ $index + 1 }}" wire:key="{{ $line['key'] }}" class="min-w-0 scroll-mt-4 space-y-4 rounded border border-gray-200 p-4 dark:border-slate-700">
                     <legend class="px-1 font-medium text-gray-900 dark:text-slate-100">Ingredient {{ $index + 1 }}</legend>
@@ -100,42 +107,43 @@
                             $currentMatch = $catalogueMatches[$lineId] ?? null;
                             $resultPage = $catalogueResultPages[$lineId] ?? null;
                         @endphp
-                        <section class="space-y-3 rounded bg-gray-50 p-3 dark:bg-slate-800" aria-label="Catalogue match for ingredient {{ $index + 1 }}">
-                            <div>
-                                <x-recipe-match-status :match="$currentMatch" :original="$line['original_text']" :id="'ingredient-review-'.($index + 1)" creator />
-                                @if ($currentMatch)
-                                    @if($currentMatch['unavailable'])
-                                        @if($currentMatch['suggested_replacement'])
-                                            <button type="button" wire:click="confirmCatalogueReplacement({{ $index }})" aria-label="Use suggested approved food for ingredient {{ $index + 1 }}" class="mt-2 inline-flex min-h-11 items-center rounded border border-sky-400 px-3 py-2 text-sm">
-                                                Use suggested approved food: {{ $currentMatch['suggested_replacement']['name'] }}
-                                            </button>
+                        <section x-data="recipeBarcodeLookup({ lineId: {{ $lineId }} })" data-recipe-barcode="{{ $lineId }}" x-bind:aria-busy="pending" class="space-y-3 rounded bg-gray-50 p-3 dark:bg-slate-800" aria-label="Catalogue match for ingredient {{ $index + 1 }}">
+                            <div class="space-y-3 rounded border border-gray-300 p-3 dark:border-slate-600">
+                                <div>
+                                    <x-recipe-match-status :match="$currentMatch" :original="$line['original_text']" :id="'ingredient-review-'.($index + 1)" creator barcode-scan embedded />
+                                    @if ($currentMatch)
+                                        @if($currentMatch['unavailable'])
+                                            @if($currentMatch['suggested_replacement'])
+                                                <button type="button" wire:click="confirmCatalogueReplacement({{ $index }})" aria-label="Use suggested approved food for ingredient {{ $index + 1 }}" class="mt-2 inline-flex min-h-11 items-center rounded border border-sky-400 px-3 py-2 text-sm">
+                                                    Use suggested approved food: {{ $currentMatch['suggested_replacement']['name'] }}
+                                                </button>
+                                            @endif
                                         @endif
                                     @endif
-                                @endif
-                            </div>
-                            @foreach ($ingredientAttention['issues'] as $issue)
-                                @if ($issue['position'] === $index)
+                                </div>
+                                @if ($lineIssue)
                                     <div class="text-sm" id="ingredient-limitations-{{ $index + 1 }}">
-                                        <ul class="list-disc pl-5">@foreach ($issue['reasons'] as $reason)<li>{{ $reason }}</li>@endforeach</ul>
-                                        <p class="mt-1">{{ implode(' ', $issue['remedies']) }}</p>
+                                        <ul class="list-disc pl-5">@foreach ($lineIssue['reasons'] as $reason)<li>{{ $reason }}</li>@endforeach</ul>
+                                        <p class="mt-1">{{ implode(' ', $lineIssue['remedies']) }}</p>
                                     </div>
                                 @endif
-                            @endforeach
-                            <div class="flex flex-col gap-2 sm:flex-row sm:items-end">
-                                <div class="min-w-0 grow">
-                                    <x-input-label for="ingredient-{{ $line['key'] }}-catalogue-search" value="Search catalogue by name or barcode" />
-                                    <x-text-input id="ingredient-{{ $line['key'] }}-catalogue-search" wire:model="catalogueSearches.{{ $lineId }}" type="search" maxlength="100" class="mt-1 block w-full" />
-                                    <x-input-error :messages="$errors->get('search')" class="mt-2" />
+                                <div class="flex flex-wrap items-end gap-2">
+                                    <div class="min-w-0 basis-full grow sm:basis-40">
+                                        <x-input-label for="ingredient-{{ $line['key'] }}-catalogue-search" value="Search catalogue by name" />
+                                        <x-text-input id="ingredient-{{ $line['key'] }}-catalogue-search" wire:model="catalogueSearches.{{ $lineId }}" type="search" maxlength="100" class="mt-1 block w-full" />
+                                        <x-input-error :messages="$errors->get('search')" class="mt-2" />
+                                    </div>
+                                    @if ($currentMatch && ! $currentMatch['unavailable'] && $currentMatch['review_state'] === 'needs_review')
+                                        <button type="button" wire:click="keepCatalogueMatch({{ $index }}, '{{ $currentMatch['version_id'] }}')" aria-label="Keep this food for ingredient {{ $index + 1 }}: {{ $line['original_text'] }}" aria-describedby="ingredient-review-{{ $index + 1 }}" class="inline-flex min-h-11 items-center rounded border px-3 py-2 text-sm dark:border-slate-600">Keep this food</button>
+                                    @endif
+                                    <button type="button" wire:click="searchCatalogue({{ $index }})" aria-label="{{ $currentMatch ? 'Search to replace' : 'Search catalogue' }} for ingredient {{ $index + 1 }}" aria-describedby="ingredient-review-{{ $index + 1 }}" class="inline-flex min-h-11 items-center rounded border px-3 py-2 text-sm dark:border-slate-600">
+                                        {{ $currentMatch ? 'Search to replace' : 'Search' }}
+                                    </button>
+                                    <button type="button" x-ref="scanButton" x-on:click="openScanner()" aria-label="Scan barcode for ingredient {{ $index + 1 }}" aria-describedby="ingredient-barcode-help-{{ $lineId }} ingredient-barcode-error-{{ $lineId }}" x-bind:disabled="pending" x-bind:aria-expanded="scanning" aria-controls="ingredient-scanner-{{ $lineId }}" class="inline-flex min-h-11 items-center rounded border px-3 py-2 text-sm disabled:opacity-50 dark:border-slate-600">Scan barcode</button>
+                                    @if ($currentMatch)
+                                        <button type="button" wire:click="clearCatalogueMatch({{ $index }})" aria-label="Clear catalogue match for ingredient {{ $index + 1 }}" aria-describedby="ingredient-review-{{ $index + 1 }}" wire:confirm="Clear this match? Original ingredient text stays intact. The selection is removed and this line will be excluded from the estimate." class="inline-flex min-h-11 items-center rounded border border-red-300 px-3 py-2 text-sm text-red-700 dark:border-red-800 dark:text-red-300">Clear match</button>
+                                    @endif
                                 </div>
-                                @if ($currentMatch && ! $currentMatch['unavailable'] && $currentMatch['review_state'] === 'needs_review')
-                                    <button type="button" wire:click="keepCatalogueMatch({{ $index }}, '{{ $currentMatch['version_id'] }}')" aria-label="Keep this food for ingredient {{ $index + 1 }}: {{ $line['original_text'] }}" aria-describedby="ingredient-review-{{ $index + 1 }}" class="inline-flex min-h-11 items-center rounded border px-3 py-2 text-sm dark:border-slate-600">Keep this food</button>
-                                @endif
-                                <button type="button" wire:click="searchCatalogue({{ $index }})" aria-label="{{ $currentMatch ? 'Search to replace' : 'Search catalogue' }} for ingredient {{ $index + 1 }}" aria-describedby="ingredient-review-{{ $index + 1 }}" class="inline-flex min-h-11 items-center rounded border px-3 py-2 text-sm dark:border-slate-600">
-                                    {{ $currentMatch ? 'Search to replace' : 'Search' }}
-                                </button>
-                                @if ($currentMatch)
-                                    <button type="button" wire:click="clearCatalogueMatch({{ $index }})" aria-label="Clear catalogue match for ingredient {{ $index + 1 }}" aria-describedby="ingredient-review-{{ $index + 1 }}" wire:confirm="Clear this match? Original ingredient text stays intact. The selection is removed and this line will be excluded from the estimate." class="inline-flex min-h-11 items-center rounded border border-red-300 px-3 py-2 text-sm text-red-700 dark:border-red-800 dark:text-red-300">Clear match</button>
-                                @endif
                             </div>
                             @include('recipes.partials.barcode-lookup')
                             <x-input-error :messages="$errors->get('catalogue_match')" />

@@ -269,8 +269,9 @@ collapsed into one ambiguous `quantity` or `recommended servings` value.
 - A candidate below the minimum threshold is not selected, leaving the line
   unmatched.
 - The recipe creator can easily replace any automatic match.
-- Saved ingredient lines offer catalogue name search, typed barcode lookup,
-  and optional camera scanning without leaving the editor. Lookup may reuse
+- Saved ingredient lines offer catalogue name search and a Scan barcode action
+  beside the search button, without a typed barcode field or separate lookup
+  panel. Scanning checks the shared catalogue first. Lookup may reuse
   an approved shared food or import a successfully confirmed provider product.
   The creator explicitly selects the result before the recipe match changes.
 - Lookup failures preserve pending edits and offer retry, name search, and

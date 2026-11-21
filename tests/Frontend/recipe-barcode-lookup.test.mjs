@@ -7,8 +7,9 @@ test('scans are scoped to the active saved line and duplicate in-flight results 
     globalThis.document = new EventTarget();
     let finish;
     const calls = [];
+    let focused = 0;
     const make = lineId => Object.assign(recipeBarcodeLookup({ lineId }), {
-        $refs: {},
+        $refs: { scanButton: { focus: () => focused++ } },
         $wire: { lookupIngredientBarcode: (...args) => {
             calls.push(args);
             return new Promise(resolve => { finish = resolve; });
@@ -26,6 +27,7 @@ test('scans are scoped to the active saved line and duplicate in-flight results 
     window.dispatchEvent(new CustomEvent(second.scanEvent, { detail: { text: 'duplicate' } }));
     assert.deepEqual(calls, [[20, '0012345678905']]);
     assert.equal(second.scanning, false);
+    assert.equal(focused, 1);
     await second.lookup();
     assert.equal(calls.length, 1);
     finish();
@@ -54,7 +56,7 @@ test('closing, navigating, and destruction stop the camera and remove listeners'
     assert.equal(row.scanning, true);
 });
 
-test('transport failure keeps typed code and restores retry controls', async () => {
+test('transport failure keeps scanned code and restores retry controls', async () => {
     const row = Object.assign(recipeBarcodeLookup({ lineId: 40 }), {
         $refs: {}, $wire: { lookupIngredientBarcode: async () => { throw new Error('offline'); } },
     });

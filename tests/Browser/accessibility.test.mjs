@@ -708,19 +708,28 @@ test('recipe edit quantities use readable precision through saves and explicit e
     }
 });
 
-test('inline typed and scanned barcodes stay on their ingredient and preserve unsaved edits', async () => {
+test('inline name search and scanned barcodes stay on their ingredient and preserve unsaved edits', async () => {
     await login();
     await open(`/recipes/${fixture.barcodeDraft}/edit`);
     const first = fixture.barcodeLines[0], second = fixture.barcodeLines[1];
     await tabTo('#title');
     await browser.actions().keyDown(Key.CONTROL).sendKeys('a').keyUp(Key.CONTROL).sendKeys('Pending barcode recipe').perform();
-    await tabTo(`#ingredient-barcode-${first}`);
-    await press();
+    assert.equal((await browser.findElements(By.css('input[id^="ingredient-barcode-"]'))).length, 0);
+    assert.equal((await browser.findElements(By.css('[aria-label^="Look up barcode for ingredient"]'))).length, 0);
+    const matchText = await (await find('#ingredient-line-1 [data-recipe-barcode]')).getText();
+    assert.equal(matchText.split('No food selected — excluded from estimate').length - 1, 1);
+    assert.match(matchText, /Search the catalogue or scan a barcode to select a food for this ingredient/);
+    await tabTo('#ingredient-line-1 [aria-label="Search catalogue for ingredient 1"]');
+    await tabTo('#ingredient-line-1 [aria-label="Scan barcode for ingredient 1"]'); await press();
+    await browser.wait(until.elementLocated(By.css('#ingredient-line-1 [data-barcode-scanner]')), 10000);
+    await browser.executeScript('window.dispatchEvent(new CustomEvent(arguments[0], {detail:{text:arguments[1]}}))',
+        `recipe-barcode-scanned-${first}`, '');
     await waitText('#ingredient-line-1', 'Enter a barcode of up to 64 characters');
-    assert.equal(await (await find(`#ingredient-barcode-${first}`)).getAttribute('aria-invalid'), 'true');
     await structure(); await scan('recipe-barcode-invalid');
-    await tabTo(`#ingredient-barcode-${first}`);
-    await browser.actions().sendKeys(fixture.barcode, Key.ENTER).perform();
+    await tabTo('#ingredient-line-1 [aria-label="Scan barcode for ingredient 1"]'); await press();
+    await browser.wait(until.elementLocated(By.css('#ingredient-line-1 [data-barcode-scanner]')), 10000);
+    await browser.executeScript('window.dispatchEvent(new CustomEvent(arguments[0], {detail:{text:arguments[1]}}))',
+        `recipe-barcode-scanned-${first}`, fixture.barcode);
     await waitText('#ingredient-line-1', 'Product found. Select the food below');
     assert.equal(await (await find('#title')).getAttribute('value'), 'Pending barcode recipe');
     assert.match(await (await find('#ingredient-review-1')).getText(), /No food selected/);

@@ -1,5 +1,5 @@
-@props(['match' => null, 'original', 'id', 'creator' => false])
-<div id="{{ $id }}" tabindex="-1" data-ingredient-review class="recipe-match-status whitespace-normal {{ ($match['unavailable'] ?? false) ? 'nutrition-unavailable' : (($match['review_state'] ?? null) === 'needs_review' ? 'nutrition-warning' : 'rounded border border-gray-200 p-3 text-sm dark:border-slate-600') }}">
+@props(['match' => null, 'original', 'id', 'creator' => false, 'barcodeScan' => false, 'embedded' => false])
+<div id="{{ $id }}" tabindex="-1" data-ingredient-review class="recipe-match-status whitespace-normal {{ ($match['unavailable'] ?? false) ? 'nutrition-unavailable' : (($match['review_state'] ?? null) === 'needs_review' ? 'nutrition-warning' : ($embedded ? 'text-sm' : 'rounded border border-gray-200 p-3 text-sm dark:border-slate-600')) }}">
     <p class="font-semibold">{{ app(\App\Domain\Recipes\RecipeIngredientMatchPresenter::class)->label($match, $creator) }}</p>
     @if ($match !== null)
         <p class="mt-1">Selected food: <strong>{{ $match['name'] ?? 'Name unavailable' }}</strong></p>
@@ -12,6 +12,6 @@
             <p class="mt-1">Selection does not mean verified nutrition.{{ $creator ? ' You can search to replace or clear this match.' : '' }}</p>
         @endif
     @else
-        <p class="mt-1">{{ $creator ? 'Search the catalogue to select a food for this ingredient.' : 'The creator can select a food in the ingredient editor.' }}</p>
+        <p class="mt-1">{{ $creator ? ($barcodeScan ? 'Search the catalogue or scan a barcode to select a food for this ingredient.' : 'Search the catalogue to select a food for this ingredient.') : 'The creator can select a food in the ingredient editor.' }}</p>
     @endif
 </div>
