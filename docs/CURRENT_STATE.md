@@ -7,9 +7,8 @@ repository. It is not a product specification or a delivery history.
 
 - **Application baseline:** `bab994f90b8532603d13514459da6f00b4972025`
   (NUT-11 merge, 2026-09-10).
-- **Last reviewed:** 2026-09-10.
-- This documentation restructure changes no application behavior after that
-  baseline.
+- **Last reviewed:** 2026-11-21 (UX-08 recipe navigation and matching).
+- Later capability entries record changes after that baseline.
 - Use [Product specification](PRODUCT_SPEC.md) for intended behavior,
   [Decisions](DECISIONS.md) for owner choices and unresolved blockers, and
   [Roadmap](ROADMAP.md) for task status and acceptance criteria.
@@ -152,7 +151,8 @@ work.
 - UX-01 adds identity/navigation; UX-02 adds accessible feedback; UX-03 adds
   responsive recipe editing/resizing; UX-04 adds optional match review ([verification](UX_04_VERIFICATION.md)).
   UX-05 adds responsive planning/consumption ([verification](UX_05_VERIFICATION.md)); UX-06 adds empty/recovery guidance.
-  UX-07 adds shared accessibility fixes and full-page/pixel regressions ([verification](UX_07_VERIFICATION.md)).
+  UX-07 adds accessibility regressions ([verification](UX_07_VERIFICATION.md)); UX-08 adds recipe/draft lists,
+  dashboard counts and inline barcode lookup with explicit food selection ([verification](UX_08_VERIFICATION.md)).
 - [Recovery tooling and drill](DEP_06_VERIFICATION.md) include DEP-08 replay/release; production installation gates remain.
 - DEP-07 implements verified owned JSON ZIP exports and queued cleanup; installation release checks remain ([evidence](DEP_07_VERIFICATION.md)).
 - DEP-08 is implemented; [DEP-09 review](DEP_09_LAUNCH_REVIEW.md) records launch blockers and pending owner approval.

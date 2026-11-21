@@ -54,7 +54,10 @@ after(async () => {
         if (browser) await browser.quit();
     } finally {
         if (server) server.kill();
-        if (fixture) execFileSync('php', ['tests/Browser/accessibility-fixture.php', 'cleanup', JSON.stringify(fixture)], { env });
+        if (fixture) {
+            const output = execFileSync('php', ['tests/Browser/accessibility-fixture.php', 'cleanup', JSON.stringify(fixture)], { env, encoding: 'utf8' });
+            assert.equal(output.trim(), '', 'Synthetic fixture cleanup must complete without errors');
+        }
         rmSync(journalWorkspace, { recursive: true });
     }
 });
@@ -608,6 +611,100 @@ test('account export request, ready download, keyboard and responsive themes rem
         await screenshot(`account-export-mobile-${theme}`);
         await browser.sendDevToolsCommand('Emulation.clearDeviceMetricsOverride');
     }
+});
+
+test('recipe library tabs expose owned drafts and bookmarks with responsive keyboard navigation', async () => {
+    await login();
+    await open('/dashboard');
+    await tabTo('main a[href$="view=drafts"]'); await press();
+    await browser.wait(until.urlContains('view=drafts'), 10000);
+    await structure(); await scan('recipe-library-drafts');
+    assert.match(await (await find('main')).getText(), /Barcode matching draft/);
+    await tabTo('a[href$="/recipes/' + fixture.barcodeDraft + '/edit"]'); await press();
+    await browser.wait(until.urlContains('/edit'), 10000);
+    assert.equal(await (await find('#title')).getAttribute('value'), 'Barcode matching draft');
+    for (const theme of ['light', 'dark']) {
+        for (const view of ['mine', 'drafts', 'bookmarks']) {
+            await open('/recipes?view=' + view);
+            await browser.executeScript('document.documentElement.classList.toggle("dark",arguments[0])', theme === 'dark');
+            await browser.sendDevToolsCommand('Emulation.setDeviceMetricsOverride', { width: 320, height: 800, deviceScaleFactor: 1, mobile: true });
+            await structure(); await reflow(); await scan(`recipe-library-${view}-${theme}`);
+            assert.equal(await (await find('nav[aria-label="Recipe views"] [aria-current="page"]')).getText(),
+                { mine: 'My recipes', drafts: 'My draft recipes', bookmarks: 'My bookmarks' }[view]);
+            assert.equal(await browser.getTitle(), { mine: 'My recipes', drafts: 'My draft recipes', bookmarks: 'My bookmarks' }[view] + ' — VibeDietr');
+            await screenshot(`recipe-library-${view}-${theme}`);
+            await browser.sendDevToolsCommand('Emulation.clearDeviceMetricsOverride');
+        }
+    }
+    await open('/bookmarks?page=2');
+    assert.match(await browser.getCurrentUrl(), /view=bookmarks.*page=2/);
+});
+
+test('inline typed and scanned barcodes stay on their ingredient and preserve unsaved edits', async () => {
+    await login();
+    await open(`/recipes/${fixture.barcodeDraft}/edit`);
+    const first = fixture.barcodeLines[0], second = fixture.barcodeLines[1];
+    await tabTo('#title');
+    await browser.actions().keyDown(Key.CONTROL).sendKeys('a').keyUp(Key.CONTROL).sendKeys('Pending barcode recipe').perform();
+    await tabTo(`#ingredient-barcode-${first}`);
+    await press();
+    await waitText('#ingredient-line-1', 'Enter a barcode of up to 64 characters');
+    assert.equal(await (await find(`#ingredient-barcode-${first}`)).getAttribute('aria-invalid'), 'true');
+    await structure(); await scan('recipe-barcode-invalid');
+    await tabTo(`#ingredient-barcode-${first}`);
+    await browser.actions().sendKeys(fixture.barcode, Key.ENTER).perform();
+    await waitText('#ingredient-line-1', 'Product found. Select the food below');
+    assert.equal(await (await find('#title')).getAttribute('value'), 'Pending barcode recipe');
+    assert.match(await (await find('#ingredient-review-1')).getText(), /No food selected/);
+    await tabTo('#ingredient-line-1 button[aria-label^="Select food:"]'); await press();
+    await waitText('#ingredient-review-1', 'Barcode browser oats');
+
+    await tabTo('#ingredient-line-1 [aria-label="Scan barcode for ingredient 1"]'); await press();
+    await browser.wait(until.elementLocated(By.css('#ingredient-line-1 [data-barcode-scanner]')), 10000);
+    await tabTo('#ingredient-line-2 [aria-label="Scan barcode for ingredient 2"]'); await press();
+    await browser.wait(async () => (await browser.findElements(By.css('[data-barcode-scanner]'))).length === 1 &&
+        (await browser.findElements(By.css('#ingredient-line-2 [data-barcode-scanner]'))).length === 1, 10000);
+    await structure(); await scan('recipe-barcode-scanner-open');
+    // Simulate decoded delivery against an existing synthetic barcode; never call a live provider.
+    await browser.executeScript('window.dispatchEvent(new CustomEvent(arguments[0], {detail:{text:arguments[1]}}))',
+        `recipe-barcode-scanned-${second}`, fixture.barcode);
+    await waitText('#ingredient-line-2', 'Product found. Select the food below');
+    assert.match(await (await find('#ingredient-review-2')).getText(), /No food selected/);
+    assert.match(await (await find('#ingredient-review-1')).getText(), /Barcode browser oats/);
+    assert.equal((await browser.findElements(By.css('[data-barcode-scanner]'))).length, 0);
+    assert.equal(await (await find('#title')).getAttribute('value'), 'Pending barcode recipe');
+    for (const theme of ['light', 'dark']) {
+        await browser.executeScript('document.documentElement.classList.toggle("dark",arguments[0])', theme === 'dark');
+        await browser.sendDevToolsCommand('Emulation.setDeviceMetricsOverride', { width: 320, height: 800, deviceScaleFactor: 1, mobile: true });
+        await structure(); await reflow(); await scan(`recipe-barcode-result-${theme}`);
+        await browser.executeScript('document.querySelector("#ingredient-line-2 [data-recipe-barcode]").scrollIntoView({block:"start"})');
+        await screenshot(`recipe-barcode-result-${theme}`);
+        await browser.sendDevToolsCommand('Emulation.clearDeviceMetricsOverride');
+    }
+    await tabTo('#ingredient-line-2 [aria-label="Scan barcode for ingredient 2"]'); await press();
+    await browser.wait(until.elementLocated(By.css('#ingredient-line-2 [data-barcode-scanner]')), 10000);
+    await tabTo('#ingredient-scanner-' + second + ' button'); await press();
+    await browser.wait(async () => (await browser.findElements(By.css('[data-barcode-scanner]'))).length === 0, 10000);
+    await waitText('#ingredient-line-2', 'Product found. Select the food below');
+    await tabTo('#ingredient-line-2 button[aria-label^="Select food:"]'); await press();
+    await waitText('#ingredient-review-2', 'Barcode browser oats');
+    await tabTo('button[type="submit"][wire\\:target="save"]'); await press();
+    await waitText('main', 'All changes saved');
+    await browser.navigate().refresh();
+    assert.equal(await (await find('#title')).getAttribute('value'), 'Pending barcode recipe');
+    await waitText('#ingredient-review-2', 'Barcode browser oats');
+    await tabTo('#ingredient-line-2 [aria-label="Scan barcode for ingredient 2"]'); await press();
+    await browser.wait(until.elementLocated(By.css('#ingredient-line-2 [data-barcode-scanner]')), 10000);
+    await tabTo('[aria-label="Remove ingredient 2"]'); await press();
+    await browser.wait(until.alertIsPresent(), 5000); await browser.switchTo().alert().accept();
+    await browser.wait(async () => (await browser.findElements(By.css('[data-barcode-scanner]'))).length === 0 &&
+        (await browser.findElements(By.css('fieldset[id^="ingredient-line-"]'))).length === 1, 10000);
+    await tabTo('button[type="submit"][wire\\:target="save"]'); await press();
+    await waitText('main', 'All changes saved');
+    await tabTo('#ingredient-line-1 [aria-label="Scan barcode for ingredient 1"]'); await press();
+    await browser.wait(until.elementLocated(By.css('[data-barcode-scanner]')), 10000);
+    await browser.executeScript('document.dispatchEvent(new CustomEvent("livewire:navigating"))');
+    await browser.wait(async () => (await browser.findElements(By.css('[data-barcode-scanner]'))).length === 0, 10000);
 });
 
 test('every scanned representative state has no accessibility violations', () => {

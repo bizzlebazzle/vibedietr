@@ -1329,6 +1329,26 @@ changes, it is deliberately split across multiple items.
 - **Risk:** High.
 - **Estimated size:** Large.
 
+### UX-08 — P1 — Recover recipe drafts and match ingredients by barcode
+
+- **Status:** Implemented (2026-11-21); incomplete at the full accessibility gate; manual checks pending.
+- **Verification:** [UX-08 recipe navigation and barcode matching](UX_08_VERIFICATION.md).
+- **Outcome:** Make owned recipes and unfinished drafts reachable from the
+  dashboard and recipe library, and look up/scan ingredient barcodes inline.
+- **Dependencies:** REC-04, REC-07, REC-09, REC-10, NUT-06, FND-03, UX-01, UX-02, UX-03, UX-04, UX-06, UX-07.
+- **Acceptance criteria:** Owner-only finalized/draft/revision views and counts
+  include private recipes and explain revision overlap; bookmarks retain
+  pagination and safe tombstones; public discovery remains the default.
+  Saved ingredient lookup/scanning preserves edits, enforces ownership and
+  existing lookup limits, offers only approved current foods and requires
+  explicit match selection. One scoped scanner releases its camera on close,
+  row removal and navigation. Failures retain retry/manual alternatives.
+- **Suggested automated tests:** Lifecycle/list/count/authorization regressions,
+  provider-faked lookup/import/failure/limit tests, scanner lifecycle tests,
+  keyboard journeys, mobile/theme reflow, and axe scans.
+- **Risk:** Medium.
+- **Estimated size:** Medium.
+
 ## 7. Deployment readiness
 
 ### DEP-01 — P0 — Document and align the supported development environment

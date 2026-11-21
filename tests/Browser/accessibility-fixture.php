@@ -10,6 +10,7 @@ use App\Models\MealPlanItemEntry;
 use App\Models\MealPlanSlot;
 use App\Models\Recipe;
 use App\Models\RecipeImport;
+use App\Models\RecipeIngredientLine;
 use App\Models\User;
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Support\Facades\DB;
@@ -33,10 +34,16 @@ if (($argv[1] ?? '') === 'cleanup') {
                     $export->forceFill(['expires_at' => now()->subSecond()])->save();
                     app(CleanupAccountExport::class)->cleanup($export->id);
                 }
+                // Remove this run's recipe matches before their referenced catalogue versions.
+                $user->recipes()->delete();
                 // Delete only this run's synthetic shared catalogue contributions.
-                CatalogueItem::query()->where('submitted_by_user_id', $user->id)->delete();
+                $itemIds = CatalogueItem::query()->where('submitted_by_user_id', $user->id)->pluck('id');
+                DB::table('catalogue_item_aliases')->whereIn('catalogue_item_id', $itemIds)->delete();
+                CatalogueItemVersion::query()->whereIn('catalogue_item_id', $itemIds)->delete();
+                CatalogueItem::query()->whereKey($itemIds)->delete();
                 DB::table('account_deletions')->where('user_id', $user->id)->delete();
-                $user->delete();
+                // This guarded teardown also removes its synthetic final administrator.
+                User::query()->whereKey($user->id)->where('email', $identity['email'])->delete();
             }
         }
     });
@@ -60,6 +67,12 @@ $fixture = DB::transaction(function (): array {
     }
     $owner = User::findOrFail($users['owner']['id']);
     $draft = Recipe::factory()->for($owner, 'owner')->validDraft()->create(['title' => 'Accessible draft']);
+    $barcodeDraft = Recipe::factory()->for($owner, 'owner')->validDraft()->create(['title' => 'Barcode matching draft']);
+    RecipeIngredientLine::factory()->for($barcodeDraft)->create(['position' => 1, 'original_text' => 'Second barcode ingredient']);
+    $barcodeItem = CatalogueItem::factory()->barcodeBacked()->submittedBy($owner)->create();
+    CatalogueItemVersion::factory()->current()->completeNutrition()->create([
+        'catalogue_item_id' => $barcodeItem->id, 'name' => 'Barcode browser oats',
+    ]);
     $public = Recipe::factory()->for($owner, 'owner')->finalizedPublic()->create(['title' => 'Accessible public recipe']);
     $failedImport = RecipeImport::factory()->for($owner, 'owner')->failed()->create();
     $reviewImport = RecipeImport::factory()->for($owner, 'owner')->withDraft()->create();
@@ -89,6 +102,7 @@ $fixture = DB::transaction(function (): array {
     MealPlanItemEntry::factory()->for($slot, 'slot')->create(['one_off_wording' => 'Accessibility snack']);
 
     return ['users' => $users, 'draft' => $draft->id, 'publicRecipe' => $public->id,
+        'barcode' => $barcodeItem->barcode, 'barcodeDraft' => $barcodeDraft->id, 'barcodeLines' => $barcodeDraft->ingredientLines()->pluck('id')->all(),
         'items' => $items, 'plan' => $plan->id, 'profile' => $owner->publicProfile->id,
         'failedImport' => $failedImport->id, 'reviewImport' => $reviewImport->id];
 });
