@@ -219,8 +219,10 @@ test('rendered primary-button text, field boundaries and focus outlines meet con
 test('theme changes retain readable text throughout color updates', async () => {
     await login();
     await browser.executeScript('localStorage.setItem("theme","light")');
-    await open('/profile');
-    const samples = await browser.executeAsyncScript(`
+    const allSamples = [];
+    for (const path of ['/profile', '/recipes']) {
+        await open(path);
+        const samples = await browser.executeAsyncScript(`
         const done=arguments[arguments.length-1];
         (async()=>{
             const buttons=[...document.querySelectorAll('button')].filter(button=>button.getAttribute('x-on:click')?.startsWith('setTheme'));
@@ -242,7 +244,9 @@ test('theme changes retain readable text throughout color updates', async () => 
             controls.flatMap(control=>control.getAnimations()).forEach(animation=>animation.finish());
             const results=[];
             for(const mode of ['dark','light','system']) {
-                buttons.find(button=>button.getAttribute('x-on:click')===\"setTheme('\"+mode+\"')\").click();
+                const button=buttons.find(button=>button.getAttribute('x-on:click')===\"setTheme('\"+mode+\"')\");
+                if (button) button.click();
+                else Alpine.$data(document.documentElement).setTheme(mode);
                 await frame();
                 // Pause and sample any real CSS transitions so fast CI cannot skip the failing frame.
                 const animations=controls.flatMap(control=>control.getAnimations());
@@ -256,14 +260,17 @@ test('theme changes retain readable text throughout color updates', async () => 
                 }
                 animations.forEach(animation=>animation.finish());
             }
-            return {samples:results,controlCount:controls.length};
+            return {samples:results,controlCount:controls.length,secondaryControlCount:controls.filter(control=>control.closest('.secondary-bar')).length};
         })().then(done).catch(error=>done({error:error.message}));
-    `);
-    assert.equal(samples.error,undefined);
-    assert.ok(samples.controlCount>3, 'Theme and navigation controls must be sampled');
-    assert.equal(samples.samples.length,samples.controlCount*15);
-    writeFileSync(`${artifacts}/theme-contrast.json`,JSON.stringify(samples.samples,null,2));
-    assert.deepEqual(samples.samples.filter(sample=>sample.ratio<4.5),[]);
+        `);
+        assert.equal(samples.error,undefined);
+        assert.ok(samples.controlCount>3, 'Theme and navigation controls must be sampled');
+        assert.equal(samples.samples.length,samples.controlCount*15);
+        if (path === '/recipes') assert.equal(samples.secondaryControlCount, 4, 'All recipe navigation tabs must be sampled');
+        allSamples.push(...samples.samples.map(sample => ({path, ...sample})));
+    }
+    writeFileSync(`${artifacts}/theme-contrast.json`,JSON.stringify(allSamples,null,2));
+    assert.deepEqual(allSamples.filter(sample=>sample.ratio<4.5),[]);
 });
 
 test('full-page guest authentication, catalogue, recipe and public-profile scans in both themes', async () => {

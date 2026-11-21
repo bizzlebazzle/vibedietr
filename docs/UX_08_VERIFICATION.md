@@ -164,3 +164,25 @@ for this parser-only correction: no views, Livewire components, JavaScript,
 CSS, or planning behavior changed. Queued-processing and escaped-rendering
 feature tests cover the changed output boundary. Existing manual release
 checks remain separate.
+
+## CI secondary-navigation theme contrast
+
+[Quality gates run 44942641512](https://github.com/bizzlebazzle/vibedietr/actions/runs/44942641512)
+passed all 1,225 PHP tests and the planning browser suite. The same
+`Backend tests` job then failed in its product accessibility step: five light
+recipe-navigation scans caught intermediate text colors during a theme change,
+including contrast of 4.32:1 where 4.5:1 is required.
+
+The primary navigation already disables text/control transitions so text and
+surfaces change together. The new secondary navigation reused animated link
+classes without that protection. The shared rule now covers secondary-bar
+links and buttons as well; no palette, threshold, baseline or test delay changes
+were needed.
+
+The existing deterministic contrast sampler now covers both Profile and
+Recipes, asserts that all four secondary tabs are included, and samples dark,
+light and system changes at 0%, 25%, 50%, 75% and 100% of any transition. It
+failed before the CSS correction and passed afterward. The four focused checks,
+full 21-case accessibility suite and six planning browser checks passed locally.
+PHP application code is unchanged from the CI-tested commit. The corrected PR
+branch will be checked again by the complete remote Quality gates workflow.
